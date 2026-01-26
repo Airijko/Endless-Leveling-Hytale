@@ -1,7 +1,7 @@
 package com.airijko.endlessleveling.ui;
 
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.Endless_Leveling_Hytale;
+import com.airijko.endlessleveling.Endlessleveling;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.SkillManager;
@@ -47,8 +47,8 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         public SkillsUIPage(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime) {
                 super(playerRef, lifetime, Data.CODEC);
-                this.skillManager = Endless_Leveling_Hytale.getInstance().getSkillManager();
-                this.playerDataManager = Endless_Leveling_Hytale.getInstance().getPlayerDataManager();
+                this.skillManager = Endlessleveling.getInstance().getSkillManager();
+                this.playerDataManager = Endlessleveling.getInstance().getPlayerDataManager();
         }
 
         @Override
@@ -61,13 +61,14 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 // Load UI
                 ui.append("Pages/SkillsPage.ui");
 
-                // Bind left navigation events (Profile / Skills / Party / Leaderboards / Settings)
+                // Bind left navigation events (Profile / Skills / Party / Leaderboards /
+                // Settings)
                 NavUIHelper.bindNavEvents(events);
 
                 // -----------------------------
                 // UI EVENT BINDINGS (CRITICAL)
                 // -----------------------------
-                
+
                 ui.set("#LifeForceLabel.Text", "Life Force");
                 ui.set("#StrengthLabel.Text", "Strength");
                 ui.set("#DefenseLabel.Text", "Defense");
@@ -102,7 +103,7 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                         return;
                 }
 
-                var playerData = Endless_Leveling_Hytale.getInstance()
+                var playerData = Endlessleveling.getInstance()
                                 .getPlayerDataManager()
                                 .get(playerRef.getUuid());
 
@@ -189,7 +190,7 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 if (data != null && data.action != null && !data.action.isEmpty()) {
                         var player = Universe.get().getPlayer(playerRef.getUuid());
                         if (player != null) {
-                                var playerData = Endless_Leveling_Hytale.getInstance()
+                                var playerData = Endlessleveling.getInstance()
                                                 .getPlayerDataManager()
                                                 .get(playerRef.getUuid());
 
@@ -265,8 +266,10 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                                                                                 playerRef.getUuid());
                                                                         }
                                                                 } else if ("sub".equals(op)) {
-                                                                        int originalLevel = Math.max(MIN_ATTRIBUTE_LEVEL,
-                                                                                        playerData.getPlayerSkillAttributeLevel(type));
+                                                                        int originalLevel = Math.max(
+                                                                                        MIN_ATTRIBUTE_LEVEL,
+                                                                                        playerData.getPlayerSkillAttributeLevel(
+                                                                                                        type));
                                                                         int availableToSub = Math.max(0,
                                                                                         current - originalLevel);
                                                                         int toSub = Math.min(amount, availableToSub);
@@ -386,7 +389,8 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
                 public String action;
 
-                // Optional search query used by pages that support filtering lists (e.g. party invites).
+                // Optional search query used by pages that support filtering lists (e.g. party
+                // invites).
                 public String searchQuery;
 
                 public Data() {

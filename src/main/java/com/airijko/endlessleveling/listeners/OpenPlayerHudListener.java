@@ -1,7 +1,7 @@
 package com.airijko.endlessleveling.listeners;
 
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.Endless_Leveling_Hytale;
+import com.airijko.endlessleveling.Endlessleveling;
 import com.airijko.endlessleveling.ui.PlayerHud;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -25,7 +25,7 @@ public class OpenPlayerHudListener {
         assert world != null;
         assert playerRef != null;
 
-        PlayerData data = Endless_Leveling_Hytale.getInstance()
+        PlayerData data = Endlessleveling.getInstance()
                 .getPlayerDataManager()
                 .get(playerRef.getUuid());
 

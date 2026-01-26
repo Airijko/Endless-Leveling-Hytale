@@ -3,7 +3,7 @@ package com.airijko.endlessleveling.ui;
 import javax.annotation.Nonnull;
 
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.Endless_Leveling_Hytale;
+import com.airijko.endlessleveling.Endlessleveling;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
@@ -49,7 +49,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             return;
         }
 
-        Endless_Leveling_Hytale plugin = Endless_Leveling_Hytale.getInstance();
+        Endlessleveling plugin = Endlessleveling.getInstance();
         if (plugin == null) {
             LOGGER.atSevere().log("ProfileUIPage.build: Endless_Leveling_Hytale instance is null");
             return;

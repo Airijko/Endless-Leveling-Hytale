@@ -2,7 +2,7 @@ package com.airijko.endlessleveling.ui;
 
 import com.airijko.endlessleveling.compatibility.MultipleHudCompatibility;
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.Endless_Leveling_Hytale;
+import com.airijko.endlessleveling.Endlessleveling;
 import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -28,8 +28,8 @@ public class PlayerHud extends CustomUIHud {
 
     public PlayerHud(@Nonnull PlayerRef playerRef) {
         super(playerRef);
-        this.playerDataManager = Endless_Leveling_Hytale.getInstance().getPlayerDataManager();
-        this.levelingManager = Endless_Leveling_Hytale.getInstance().getLevelingManager();
+        this.playerDataManager = Endlessleveling.getInstance().getPlayerDataManager();
+        this.levelingManager = Endlessleveling.getInstance().getLevelingManager();
         this.targetPlayerRef = playerRef;
         ACTIVE_HUDS.put(playerRef.getUuid(), this);
     }

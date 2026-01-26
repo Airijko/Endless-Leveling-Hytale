@@ -3,7 +3,7 @@ package com.airijko.endlessleveling.ui;
 import javax.annotation.Nonnull;
 
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.Endless_Leveling_Hytale;
+import com.airijko.endlessleveling.Endlessleveling;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -37,7 +37,7 @@ public class LeaderboardsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Dat
         ui.append("Pages/Leaderboards/LeaderboardsPage.ui");
         NavUIHelper.bindNavEvents(events);
 
-        PlayerDataManager dataManager = Endless_Leveling_Hytale.getInstance().getPlayerDataManager();
+        PlayerDataManager dataManager = Endlessleveling.getInstance().getPlayerDataManager();
         List<PlayerData> all = dataManager.getAllPlayersSortedByLevel().reversed();
 
         LOGGER.atInfo().log("LeaderboardsUIPage: rendering %d players", all.size());

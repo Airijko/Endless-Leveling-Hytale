@@ -21,6 +21,15 @@
         <hytale.jdk.path>C:/Program Files/Eclipse Adoptium/jdk-25.0.1.8-hotspot</hytale.jdk.path>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>HM-releases</id>
+            <name>Hytale-Modding.info Maven</name>
+            <url>https://maven.hytale-mods.dev/releases</url>
+        </repository>
+    </repositories>
+
+
     <dependencies>
         <dependency>
             <groupId>com.hypixel.hytale</groupId>
@@ -28,6 +37,17 @@
             <version>1.0</version>
             <scope>system</scope>
             <systemPath>${hytale.install.path}/Server/HytaleServer.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.buuz135</groupId>
+            <artifactId>MultipleHUD</artifactId>
+            <version>1.0.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>2.2</version>
         </dependency>
     </dependencies>
 

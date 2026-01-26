@@ -1,7 +1,7 @@
 package com.airijko.endlessleveling.commands.subcommands;
 
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.Endless_Leveling_Hytale;
+import com.airijko.endlessleveling.Endlessleveling;
 import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.SkillManager;
@@ -29,15 +29,14 @@ public class ResetLevelCommand extends AbstractPlayerCommand {
     private final LevelingManager levelingManager;
     private final SkillManager skillManager;
 
-    private final RequiredArg<String> targetArg =
-            this.withRequiredArg("player", "Target player name", ArgTypes.STRING);
+    private final RequiredArg<String> targetArg = this.withRequiredArg("player", "Target player name", ArgTypes.STRING);
 
     public ResetLevelCommand() {
         super("resetlevel", "Reset a player's level back to 1");
 
-        this.playerDataManager = Endless_Leveling_Hytale.getInstance().getPlayerDataManager();
-        this.levelingManager = Endless_Leveling_Hytale.getInstance().getLevelingManager();
-        this.skillManager = Endless_Leveling_Hytale.getInstance().getSkillManager();
+        this.playerDataManager = Endlessleveling.getInstance().getPlayerDataManager();
+        this.levelingManager = Endlessleveling.getInstance().getLevelingManager();
+        this.skillManager = Endlessleveling.getInstance().getSkillManager();
     }
 
     @Override
@@ -46,8 +45,7 @@ public class ResetLevelCommand extends AbstractPlayerCommand {
             @Nonnull Store<EntityStore> store,
             @Nonnull Ref<EntityStore> ref,
             @Nonnull PlayerRef senderRef,
-            @Nonnull World world
-    ) {
+            @Nonnull World world) {
         CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
 
         String targetName = targetArg.get(commandContext);

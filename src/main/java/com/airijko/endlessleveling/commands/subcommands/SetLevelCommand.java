@@ -1,7 +1,7 @@
 package com.airijko.endlessleveling.commands.subcommands;
 
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.Endless_Leveling_Hytale;
+import com.airijko.endlessleveling.Endlessleveling;
 import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.hypixel.hytale.component.Ref;
@@ -28,17 +28,15 @@ public class SetLevelCommand extends AbstractPlayerCommand {
     private final LevelingManager levelingManager;
 
     // Arguments: target player name, new level
-    private final RequiredArg<String> targetArg =
-            this.withRequiredArg("player", "Target player name", ArgTypes.STRING);
-    private final RequiredArg<Integer> levelArg =
-            this.withRequiredArg("level", "New level to set", ArgTypes.INTEGER);
+    private final RequiredArg<String> targetArg = this.withRequiredArg("player", "Target player name", ArgTypes.STRING);
+    private final RequiredArg<Integer> levelArg = this.withRequiredArg("level", "New level to set", ArgTypes.INTEGER);
 
     public SetLevelCommand() {
         super("setlevel", "Set a player's level");
 
         // Initialize the managers from your main plugin instance
-        this.playerDataManager = Endless_Leveling_Hytale.getInstance().getPlayerDataManager();
-        this.levelingManager = Endless_Leveling_Hytale.getInstance().getLevelingManager();
+        this.playerDataManager = Endlessleveling.getInstance().getPlayerDataManager();
+        this.levelingManager = Endlessleveling.getInstance().getLevelingManager();
     }
 
     @Override
@@ -47,8 +45,7 @@ public class SetLevelCommand extends AbstractPlayerCommand {
             @Nonnull Store<EntityStore> store,
             @Nonnull Ref<EntityStore> ref,
             @Nonnull PlayerRef senderRef,
-            @Nonnull World world
-    ) {
+            @Nonnull World world) {
         CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
 
         String targetName = targetArg.get(commandContext);
@@ -74,20 +71,17 @@ public class SetLevelCommand extends AbstractPlayerCommand {
 
         if (requestedLevel != clampedLevel) {
             senderRef.sendMessage(Message.raw(
-                    "Requested level exceeds cap (" + levelCap + "). Applied cap instead."
-            ));
+                    "Requested level exceeds cap (" + levelCap + "). Applied cap instead."));
         }
 
         senderRef.sendMessage(Message.raw(
-                "Set level of " + targetName + " to " + clampedLevel
-        ));
+                "Set level of " + targetName + " to " + clampedLevel));
 
         // If target is online, notify them
         PlayerRef targetRef = Universe.get().getPlayer(targetData.getUuid());
         if (targetRef != null) {
             targetRef.sendMessage(Message.raw(
-                    "Your level has been set to " + clampedLevel + " by an admin!"
-            ));
+                    "Your level has been set to " + clampedLevel + " by an admin!"));
         }
     }
 }
