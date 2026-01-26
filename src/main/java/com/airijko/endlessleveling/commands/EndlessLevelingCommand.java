@@ -43,9 +43,8 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
                 playerRef -> new SettingsUIPage(playerRef, CustomPageLifetime.CanDismiss));
         addGuiShortcut("profile", "Open the EndlessLeveling Profile page",
                 playerRef -> new ProfileUIPage(playerRef, CustomPageLifetime.CanDismiss));
-        OpenPageSubCommand attributes = addGuiShortcut("attributes", "Open the EndlessLeveling Skills page",
+        addGuiShortcut("attributes", "Open the EndlessLeveling Skills page",
                 playerRef -> new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));
-        attributes.addAliases("skillpoints", "sp", "spoints");
     }
 
     @Override

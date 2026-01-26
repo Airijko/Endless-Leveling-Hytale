@@ -6,7 +6,8 @@ import com.hypixel.hytale.server.core.entity.entities.player.hud.CustomUIHud;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
 public class MultipleHudCompatibility {
-    private MultipleHudCompatibility() {}
+    private MultipleHudCompatibility() {
+    }
 
     public static boolean showHud(Player player, PlayerRef playerRef, CustomUIHud endlessHud) {
         try {
