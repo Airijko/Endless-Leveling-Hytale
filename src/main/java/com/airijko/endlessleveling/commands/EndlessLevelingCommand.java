@@ -1,11 +1,16 @@
 package com.airijko.endlessleveling.commands;
 
 import com.airijko.endlessleveling.commands.subcommands.ApplyModifiersCommand;
+import com.airijko.endlessleveling.commands.subcommands.OpenPageSubCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetAllPlayersCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetLevelCommand;
 import com.airijko.endlessleveling.commands.subcommands.SetLevelCommand;
 import com.airijko.endlessleveling.commands.subcommands.StatTestCommand;
 import com.airijko.endlessleveling.ui.SkillsUIPage;
+import com.airijko.endlessleveling.ui.PartyUIPage;
+import com.airijko.endlessleveling.ui.LeaderboardsUIPage;
+import com.airijko.endlessleveling.ui.ProfileUIPage;
+import com.airijko.endlessleveling.ui.SettingsUIPage;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
@@ -29,6 +34,18 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
         this.addSubCommand(new ApplyModifiersCommand());
         this.addSubCommand(new StatTestCommand());
         this.addSubCommand(new ResetAllPlayersCommand());
+
+        addGuiShortcut("party", "Open the EndlessLeveling Party page",
+                playerRef -> new PartyUIPage(playerRef, CustomPageLifetime.CanDismiss));
+        addGuiShortcut("leaderboards", "Open the EndlessLeveling Leaderboards page",
+                playerRef -> new LeaderboardsUIPage(playerRef, CustomPageLifetime.CanDismiss));
+        addGuiShortcut("settings", "Open the EndlessLeveling Settings page",
+                playerRef -> new SettingsUIPage(playerRef, CustomPageLifetime.CanDismiss));
+        addGuiShortcut("profile", "Open the EndlessLeveling Profile page",
+                playerRef -> new ProfileUIPage(playerRef, CustomPageLifetime.CanDismiss));
+        OpenPageSubCommand attributes = addGuiShortcut("attributes", "Open the EndlessLeveling Skills page",
+                playerRef -> new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));
+        attributes.addAliases("skillpoints", "sp", "spoints");
     }
 
     @Override
@@ -37,11 +54,21 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
     }
 
     @Override
-    protected void execute(@Nonnull CommandContext commandContext, @Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+    protected void execute(@Nonnull CommandContext commandContext, @Nonnull Store<EntityStore> store,
+            @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
         Player player = commandContext.senderAs(Player.class);
 
         CompletableFuture.runAsync(() -> {
-            player.getPageManager().openCustomPage(ref, store, new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));
+            player.getPageManager().openCustomPage(ref, store,
+                    new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));
         }, world);
+    }
+
+    private OpenPageSubCommand addGuiShortcut(String keyword,
+            String description,
+            OpenPageSubCommand.PageFactory factory) {
+        OpenPageSubCommand command = new OpenPageSubCommand(keyword, description, factory);
+        this.addSubCommand(command);
+        return command;
     }
 }

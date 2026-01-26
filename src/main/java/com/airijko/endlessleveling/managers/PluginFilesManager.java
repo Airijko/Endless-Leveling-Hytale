@@ -13,14 +13,18 @@ public class PluginFilesManager {
 
     private static final String PLUGIN_FOLDER_NAME = "EndlessLeveling";
     private static final String PLAYERDATA_FOLDER_NAME = "playerdata";
+    private static final String PARTYDATA_FOLDER_NAME = "partydata";
+    private static final String PARTYDATA_FILE_NAME = "parties.json";
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
     private final JavaPlugin plugin;
     private final File pluginFolder;
     private final File playerDataFolder;
+    private final File partyDataFolder;
 
     private final File configFile;
     private final File levelingFile;
+    private final File partyDataFile;
 
     public PluginFilesManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -30,11 +34,13 @@ public class PluginFilesManager {
         }
         this.pluginFolder = modsPath.resolve(PLUGIN_FOLDER_NAME).toFile();
         this.playerDataFolder = new File(pluginFolder, PLAYERDATA_FOLDER_NAME);
+        this.partyDataFolder = new File(pluginFolder, PARTYDATA_FOLDER_NAME);
 
         createFolders();
 
         this.configFile = initYamlFile("config.yml");
         this.levelingFile = initYamlFile("leveling.yml");
+        this.partyDataFile = initPartyDataFile();
     }
 
     /** Create the plugin folder and player data folder */
@@ -42,6 +48,7 @@ public class PluginFilesManager {
         try {
             Files.createDirectories(pluginFolder.toPath());
             Files.createDirectories(playerDataFolder.toPath());
+            Files.createDirectories(partyDataFolder.toPath());
             LOGGER.atInfo().log("Plugin folders initialized at: %s", pluginFolder.getAbsolutePath());
         } catch (IOException e) {
             throw new IllegalStateException("Unable to create EndlessLeveling folders", e);
@@ -57,6 +64,10 @@ public class PluginFilesManager {
         return playerDataFolder;
     }
 
+    public File getPartyDataFolder() {
+        return partyDataFolder;
+    }
+
     public File getConfigFile() {
         return configFile;
     }
@@ -68,6 +79,10 @@ public class PluginFilesManager {
     /** Convenience method for player data file */
     public File getPlayerDataFile(UUID uuid) {
         return new File(playerDataFolder, uuid + ".yml");
+    }
+
+    public File getPartyDataFile() {
+        return partyDataFile;
     }
 
     /**
@@ -97,5 +112,21 @@ public class PluginFilesManager {
         }
 
         return yamlFile;
+    }
+
+    private File initPartyDataFile() {
+        File jsonFile = new File(partyDataFolder, PARTYDATA_FILE_NAME);
+        if (jsonFile.exists()) {
+            LOGGER.atFine().log("Party data file already exists at %s", jsonFile.getAbsolutePath());
+            return jsonFile;
+        }
+
+        try (FileWriter writer = new FileWriter(jsonFile)) {
+            writer.write("{\n  \"parties\": []\n}\n");
+            LOGGER.atInfo().log("Party data file created at %s", jsonFile.getAbsolutePath());
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to create party data file", e);
+        }
+        return jsonFile;
     }
 }

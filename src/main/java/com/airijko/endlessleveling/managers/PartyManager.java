@@ -2,44 +2,61 @@ package com.airijko.endlessleveling.managers;
 
 import com.airijko.endlessleveling.data.PlayerData;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.Universe;
 
 import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Simple in-memory party system.
- *
- * Parties are ephemeral (not persisted across restarts) and are
+ * Party system that persists to disk using a JSON snapshot. Parties are
  * identified by their leader's UUID. XP gains are split evenly between
- * all current members of a party.
+ * all online members of a party.
  */
 public class PartyManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+    private static final Pattern PARTY_PATTERN = Pattern.compile(
+            "\\{\\s*\"leader\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"members\"\\s*:\\s*\\[(.*?)\\]\\s*\\}", Pattern.DOTALL);
+    private static final Pattern MEMBER_PATTERN = Pattern.compile("\"([^\"]+)\"");
 
     private final PlayerDataManager playerDataManager;
     private final LevelingManager levelingManager;
-
+    private final File partyDataFile;
 
     private final Map<UUID, Party> membershipIndex = new HashMap<>();
     private final Map<UUID, UUID> pendingInvites = new HashMap<>();
 
     public PartyManager(@Nonnull PlayerDataManager playerDataManager,
-                        @Nonnull LevelingManager levelingManager) {
+            @Nonnull LevelingManager levelingManager,
+            @Nonnull PluginFilesManager filesManager) {
         this.playerDataManager = playerDataManager;
         this.levelingManager = levelingManager;
+        this.partyDataFile = filesManager.getPartyDataFile();
+        loadPersistedParties();
         LOGGER.atInfo().log("PartyManager initialized.");
     }
 
     /**
      * Create a new party with the given leader.
      *
-     * @return true if a new party was created, false if the player is already in a party.
+     * @return true if a new party was created, false if the player is already in a
+     *         party.
      */
     public synchronized boolean createParty(@Nonnull UUID leaderUuid) {
         if (membershipIndex.containsKey(leaderUuid)) {
@@ -50,6 +67,7 @@ public class PartyManager {
         Party party = new Party(leaderUuid);
         party.members.add(leaderUuid);
         membershipIndex.put(leaderUuid, party);
+        persistParties();
 
         LOGGER.atInfo().log("Created new party with leader %s", leaderUuid);
         return true;
@@ -75,6 +93,7 @@ public class PartyManager {
 
         leaderParty.members.add(memberUuid);
         membershipIndex.put(memberUuid, leaderParty);
+        persistParties();
         LOGGER.atInfo().log("Player %s joined party led by %s", memberUuid, leaderUuid);
         return true;
     }
@@ -90,12 +109,14 @@ public class PartyManager {
         }
 
         if (party.leader.equals(memberUuid)) {
-            // Leader leaving disbands the party.
-            disbandParty(memberUuid);
-            return true;
+            notifyLeaderCannotLeave(memberUuid);
+            LOGGER.atWarning().log("Leader %s attempted to leave their party; instructing to disband instead.",
+                    memberUuid);
+            return false;
         }
 
         internalLeave(memberUuid, party);
+        persistParties();
         LOGGER.atInfo().log("Player %s left party led by %s", memberUuid, party.leader);
         return true;
     }
@@ -115,28 +136,21 @@ public class PartyManager {
         }
         // Remove any pending invites issued by this leader.
         pendingInvites.entrySet().removeIf(entry -> leaderUuid.equals(entry.getValue()));
+        persistParties();
         LOGGER.atInfo().log("Party led by %s disbanded (%d members).", leaderUuid, party.members.size());
         return true;
     }
 
     /**
-     * Remove a player from any party they are in (e.g. on disconnect).
+     * Handle a player disconnecting from the server. Parties remain intact,
+     * but we remove any pending invites involving the player and snapshot
+     * the current party state.
      */
-    public synchronized void removePlayer(@Nonnull UUID uuid) {
-        Party party = membershipIndex.get(uuid);
-        if (party == null) {
-            return;
-        }
-        if (party.leader.equals(uuid)) {
-            disbandParty(uuid);
-        } else {
-            internalLeave(uuid, party);
-            LOGGER.atInfo().log("Player %s removed from party led by %s (disconnect).", uuid, party.leader);
-        }
-
-        // Clear any pending invite for or from this player.
+    public synchronized void handlePlayerDisconnect(@Nonnull UUID uuid) {
         pendingInvites.remove(uuid);
         pendingInvites.entrySet().removeIf(entry -> uuid.equals(entry.getValue()));
+        persistParties();
+        LOGGER.atFine().log("Handled disconnect bookkeeping for %s", uuid);
     }
 
     /**
@@ -226,24 +240,26 @@ public class PartyManager {
             return;
         }
 
-        int size = party.members.size();
-        if (size <= 0) {
+        List<UUID> activeMembers = new ArrayList<>();
+        for (UUID member : party.members) {
+            PlayerData data = playerDataManager.get(member);
+            if (data != null) {
+                activeMembers.add(member);
+            }
+        }
+
+        if (activeMembers.isEmpty()) {
             levelingManager.addXp(sourcePlayerUuid, totalXp);
             return;
         }
 
-        double share = totalXp / (double) size;
-        for (UUID member : party.members) {
-            // Only grant to players with loaded PlayerData to match the
-            // rest of the plugin's behavior.
-            PlayerData data = playerDataManager.get(member);
-            if (data != null) {
-                levelingManager.addXp(member, share);
-            }
+        double share = totalXp / (double) activeMembers.size();
+        for (UUID member : activeMembers) {
+            levelingManager.addXp(member, share);
         }
 
-        LOGGER.atInfo().log("Distributed %f XP from %s among %d party members (%.3f each).",
-                totalXp, sourcePlayerUuid, size, share);
+        LOGGER.atInfo().log("Distributed %f XP from %s among %d active party members (%.3f each).",
+                totalXp, sourcePlayerUuid, activeMembers.size(), share);
     }
 
     private void internalLeave(@Nonnull UUID memberUuid, @Nonnull Party party) {
@@ -251,9 +267,162 @@ public class PartyManager {
         membershipIndex.remove(memberUuid);
     }
 
+    private void notifyLeaderCannotLeave(UUID leaderUuid) {
+        PlayerRef playerRef = Universe.get().getPlayer(leaderUuid);
+        if (playerRef == null) {
+            LOGGER.atFine().log("Leader %s is offline; cannot send leave warning message.", leaderUuid);
+            return;
+        }
+
+        Message warning = Message
+                .raw("You cannot leave the party while you are the leader. Use /party disband or disband button instead.")
+                .color("#ff6666");
+        playerRef.sendMessage(warning);
+    }
+
+    public synchronized void saveAllParties() {
+        persistParties();
+    }
+
+    private void loadPersistedParties() {
+        if (partyDataFile == null || !partyDataFile.exists()) {
+            LOGGER.atFine().log("No existing party data file found; starting fresh.");
+            return;
+        }
+
+        try {
+            String content = Files.readString(partyDataFile.toPath(), StandardCharsets.UTF_8);
+            if (content == null || content.isBlank()) {
+                LOGGER.atFine().log("Party data file %s is empty.", partyDataFile.getName());
+                return;
+            }
+
+            List<PersistedParty> snapshots = parsePartiesJson(content);
+            if (snapshots.isEmpty()) {
+                LOGGER.atFine().log("Party data file %s contained no parties.", partyDataFile.getName());
+                return;
+            }
+
+            membershipIndex.clear();
+            for (PersistedParty snapshot : snapshots) {
+                Party party = new Party(snapshot.leader());
+                party.members.addAll(snapshot.members());
+                for (UUID member : party.members) {
+                    membershipIndex.put(member, party);
+                }
+            }
+            LOGGER.atInfo().log("Loaded %d parties from %s", snapshots.size(), partyDataFile.getName());
+        } catch (IOException e) {
+            LOGGER.atSevere().log("Failed to load parties from %s: %s", partyDataFile.getName(), e.getMessage());
+        }
+    }
+
+    private void persistParties() {
+        if (partyDataFile == null) {
+            return;
+        }
+
+        List<Party> parties = collectActiveParties();
+        String json = serializeParties(parties);
+        try {
+            Files.writeString(partyDataFile.toPath(), json, StandardCharsets.UTF_8);
+            LOGGER.atFine().log("Persisted %d parties to %s", parties.size(), partyDataFile.getName());
+        } catch (IOException e) {
+            LOGGER.atSevere().log("Failed to persist parties to %s: %s", partyDataFile.getName(), e.getMessage());
+        }
+    }
+
+    private List<Party> collectActiveParties() {
+        Map<UUID, Party> partiesByLeader = new HashMap<>();
+        for (Map.Entry<UUID, Party> entry : membershipIndex.entrySet()) {
+            Party party = entry.getValue();
+            if (party != null && party.leader.equals(entry.getKey())) {
+                partiesByLeader.put(party.leader, party);
+            }
+        }
+
+        List<UUID> sortedLeaders = new ArrayList<>(partiesByLeader.keySet());
+        sortedLeaders.sort(UUID::compareTo);
+
+        List<Party> sortedParties = new ArrayList<>(sortedLeaders.size());
+        for (UUID leader : sortedLeaders) {
+            sortedParties.add(partiesByLeader.get(leader));
+        }
+        return sortedParties;
+    }
+
+    private String serializeParties(List<Party> parties) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("{\n  \"parties\": [");
+        if (!parties.isEmpty()) {
+            builder.append("\n");
+        }
+
+        for (int i = 0; i < parties.size(); i++) {
+            Party party = parties.get(i);
+            builder.append("    {\n");
+            builder.append("      \"leader\": \"").append(party.leader).append("\",\n");
+            builder.append("      \"members\": [");
+            List<UUID> members = new ArrayList<>(party.members);
+            members.sort(UUID::compareTo);
+            for (int j = 0; j < members.size(); j++) {
+                builder.append("\"").append(members.get(j)).append("\"");
+                if (j < members.size() - 1) {
+                    builder.append(", ");
+                }
+            }
+            builder.append("]\n");
+            builder.append("    }");
+            if (i < parties.size() - 1) {
+                builder.append(",\n");
+            } else {
+                builder.append("\n");
+            }
+        }
+
+        if (parties.isEmpty()) {
+            builder.append("]\n");
+        } else {
+            builder.append("  ]\n");
+        }
+        builder.append("}\n");
+        return builder.toString();
+    }
+
+    private List<PersistedParty> parsePartiesJson(String json) {
+        List<PersistedParty> result = new ArrayList<>();
+        Matcher matcher = PARTY_PATTERN.matcher(json);
+        while (matcher.find()) {
+            try {
+                UUID leader = UUID.fromString(matcher.group(1));
+                String membersBlock = matcher.group(2);
+                Set<UUID> members = new LinkedHashSet<>();
+                Matcher memberMatcher = MEMBER_PATTERN.matcher(membersBlock);
+                while (memberMatcher.find()) {
+                    String raw = memberMatcher.group(1);
+                    try {
+                        members.add(UUID.fromString(raw));
+                    } catch (IllegalArgumentException invalidMember) {
+                        LOGGER.atWarning().log("Ignoring invalid party member UUID %s in %s", raw,
+                                partyDataFile.getName());
+                    }
+                }
+                members.add(leader);
+                result.add(new PersistedParty(leader, members));
+            } catch (IllegalArgumentException invalidLeader) {
+                LOGGER.atWarning().log("Ignoring invalid party entry in %s due to UUID parse error.",
+                        partyDataFile.getName());
+            }
+        }
+        return result;
+    }
+
+    private record PersistedParty(UUID leader, Set<UUID> members) {
+    }
+
     private static final class Party {
         private final UUID leader;
-        private final Set<UUID> members = new HashSet<>();
+        private final Set<UUID> members = new LinkedHashSet<>();
 
         private Party(UUID leader) {
             this.leader = leader;

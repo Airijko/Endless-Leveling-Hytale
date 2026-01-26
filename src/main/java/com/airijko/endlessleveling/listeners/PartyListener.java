@@ -18,6 +18,6 @@ public class PartyListener {
         if (playerRef == null) {
             return;
         }
-        partyManager.removePlayer(playerRef.getUuid());
+        partyManager.handlePlayerDisconnect(playerRef.getUuid());
     }
 }

@@ -76,7 +76,7 @@ public class EndlessLeveling extends JavaPlugin {
         skillManager = new SkillManager(filesManager);
         playerDataManager = new PlayerDataManager(filesManager, skillManager);
         levelingManager = new LevelingManager(playerDataManager, filesManager, skillManager);
-        partyManager = new PartyManager(playerDataManager, levelingManager);
+        partyManager = new PartyManager(playerDataManager, levelingManager, filesManager);
 
         // Register event listeners
         PlayerDataListener playerDataListener = new PlayerDataListener(playerDataManager);
@@ -104,6 +104,10 @@ public class EndlessLeveling extends JavaPlugin {
         if (playerDataManager != null) {
             playerDataManager.saveAll();
             LOGGER.atInfo().log("Server shutting down: all player data saved.");
+        }
+        if (partyManager != null) {
+            partyManager.saveAllParties();
+            LOGGER.atInfo().log("Server shutting down: all party data saved.");
         }
     }
 
