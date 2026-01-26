@@ -2,12 +2,17 @@
   "Group": "com.airijko",
   "Name": "endlessleveling",
   "Version": "2.1",
-  "Main": "com.airijko.endlessleveling.endlesslevelinghytale",
-  "ServerVersion": "*",
+  "Description": "Endless Leveling by Airijko",
   "Authors": [
     {
       "Name": "Airijko",
       "Email": "airijko@email.com"
     }
-  ]
+  ],
+  "ServerVersion": "*",
+  "Dependencies": {},
+  "OptionalDependencies": { "Buuz135:MultipleHUD": ">=1.0.1" },
+  "DisabledByDefault": false,
+  "IncludesAssetPack": true,
+  "Main": "com.airijko.endlessleveling.EndlessLeveling"
 }

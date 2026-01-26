@@ -3,7 +3,7 @@ package com.airijko.endlessleveling.ui;
 import javax.annotation.Nonnull;
 
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.Endlesslevelinghytale;
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.managers.PartyManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.hypixel.hytale.component.Ref;
@@ -31,8 +31,8 @@ public class PartyUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     public PartyUIPage(@Nonnull PlayerRef playerRef,
             @Nonnull CustomPageLifetime lifetime) {
         super(playerRef, lifetime, SkillsUIPage.Data.CODEC);
-        this.partyManager = Endlesslevelinghytale.getInstance().getPartyManager();
-        this.playerDataManager = Endlesslevelinghytale.getInstance().getPlayerDataManager();
+        this.partyManager = EndlessLeveling.getInstance().getPartyManager();
+        this.playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
     }
 
     @Override
@@ -141,19 +141,15 @@ public class PartyUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         }
 
         if (partyManager.invitePlayer(sender.getUuid(), targetUuid)) {
-            sender.sendMessage(
-                    Message.raw("You invited " + resolveName(targetUuid) + " to your party.").color("#00ff00"));
+            sender.sendMessage(Message.raw("You invited " + resolveName(targetUuid) + " to your party.").color("#00ff00"));
 
             PlayerRef targetRef = Universe.get().getPlayer(targetUuid);
             if (targetRef != null) {
-                targetRef.sendMessage(Message
-                        .raw(resolveName(sender.getUuid()) + " invited you to their party. Use /skills party join "
-                                + resolveName(sender.getUuid()) + " to accept.")
-                        .color("#4fd7f7"));
+                targetRef.sendMessage(Message.raw(resolveName(sender.getUuid()) + " invited you to their party. Use /skills party join "
+                        + resolveName(sender.getUuid()) + " to accept.").color("#4fd7f7"));
             }
         } else {
-            sender.sendMessage(
-                    Message.raw("Could not send party invite. Make sure you are the party leader.").color("#ff0000"));
+            sender.sendMessage(Message.raw("Could not send party invite. Make sure you are the party leader.").color("#ff0000"));
         }
     }
 
@@ -216,3 +212,4 @@ public class PartyUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return uuid.toString();
     }
 }
+

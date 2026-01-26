@@ -4,7 +4,7 @@ import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.Endlesslevelinghytale;
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.query.Query;
@@ -26,7 +26,7 @@ import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
  * damage dealt.
  */
 public class PlayerCombatListener extends DamageEventSystem {
-    private final SkillManager skillManager = Endlesslevelinghytale.getInstance().getSkillManager();
+    private final SkillManager skillManager = EndlessLeveling.getInstance().getSkillManager();
 
     @Override
     @Nonnull
@@ -55,8 +55,7 @@ public class PlayerCombatListener extends DamageEventSystem {
             if (attackerPlayer != null && attackerPlayer.isValid()) {
                 // Get the player's PlayerData (assume a PlayerDataManager is accessible
                 // statically or via singleton)
-                PlayerData playerData = com.airijko.endlessleveling.Endlesslevelinghytale.getInstance()
-                        .getPlayerDataManager()
+                PlayerData playerData = com.airijko.endlessleveling.EndlessLeveling.getInstance().getPlayerDataManager()
                         .get(attackerPlayer.getUuid());
                 if (playerData != null) {
                     // Calculate strength bonus using SkillManager

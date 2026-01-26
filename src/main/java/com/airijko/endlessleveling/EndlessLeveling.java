@@ -18,9 +18,9 @@ import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import javax.annotation.Nonnull;
 import java.io.File;
 
-public class Endlesslevelinghytale extends JavaPlugin {
+public class EndlessLeveling extends JavaPlugin {
 
-    private static Endlesslevelinghytale INSTANCE;
+    private static EndlessLeveling INSTANCE;
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
     // ------------------------
@@ -56,11 +56,11 @@ public class Endlesslevelinghytale extends JavaPlugin {
     }
 
     /** Singleton access to the mod instance */
-    public static Endlesslevelinghytale getInstance() {
+    public static EndlessLeveling getInstance() {
         return INSTANCE;
     }
 
-    public Endlesslevelinghytale(@Nonnull JavaPluginInit init) {
+    public EndlessLeveling(@Nonnull JavaPluginInit init) {
         super(init);
         INSTANCE = this;
     }

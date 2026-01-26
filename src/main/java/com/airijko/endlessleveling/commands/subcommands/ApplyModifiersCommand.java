@@ -1,7 +1,7 @@
 package com.airijko.endlessleveling.commands.subcommands;
 
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.Endlesslevelinghytale;
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.managers.ConfigManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.SkillManager;
@@ -29,9 +29,9 @@ public class ApplyModifiersCommand extends AbstractPlayerCommand {
     public ApplyModifiersCommand() {
         super("applymodifiers", "Apply health modifier for testing");
 
-        this.playerDataManager = Endlesslevelinghytale.getInstance().getPlayerDataManager();
-        this.skillManager = Endlesslevelinghytale.getInstance().getSkillManager();
-        this.configManager = Endlesslevelinghytale.getInstance().getConfigManager();
+        this.playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
+        this.skillManager = EndlessLeveling.getInstance().getSkillManager();
+        this.configManager = EndlessLeveling.getInstance().getConfigManager();
     }
 
     @Override
@@ -40,7 +40,8 @@ public class ApplyModifiersCommand extends AbstractPlayerCommand {
             @Nonnull Store<EntityStore> store,
             @Nonnull Ref<EntityStore> ref,
             @Nonnull PlayerRef senderRef,
-            @Nonnull World world) {
+            @Nonnull World world
+    ) {
         CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
 
         if (playerDataManager == null) {

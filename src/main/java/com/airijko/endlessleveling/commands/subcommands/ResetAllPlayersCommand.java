@@ -1,7 +1,7 @@
 package com.airijko.endlessleveling.commands.subcommands;
 
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.Endlesslevelinghytale;
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.SkillManager;
@@ -29,17 +29,17 @@ public class ResetAllPlayersCommand extends AbstractPlayerCommand {
 
     public ResetAllPlayersCommand() {
         super("resetallplayers", "Reset every loaded player's level to 1");
-        this.playerDataManager = Endlesslevelinghytale.getInstance().getPlayerDataManager();
-        this.levelingManager = Endlesslevelinghytale.getInstance().getLevelingManager();
-        this.skillManager = Endlesslevelinghytale.getInstance().getSkillManager();
+        this.playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
+        this.levelingManager = EndlessLeveling.getInstance().getLevelingManager();
+        this.skillManager = EndlessLeveling.getInstance().getSkillManager();
     }
 
     @Override
     protected void execute(@Nonnull CommandContext commandContext,
-            @Nonnull Store<EntityStore> store,
-            @Nonnull Ref<EntityStore> ref,
-            @Nonnull PlayerRef senderRef,
-            @Nonnull World world) {
+                            @Nonnull Store<EntityStore> store,
+                            @Nonnull Ref<EntityStore> ref,
+                            @Nonnull PlayerRef senderRef,
+                            @Nonnull World world) {
         CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
 
         var cachedPlayers = playerDataManager.getAllCached();
