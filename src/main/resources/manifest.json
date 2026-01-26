@@ -1,0 +1,13 @@
+{
+  "Group": "com.airijko",
+  "Name": "endlessleveling",
+  "Version": "1.0.0",
+  "Main": "com.airijko.endlessleveling.Endlessleveling",
+  "ServerVersion": "*",
+  "Authors": [
+    {
+      "Name": "Airijko",
+      "Email": "airijko@email.com"
+    }
+  ]
+}
