@@ -24,7 +24,8 @@ public class LevelingManager {
     private double multiplier;
     private int levelCap;
 
-    public LevelingManager(PlayerDataManager playerDataManager, PluginFilesManager filesManager, SkillManager skillManager) {
+    public LevelingManager(PlayerDataManager playerDataManager, PluginFilesManager filesManager,
+            SkillManager skillManager) {
         this.playerDataManager = playerDataManager;
         this.configManager = new ConfigManager(filesManager.getLevelingFile());
         this.skillManager = skillManager;
@@ -49,15 +50,18 @@ public class LevelingManager {
             if (powIndex >= 0 && powIndex + 1 < expr.length()) {
                 return Double.parseDouble(expr.substring(powIndex + 1).trim());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return fallback;
     }
 
     public void addXp(UUID uuid, double xpAmount) {
-        if (xpAmount <= 0) return;
+        if (xpAmount <= 0)
+            return;
 
         PlayerData player = playerDataManager.get(uuid);
-        if (player == null) return;
+        if (player == null)
+            return;
 
         if (player.getLevel() >= levelCap) {
             if (player.getXp() != 0) {
@@ -72,7 +76,7 @@ public class LevelingManager {
         player.setXp(player.getXp() + xpAmount);
 
         // Notify XP gain
-    notifyXpGain(player, xpAmount);
+        notifyXpGain(player, xpAmount);
 
         // Handle level-ups
         while (player.getLevel() < levelCap && player.getXp() >= getXpForNextLevel(player.getLevel())) {
@@ -126,10 +130,12 @@ public class LevelingManager {
         }
 
         PlayerRef playerRef = Universe.get().getPlayer(player.getUuid());
-        if (playerRef == null) return;
+        if (playerRef == null)
+            return;
 
         var packetHandler = playerRef.getPacketHandler();
-        var primaryMessage = Message.raw("Gained " + xpAmount + " XP!").color("#00FF00");
+        int displayedXp = (int) Math.round(xpAmount);
+        var primaryMessage = Message.raw("Gained " + displayedXp + " XP!").color("#00FF00");
         var secondaryMessage = Message.raw("Current level: " + player.getLevel()).color("#228B22");
         var icon = new ItemStack("Ingredient_Life_Essence", 1).toPacket();
         NotificationUtil.sendNotification(packetHandler, primaryMessage, secondaryMessage, icon);
@@ -137,7 +143,8 @@ public class LevelingManager {
 
     private void notifyLevelUp(PlayerData player) {
         PlayerRef playerRef = Universe.get().getPlayer(player.getUuid());
-        if (playerRef == null) return;
+        if (playerRef == null)
+            return;
 
         // Level-Up Title
         Message primaryMessage = Message.raw("Level Up!").color("#FFD700");
@@ -145,20 +152,23 @@ public class LevelingManager {
         EventTitleUtil.showEventTitleToPlayer(playerRef, primaryMessage, secondaryMessage, true, null, 5, 1, 1);
 
         // Skill point notification
-        var notifPrimary = Message.raw("You gained " + skillManager.getSkillPointsPerLevel() + " skill points!").color("#ffc300");
+        var notifPrimary = Message.raw("You gained " + skillManager.getSkillPointsPerLevel() + " skill points!")
+                .color("#ffc300");
         var notifSecondary = Message.join(
                 Message.raw("Use ").color("#ff9d00"),
                 Message.raw("/skills").color("#4fd7f7"),
-                Message.raw(" to allocate your points").color("#ff9d00")
-        );
+                Message.raw(" to allocate your points").color("#ff9d00"));
         var icon = new ItemStack("Ingredient_Ice_Essence", 1).toPacket();
         NotificationUtil.sendNotification(playerRef.getPacketHandler(), notifPrimary, notifSecondary, icon);
     }
 
     public void setPlayerLevel(PlayerData player, int newLevel) {
-        if (player == null) return;
-        if (newLevel < 1) newLevel = 1;
-        if (newLevel > levelCap) newLevel = levelCap;
+        if (player == null)
+            return;
+        if (newLevel < 1)
+            newLevel = 1;
+        if (newLevel > levelCap)
+            newLevel = levelCap;
 
         int oldLevel = player.getLevel();
         player.setLevel(newLevel);
