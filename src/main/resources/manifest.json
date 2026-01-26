@@ -1,7 +1,7 @@
 {
   "Group": "com.airijko",
   "Name": "endlessleveling",
-  "Version": "1.0.0",
+  "Version": "2.1",
   "Main": "com.airijko.endlessleveling.Endlessleveling",
   "ServerVersion": "*",
   "Authors": [
