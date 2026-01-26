@@ -9,4 +9,45 @@ skill_attributes: # Value per level
   stamina: 0.2 # Stamina
   intelligence: 0.5 # Mana
 
+passives:
+  life_steal:
+    enabled: true
+    unlock_level: 25
+    base_value: 4.0 # % of damage converted to health at passive level 1
+    value_per_level: 2.0 # Additional % per passive level
+    max_level: 10
+    tier_interval: 7 # Gain 1 passive level every 7 player levels
+
+  regeneration:
+    enabled: true
+    unlock_level: 20
+    base_value: 5.0 # Health/sec out of combat at passive level 1
+    value_per_level: 2.5 # Additional health/sec per passive level
+    max_level: 10
+    tier_interval: 6 # Gain 1 passive level every 6 player levels
+
+  signature_gain:
+    enabled: true
+    unlock_level: 15
+    base_value: 20.0 # % bonus to Signature gain at passive level 1
+    value_per_level: 10.0 # Additional % per passive level
+    max_level: 10
+    tier_interval: 6 # Gain 1 passive level every 6 player levels
+
+  mana_regeneration:
+    enabled: true
+    unlock_level: 10
+    base_value: 2.0 # Mana/sec at passive level 1
+    value_per_level: 1.0 # Additional mana/sec per passive level
+    max_level: 10
+    tier_interval: 5 # Gain 1 passive level every 5 player levels
+
+  stamina_regeneration:
+    enabled: true
+    unlock_level: 5
+    base_value: 1.0 # Stamina/sec at passive level 1
+    value_per_level: 0.5 # Additional mana/sec per passive level
+    max_level: 10
+    tier_interval: 5 # Gain 1 passive level every 5 player levels
+
 enable_logging: false # Enable or disable logging
