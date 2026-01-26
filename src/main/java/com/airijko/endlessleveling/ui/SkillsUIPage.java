@@ -61,13 +61,14 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 // Load UI
                 ui.append("Pages/SkillsPage.ui");
 
-                // Bind left navigation events (Profile / Skills / Party / Leaderboards / Settings)
+                // Bind left navigation events (Profile / Skills / Party / Leaderboards /
+                // Settings)
                 NavUIHelper.bindNavEvents(events);
 
                 // -----------------------------
                 // UI EVENT BINDINGS (CRITICAL)
                 // -----------------------------
-                
+
                 ui.set("#LifeForceLabel.Text", "Life Force");
                 ui.set("#StrengthLabel.Text", "Strength");
                 ui.set("#DefenseLabel.Text", "Defense");
@@ -92,7 +93,7 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 }
 
                 // Footer buttons
-                events.addEventBinding(Activating, "#ResetSkills", of("Action", "reset"), false);
+                events.addEventBinding(Activating, "#ResetSkills", of("Action", "undo"), false);
                 events.addEventBinding(Activating, "#ApplySkills", of("Action", "apply"), false);
 
                 // Get PlayerData
@@ -265,8 +266,10 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                                                                                 playerRef.getUuid());
                                                                         }
                                                                 } else if ("sub".equals(op)) {
-                                                                        int originalLevel = Math.max(MIN_ATTRIBUTE_LEVEL,
-                                                                                        playerData.getPlayerSkillAttributeLevel(type));
+                                                                        int originalLevel = Math.max(
+                                                                                        MIN_ATTRIBUTE_LEVEL,
+                                                                                        playerData.getPlayerSkillAttributeLevel(
+                                                                                                        type));
                                                                         int availableToSub = Math.max(0,
                                                                                         current - originalLevel);
                                                                         int toSub = Math.min(amount, availableToSub);
@@ -386,7 +389,8 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
                 public String action;
 
-                // Optional search query used by pages that support filtering lists (e.g. party invites).
+                // Optional search query used by pages that support filtering lists (e.g. party
+                // invites).
                 public String searchQuery;
 
                 public Data() {
