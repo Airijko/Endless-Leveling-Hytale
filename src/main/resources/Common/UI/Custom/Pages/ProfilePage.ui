@@ -1,0 +1,196 @@
+$C = "../Common.ui";
+$Nav = "Nav/LeftNavPanel.ui";
+
+@CustomStyle = TextButtonStyle(
+    Default: (Background: $C.@DefaultSquareButtonDefaultBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Hovered: (Background: $C.@DefaultSquareButtonHoveredBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Pressed: (Background: $C.@DefaultSquareButtonPressedBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Disabled: (Background: $C.@DefaultSquareButtonDisabledBackground, LabelStyle: $C.@DefaultButtonDisabledLabelStyle),
+    Sounds: $C.@ButtonSounds,
+);
+
+@ButtonClusterWidth = 180;
+
+$C.@PageOverlay {
+    $C.@Container {
+        Anchor: (Width: 800, Height: 700);
+        #Title {
+            Group {
+                $C.@Title {
+                    @Text = "ENDLESS LEVELING";
+                }
+            }
+        }
+
+        #Content {
+            LayoutMode: Left;
+            Padding: (Full: 0);
+
+            // ================= LEFT PANEL =================
+            $Nav.@LeftNavPanel {}
+            
+            // ================= RIGHT PANEL =================
+            Group #RightPanel {
+                FlexWeight: 1;
+                LayoutMode: Top;
+                Anchor: (Right: 7, Bottom: 7);
+
+                // -------- Title --------
+                Label #PlayerNameValue {
+                    Anchor: (Height: 48);
+                    Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true);
+                    Padding: (Horizontal: 16, Top: 8);
+                }
+
+                Group {
+                    Anchor: (Height: 1);
+                    Background: #2b3542;
+                }
+
+                Group { Anchor: (Height: 10); }
+
+                // -------- PLAYER OVERVIEW --------
+                Group #Overview {
+                    LayoutMode: Top;
+                    Padding: (Full: 16);
+
+                    Group {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 4);
+
+                        Label { Style: $C.@DefaultLabelStyle; Text: "Level:"; FlexWeight: 1; }
+                        Label #PlayerLevelValue { Style: $C.@DefaultLabelStyle; Text: "1"; FlexWeight: 2; }
+                    }
+
+                    Group {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 4);
+
+                        Label { Style: $C.@DefaultLabelStyle; Text: "XP:"; FlexWeight: 1; }
+                        Label #PlayerXpValue { Style: $C.@DefaultLabelStyle; Text: "0 / 0"; FlexWeight: 2; }
+                    }
+
+                    Group {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 4);
+
+                        Label { Style: $C.@DefaultLabelStyle; Text: "Skill Points:"; FlexWeight: 1; }
+                        Label #SkillPointsValue { Style: $C.@DefaultLabelStyle; Text: "0"; FlexWeight: 2; }
+                    }
+                }
+
+                Group {
+                    Anchor: (Height: 1);
+                    Background: #2b3542;
+                }
+
+                Group { Anchor: (Height: 10); }
+
+                // -------- AMPLIFIED STATS (BY SKILL) --------
+                Group #AmplifiedStats {
+                    LayoutMode: Top;
+                    Padding: (Full: 16);
+
+                    Label {
+                        Text: "Amplified Skill Stats";
+                        Style: (FontSize: 18, TextColor: #ffffff, RenderBold: true);
+                        Anchor: (Height: 28);
+                    }
+
+                    Group { Anchor: (Height: 6); }
+
+                    Group #Headers {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 6);
+
+                        Label { Style: $C.@DefaultLabelStyle; Text: "Skill"; FlexWeight: 1; }
+                        Label { Style: $C.@DefaultLabelStyle; Text: "Level"; Anchor: (Width: 60); }
+                        Label { Style: $C.@DefaultLabelStyle; Text: "Value"; Anchor: (Width: 200); }
+                    }
+
+                    // ---------------- LIFE FORCE ----------------
+                    Group #LifeForceRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 4);
+
+                        Label #LifeForceLabel { Style: $C.@DefaultLabelStyle; Text: "Life Force"; FlexWeight: 1; }
+                        Label #LifeForceLevel { Style: $C.@DefaultLabelStyle; Text: "0"; Anchor: (Width: 60); }
+                        Label #LifeForceValue { Style: $C.@DefaultLabelStyle; Text: "0 Health"; Anchor: (Width: 200); }
+                    }
+
+                    // ---------------- STRENGTH ----------------
+                    Group #StrengthRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 4);
+
+                        Label #StrengthLabel { Style: $C.@DefaultLabelStyle; Text: "Strength"; FlexWeight: 1; }
+                        Label #StrengthLevel { Style: $C.@DefaultLabelStyle; Text: "0"; Anchor: (Width: 60); }
+                        Label #StrengthValue { Style: $C.@DefaultLabelStyle; Text: "0% Damage"; Anchor: (Width: 200); }
+                    }
+
+                    // ---------------- DEFENSE ----------------
+                    Group #DefenseRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 4);
+
+                        Label #DefenseLabel { Style: $C.@DefaultLabelStyle; Text: "Defense"; FlexWeight: 1; }
+                        Label #DefenseLevel { Style: $C.@DefaultLabelStyle; Text: "0"; Anchor: (Width: 60); }
+                        Label #DefenseValue { Style: $C.@DefaultLabelStyle; Text: "0% Reduction"; Anchor: (Width: 200); }
+                    }
+
+                    // ---------------- HASTE ----------------
+                    Group #HasteRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 4);
+
+                        Label #HasteLabel { Style: $C.@DefaultLabelStyle; Text: "Haste"; FlexWeight: 1; }
+                        Label #HasteLevel { Style: $C.@DefaultLabelStyle; Text: "0"; Anchor: (Width: 60); }
+                        Label #HasteValue { Style: $C.@DefaultLabelStyle; Text: "0% Speed"; Anchor: (Width: 200); }
+                    }
+
+                    // ---------------- PRECISION ----------------
+                    Group #PrecisionRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 4);
+
+                        Label #PrecisionLabel { Style: $C.@DefaultLabelStyle; Text: "Precision"; FlexWeight: 1; }
+                        Label #PrecisionLevel { Style: $C.@DefaultLabelStyle; Text: "0"; Anchor: (Width: 60); }
+                        Label #PrecisionValue { Style: $C.@DefaultLabelStyle; Text: "0% Crit Chance"; Anchor: (Width: 200); }
+                    }
+
+                    // ---------------- FEROCITY ----------------
+                    Group #FerocityRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 4);
+
+                        Label #FerocityLabel { Style: $C.@DefaultLabelStyle; Text: "Ferocity"; FlexWeight: 1; }
+                        Label #FerocityLevel { Style: $C.@DefaultLabelStyle; Text: "0"; Anchor: (Width: 60); }
+                        Label #FerocityValue { Style: $C.@DefaultLabelStyle; Text: "0% Crit Damage"; Anchor: (Width: 200); }
+                    }
+
+                    // ---------------- STAMINA ----------------
+                    Group #StaminaRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 4);
+
+                        Label #StaminaLabel { Style: $C.@DefaultLabelStyle; Text: "Stamina"; FlexWeight: 1; }
+                        Label #StaminaLevel { Style: $C.@DefaultLabelStyle; Text: "0"; Anchor: (Width: 60); }
+                        Label #StaminaValue { Style: $C.@DefaultLabelStyle; Text: "0 Stamina"; Anchor: (Width: 200); }
+                    }
+
+                    // ---------------- INTELLIGENCE ----------------
+                    Group #IntelligenceRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 4);
+
+                        Label #IntelligenceLabel { Style: $C.@DefaultLabelStyle; Text: "Intelligence"; FlexWeight: 1; }
+                        Label #IntelligenceLevel { Style: $C.@DefaultLabelStyle; Text: "0"; Anchor: (Width: 60); }
+                        Label #IntelligenceValue { Style: $C.@DefaultLabelStyle; Text: "0 Mana"; Anchor: (Width: 200); }
+                    }
+                }
+            }
+        }
+    }
+}
+
+$C.@BackButton {}

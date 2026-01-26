@@ -1,0 +1,107 @@
+@LeftNavButton = MenuItem {
+  Anchor: (Height: 36);
+  Padding: (Left: 16, Right: 16);
+
+  Style: (
+    Default: (
+      LabelStyle: (
+        FontSize: 14,
+        TextColor: #6e7da1,
+        VerticalAlignment: Center,
+        RenderBold: true
+      )
+    ),
+    Hovered: (
+      Background: #121a26,
+      LabelStyle: (
+        FontSize: 14,
+        TextColor: #ffffff,
+        VerticalAlignment: Center,
+        RenderBold: true
+      )
+    )
+  );
+
+  SelectedStyle: (
+    Default: (
+      Background: #121a26,
+      LabelStyle: (
+        FontSize: 14,
+        TextColor: #ffffff,
+        VerticalAlignment: Center,
+        RenderBold: true
+      )
+    )
+  );
+};
+
+@LeftNavPanel = Group {
+  Anchor: (Width: 180, Left: 7, Bottom: 7);
+  Background: #0a1119(0.95);
+  LayoutMode: Top;
+  Padding: (Top: 16, Bottom: 16);
+
+  // ---- Header ----
+  Group {
+    LayoutMode: Top;
+    Padding: (Left: 16, Right: 16);
+
+    Label {
+      Text: "ENDLESS";
+      Anchor: (Height: 22);
+      Style: (
+        FontSize: 16,
+        TextColor: #4a5568,
+        RenderUppercase: true,
+        LetterSpacing: 2
+      );
+    }
+
+    Label {
+      Text: "LEVELING";
+      Anchor: (Height: 28);
+      Style: (
+        FontSize: 21,
+        TextColor: #ffffff,
+        RenderBold: true
+      );
+    }
+  }
+
+  Group { Anchor: (Height: 20); }
+
+  // ---- NAV ITEMS ----
+  Group #NavButtons {
+    LayoutMode: Top;
+
+    @LeftNavButton #NavProfile {
+      Text: "PROFILE";
+    }
+
+    @LeftNavButton #NavSkills {
+      Text: "SKILLS";
+    }
+
+    @LeftNavButton #NavParty {
+      Text: "PARTY";
+    }
+
+    @LeftNavButton #NavLeaderboards {
+      Text: "LEADERBOARDS";
+    }
+
+    @LeftNavButton #NavSettings {
+      Text: "SETTINGS";
+    }
+  }
+
+  Group { FlexWeight: 1; }
+
+  // ---- Footer ----
+  Label {
+    Text: "v2.0";
+    Anchor: (Height: 20);
+    Padding: (Left: 16);
+    Style: (FontSize: 10, TextColor: #4a5568);
+  }
+};

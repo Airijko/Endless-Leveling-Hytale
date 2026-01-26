@@ -1,0 +1,36 @@
+$C = "../../Common.ui";
+
+Group {
+    LayoutMode: Left;
+    Padding: (Vertical: 4);
+
+    Label #Rank {
+        Style: (
+          FontSize: 14,
+          TextColor: #c0c0c0,
+          RenderBold: true
+        );
+        Anchor: (Width: 40);
+        Text: "-";
+    }
+
+    Label #Name {
+        Style: (
+          FontSize: 14,
+          TextColor: #c0c0c0,
+          RenderBold: true
+        );
+        FlexWeight: 1;
+        Text: "-";
+    }
+
+    Label #Level {
+        Style: (
+          FontSize: 14,
+          TextColor: #c0c0c0,
+          RenderBold: true
+        );
+        Anchor: (Width: 80);
+        Text: "-";
+    }
+}

@@ -1,0 +1,12 @@
+# config.yml
+skill_attributes: # Value per level
+  life_force: 2.0 # Health
+  strength: 0.5 # Damage
+  defense: 0.5 # Damage reduction
+  haste: 0.75 # Movement speed
+  precision: 0.8 # Critical chance
+  ferocity: 1.2 # Critical damage
+  stamina: 0.2 # Stamina
+  intelligence: 0.5 # Mana
+
+enable_logging: false # Enable or disable logging

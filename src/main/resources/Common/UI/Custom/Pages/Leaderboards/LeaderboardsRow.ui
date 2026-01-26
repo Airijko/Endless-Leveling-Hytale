@@ -1,0 +1,24 @@
+$C = "../../Common.ui";
+
+Group {
+    LayoutMode: Left;
+    Padding: (Vertical: 4);
+
+    Label #Rank {
+        Style: $C.@DefaultLabelStyle;
+        Anchor: (Width: 40);
+        Text: "-";
+    }
+
+    Label #Name {
+        Style: $C.@DefaultLabelStyle;
+        FlexWeight: 1;
+        Text: "-";
+    }
+
+    Label #Level {
+        Style: $C.@DefaultLabelStyle;
+        Anchor: (Width: 80);
+        Text: "-";
+    }
+}

@@ -1,0 +1,26 @@
+$C = "../Common.ui";
+
+$C.@Container {
+  Anchor: (Left: 30, Bottom: 30, Width: 275, Height: 85);
+
+  #Title {
+    Group {
+      $C.@Title {
+        @Text = "ENDLESS LEVELING";
+      }
+    }
+  }
+
+  #Content {
+    LayoutMode: Bottom;
+    Padding: (Bottom: 10);
+
+    Group {
+      Padding: (Horizontal: 15);
+      LayoutMode: Left;
+
+      Label #PlayerLevelValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 100); }
+      Label #PlayerXpValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 120); }
+    }
+  }
+}

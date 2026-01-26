@@ -1,0 +1,84 @@
+package com.airijko.endlessleveling.listeners;
+
+import com.airijko.endlessleveling.managers.LevelingManager;
+import com.airijko.endlessleveling.managers.PartyManager;
+import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.hypixel.hytale.component.CommandBuffer;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.component.query.Query;
+import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
+import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
+import com.hypixel.hytale.server.core.modules.entity.damage.DeathSystems;
+import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
+import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+
+import java.util.UUID;
+
+import javax.annotation.Nonnull;
+
+public class XpEventListener extends DeathSystems.OnDeathSystem {
+
+    private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+
+    private final PlayerDataManager playerDataManager;
+    private final LevelingManager levelingManager;
+    private final PartyManager partyManager;
+
+    public XpEventListener(PlayerDataManager playerDataManager,
+                           LevelingManager levelingManager,
+                           PartyManager partyManager) {
+        this.playerDataManager = playerDataManager;
+        this.levelingManager = levelingManager;
+        this.partyManager = partyManager;
+        LOGGER.atInfo().log("XpEventListener initialized.");
+    }
+
+    @Override
+    public Query<EntityStore> getQuery() {
+        return Query.any();
+    }
+
+    @Override
+    public void onComponentAdded(
+            @Nonnull Ref<EntityStore> ref,
+            @Nonnull DeathComponent component,
+            @Nonnull Store<EntityStore> store,
+            @Nonnull CommandBuffer<EntityStore> commandBuffer
+    ) {
+        LOGGER.atInfo().log("onComponentAdded called for entity: %s", ref);
+
+        var deathInfo = component.getDeathInfo();
+        if (deathInfo == null) return;
+
+        if (!(deathInfo.getSource() instanceof Damage.EntitySource entitySource)) return;
+
+        var attackerRef = entitySource.getRef();
+        if (!attackerRef.isValid()) return;
+
+        PlayerRef player = store.getComponent(attackerRef, PlayerRef.getComponentType());
+        if (player == null) return;
+
+        UUID playerUuid = player.getUuid();
+        var playerData = playerDataManager.get(playerUuid);
+        if (playerData == null) return;
+
+        EntityStatMap statMap = store.getComponent(ref, EntityStatMap.getComponentType());
+        if (statMap == null) return;
+
+        var healthStat = statMap.get(DefaultEntityStatTypes.getHealth());
+        if (healthStat == null) return;
+
+        double xpGained = Math.max(1, healthStat.getMax());
+        LOGGER.atInfo().log("Granting XP (before party share): %f to player %s", xpGained, playerUuid);
+
+        if (partyManager != null) {
+            partyManager.handleXpGain(playerUuid, xpGained);
+        } else {
+            levelingManager.addXp(playerUuid, xpGained);
+        }
+    }
+}

@@ -1,0 +1,395 @@
+$C = "../Common.ui";
+$Nav = "Nav/LeftNavPanel.ui";
+
+@CustomStyle = TextButtonStyle(
+    Default: (Background: $C.@DefaultSquareButtonDefaultBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Hovered: (Background: $C.@DefaultSquareButtonHoveredBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Pressed: (Background: $C.@DefaultSquareButtonPressedBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Disabled: (Background: $C.@DefaultSquareButtonDisabledBackground, LabelStyle: $C.@DefaultButtonDisabledLabelStyle),
+    Sounds: $C.@ButtonSounds,
+);
+
+@ButtonClusterWidth = 180;
+
+$C.@PageOverlay {
+    $C.@Container {
+        Anchor: (Width: 800, Height: 700);
+        #Title {
+            Group {
+                $C.@Title {
+                    @Text = "ENDLESS LEVELING";
+                }
+            }
+        }
+
+        #Content {
+            LayoutMode: Left;
+            Padding: (Full: 0);
+
+            // ================= LEFT PANEL =================
+            $Nav.@LeftNavPanel {}
+            
+            // ================= RIGHT PANEL =================
+            Group #RightPanel {
+                FlexWeight: 1;
+                LayoutMode: Top;
+                Anchor: (Right: 7, Bottom: 7);
+
+                // -------- Title --------
+                Label {
+                    Text: "Skill Attributes";
+                    Anchor: (Height: 48);
+                    Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true);
+                    Padding: (Horizontal: 16, Top: 8);
+                }
+
+                Group {
+                    Anchor: (Height: 1);
+                    Background: #2b3542;
+                }
+
+                Group { Anchor: (Height: 10); }
+
+                // -------- SKILLS --------
+                Group #Main {
+                    LayoutMode: Top;
+                    FlexWeight: 1;
+                    Padding: (Full: 16);
+
+                    Group #Skills {
+                        LayoutMode: Top;
+
+                        Group #ColumnHeaders {
+                            LayoutMode: Left;
+                            Padding: (Vertical: 6);
+
+                            Label { Style: $C.@DefaultLabelStyle; Text: "Skill"; FlexWeight: 1; }
+                            Label #ColumnLevel { Style: $C.@DefaultLabelStyle; Text: "Level"; Anchor: (Width: 60); }
+                            Label #ColumnValue { Style: $C.@DefaultLabelStyle; Text: "Value"; Anchor: (Width: 160); }
+                            Label #ColumnSpacer { Style: $C.@DefaultLabelStyle; Anchor: (Width: @ButtonClusterWidth); }
+                        }
+
+                        // ---------------- LIFE FORCE ----------------
+                        Group #LifeForce {
+                            LayoutMode: Left;
+                            Padding: (Vertical: 8);
+
+                            Label #LifeForceLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
+                            Label #LifeForceLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
+                            Label #LifeForceValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
+
+                            Group #LifeForceButtons {
+                                Anchor: (Width: @ButtonClusterWidth);
+                                LayoutMode: Left;
+
+                                $C.@TextButton #LifeForceMinus1 {
+                                    Anchor: (Left: 10, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "-1";
+                                    Style: @CancelTextButtonStyle;
+                                }
+
+                                $C.@TextButton #LifeForcePlus1 {
+                                    Anchor: (Left: 4, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+1";
+                                    Style: @CustomStyle;
+                                }
+
+                                $C.@TextButton #LifeForcePlus5 {
+                                    Anchor: (Left: 4, Height: 28, Right: 0);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+5";
+                                    Style: @CustomStyle;
+                                }
+                            }
+                        }
+
+                        // ---------------- STRENGTH ----------------
+                        Group #Strength {
+                            LayoutMode: Left;
+                            Padding: (Vertical: 8);
+
+                            Label #StrengthLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
+                            Label #StrengthLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
+                            Label #StrengthValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
+
+                            Group #StrengthButtons {
+                                Anchor: (Width: @ButtonClusterWidth);
+                                LayoutMode: Left;
+
+                                $C.@TextButton #StrengthMinus1 {
+                                    Anchor: (Left: 10, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "-1";
+                                    Style: @CancelTextButtonStyle;
+                                }
+
+                                $C.@TextButton #StrengthPlus1 {
+                                    Anchor: (Left: 4, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+1";
+                                    Style: @CustomStyle;
+                                }
+
+                                $C.@TextButton #StrengthPlus5 {
+                                    Anchor: (Left: 4, Height: 28, Right: 0);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+5";
+                                    Style: @CustomStyle;
+                                }
+                            }
+                        }
+
+                        // ---------------- DEFENSE ----------------
+                        Group #Defense {
+                            LayoutMode: Left;
+                            Padding: (Vertical: 8);
+
+                            Label #DefenseLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
+                            Label #DefenseLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
+                            Label #DefenseValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
+
+                            Group #DefenseButtons {
+                                Anchor: (Width: @ButtonClusterWidth);
+                                LayoutMode: Left;
+
+                                $C.@TextButton #DefenseMinus1 {
+                                    Anchor: (Left: 10, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "-1";
+                                    Style: @CancelTextButtonStyle;
+                                }
+
+                                $C.@TextButton #DefensePlus1 {
+                                    Anchor: (Left: 4, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+1";
+                                    Style: @CustomStyle;
+                                }
+
+                                $C.@TextButton #DefensePlus5 {
+                                    Anchor: (Left: 4, Height: 28, Right: 0);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+5";
+                                    Style: @CustomStyle;
+                                }
+                            }
+                        }
+
+                        // ---------------- HASTE ----------------
+                        Group #Haste {
+                            LayoutMode: Left;
+                            Padding: (Vertical: 8);
+
+                            Label #HasteLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
+                            Label #HasteLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
+                            Label #HasteValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
+
+                            Group #HasteButtons {
+                                Anchor: (Width: @ButtonClusterWidth);
+                                LayoutMode: Left;
+
+                                $C.@TextButton #HasteMinus1 {
+                                    Anchor: (Left: 10, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "-1";
+                                    Style: @CancelTextButtonStyle;
+                                }
+
+                                $C.@TextButton #HastePlus1 {
+                                    Anchor: (Left: 4, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+1";
+                                    Style: @CustomStyle;
+                                }
+
+                                $C.@TextButton #HastePlus5 {
+                                    Anchor: (Left: 4, Height: 28, Right: 0);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+5";
+                                    Style: @CustomStyle;
+                                }
+                            }
+                        }
+
+                        // ---------------- PRECISION ----------------
+                        Group #Precision {
+                            LayoutMode: Left;
+                            Padding: (Vertical: 8);
+
+                            Label #PrecisionLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
+                            Label #PrecisionLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
+                            Label #PrecisionValue { Style: $C.@DefaultLabelStyle; Text: "0.00%"; Anchor: (Width: 160); }
+
+                            Group #PrecisionButtons {
+                                Anchor: (Width: @ButtonClusterWidth);
+                                LayoutMode: Left;
+
+                                $C.@TextButton #PrecisionMinus1 {
+                                    Anchor: (Left: 10, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "-1";
+                                    Style: @CancelTextButtonStyle;
+                                }
+
+                                $C.@TextButton #PrecisionPlus1 {
+                                    Anchor: (Left: 4, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+1";
+                                    Style: @CustomStyle;
+                                }
+
+                                $C.@TextButton #PrecisionPlus5 {
+                                    Anchor: (Left: 4, Height: 28, Right: 0);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+5";
+                                    Style: @CustomStyle;
+                                }
+                            }
+                        }
+
+                        // ---------------- FEROCITY ----------------
+                        Group #Ferocity {
+                            LayoutMode: Left;
+                            Padding: (Vertical: 8);
+
+                            Label #FerocityLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
+                            Label #FerocityLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
+                            Label #FerocityValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
+
+                            Group #FerocityButtons {
+                                Anchor: (Width: @ButtonClusterWidth);
+                                LayoutMode: Left;
+
+                                $C.@TextButton #FerocityMinus1 {
+                                    Anchor: (Left: 10, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "-1";
+                                    Style: @CancelTextButtonStyle;
+                                }
+
+                                $C.@TextButton #FerocityPlus1 {
+                                    Anchor: (Left: 4, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+1";
+                                    Style: @CustomStyle;
+                                }
+
+                                $C.@TextButton #FerocityPlus5 {
+                                    Anchor: (Left: 4, Height: 28, Right: 0);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+5";
+                                    Style: @CustomStyle;
+                                }
+                            }
+                        }
+
+                        // ---------------- STAMINA ----------------
+                        Group #Stamina {
+                            LayoutMode: Left;
+                            Padding: (Vertical: 8);
+
+                            Label #StaminaLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
+                            Label #StaminaLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
+                            Label #StaminaValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
+
+                            Group #StaminaButtons {
+                                Anchor: (Width: @ButtonClusterWidth);
+                                LayoutMode: Left;
+
+                                $C.@TextButton #StaminaMinus1 {
+                                    Anchor: (Left: 10, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "-1";
+                                    Style: @CancelTextButtonStyle;
+                                }
+
+                                $C.@TextButton #StaminaPlus1 {
+                                    Anchor: (Left: 4, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+1";
+                                    Style: @CustomStyle;
+                                }
+
+                                $C.@TextButton #StaminaPlus5 {
+                                    Anchor: (Left: 4, Height: 28, Right: 0);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+5";
+                                    Style: @CustomStyle;
+                                }
+                            }
+                        }
+
+                        // ---------------- INTELLIGENCE ----------------
+                        Group #Intelligence {
+                            LayoutMode: Left;
+                            Padding: (Vertical: 8);
+
+                            Label #IntelligenceLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
+                            Label #IntelligenceLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
+                            Label #IntelligenceValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
+
+                            Group #IntelligenceButtons {
+                                Anchor: (Width: @ButtonClusterWidth);
+                                LayoutMode: Left;
+
+                                $C.@TextButton #IntelligenceMinus1 {
+                                    Anchor: (Left: 10, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "-1";
+                                    Style: @CancelTextButtonStyle;
+                                }
+
+                                $C.@TextButton #IntelligencePlus1 {
+                                    Anchor: (Left: 4, Height: 28, Right: 4);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+1";
+                                    Style: @CustomStyle;
+                                }
+
+                                $C.@TextButton #IntelligencePlus5 {
+                                    Anchor: (Left: 4, Height: 28, Right: 0);
+                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
+                                    Text: "+5";
+                                    Style: @CustomStyle;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // -------- FOOTER --------
+                Group #Footer {
+                    Anchor: (Height: @PrimaryButtonHeight + 16);
+                    LayoutMode: Right;
+                    Padding: (Full: 16);
+                    Background: #000000(0.12);
+
+                    Label #SKILLPOINTS {
+                        Style: $C.@DefaultLabelStyle;
+                        FlexWeight: 1;
+                    }
+
+                    Group { FlexWeight: 1; }
+
+                    $C.@CancelTextButton #ResetSkills {
+                        Text: "RESET";
+                        Anchor: (Height: @PrimaryButtonHeight, Width: 120);
+                        Padding: (Horizontal: @ButtonPadding);
+                    }
+
+                    Group { Anchor: (Width: 10); }
+
+                    $C.@TextButton #ApplySkills {
+                        Text: "APPLY";
+                        Anchor: (Height: @PrimaryButtonHeight, Width: 120);
+                        Padding: (Horizontal: @ButtonPadding);
+                    }
+                }
+            }
+        }
+    }
+}
+
+$C.@BackButton {}

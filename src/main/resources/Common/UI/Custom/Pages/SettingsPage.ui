@@ -1,0 +1,109 @@
+$C = "../Common.ui";
+$Nav = "Nav/LeftNavPanel.ui";
+
+@CustomStyle = TextButtonStyle(
+    Default: (Background: $C.@DefaultSquareButtonDefaultBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Hovered: (Background: $C.@DefaultSquareButtonHoveredBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Pressed: (Background: $C.@DefaultSquareButtonPressedBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Disabled: (Background: $C.@DefaultSquareButtonDisabledBackground, LabelStyle: $C.@DefaultButtonDisabledLabelStyle),
+    Sounds: $C.@ButtonSounds,
+);
+
+@ButtonClusterWidth = 180;
+
+$C.@PageOverlay {
+    $C.@Container {
+        Anchor: (Width: 800, Height: 700);
+        #Title {
+            Group {
+                $C.@Title {
+                    @Text = "ENDLESS LEVELING";
+                }
+            }
+        }
+
+        #Content {
+            LayoutMode: Left;
+            Padding: (Full: 0);
+
+            // ================= LEFT PANEL =================
+            $Nav.@LeftNavPanel {}
+            
+            // ================= RIGHT PANEL =================
+            Group #RightPanel {
+                FlexWeight: 1;
+                LayoutMode: Top;
+                Anchor: (Right: 7, Bottom: 7);
+
+                // -------- Title --------
+                Label {
+                    Text: "Settings";
+                    Anchor: (Height: 48);
+                    Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true);
+                    Padding: (Horizontal: 16, Top: 8);
+                }
+
+                Group {
+                    Anchor: (Height: 1);
+                    Background: #2b3542;
+                }
+
+                Group { Anchor: (Height: 10); }
+
+                // -------- OPTIONS --------
+                Group #Main {
+                    LayoutMode: Top;
+                    FlexWeight: 1;
+                    Padding: (Full: 16);
+
+                    Group #PlayerHudRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 8);
+
+                        Label #PlayerHudLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "Player HUD"; }
+                        Label #PlayerHudValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+
+                        $C.@TextButton #PlayerHudToggle {
+                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
+                            Padding: (Horizontal: @ButtonPadding);
+                            Text: "Toggle";
+                            Style: @CustomStyle;
+                        }
+                    }
+
+                    Group #CriticalNotifRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 8);
+
+                        Label #CriticalNotifLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "Critical Hit Notifications"; }
+                        Label #CriticalNotifValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+
+                        $C.@TextButton #CriticalNotifToggle {
+                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
+                            Padding: (Horizontal: @ButtonPadding);
+                            Text: "Toggle";
+                            Style: @CustomStyle;
+                        }
+                    }
+
+                    Group #XpNotifRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 8);
+
+                        Label #XpNotifLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "XP Gain Notifications"; }
+                        Label #XpNotifValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+
+                        $C.@TextButton #XpNotifToggle {
+                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
+                            Padding: (Horizontal: @ButtonPadding);
+                            Text: "Toggle";
+                            Style: @CustomStyle;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+$C.@BackButton {}

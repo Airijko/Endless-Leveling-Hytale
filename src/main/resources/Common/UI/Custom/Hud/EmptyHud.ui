@@ -1,0 +1,10 @@
+$C = "../Common.ui";
+
+// Simple empty container so disabling the custom HUD
+$C.@Container {
+  Anchor: (Left: 0, Bottom: 0, Width: 0, Height: 0);
+
+  #Content {
+    // Intentionally left blank
+  }
+}

@@ -1,33 +1,127 @@
 package com.airijko.endlessleveling;
 
+import com.airijko.endlessleveling.commands.EndlessLevelingCommand;
+import com.airijko.endlessleveling.commands.PartyCommand;
+import com.airijko.endlessleveling.listeners.OpenPlayerHudListener;
+import com.airijko.endlessleveling.listeners.PartyListener;
+import com.airijko.endlessleveling.listeners.PlayerCombatListener;
+import com.airijko.endlessleveling.listeners.PlayerDataListener;
+import com.airijko.endlessleveling.listeners.PlayerDefenseListener;
+import com.airijko.endlessleveling.listeners.XpEventListener;
+import com.airijko.endlessleveling.managers.*;
+import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
+import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
-import java.util.logging.Level;
-import javax.annotation.Nonnull;
 
-/**
- * Main entry point for the Endlessleveling plugin.
- */
+import javax.annotation.Nonnull;
+import java.io.File;
+
 public class Endlessleveling extends JavaPlugin {
+
+    private static Endlessleveling INSTANCE;
+    private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+
+    // ------------------------
+    // Shared managers (singleton)
+    // ------------------------
+    private PluginFilesManager filesManager;
+    private ConfigManager configManager;
+    private PlayerDataManager playerDataManager;
+    private LevelingManager levelingManager;
+    private SkillManager skillManager;
+    private PartyManager partyManager;
+
+    // Getter for SkillManager
+    public SkillManager getSkillManager() {
+        return skillManager;
+    }
+
+    // Getter for PlayerDataManager
+    public PlayerDataManager getPlayerDataManager() {
+        return playerDataManager;
+    }
+
+    public LevelingManager getLevelingManager() {
+        return levelingManager;
+    }
+
+    public PartyManager getPartyManager() {
+        return partyManager;
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
+    }
+
+    /** Singleton access to the mod instance */
+    public static Endlessleveling getInstance() {
+        return INSTANCE;
+    }
 
     public Endlessleveling(@Nonnull JavaPluginInit init) {
         super(init);
+        INSTANCE = this;
     }
 
     @Override
     protected void setup() {
-        // Called during plugin setup phase
+        // Create main plugin folder
+        File pluginFolder = new File(getFile().getParent().toFile(), "EndlessLeveling");
+        if (!pluginFolder.exists())
+            pluginFolder.mkdirs();
+
+        // Initialize all folders and managers
+        filesManager = new PluginFilesManager(pluginFolder, this);
+        configManager = new ConfigManager(filesManager.getConfigFile());
+
+        boolean enableLogging = toBoolean(configManager.get("enable_logging", Boolean.FALSE, false), false);
+        LoggingManager.configure(enableLogging);
+
+        skillManager = new SkillManager(filesManager);
+        playerDataManager = new PlayerDataManager(filesManager, skillManager);
+        levelingManager = new LevelingManager(playerDataManager, filesManager, skillManager);
+        partyManager = new PartyManager(playerDataManager, levelingManager);
+
+        // Register event listeners
+        PlayerDataListener playerDataListener = new PlayerDataListener(playerDataManager);
+        this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, playerDataListener::onPlayerReady);
+        this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, playerDataListener::onPlayerDisconnect);
+
+        PartyListener partyListener = new PartyListener(partyManager);
+        this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, partyListener::onPlayerDisconnect);
+
+        this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, OpenPlayerHudListener::openGui);
+        this.getEntityStoreRegistry()
+                .registerSystem(new XpEventListener(playerDataManager, levelingManager, partyManager));
+        this.getEntityStoreRegistry().registerSystem(new PlayerCombatListener());
+        this.getEntityStoreRegistry().registerSystem(new PlayerDefenseListener(playerDataManager, skillManager));
+
+        // Register commands
+        this.getCommandRegistry().registerCommand(new EndlessLevelingCommand("skills", "Skills menu"));
+        this.getCommandRegistry().registerCommand(new PartyCommand());
+
+        LOGGER.atInfo().log("Plugin initialized! Plugin folder: %s", pluginFolder.getAbsolutePath());
     }
 
-    @Override
-    protected void start() {
-        // Called when the plugin is enabled
-        getLogger().at(Level.INFO).log("Endlessleveling has been enabled!");
-    }
-
-    @Override
     protected void shutdown() {
-        // Called when the plugin is disabled
-        getLogger().at(Level.INFO).log("Endlessleveling has been disabled!");
+        if (playerDataManager != null) {
+            playerDataManager.saveAll();
+            LOGGER.atInfo().log("Server shutting down: all player data saved.");
+        }
+    }
+
+    private boolean toBoolean(Object value, boolean defaultValue) {
+        if (value instanceof Boolean bool) {
+            return bool;
+        }
+        if (value instanceof Number number) {
+            return number.intValue() != 0;
+        }
+        if (value instanceof String str) {
+            return Boolean.parseBoolean(str.trim());
+        }
+        return defaultValue;
     }
 }

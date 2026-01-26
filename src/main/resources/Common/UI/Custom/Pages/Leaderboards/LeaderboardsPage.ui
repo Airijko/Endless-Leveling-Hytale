@@ -1,0 +1,88 @@
+$C = "../../Common.ui";
+$Nav = "../Nav/LeftNavPanel.ui";
+
+@CustomStyle = TextButtonStyle(
+    Default: (Background: $C.@DefaultSquareButtonDefaultBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Hovered: (Background: $C.@DefaultSquareButtonHoveredBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Pressed: (Background: $C.@DefaultSquareButtonPressedBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Disabled: (Background: $C.@DefaultSquareButtonDisabledBackground, LabelStyle: $C.@DefaultButtonDisabledLabelStyle),
+    Sounds: $C.@ButtonSounds,
+);
+
+@ButtonClusterWidth = 180;
+
+$C.@PageOverlay {
+    $C.@Container {
+        Anchor: (Width: 800, Height: 700);
+        #Title {
+            Group {
+                $C.@Title {
+                    @Text = "ENDLESS LEVELING";
+                }
+            }
+        }
+
+        #Content {
+            LayoutMode: Left;
+            Padding: (Full: 0);
+
+            // ================= LEFT PANEL =================
+            $Nav.@LeftNavPanel {}
+            
+            // ================= RIGHT PANEL =================
+            Group #RightPanel {
+                FlexWeight: 1;
+                LayoutMode: Top;
+                Anchor: (Right: 7, Bottom: 7);
+
+                // -------- Title --------
+                Label {
+                    Text: "Leaderboards";
+                    Anchor: (Height: 48);
+                    Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true);
+                    Padding: (Horizontal: 16, Top: 8);
+                }
+
+                Group {
+                    Anchor: (Height: 1);
+                    Background: #2b3542;
+                }
+
+                Group { Anchor: (Height: 10); }
+
+                // -------- TABLE --------
+                Group #Main {
+                    LayoutMode: Top;
+                    FlexWeight: 1;
+                    Padding: (Full: 16);
+
+                    Group #Headers {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 6);
+
+                        Label { Style: $C.@DefaultLabelStyle; Text: "#"; Anchor: (Width: 40); }
+                        Label { Style: $C.@DefaultLabelStyle; Text: "Player"; FlexWeight: 1; }
+                        Label { Style: $C.@DefaultLabelStyle; Text: "Level"; Anchor: (Width: 80); }
+                    }
+
+                    Group { Anchor: (Height: 1); Background: #2b3542; }
+
+                    // Scrollable list of leaderboard rows; rows are added dynamically from code
+                    Group #Rows {
+                        Anchor: (Top: 2);
+                        FlexWeight: 1;
+                        LayoutMode: TopScrolling;
+                        Padding: (Left: 0);
+                        ScrollbarStyle: $C.@DefaultScrollbarStyle;
+
+                        Group #RowCards {
+                            LayoutMode: Top;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+$C.@BackButton {}
