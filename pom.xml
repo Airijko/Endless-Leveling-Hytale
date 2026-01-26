@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.airijko</groupId>
-    <artifactId>endlessleveling</artifactId>
-    <version>1.0.0</version>
+    <artifactId>endlesslevelinghytale</artifactId>
+    <version>2.1</version>
     <packaging>jar</packaging>
 
-    <name>Endlessleveling</name>
+    <name>EndlessLevelingHytale</name>
     <description></description>
 
     <properties>
