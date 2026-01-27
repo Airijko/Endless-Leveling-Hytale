@@ -100,6 +100,51 @@ $C.@PageOverlay {
                             Style: @CustomStyle;
                         }
                     }
+
+                    Group #PassiveLevelUpNotifRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 8);
+
+                        Label #PassiveLevelUpNotifLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "Passive Level-Up Notifications"; }
+                        Label #PassiveLevelUpNotifValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+
+                        $C.@TextButton #PassiveLevelUpNotifToggle {
+                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
+                            Padding: (Horizontal: @ButtonPadding);
+                            Text: "Toggle";
+                            Style: @CustomStyle;
+                        }
+                    }
+
+                    Group #LuckDoubleDropsNotifRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 8);
+
+                        Label #LuckDoubleDropsNotifLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "Luck Double-Drop Notifications"; }
+                        Label #LuckDoubleDropsNotifValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+
+                        $C.@TextButton #LuckDoubleDropsNotifToggle {
+                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
+                            Padding: (Horizontal: @ButtonPadding);
+                            Text: "Toggle";
+                            Style: @CustomStyle;
+                        }
+                    }
+
+                    Group #HealthRegenNotifRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 8);
+
+                        Label #HealthRegenNotifLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "Health Regen Notifications"; }
+                        Label #HealthRegenNotifValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+
+                        $C.@TextButton #HealthRegenNotifToggle {
+                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
+                            Padding: (Horizontal: @ButtonPadding);
+                            Text: "Toggle";
+                            Style: @CustomStyle;
+                        }
+                    }
                 }
             }
         }

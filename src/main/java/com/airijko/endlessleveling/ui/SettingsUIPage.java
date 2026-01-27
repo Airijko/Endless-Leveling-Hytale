@@ -47,6 +47,11 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         events.addEventBinding(Activating, "#PlayerHudToggle", of("Action", "toggle:playerHud"), false);
         events.addEventBinding(Activating, "#CriticalNotifToggle", of("Action", "toggle:criticalNotif"), false);
         events.addEventBinding(Activating, "#XpNotifToggle", of("Action", "toggle:xpNotif"), false);
+        events.addEventBinding(Activating, "#PassiveLevelUpNotifToggle", of("Action", "toggle:passiveLevelUpNotif"),
+                false);
+        events.addEventBinding(Activating, "#LuckDoubleDropsNotifToggle", of("Action", "toggle:luckDoubleDropsNotif"),
+                false);
+        events.addEventBinding(Activating, "#HealthRegenNotifToggle", of("Action", "toggle:healthRegenNotif"), false);
 
         // Populate current values from PlayerData
         PlayerRef player = Universe.get().getPlayer(playerRef.getUuid());
@@ -70,6 +75,15 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         ui.set("#XpNotifLabel.Text", "XP Gain Notifications");
         ui.set("#XpNotifValue.Text", data.isXpNotifEnabled() ? "ON" : "OFF");
+
+        ui.set("#PassiveLevelUpNotifLabel.Text", "Passive Level-Up Notifications");
+        ui.set("#PassiveLevelUpNotifValue.Text", data.isPassiveLevelUpNotifEnabled() ? "ON" : "OFF");
+
+        ui.set("#LuckDoubleDropsNotifLabel.Text", "Luck Double-Drop Notifications");
+        ui.set("#LuckDoubleDropsNotifValue.Text", data.isLuckDoubleDropsNotifEnabled() ? "ON" : "OFF");
+
+        ui.set("#HealthRegenNotifLabel.Text", "Health Regen Notifications");
+        ui.set("#HealthRegenNotifValue.Text", data.isHealthRegenNotifEnabled() ? "ON" : "OFF");
     }
 
     @Override
@@ -131,6 +145,27 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             playerData.setXpNotifEnabled(newValue);
             changed = true;
             player.sendMessage(Message.raw("XP gain notifications " + (newValue ? "enabled" : "disabled"))
+                    .color("#ffc300"));
+        } else if ("toggle:passiveLevelUpNotif".equalsIgnoreCase(action)) {
+            boolean newValue = !playerData.isPassiveLevelUpNotifEnabled();
+            playerData.setPassiveLevelUpNotifEnabled(newValue);
+            changed = true;
+            player.sendMessage(Message
+                    .raw("Passive level-up notifications " + (newValue ? "enabled" : "disabled"))
+                    .color("#ffc300"));
+        } else if ("toggle:luckDoubleDropsNotif".equalsIgnoreCase(action)) {
+            boolean newValue = !playerData.isLuckDoubleDropsNotifEnabled();
+            playerData.setLuckDoubleDropsNotifEnabled(newValue);
+            changed = true;
+            player.sendMessage(Message
+                    .raw("Luck double-drop notifications " + (newValue ? "enabled" : "disabled"))
+                    .color("#ffc300"));
+        } else if ("toggle:healthRegenNotif".equalsIgnoreCase(action)) {
+            boolean newValue = !playerData.isHealthRegenNotifEnabled();
+            playerData.setHealthRegenNotifEnabled(newValue);
+            changed = true;
+            player.sendMessage(Message
+                    .raw("Health regen notifications " + (newValue ? "enabled" : "disabled"))
                     .color("#ffc300"));
         }
 
