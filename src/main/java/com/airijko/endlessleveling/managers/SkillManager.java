@@ -32,6 +32,11 @@ import java.util.Map;
 public class SkillManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+    private static final double DEFENSE_MAX_REDUCTION = 80.0;
+    private static final double DEFENSE_CURVE_START = 30.0;
+    private static final double DEFENSE_SHARP_CURVE_START = 100.0;
+    private static final double DEFENSE_MID_SEGMENT_SLOPE = 0.5;
+    private static final double DEFENSE_FINAL_SEGMENT_SLOPE = 0.2;
 
     private final File levelingFile;
     private final ConfigManager config;
@@ -466,40 +471,43 @@ public class SkillManager {
 
         int defenseLevel = playerData.getPlayerSkillAttributeLevel(SkillAttributeType.DEFENSE);
         double perPointValue = getSkillAttributeConfigValue(SkillAttributeType.DEFENSE);
-
-        // Calculate total defense value
         double defenseValue = defenseLevel * perPointValue;
+        double reduction = applyDefenseCurve(defenseValue);
+        float resistance = (float) (reduction / 100.0);
 
         LOGGER.atInfo().log(
                 "calculatePlayerDefense: DEFENSE level=%d, perPointValue=%.2f, defenseValue=%.2f for player %s",
                 defenseLevel, perPointValue, defenseValue, playerData.getPlayerName());
 
-        // Apply damage reduction curve
-        double maxReduction = 80.0; // Max reduction as a percentage (80%)
-        double curveStart = 30.0; // Start of gradual curve
-        double sharpCurveStart = 70.0; // Start of sharp curve
-
-        double reduction;
-        if (defenseValue <= curveStart) {
-            reduction = defenseValue; // Linear increase up to halfway
-        } else if (defenseValue <= sharpCurveStart) {
-            // Gradual curve between halfway and sharp curve start
-            reduction = curveStart + (defenseValue - curveStart) * 0.5;
-        } else {
-            // Sharp curve between sharp curve start and maxReduction
-            reduction = sharpCurveStart + (defenseValue - sharpCurveStart) * 0.1;
-        }
-
-        // Ensure the reduction does not exceed maxReduction
-        reduction = Math.min(reduction, maxReduction);
-
-        // Convert percentage to decimal (0.0 to 0.80)
-        float resistance = (float) (reduction / 100.0);
-
         LOGGER.atInfo().log("calculatePlayerDefense: Applied curve - reduction=%.2f%%, defenseValue=%.4f for player %s",
                 reduction, defenseValue, playerData.getPlayerName());
 
         return resistance;
+    }
+
+    public float calculateDefenseResistanceForLevel(int defenseLevel) {
+        double perPointValue = getSkillAttributeConfigValue(SkillAttributeType.DEFENSE);
+        double defenseValue = defenseLevel * perPointValue;
+        double reduction = applyDefenseCurve(defenseValue);
+        return (float) (reduction / 100.0);
+    }
+
+    private double applyDefenseCurve(double defenseValue) {
+        double reductionAtSharpStart = DEFENSE_CURVE_START
+                + (DEFENSE_SHARP_CURVE_START - DEFENSE_CURVE_START) * DEFENSE_MID_SEGMENT_SLOPE;
+
+        double reduction;
+        if (defenseValue <= DEFENSE_CURVE_START) {
+            reduction = defenseValue;
+        } else if (defenseValue <= DEFENSE_SHARP_CURVE_START) {
+            reduction = DEFENSE_CURVE_START
+                    + (defenseValue - DEFENSE_CURVE_START) * DEFENSE_MID_SEGMENT_SLOPE;
+        } else {
+            reduction = reductionAtSharpStart
+                    + (defenseValue - DEFENSE_SHARP_CURVE_START) * DEFENSE_FINAL_SEGMENT_SLOPE;
+        }
+
+        return Math.min(reduction, DEFENSE_MAX_REDUCTION);
     }
 
     /**

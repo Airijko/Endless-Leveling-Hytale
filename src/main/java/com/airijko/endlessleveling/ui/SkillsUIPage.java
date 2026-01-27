@@ -131,9 +131,9 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ui.set("#StrengthValue.Text", "+" + formatNumber(strLevel * strPer) + "% Damage");
 
                 int defLevel = getPreviewLevel(SkillAttributeType.DEFENSE);
-                double defenseValue = calculatePreviewDefense(defLevel);
+                float defenseResistance = skillManager.calculateDefenseResistanceForLevel(defLevel);
                 ui.set("#DefenseLevel.Text", String.valueOf(defLevel));
-                ui.set("#DefenseValue.Text", formatNumber(defenseValue * 100) + "% Reduction");
+                ui.set("#DefenseValue.Text", formatNumber(defenseResistance * 100) + "% Reduction");
 
                 int hasteLevel = getPreviewLevel(SkillAttributeType.HASTE);
                 double hastePerPercent = skillManager.getSkillAttributeConfigValue(SkillAttributeType.HASTE);
@@ -354,24 +354,6 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                         LOGGER.atWarning().log("applyPreviewChanges: missing ref/store for player %s",
                                         playerRef.getUuid());
                 }
-        }
-
-        private double calculatePreviewDefense(int defenseLevel) {
-                double perPointValue = skillManager.getSkillAttributeConfigValue(SkillAttributeType.DEFENSE);
-                double defenseValue = defenseLevel * perPointValue;
-                double maxReduction = 80.0;
-                double curveStart = 30.0;
-                double sharpCurveStart = 70.0;
-                double reduction;
-                if (defenseValue <= curveStart) {
-                        reduction = defenseValue;
-                } else if (defenseValue <= sharpCurveStart) {
-                        reduction = curveStart + (defenseValue - curveStart) * 0.5;
-                } else {
-                        reduction = sharpCurveStart + (defenseValue - sharpCurveStart) * 0.1;
-                }
-                reduction = Math.min(reduction, maxReduction);
-                return reduction / 100.0;
         }
 
         private String formatNumber(double value) {
