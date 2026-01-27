@@ -29,12 +29,11 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
     private final PartyManager partyManager;
 
     public XpEventListener(PlayerDataManager playerDataManager,
-                           LevelingManager levelingManager,
-                           PartyManager partyManager) {
+            LevelingManager levelingManager,
+            PartyManager partyManager) {
         this.playerDataManager = playerDataManager;
         this.levelingManager = levelingManager;
         this.partyManager = partyManager;
-        LOGGER.atInfo().log("XpEventListener initialized.");
     }
 
     @Override
@@ -47,30 +46,36 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
             @Nonnull Ref<EntityStore> ref,
             @Nonnull DeathComponent component,
             @Nonnull Store<EntityStore> store,
-            @Nonnull CommandBuffer<EntityStore> commandBuffer
-    ) {
+            @Nonnull CommandBuffer<EntityStore> commandBuffer) {
         LOGGER.atInfo().log("onComponentAdded called for entity: %s", ref);
 
         var deathInfo = component.getDeathInfo();
-        if (deathInfo == null) return;
+        if (deathInfo == null)
+            return;
 
-        if (!(deathInfo.getSource() instanceof Damage.EntitySource entitySource)) return;
+        if (!(deathInfo.getSource() instanceof Damage.EntitySource entitySource))
+            return;
 
         var attackerRef = entitySource.getRef();
-        if (!attackerRef.isValid()) return;
+        if (!attackerRef.isValid())
+            return;
 
         PlayerRef player = store.getComponent(attackerRef, PlayerRef.getComponentType());
-        if (player == null) return;
+        if (player == null)
+            return;
 
         UUID playerUuid = player.getUuid();
         var playerData = playerDataManager.get(playerUuid);
-        if (playerData == null) return;
+        if (playerData == null)
+            return;
 
         EntityStatMap statMap = store.getComponent(ref, EntityStatMap.getComponentType());
-        if (statMap == null) return;
+        if (statMap == null)
+            return;
 
         var healthStat = statMap.get(DefaultEntityStatTypes.getHealth());
-        if (healthStat == null) return;
+        if (healthStat == null)
+            return;
 
         double xpGained = Math.max(1, healthStat.getMax());
         LOGGER.atInfo().log("Granting XP (before party share): %f to player %s", xpGained, playerUuid);

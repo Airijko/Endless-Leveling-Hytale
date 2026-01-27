@@ -44,7 +44,6 @@ public class PlayerDataManager {
     // --- Load or create a player ---
     public PlayerData loadOrCreate(UUID uuid, String playerName) {
         if (playerCache.containsKey(uuid)) {
-            LOGGER.atInfo().log("PlayerData for UUID %s retrieved from cache.", uuid);
             return playerCache.get(uuid);
         }
 
@@ -70,11 +69,6 @@ public class PlayerDataManager {
     // --- Get player from cache ---
     public PlayerData get(UUID uuid) {
         PlayerData data = playerCache.get(uuid);
-        if (data != null) {
-            LOGGER.atInfo().log("PlayerData for UUID %s retrieved from cache.", uuid);
-        } else {
-            LOGGER.atWarning().log("PlayerData for UUID %s not found in cache.", uuid);
-        }
         return data;
     }
 
@@ -196,7 +190,7 @@ public class PlayerDataManager {
 
         for (PlayerData data : playerCache.values()) {
             if (data.getPlayerName().equalsIgnoreCase(playerName)) {
-                LOGGER.atInfo().log("PlayerData for %s retrieved from cache by name.", playerName);
+                LOGGER.atFine().log("PlayerData for %s retrieved from cache by name.", playerName);
                 return data;
             }
         }

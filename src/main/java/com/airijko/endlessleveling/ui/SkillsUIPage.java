@@ -93,7 +93,7 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 }
 
                 // Footer buttons
-                events.addEventBinding(Activating, "#ResetSkills", of("Action", "undo"), false);
+                events.addEventBinding(Activating, "#ResetSkills", of("Action", "reset"), false);
                 events.addEventBinding(Activating, "#ApplySkills", of("Action", "apply"), false);
 
                 // Get PlayerData

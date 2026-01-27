@@ -105,12 +105,14 @@ public class PassiveManager {
         if (result.leveledUp().isEmpty()) {
             return;
         }
+        if (!playerData.isPassiveLevelUpNotifEnabled()) {
+            return;
+        }
+
         PlayerRef ref = Universe.get().getPlayer(playerData.getUuid());
         if (ref == null) {
             return;
         }
-        boolean popupEnabled = playerData.isPassiveLevelUpNotifEnabled();
-        var packetHandler = ref.getPacketHandler();
         for (PassiveType type : result.leveledUp()) {
             PassiveSnapshot snapshot = result.snapshots().get(type);
             if (snapshot == null || snapshot.level() <= 0) {
@@ -125,21 +127,6 @@ public class PassiveManager {
                     Message.raw(" (" + formattedValue + ")").color("#9be7ff"));
             ref.sendMessage(message);
 
-            if (popupEnabled && packetHandler != null) {
-                Message primary = Message.join(
-                        Message.raw("Passive Level Up: ").color("#4fd7f7"),
-                        Message.raw(type.getDisplayName()).color("#ffc300"));
-                Message secondary = Message.join(
-                        Message.raw("Level ").color("#ffffff"),
-                        Message.raw(String.valueOf(snapshot.level())).color("#4fd7f7"),
-                        Message.raw(" - ").color("#ffffff"),
-                        Message.raw(formattedValue).color("#9be7ff"));
-                var icon = new ItemStack("Ingredient_Life_Essence", 1).toPacket();
-                NotificationUtil.sendNotification(packetHandler, primary, secondary, icon);
-            } else if (popupEnabled) {
-                LOGGER.atFine().log("Skipping passive level-up popup for %s - packet handler unavailable",
-                        playerData.getPlayerName());
-            }
         }
     }
 

@@ -374,7 +374,7 @@ $C.@PageOverlay {
                     Group { FlexWeight: 1; }
 
                     $C.@CancelTextButton #ResetSkills {
-                        Text: "RESET";
+                        Text: "UNDO";
                         Anchor: (Height: @PrimaryButtonHeight, Width: 120);
                         Padding: (Horizontal: @ButtonPadding);
                     }
