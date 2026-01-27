@@ -209,6 +209,8 @@ public class PassiveManager {
      */
     public double getLuckValue(@Nonnull PlayerData playerData) {
         PassiveSnapshot snapshot = getSnapshot(playerData, PassiveType.LUCK);
+        LOGGER.atFiner().log("Computed luck value for %s: %f",
+                playerData.getPlayerName(), snapshot.value());
         return snapshot != null && snapshot.isUnlocked() ? snapshot.value() : 0.0;
     }
 

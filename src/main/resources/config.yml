@@ -44,11 +44,11 @@ passives:
 
   luck:
     enabled: true
-    unlock_level: 15
+    unlock_level: 10
     base_value: 10.0
     value_per_level: 10.0
     max_level: 10
-    tier_interval: 5
+    tier_interval: 7
 
   mana_regeneration:
     enabled: true
