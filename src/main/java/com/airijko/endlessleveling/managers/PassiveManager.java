@@ -2,6 +2,7 @@ package com.airijko.endlessleveling.managers;
 
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.PassiveType;
+import com.airijko.endlessleveling.systems.PassiveRegenSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
@@ -89,8 +90,7 @@ public class PassiveManager {
             int previousLevel = playerData.getPassiveLevel(type);
             playerData.setPassiveLevel(type, computedLevel);
 
-            double value = computedLevel <= 0 ? 0.0
-                    : definition.baseValue + (computedLevel - 1) * definition.valuePerLevel;
+            double value = computePassiveValue(definition, computedLevel);
             snapshots.put(type, new PassiveSnapshot(definition, computedLevel, value));
 
             if (computedLevel > previousLevel) {
@@ -142,7 +142,7 @@ public class PassiveManager {
     public PassiveSnapshot getSnapshot(@Nonnull PlayerData playerData, @Nonnull PassiveType type) {
         PassiveDefinition definition = definitions.getOrDefault(type, PassiveDefinition.disabled(type));
         int level = computePassiveLevel(definition, playerData.getLevel());
-        double value = level <= 0 ? 0.0 : definition.baseValue + (level - 1) * definition.valuePerLevel;
+        double value = computePassiveValue(definition, level);
         return new PassiveSnapshot(definition, level, value);
     }
 
@@ -164,6 +164,23 @@ public class PassiveManager {
         int tiers = definition.tierInterval <= 0 ? relativeLevel : relativeLevel / definition.tierInterval;
         int computed = 1 + Math.max(0, tiers);
         return Math.min(definition.maxLevel, computed);
+    }
+
+    private double computePassiveValue(PassiveDefinition definition, int level) {
+        if (level <= 0) {
+            return 0.0;
+        }
+        double rawValue = definition.baseValue + (level - 1) * definition.valuePerLevel;
+        if (rawValue <= 0.0) {
+            return 0.0;
+        }
+        return appliesResourceDivisor(definition.type())
+                ? rawValue / PassiveRegenSystem.RESOURCE_REGEN_DIVISOR
+                : rawValue;
+    }
+
+    private boolean appliesResourceDivisor(PassiveType type) {
+        return type == PassiveType.MANA_REGENERATION || type == PassiveType.STAMINA_REGENERATION;
     }
 
     private boolean toBoolean(Object value, boolean defaultValue) {

@@ -29,7 +29,7 @@ import javax.annotation.Nonnull;
 public class PassiveRegenSystem extends TickingSystem<EntityStore> {
 
     private static final long HEALTH_REGEN_COOLDOWN_MS = TimeUnit.SECONDS.toMillis(10);
-    private static final double RESOURCE_REGEN_DIVISOR = 5.0D;
+    public static final double RESOURCE_REGEN_DIVISOR = 5.0D;
     private static final Query<EntityStore> PLAYER_QUERY = Query.any();
 
     private final PlayerDataManager playerDataManager;
@@ -108,7 +108,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         if (!snapshot.isUnlocked() || snapshot.value() <= 0) {
             return;
         }
-        double perSecond = snapshot.value() / RESOURCE_REGEN_DIVISOR;
+        double perSecond = snapshot.value();
         if (perSecond <= 0) {
             return;
         }
@@ -123,7 +123,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         if (!snapshot.isUnlocked() || snapshot.value() <= 0) {
             return;
         }
-        double perSecond = snapshot.value() / RESOURCE_REGEN_DIVISOR;
+        double perSecond = snapshot.value();
         if (perSecond <= 0) {
             return;
         }

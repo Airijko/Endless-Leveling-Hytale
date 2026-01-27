@@ -53,8 +53,8 @@ passives:
   mana_regeneration:
     enabled: true
     unlock_level: 10
-    base_value: 2.0
-    value_per_level: 1.0
+    base_value: 4.0
+    value_per_level: 2.0
     max_level: 10
     tier_interval: 5
 

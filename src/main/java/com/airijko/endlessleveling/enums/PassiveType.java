@@ -2,6 +2,8 @@ package com.airijko.endlessleveling.enums;
 
 import java.util.Locale;
 
+import com.airijko.endlessleveling.systems.PassiveRegenSystem;
+
 /**
  * Enumerates the configurable EndlessLeveling passive systems defined in
  * config.yml.
@@ -35,8 +37,9 @@ public enum PassiveType {
             case LIFE_STEAL, SIGNATURE_GAIN -> formatNumber(value) + "%";
             case REGENERATION -> formatNumber(value) + " Health/sec";
             case LUCK -> formatNumber(value) + "% Luck";
-            case MANA_REGENERATION -> formatNumber(value) + " Mana/sec";
-            case STAMINA_REGENERATION -> formatNumber(value) + " Stamina/sec";
+            case MANA_REGENERATION -> formatNumber(value * PassiveRegenSystem.RESOURCE_REGEN_DIVISOR) + " Mana/5s";
+            case STAMINA_REGENERATION ->
+                formatNumber(value * PassiveRegenSystem.RESOURCE_REGEN_DIVISOR) + " Stamina/5s";
         };
     }
 

@@ -15,6 +15,9 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
+import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
+import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
+import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
 import com.hypixel.hytale.server.core.universe.Universe;
@@ -102,12 +105,15 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         // -----------------------------
         // AMPLIFIED SKILL STATS
         // -----------------------------
+        EntityStatMap statMap = store.getComponent(ref, EntityStatMap.getComponentType());
 
         // Life Force (bonus health)
         int lifeLevel = playerData.getPlayerSkillAttributeLevel(SkillAttributeType.LIFE_FORCE);
         float bonusHealth = skillManager.calculatePlayerHealth(playerData);
+        float maxHealth = resolveMaxStatValue(statMap, DefaultEntityStatTypes.getHealth());
+        float displayedHealth = maxHealth > 0 ? maxHealth : bonusHealth;
         ui.set("#LifeForceLevel.Text", String.valueOf(lifeLevel));
-        ui.set("#LifeForceValue.Text", formatNumber(bonusHealth) + " Health");
+        ui.set("#LifeForceValue.Text", formatNumber(displayedHealth) + " Health");
 
         // Strength (bonus damage percent)
         int strLevel = playerData.getPlayerSkillAttributeLevel(SkillAttributeType.STRENGTH);
@@ -143,14 +149,18 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         // Stamina (bonus stamina)
         int stamLevel = playerData.getPlayerSkillAttributeLevel(SkillAttributeType.STAMINA);
         float bonusStamina = skillManager.calculatePlayerStamina(playerData);
+        float maxStamina = resolveMaxStatValue(statMap, DefaultEntityStatTypes.getStamina());
+        float displayedStamina = maxStamina > 0 ? maxStamina : bonusStamina;
         ui.set("#StaminaLevel.Text", String.valueOf(stamLevel));
-        ui.set("#StaminaValue.Text", formatNumber(bonusStamina) + " Stamina");
+        ui.set("#StaminaValue.Text", formatNumber(displayedStamina) + " Stamina");
 
         // Intelligence (bonus mana)
         int intLevel = playerData.getPlayerSkillAttributeLevel(SkillAttributeType.INTELLIGENCE);
         float bonusIntelligence = skillManager.calculatePlayerIntelligence(playerData);
+        float maxMana = resolveMaxStatValue(statMap, DefaultEntityStatTypes.getMana());
+        float displayedMana = maxMana > 0 ? maxMana : bonusIntelligence;
         ui.set("#IntelligenceLevel.Text", String.valueOf(intLevel));
-        ui.set("#IntelligenceValue.Text", formatNumber(bonusIntelligence) + " Mana");
+        ui.set("#IntelligenceValue.Text", formatNumber(displayedMana) + " Mana");
 
         // -----------------------------
         // PASSIVE EFFECTS
@@ -212,4 +222,13 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set(levelSelector, String.valueOf(snapshot.level()));
         ui.set(valueSelector, type.formatValue(snapshot.value()));
     }
+
+    private float resolveMaxStatValue(EntityStatMap statMap, int statIndex) {
+        if (statMap == null) {
+            return 0.0F;
+        }
+        EntityStatValue statValue = statMap.get(statIndex);
+        return statValue != null ? statValue.getMax() : 0.0F;
+    }
+
 }

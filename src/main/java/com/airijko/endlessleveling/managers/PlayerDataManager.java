@@ -104,6 +104,9 @@ public class PlayerDataManager {
         options.put("playerHud", data.isPlayerHudEnabled());
         options.put("criticalNotif", data.isCriticalNotifEnabled());
         options.put("xpNotif", data.isXpNotifEnabled());
+        options.put("passiveLevelUpNotif", data.isPassiveLevelUpNotifEnabled());
+        options.put("luckDoubleDropsNotif", data.isLuckDoubleDropsNotifEnabled());
+        options.put("healthRegenNotif", data.isHealthRegenNotifEnabled());
         map.put("options", options);
 
         Map<String, Integer> passives = new LinkedHashMap<>();
@@ -154,9 +157,18 @@ public class PlayerDataManager {
             Object playerHud = options != null ? options.get("playerHud") : map.get("playerHud");
             Object criticalNotif = options != null ? options.get("criticalNotif") : map.get("criticalNotif");
             Object xpNotif = options != null ? options.get("xpNotif") : map.get("xpNotif");
+            Object passiveLevelUpNotif = options != null ? options.get("passiveLevelUpNotif")
+                    : map.get("passiveLevelUpNotif");
+            Object luckDoubleDropsNotif = options != null ? options.get("luckDoubleDropsNotif")
+                    : map.get("luckDoubleDropsNotif");
+            Object healthRegenNotif = options != null ? options.get("healthRegenNotif")
+                    : map.get("healthRegenNotif");
             data.setPlayerHudEnabled(parseBoolean(playerHud, true));
             data.setCriticalNotifEnabled(parseBoolean(criticalNotif, true));
             data.setXpNotifEnabled(parseBoolean(xpNotif, true));
+            data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
+            data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
+            data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
 
             Map<String, Object> passives = castToStringObjectMap(map.get("passives"));
             if (passives != null) {
@@ -301,9 +313,18 @@ public class PlayerDataManager {
             Object playerHud = options != null ? options.get("playerHud") : map.get("playerHud");
             Object criticalNotif = options != null ? options.get("criticalNotif") : map.get("criticalNotif");
             Object xpNotif = options != null ? options.get("xpNotif") : map.get("xpNotif");
+            Object passiveLevelUpNotif = options != null ? options.get("passiveLevelUpNotif")
+                    : map.get("passiveLevelUpNotif");
+            Object luckDoubleDropsNotif = options != null ? options.get("luckDoubleDropsNotif")
+                    : map.get("luckDoubleDropsNotif");
+            Object healthRegenNotif = options != null ? options.get("healthRegenNotif")
+                    : map.get("healthRegenNotif");
             data.setPlayerHudEnabled(parseBoolean(playerHud, true));
             data.setCriticalNotifEnabled(parseBoolean(criticalNotif, true));
             data.setXpNotifEnabled(parseBoolean(xpNotif, true));
+            data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
+            data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
+            data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
 
             Map<String, Object> passives = castToStringObjectMap(map.get("passives"));
             if (passives != null) {

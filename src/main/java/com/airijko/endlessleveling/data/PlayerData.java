@@ -29,6 +29,9 @@ public class PlayerData {
     private boolean playerHudEnabled;
     private boolean criticalNotifEnabled;
     private boolean xpNotifEnabled;
+    private boolean passiveLevelUpNotifEnabled;
+    private boolean luckDoubleDropsNotifEnabled;
+    private boolean healthRegenNotifEnabled;
 
     public PlayerData(UUID uuid, String playerName) {
         this(uuid, playerName, 0);
@@ -44,6 +47,9 @@ public class PlayerData {
         this.playerHudEnabled = true;
         this.criticalNotifEnabled = true;
         this.xpNotifEnabled = true;
+        this.passiveLevelUpNotifEnabled = true;
+        this.luckDoubleDropsNotifEnabled = true;
+        this.healthRegenNotifEnabled = true;
 
         this.attributes = new EnumMap<>(SkillAttributeType.class);
         for (SkillAttributeType type : SkillAttributeType.values()) {
@@ -116,6 +122,30 @@ public class PlayerData {
 
     public void setXpNotifEnabled(boolean xpNotifEnabled) {
         this.xpNotifEnabled = xpNotifEnabled;
+    }
+
+    public boolean isPassiveLevelUpNotifEnabled() {
+        return passiveLevelUpNotifEnabled;
+    }
+
+    public void setPassiveLevelUpNotifEnabled(boolean passiveLevelUpNotifEnabled) {
+        this.passiveLevelUpNotifEnabled = passiveLevelUpNotifEnabled;
+    }
+
+    public boolean isLuckDoubleDropsNotifEnabled() {
+        return luckDoubleDropsNotifEnabled;
+    }
+
+    public void setLuckDoubleDropsNotifEnabled(boolean luckDoubleDropsNotifEnabled) {
+        this.luckDoubleDropsNotifEnabled = luckDoubleDropsNotifEnabled;
+    }
+
+    public boolean isHealthRegenNotifEnabled() {
+        return healthRegenNotifEnabled;
+    }
+
+    public void setHealthRegenNotifEnabled(boolean healthRegenNotifEnabled) {
+        this.healthRegenNotifEnabled = healthRegenNotifEnabled;
     }
 
     // --- Skill Level handling ---
