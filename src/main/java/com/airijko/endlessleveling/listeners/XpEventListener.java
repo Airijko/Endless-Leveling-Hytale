@@ -2,6 +2,7 @@ package com.airijko.endlessleveling.listeners;
 
 import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.PartyManager;
+import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
@@ -27,13 +28,16 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
     private final PlayerDataManager playerDataManager;
     private final LevelingManager levelingManager;
     private final PartyManager partyManager;
+    private final PassiveManager passiveManager;
 
     public XpEventListener(PlayerDataManager playerDataManager,
             LevelingManager levelingManager,
-            PartyManager partyManager) {
+            PartyManager partyManager,
+            PassiveManager passiveManager) {
         this.playerDataManager = playerDataManager;
         this.levelingManager = levelingManager;
         this.partyManager = partyManager;
+        this.passiveManager = passiveManager;
     }
 
     @Override
@@ -84,6 +88,10 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
             partyManager.handleXpGain(playerUuid, xpGained);
         } else {
             levelingManager.addXp(playerUuid, xpGained);
+        }
+
+        if (passiveManager != null && passiveManager.getLuckValue(playerData) > 0.0D) {
+            passiveManager.openMobDropWindow(playerUuid);
         }
     }
 }

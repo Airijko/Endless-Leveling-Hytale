@@ -2,6 +2,7 @@ package com.airijko.endlessleveling;
 
 import com.airijko.endlessleveling.commands.EndlessLevelingCommand;
 import com.airijko.endlessleveling.commands.PartyCommand;
+import com.airijko.endlessleveling.listeners.LuckDoubleDropSystem;
 import com.airijko.endlessleveling.listeners.OpenPlayerHudListener;
 import com.airijko.endlessleveling.listeners.PartyListener;
 import com.airijko.endlessleveling.listeners.PlayerCombatListener;
@@ -11,6 +12,7 @@ import com.airijko.endlessleveling.listeners.XpEventListener;
 import com.airijko.endlessleveling.managers.*;
 import com.airijko.endlessleveling.systems.PassiveRegenSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.event.events.entity.LivingEntityInventoryChangeEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
@@ -94,8 +96,11 @@ public class EndlessLeveling extends JavaPlugin {
         this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, partyListener::onPlayerDisconnect);
 
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, OpenPlayerHudListener::openGui);
+        LuckDoubleDropSystem luckDoubleDropSystem = new LuckDoubleDropSystem(playerDataManager, passiveManager);
+        this.getEventRegistry().registerGlobal(LivingEntityInventoryChangeEvent.class,
+                luckDoubleDropSystem::onInventoryChange);
         this.getEntityStoreRegistry()
-                .registerSystem(new XpEventListener(playerDataManager, levelingManager, partyManager));
+                .registerSystem(new XpEventListener(playerDataManager, levelingManager, partyManager, passiveManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerCombatListener(playerDataManager, skillManager, passiveManager));
         this.getEntityStoreRegistry()

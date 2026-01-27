@@ -5,10 +5,8 @@ import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.systems.PassiveRegenSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
-import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
-import com.hypixel.hytale.server.core.util.NotificationUtil;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -25,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PassiveManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+    private static final long LUCK_MOB_DROP_WINDOW_MS = 3500L;
+    private static final int LUCK_MOB_DROP_STACK_BUDGET = 6;
 
     private final ConfigManager configManager;
     private final Map<PassiveType, PassiveDefinition> definitions = new EnumMap<>(PassiveType.class);
@@ -47,6 +47,43 @@ public class PassiveManager {
         PassiveRuntimeState state = runtimeStates.computeIfAbsent(uuid, PassiveRuntimeState::new);
         state.setLastCombatMillis(System.currentTimeMillis());
         state.setRegenerationActive(false);
+    }
+
+    public void openMobDropWindow(@Nonnull UUID uuid) {
+        PassiveRuntimeState state = runtimeStates.computeIfAbsent(uuid, PassiveRuntimeState::new);
+        state.setLuckMobDropWindowExpiresAt(System.currentTimeMillis() + LUCK_MOB_DROP_WINDOW_MS);
+        state.setLuckMobDropStacks(Math.max(state.getLuckMobDropStacks(), LUCK_MOB_DROP_STACK_BUDGET));
+    }
+
+    public boolean hasMobDropStack(@Nonnull UUID uuid) {
+        PassiveRuntimeState state = runtimeStates.get(uuid);
+        if (state == null) {
+            return false;
+        }
+        long now = System.currentTimeMillis();
+        if (state.getLuckMobDropWindowExpiresAt() <= now) {
+            state.setLuckMobDropStacks(0);
+            return false;
+        }
+        return state.getLuckMobDropStacks() > 0;
+    }
+
+    public boolean consumeMobDropStack(@Nonnull UUID uuid) {
+        PassiveRuntimeState state = runtimeStates.get(uuid);
+        if (state == null) {
+            return false;
+        }
+        long now = System.currentTimeMillis();
+        if (state.getLuckMobDropWindowExpiresAt() <= now) {
+            state.setLuckMobDropStacks(0);
+            return false;
+        }
+        int remaining = state.getLuckMobDropStacks();
+        if (remaining <= 0) {
+            return false;
+        }
+        state.setLuckMobDropStacks(remaining - 1);
+        return true;
     }
 
     public boolean isOutOfCombat(@Nonnull UUID uuid, long cooldownMillis) {
@@ -154,19 +191,8 @@ public class PassiveManager {
                 Message.raw(" +" + bonusAmount + " (total x" + totalAmount + ")").color("#9be7ff"));
         ref.sendMessage(chatMessage);
 
-        var packetHandler = ref.getPacketHandler();
-        if (packetHandler != null) {
-            Message primary = Message.join(
-                    Message.raw("Luck Double Drop").color("#4fd7f7"),
-                    Message.raw(" +" + bonusAmount).color("#9be7ff"));
-            Message secondary = Message.join(
-                    Message.raw(dropName + " x" + totalAmount).color("#ffc300"));
-            var icon = new ItemStack("Ingredient_Life_Essence", 1).toPacket();
-            NotificationUtil.sendNotification(packetHandler, primary, secondary, icon);
-        } else {
-            LOGGER.atFine().log("Skipping luck double-drop popup for %s - packet handler unavailable",
-                    playerData.getPlayerName());
-        }
+        LOGGER.atFine().log("Luck double-drop triggered for %s: %s +%d",
+                playerData.getPlayerName(), dropName, bonusAmount);
     }
 
     public PassiveSnapshot getSnapshot(@Nonnull PlayerData playerData, @Nonnull PassiveType type) {
@@ -278,6 +304,8 @@ public class PassiveManager {
         private long lastCombatMillis;
         private float lastSignatureValue = Float.NaN;
         private boolean regenerationActive;
+        private long luckMobDropWindowExpiresAt;
+        private int luckMobDropStacks;
 
         PassiveRuntimeState(UUID ignored) {
         }
@@ -304,6 +332,22 @@ public class PassiveManager {
 
         public void setRegenerationActive(boolean regenerationActive) {
             this.regenerationActive = regenerationActive;
+        }
+
+        public long getLuckMobDropWindowExpiresAt() {
+            return luckMobDropWindowExpiresAt;
+        }
+
+        public void setLuckMobDropWindowExpiresAt(long luckMobDropWindowExpiresAt) {
+            this.luckMobDropWindowExpiresAt = luckMobDropWindowExpiresAt;
+        }
+
+        public int getLuckMobDropStacks() {
+            return luckMobDropStacks;
+        }
+
+        public void setLuckMobDropStacks(int luckMobDropStacks) {
+            this.luckMobDropStacks = luckMobDropStacks;
         }
     }
 }
