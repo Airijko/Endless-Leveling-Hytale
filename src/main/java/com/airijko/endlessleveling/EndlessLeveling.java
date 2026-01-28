@@ -30,6 +30,7 @@ public class EndlessLeveling extends JavaPlugin {
     // ------------------------
     private PluginFilesManager filesManager;
     private ConfigManager configManager;
+    private ModVersionManager modVersionManager;
     private PlayerDataManager playerDataManager;
     private LevelingManager levelingManager;
     private SkillManager skillManager;
@@ -76,6 +77,8 @@ public class EndlessLeveling extends JavaPlugin {
     protected void setup() {
         // Initialize all folders and managers
         filesManager = new PluginFilesManager(this);
+        modVersionManager = new ModVersionManager(this, filesManager);
+        modVersionManager.enforceVersionSafety();
         configManager = new ConfigManager(filesManager.getConfigFile());
 
         boolean enableLogging = toBoolean(configManager.get("enable_logging", Boolean.FALSE, false), false);

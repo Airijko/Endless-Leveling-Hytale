@@ -15,7 +15,7 @@ public class ConfigManager {
     private final File configFile;
     private final Yaml yaml;
     private Map<String, Object> configMap = new LinkedHashMap<>();
-    private final double bundledConfigVersion;
+    private final int bundledConfigVersion;
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final String CONFIG_RESOURCE = "config.yml";
     private static final String CONFIG_VERSION_KEY = "config_version";
@@ -132,13 +132,13 @@ public class ConfigManager {
     }
 
     private void ensureConfigUpToDate() {
-        double currentVersion = extractConfigVersion(configMap);
-        if (!Double.isNaN(currentVersion) && currentVersion >= bundledConfigVersion) {
+        Integer currentVersion = extractConfigVersion(configMap);
+        if (currentVersion != null && currentVersion >= bundledConfigVersion) {
             return;
         }
 
-        String foundVersion = Double.isNaN(currentVersion) ? "missing" : Double.toString(currentVersion);
-        String expectedVersion = Double.toString(bundledConfigVersion);
+        String foundVersion = currentVersion == null ? "missing" : Integer.toString(currentVersion);
+        String expectedVersion = Integer.toString(bundledConfigVersion);
         LOGGER.atWarning().log(
                 "Config version is missing/outdated (found=%s, expected=%s). Refreshing config...",
                 foundVersion, expectedVersion);
@@ -175,14 +175,14 @@ public class ConfigManager {
         }
     }
 
-    private double resolveBundledConfigVersion() {
+    private int resolveBundledConfigVersion() {
         try (InputStream in = ConfigManager.class.getClassLoader().getResourceAsStream(CONFIG_RESOURCE)) {
             if (in == null) {
                 throw new IllegalStateException("Bundled config resource missing: " + CONFIG_RESOURCE);
             }
             Map<String, Object> bundledMap = toMutableMap(yaml.load(in));
-            double version = extractConfigVersion(bundledMap);
-            if (Double.isNaN(version)) {
+            Integer version = extractConfigVersion(bundledMap);
+            if (version == null) {
                 throw new IllegalStateException("Bundled config is missing a valid config_version");
             }
             return version;
@@ -191,21 +191,33 @@ public class ConfigManager {
         }
     }
 
-    private double extractConfigVersion(Map<String, Object> source) {
+    private Integer extractConfigVersion(Map<String, Object> source) {
         if (source == null || source.isEmpty()) {
-            return Double.NaN;
+            return null;
         }
         Object versionValue = source.get(CONFIG_VERSION_KEY);
         if (versionValue instanceof Number number) {
-            return number.doubleValue();
+            double raw = number.doubleValue();
+            if (Double.isNaN(raw) || raw % 1 != 0) {
+                return null; // reject decimal versions
+            }
+            long numeric = number.longValue();
+            if (numeric < Integer.MIN_VALUE || numeric > Integer.MAX_VALUE) {
+                return null;
+            }
+            return (int) numeric;
         }
         if (versionValue instanceof String str) {
+            String trimmed = str.trim();
+            if (!trimmed.matches("-?\\d+")) {
+                return null;
+            }
             try {
-                return Double.parseDouble(str.trim());
+                return Integer.parseInt(trimmed);
             } catch (NumberFormatException ignored) {
-                return Double.NaN;
+                return null;
             }
         }
-        return Double.NaN;
+        return null;
     }
 }
