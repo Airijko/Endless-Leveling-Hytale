@@ -67,3 +67,6 @@ passives:
     tier_interval: 5
 
 enable_logging: false # Enable or disable logging
+
+# DON'T EDIT THIS LINE BELOW
+config_version: 3.0
