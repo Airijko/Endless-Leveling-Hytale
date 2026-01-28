@@ -28,6 +28,10 @@ public class PlayerDataManager {
     private final Yaml yaml;
     private final Map<UUID, PlayerData> playerCache = new HashMap<>();
 
+    // Current schema version for player data files. Increment when adding new
+    // fields that require migration. Use this to detect/outdate/migrate files.
+    private static final int CURRENT_PLAYERDATA_VERSION = 2;
+
     public PlayerDataManager(PluginFilesManager filesManager, SkillManager skillManager) {
         this.filesManager = filesManager;
         this.skillManager = skillManager;
@@ -39,6 +43,10 @@ public class PlayerDataManager {
         this.yaml = new Yaml(options);
 
         LOGGER.atInfo().log("PlayerDataManager initialized.");
+    }
+
+    public int getCurrentPlayerDataVersion() {
+        return CURRENT_PLAYERDATA_VERSION;
     }
 
     // --- Load or create a player ---
@@ -83,6 +91,9 @@ public class PlayerDataManager {
         File file = filesManager.getPlayerDataFile(data.getUuid());
 
         Map<String, Object> map = new LinkedHashMap<>();
+        // write current version into the file so future loads can detect schema
+        // and migrate if needed
+        map.put("version", CURRENT_PLAYERDATA_VERSION);
         map.put("playerName", data.getPlayerName());
         map.put("xp", data.getXp());
         map.put("level", data.getLevel());
@@ -132,6 +143,9 @@ public class PlayerDataManager {
                         uuid);
                 return new PlayerData(uuid, playerName, getStartingSkillPoints());
             }
+            // Migrate file if it's an older schema version. This will create
+            // a backup of the original file and write a migrated file in-place.
+            map = PlayerDataMigration.migrateIfNeeded(file, map, yaml, CURRENT_PLAYERDATA_VERSION);
             PlayerData data = new PlayerData(uuid, playerName, getStartingSkillPoints());
 
             data.setXp(((Number) map.getOrDefault("xp", 0)).doubleValue());
@@ -287,6 +301,9 @@ public class PlayerDataManager {
                 LOGGER.atWarning().log("Minimal load: empty YAML for UUID %s in file %s", uuid, file.getName());
                 return null;
             }
+            // Do NOT auto-migrate on minimal loads (leaderboards) to avoid
+            // touching files during read-only operations. Full load will
+            // perform migration when needed.
             String playerName = (String) map.getOrDefault("playerName", uuid.toString());
             PlayerData data = new PlayerData(uuid, playerName, getStartingSkillPoints());
 
@@ -341,4 +358,5 @@ public class PlayerDataManager {
     private int getStartingSkillPoints() {
         return skillManager != null ? skillManager.getBaseSkillPoints() : 0;
     }
+
 }
