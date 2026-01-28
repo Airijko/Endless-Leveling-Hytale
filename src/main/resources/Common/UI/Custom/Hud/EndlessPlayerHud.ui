@@ -1,26 +1,32 @@
 $C = "../Common.ui";
 
-$C.@Container {
-  Anchor: (Left: 30, Bottom: 30, Width: 275, Height: 85);
+$Hotbar = "Hotbar.ui";
+Group {
+  LayoutMode: Bottom;
+  Anchor: (Bottom: 0, Width: 675, Height: 12);
 
-  #Title {
+  Group {
+    LayoutMode: Middle;
+
     Group {
-      $C.@Title {
-        @Text = "ENDLESS LEVELING";
+      Anchor: (Left: 0, Width: 675, Height: 12);
+      Background: "XPBackground.png";
+
+      ProgressBar #ProgressBar {
+        Anchor: (Width: 675, Height: 12);
+        BarTexturePath: "XPFill.png";
+      }
+
+      ProgressBar #ProgressBarEffect {
+        Anchor: (Width: 675, Height: 12);
+        BarTexturePath: "XPEffect.png";
       }
     }
   }
 
-  #Content {
-    LayoutMode: Bottom;
-    Padding: (Bottom: 10);
-
-    Group {
-      Padding: (Horizontal: 15);
-      LayoutMode: Left;
-
-      Label #PlayerLevelValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 100); }
-      Label #PlayerXpValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 120); }
-    }
+  Label #Level {
+    Anchor: (Left: 0, Width: 4, Height: 18, Right: 4);
+    Style: (FontSize: 12, Alignment: Center);
+    Text: "MyText";
   }
 }

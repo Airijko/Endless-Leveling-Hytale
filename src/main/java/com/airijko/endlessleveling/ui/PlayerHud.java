@@ -37,39 +37,59 @@ public class PlayerHud extends CustomUIHud {
     @Override
     protected void build(@Nonnull UICommandBuilder uiCommandBuilder) {
         uiCommandBuilder.append("Hud/EndlessPlayerHud.ui");
-        uiCommandBuilder.set("#PlayerLevelValue.Text", resolveLevelText());
-        uiCommandBuilder.set("#PlayerXpValue.Text", resolveXpText());
+        pushHudState(uiCommandBuilder);
     }
 
-    private String resolveLevelText() {
-        PlayerData data = getPlayerData();
-        if (data != null) {
-            return "LEVEL " + data.getLevel();
-        }
-        return "LEVEL --";
+    private void pushHudState(@Nonnull UICommandBuilder uiCommandBuilder) {
+        uiCommandBuilder.set("#Level.Text", resolveHudLabel());
+        double progress = resolveXpProgress();
+        uiCommandBuilder.set("#ProgressBar.Value", progress);
+        uiCommandBuilder.set("#ProgressBarEffect.Value", progress);
+        update(false, uiCommandBuilder);
     }
 
-    private String resolveXpText() {
+    private String resolveHudLabel() {
         PlayerData data = getPlayerData();
         if (data == null) {
-            return "0 / -- XP";
+            return "LVL --   XP: 0 / --";
         }
 
         double currentXp = Math.max(0.0, data.getXp());
         if (levelingManager == null) {
-            return formatXpValue(currentXp) + " XP";
+            return "LVL " + data.getLevel() + "   XP: " + formatXpValue(currentXp);
         }
 
         if (data.getLevel() >= levelingManager.getLevelCap()) {
-            return "MAX LEVEL";
+            return "LVL " + levelingManager.getLevelCap() + "   MAX LEVEL";
         }
 
         double xpNeeded = levelingManager.getXpForNextLevel(data.getLevel());
         if (!Double.isFinite(xpNeeded) || xpNeeded <= 0.0) {
-            return "MAX LEVEL";
+            return "LVL " + data.getLevel() + "   MAX LEVEL";
         }
 
-        return formatXpValue(currentXp) + " / " + formatXpValue(xpNeeded) + " XP";
+        return "LVL " + data.getLevel() + "   XP: "
+                + formatXpValue(currentXp) + " / " + formatXpValue(xpNeeded);
+    }
+
+    private double resolveXpProgress() {
+        PlayerData data = getPlayerData();
+        if (data == null || levelingManager == null) {
+            return 0.0;
+        }
+
+        if (data.getLevel() >= levelingManager.getLevelCap()) {
+            return 1.0;
+        }
+
+        double xpNeeded = levelingManager.getXpForNextLevel(data.getLevel());
+        if (!Double.isFinite(xpNeeded) || xpNeeded <= 0.0) {
+            return 0.0;
+        }
+
+        double currentXp = Math.max(0.0, data.getXp());
+        double ratio = currentXp / xpNeeded;
+        return Math.max(0.0, Math.min(1.0, ratio));
     }
 
     private PlayerData getPlayerData() {
@@ -88,11 +108,8 @@ public class PlayerHud extends CustomUIHud {
         return Long.toString(rounded);
     }
 
-    public void refreshLevel() {
-        UICommandBuilder builder = new UICommandBuilder();
-        builder.set("#PlayerLevelValue.Text", resolveLevelText());
-        builder.set("#PlayerXpValue.Text", resolveXpText());
-        update(false, builder);
+    public void refreshHud() {
+        pushHudState(new UICommandBuilder());
     }
 
     public static void refreshHud(UUID uuid) {
@@ -102,7 +119,7 @@ public class PlayerHud extends CustomUIHud {
 
         PlayerHud hud = ACTIVE_HUDS.get(uuid);
         if (hud != null) {
-            hud.refreshLevel();
+            hud.refreshHud();
         }
     }
 

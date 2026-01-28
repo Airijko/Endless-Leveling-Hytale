@@ -27,49 +27,49 @@ import java.util.concurrent.CompletableFuture;
 
 public class EndlessLevelingCommand extends AbstractPlayerCommand {
 
-    public EndlessLevelingCommand(@Nonnull String name, @Nonnull String description) {
-        super(name, description);
-        this.addAliases("el", "endlessleveling", "skill");
-        this.addSubCommand(new SetLevelCommand());
-        this.addSubCommand(new ResetLevelCommand());
-        this.addSubCommand(new ApplyModifiersCommand());
-        this.addSubCommand(new StatTestCommand());
-        this.addSubCommand(new ResetAllPlayersCommand());
-        this.addSubCommand(new ResetSkillPointsCommand());
+        public EndlessLevelingCommand(@Nonnull String name, @Nonnull String description) {
+                super(name, description);
+                this.addAliases("el", "endlessleveling", "skill", "eskills");
+                this.addSubCommand(new SetLevelCommand());
+                this.addSubCommand(new ResetLevelCommand());
+                this.addSubCommand(new ApplyModifiersCommand());
+                this.addSubCommand(new StatTestCommand());
+                this.addSubCommand(new ResetAllPlayersCommand());
+                this.addSubCommand(new ResetSkillPointsCommand());
 
-        addGuiShortcut("party", "Open the EndlessLeveling Party page",
-                playerRef -> new PartyUIPage(playerRef, CustomPageLifetime.CanDismiss));
-        addGuiShortcut("leaderboards", "Open the EndlessLeveling Leaderboards page",
-                playerRef -> new LeaderboardsUIPage(playerRef, CustomPageLifetime.CanDismiss));
-        addGuiShortcut("settings", "Open the EndlessLeveling Settings page",
-                playerRef -> new SettingsUIPage(playerRef, CustomPageLifetime.CanDismiss));
-        addGuiShortcut("profile", "Open the EndlessLeveling Profile page",
-                playerRef -> new ProfileUIPage(playerRef, CustomPageLifetime.CanDismiss));
-        addGuiShortcut("attributes", "Open the EndlessLeveling Skills page",
-                playerRef -> new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));
-    }
+                addGuiShortcut("party", "Open the EndlessLeveling Party page",
+                                playerRef -> new PartyUIPage(playerRef, CustomPageLifetime.CanDismiss));
+                addGuiShortcut("leaderboards", "Open the EndlessLeveling Leaderboards page",
+                                playerRef -> new LeaderboardsUIPage(playerRef, CustomPageLifetime.CanDismiss));
+                addGuiShortcut("settings", "Open the EndlessLeveling Settings page",
+                                playerRef -> new SettingsUIPage(playerRef, CustomPageLifetime.CanDismiss));
+                addGuiShortcut("profile", "Open the EndlessLeveling Profile page",
+                                playerRef -> new ProfileUIPage(playerRef, CustomPageLifetime.CanDismiss));
+                addGuiShortcut("attributes", "Open the EndlessLeveling Skills page",
+                                playerRef -> new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));
+        }
 
-    @Override
-    protected boolean canGeneratePermission() {
-        return false; // let everyone open
-    }
+        @Override
+        protected boolean canGeneratePermission() {
+                return false; // let everyone open
+        }
 
-    @Override
-    protected void execute(@Nonnull CommandContext commandContext, @Nonnull Store<EntityStore> store,
-            @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
-        Player player = commandContext.senderAs(Player.class);
+        @Override
+        protected void execute(@Nonnull CommandContext commandContext, @Nonnull Store<EntityStore> store,
+                        @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+                Player player = commandContext.senderAs(Player.class);
 
-        CompletableFuture.runAsync(() -> {
-            player.getPageManager().openCustomPage(ref, store,
-                    new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));
-        }, world);
-    }
+                CompletableFuture.runAsync(() -> {
+                        player.getPageManager().openCustomPage(ref, store,
+                                        new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));
+                }, world);
+        }
 
-    private OpenPageSubCommand addGuiShortcut(String keyword,
-            String description,
-            OpenPageSubCommand.PageFactory factory) {
-        OpenPageSubCommand command = new OpenPageSubCommand(keyword, description, factory);
-        this.addSubCommand(command);
-        return command;
-    }
+        private OpenPageSubCommand addGuiShortcut(String keyword,
+                        String description,
+                        OpenPageSubCommand.PageFactory factory) {
+                OpenPageSubCommand command = new OpenPageSubCommand(keyword, description, factory);
+                this.addSubCommand(command);
+                return command;
+        }
 }
