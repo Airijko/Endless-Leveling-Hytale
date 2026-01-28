@@ -21,6 +21,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -34,11 +35,21 @@ public class LuckDoubleDropSystem {
     private final PlayerDataManager playerDataManager;
     private final PassiveManager passiveManager;
     private final Set<UUID> suppressedPlayers = ConcurrentHashMap.newKeySet();
+    private final ConcurrentMap<UUID, Long> recentOreBreaks = new ConcurrentHashMap<>();
 
     public LuckDoubleDropSystem(@Nonnull PlayerDataManager playerDataManager,
             @Nonnull PassiveManager passiveManager) {
         this.playerDataManager = playerDataManager;
         this.passiveManager = passiveManager;
+    }
+
+    /**
+     * Record that a player recently broke an ore block. The inventory change
+     * handler will only treat drops as "ore" when a recent break has been
+     * recorded for the player (prevents non-mining inventory additions).
+     */
+    public void markRecentOreBreak(@Nonnull UUID uuid) {
+        recentOreBreaks.put(uuid, System.currentTimeMillis());
     }
 
     /**
@@ -93,6 +104,14 @@ public class LuckDoubleDropSystem {
 
         boolean oreDrop = isOreStack(sourceStack);
         boolean mobDrop = !oreDrop && passiveManager.hasMobDropStack(uuid);
+        if (oreDrop) {
+            Long t = recentOreBreaks.get(uuid);
+            if (t == null || System.currentTimeMillis() - t > 3000L) {
+                oreDrop = false;
+            } else {
+                recentOreBreaks.remove(uuid);
+            }
+        }
         if (!oreDrop && !mobDrop) {
             return;
         }

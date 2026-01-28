@@ -9,6 +9,7 @@ import com.airijko.endlessleveling.listeners.PlayerCombatListener;
 import com.airijko.endlessleveling.listeners.PlayerDataListener;
 import com.airijko.endlessleveling.listeners.PlayerDefenseListener;
 import com.airijko.endlessleveling.listeners.XpEventListener;
+import com.airijko.endlessleveling.listeners.BreakBlockEntitySystem;
 import com.airijko.endlessleveling.managers.*;
 import com.airijko.endlessleveling.systems.PassiveRegenSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -99,6 +100,7 @@ public class EndlessLeveling extends JavaPlugin {
         LuckDoubleDropSystem luckDoubleDropSystem = new LuckDoubleDropSystem(playerDataManager, passiveManager);
         this.getEventRegistry().registerGlobal(LivingEntityInventoryChangeEvent.class,
                 luckDoubleDropSystem::onInventoryChange);
+        this.getEntityStoreRegistry().registerSystem(new BreakBlockEntitySystem(luckDoubleDropSystem));
         this.getEntityStoreRegistry()
                 .registerSystem(new XpEventListener(playerDataManager, levelingManager, partyManager, passiveManager));
         this.getEntityStoreRegistry()
