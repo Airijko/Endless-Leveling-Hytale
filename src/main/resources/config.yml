@@ -69,4 +69,4 @@ passives:
 enable_logging: false # Enable or disable logging
 
 # DON'T EDIT THIS LINE BELOW
-config_version: 3.0
+config_version: 1.0
