@@ -130,20 +130,31 @@ public class LevelingConfigManager {
     }
 
     private void copyBundledToFile() throws IOException {
-        try (InputStream in = LevelingConfigManager.class.getClassLoader().getResourceAsStream(resourceName)) {
-            if (in == null)
-                throw new FileNotFoundException("Bundled leveling resource not found: " + resourceName);
-            Files.copy(in, levelingFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        InputStream in = LevelingConfigManager.class.getClassLoader().getResourceAsStream(resourceName);
+        if (in == null) {
+            // Try class resource lookup as fallback (handles different classloader
+            // behaviors)
+            in = LevelingConfigManager.class.getResourceAsStream("/" + resourceName);
+        }
+        if (in == null) {
+            throw new FileNotFoundException("Bundled leveling resource not found: " + resourceName);
+        }
+        try (InputStream input = in) {
+            Files.copy(input, levelingFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
     private int resolveBundledConfigVersion() {
-        try (InputStream in = LevelingConfigManager.class.getClassLoader().getResourceAsStream(resourceName)) {
-            if (in == null) {
-                LOGGER.atWarning().log("Bundled resource %s missing, defaulting version to 1", resourceName);
-                return 1;
-            }
-            Map<String, Object> bundledMap = toMutableMap(yaml.load(in));
+        InputStream in = LevelingConfigManager.class.getClassLoader().getResourceAsStream(resourceName);
+        if (in == null) {
+            in = LevelingConfigManager.class.getResourceAsStream("/" + resourceName);
+        }
+        if (in == null) {
+            LOGGER.atWarning().log("Bundled resource %s missing, defaulting version to 1", resourceName);
+            return 1;
+        }
+        try (InputStream input = in) {
+            Map<String, Object> bundledMap = toMutableMap(yaml.load(input));
             Integer v = extractConfigVersion(bundledMap);
             return v == null ? 1 : v;
         } catch (IOException e) {

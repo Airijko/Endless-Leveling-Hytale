@@ -9,5 +9,97 @@ skillPointsPerLevel: 6
 
 player_level_cap: 100
 
+# =====================================================
+# MOB LEVELING CONFIG
+# =====================================================
+
+Mob_Leveling:
+  Enabled: true
+
+  # Mobs listed here will NEVER be leveled
+  Blacklist_Mob_Types:
+    - "EXAMPLE_MOB_TYPE_1"
+    - "EXAMPLE_MOB_TYPE_2"
+
+  # -------------------------------------------------
+  # GLOBAL MOB LEVEL RANGE
+  # -------------------------------------------------
+  Level_Range:
+    Min: 1
+    Max: 100
+
+  # -------------------------------------------------
+  # HOW MOB LEVELS ARE ASSIGNED
+  # -------------------------------------------------
+  Level_Source:
+    # DISTANCE | PLAYER | FIXED
+    Mode: "DISTANCE"
+
+    # Mob level is based on the player's level
+    Player_Based:
+      Offset: 0 # Mob level = player level + offset
+      Min_Difference: -3 # Mobs can be 3 levels lower
+      Max_Difference: 3 # Mobs can be 3 levels higher
+
+    # Used when Mode is FIXED
+    Fixed_Level:
+      Level: 10
+
+  # -------------------------------------------------
+  # MOB STAT SCALING
+  # -------------------------------------------------
+  Scaling:
+    Health:
+      Base_Multiplier: 1.0
+      Per_Level: 0.05 # +5% HP per mob level
+
+    Damage:
+      Base_Multiplier: 1.0
+      Per_Level: 0.03 # +3% damage per mob level
+
+  # -------------------------------------------------
+  # EXPERIENCE & ANTI-EXPLOIT RULES
+  # -------------------------------------------------
+  Experience:
+    Enabled: true
+
+    # Controls when XP is awarded based on level difference
+    XP_Level_Range:
+      Enabled: true
+
+      # No XP if the player is this many levels
+      # above OR below the mob
+      Max_Difference: 10
+
+      # Hard cutoffs
+      Below_Range:
+        Multiplier: 0.0 # Player too weak → no XP
+
+      Above_Range:
+        Multiplier: 0.0 # Player too strong → no XP
+
+    # Optional global XP multiplier
+    Global_XP_Multiplier: 1.0
+
+  # -------------------------------------------------
+  # MOB SPAWN & BEHAVIOR RULES
+  # -------------------------------------------------
+  Spawn_Behavior:
+    Recalculate_On_Spawn: true # Assign level when mob spawns
+    Lock_Level_After_Spawn: true # Prevents level abuse
+    Despawn_When_Too_Far: false
+
+  # -------------------------------------------------
+  # VISUALS & PLAYER FEEDBACK
+  # -------------------------------------------------
+  UI:
+    Show_Mob_Level: true
+    Show_Level_In_Name: true
+
+    Level_Color:
+      Lower: GREEN # Mob is lower level
+      Equal: YELLOW # Mob is near player level
+      Higher: RED # Mob is higher level
+
 # DON'T EDIT THIS LINE BELOW
-config_version: 1
+config_version: 2
