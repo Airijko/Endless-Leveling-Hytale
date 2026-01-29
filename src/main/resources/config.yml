@@ -1,4 +1,5 @@
 # config.yml
+
 skill_attributes: # Value per level
   life_force: 2.0 # Health
   strength: 0.5 # Damage
@@ -69,4 +70,5 @@ passives:
 enable_logging: false # Enable or disable logging
 
 # DON'T EDIT THIS LINE BELOW
+
 config_version: 1

@@ -38,32 +38,23 @@ public class SkillManager {
     private static final double DEFENSE_MID_SEGMENT_SLOPE = 0.5;
     private static final double DEFENSE_FINAL_SEGMENT_SLOPE = 0.2;
 
-    private final File levelingFile;
+    private final LevelingConfigManager levelingConfig;
     private final ConfigManager config;
 
     private int baseSkillPoints;
     private int skillPointsPerLevel;
 
     public SkillManager(PluginFilesManager filesManager) {
-        this.levelingFile = filesManager.getLevelingFile();
+        this.levelingConfig = new LevelingConfigManager(filesManager.getLevelingFile());
         this.config = new ConfigManager(filesManager.getConfigFile());
         loadConfigValues();
     }
 
     /** Load skill point values from leveling.yml */
     public void loadConfigValues() {
-        if (levelingFile == null || !levelingFile.exists()) {
-            LOGGER.atWarning().log("leveling.yml not found, using default skill points.");
-            baseSkillPoints = 8;
-            skillPointsPerLevel = 4;
-            return;
-        }
-
-        try (FileInputStream fis = new FileInputStream(levelingFile)) {
-            Yaml yaml = new Yaml();
-            Map<String, Object> config = yaml.load(fis);
-            baseSkillPoints = ((Number) config.getOrDefault("baseSkillPoints", 8)).intValue();
-            skillPointsPerLevel = ((Number) config.getOrDefault("skillPointsPerLevel", 4)).intValue();
+        try {
+            baseSkillPoints = levelingConfig.getInt("baseSkillPoints", 8);
+            skillPointsPerLevel = levelingConfig.getInt("skillPointsPerLevel", 4);
             LOGGER.atInfo().log("SkillManager loaded: baseSkillPoints=%d, skillPointsPerLevel=%d",
                     baseSkillPoints, skillPointsPerLevel);
         } catch (Exception e) {
