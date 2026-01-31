@@ -198,4 +198,122 @@ public class LevelingManager {
     public int getLevelCap() {
         return levelCap;
     }
+
+    /**
+     * Whether mob leveling is enabled in the leveling.yml under
+     * Mob_Leveling.Enabled
+     */
+    public boolean isMobLevelingEnabled() {
+        Object raw = configManager.get("Mob_Leveling.Enabled", Boolean.TRUE, false);
+        if (raw instanceof Boolean b)
+            return b;
+        if (raw instanceof Number n)
+            return n.intValue() != 0;
+        if (raw instanceof String s)
+            return Boolean.parseBoolean(s.trim());
+        return false;
+    }
+
+    /**
+     * Whether passive mobs are allowed to be leveled
+     * (Mob_Leveling.allow_passive_mob_leveling)
+     */
+    public boolean allowPassiveMobLeveling() {
+        Object raw = configManager.get("Mob_Leveling.allow_passive_mob_leveling", Boolean.FALSE, false);
+        if (raw instanceof Boolean b)
+            return b;
+        if (raw instanceof Number n)
+            return n.intValue() != 0;
+        if (raw instanceof String s)
+            return Boolean.parseBoolean(s.trim());
+        return false;
+    }
+
+    /**
+     * Returns true if the provided mob type (string) is present in the blacklist
+     * defined at Mob_Leveling.Blacklist_Mob_Types. Comparison is case-insensitive.
+     */
+    public boolean isMobTypeBlacklisted(String mobType) {
+        if (mobType == null || mobType.isBlank())
+            return false;
+        Object raw = configManager.get("Mob_Leveling.Blacklist_Mob_Types", null, false);
+        if (raw == null)
+            return false;
+
+        if (raw instanceof Iterable<?> iterable) {
+            for (Object entry : iterable) {
+                if (entry == null)
+                    continue;
+                if (mobType.equalsIgnoreCase(entry.toString())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Single value case
+        String single = raw.toString();
+        return mobType.equalsIgnoreCase(single);
+    }
+
+    /**
+     * Returns a health multiplier for a given mob level using the config values:
+     * Mob_Leveling.Scaling.Health.Base_Multiplier and Per_Level.
+     */
+    public double getMobHealthMultiplierForLevel(int level) {
+        double base = getConfigDouble("Mob_Leveling.Scaling.Health.Base_Multiplier", 1.0);
+        double per = getConfigDouble("Mob_Leveling.Scaling.Health.Per_Level", 0.05);
+        int effectiveLevel = Math.max(1, level);
+        return base * (1.0 + per * (effectiveLevel - 1));
+    }
+
+    /**
+     * Returns a damage multiplier for a given mob level using the config values:
+     * Mob_Leveling.Scaling.Damage.Base_Multiplier and Per_Level.
+     */
+    public double getMobDamageMultiplierForLevel(int level) {
+        double base = getConfigDouble("Mob_Leveling.Scaling.Damage.Base_Multiplier", 1.0);
+        double per = getConfigDouble("Mob_Leveling.Scaling.Damage.Per_Level", 0.03);
+        int effectiveLevel = Math.max(1, level);
+        return base * (1.0 + per * (effectiveLevel - 1));
+    }
+
+    /**
+     * Whether damage-scaling should be applied to mobs via MobDamageScalingSystem
+     */
+    public boolean isMobDamageScalingEnabled() {
+        Object raw = configManager.get("Mob_Leveling.Scaling.Damage.Enabled", Boolean.FALSE, false);
+        if (raw instanceof Boolean b)
+            return b;
+        if (raw instanceof Number n)
+            return n.intValue() != 0;
+        if (raw instanceof String s)
+            return Boolean.parseBoolean(s.trim());
+        return false;
+    }
+
+    /** Whether health-scaling should be applied to mobs via MobLevelingSystem */
+    public boolean isMobHealthScalingEnabled() {
+        Object raw = configManager.get("Mob_Leveling.Scaling.Health.Enabled", Boolean.FALSE, false);
+        if (raw instanceof Boolean b)
+            return b;
+        if (raw instanceof Number n)
+            return n.intValue() != 0;
+        if (raw instanceof String s)
+            return Boolean.parseBoolean(s.trim());
+        return false;
+    }
+
+    private double getConfigDouble(String path, double defaultValue) {
+        Object raw = configManager.get(path, defaultValue, false);
+        if (raw == null)
+            return defaultValue;
+        try {
+            if (raw instanceof Number)
+                return ((Number) raw).doubleValue();
+            return Double.parseDouble(raw.toString());
+        } catch (Exception ignored) {
+            return defaultValue;
+        }
+    }
 }

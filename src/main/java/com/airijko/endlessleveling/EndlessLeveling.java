@@ -12,6 +12,7 @@ import com.airijko.endlessleveling.listeners.XpEventListener;
 import com.airijko.endlessleveling.listeners.BreakBlockEntitySystem;
 import com.airijko.endlessleveling.managers.*;
 import com.airijko.endlessleveling.systems.PassiveRegenSystem;
+import com.airijko.endlessleveling.systems.MobNameplateSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.event.events.entity.LivingEntityInventoryChangeEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
@@ -108,6 +109,11 @@ public class EndlessLeveling extends JavaPlugin {
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerDefenseListener(playerDataManager, skillManager, passiveManager));
         this.getEntityStoreRegistry().registerSystem(new PassiveRegenSystem(playerDataManager, passiveManager));
+        this.getEntityStoreRegistry().registerSystem(new MobNameplateSystem());
+        this.getEntityStoreRegistry()
+                .registerSystem(new com.airijko.endlessleveling.systems.MobDamageScalingSystem(levelingManager));
+        this.getEntityStoreRegistry().registerSystem(
+                new com.airijko.endlessleveling.systems.MobIncomingDamageScalingSystem(levelingManager));
 
         // Register commands
         this.getCommandRegistry().registerCommand(new EndlessLevelingCommand("skills", "Skills menu"));

@@ -21,6 +21,8 @@ Mob_Leveling:
     - "EXAMPLE_MOB_TYPE_1"
     - "EXAMPLE_MOB_TYPE_2"
 
+  allow_passive_mob_leveling: false
+
   # -------------------------------------------------
   # GLOBAL MOB LEVEL RANGE
   # -------------------------------------------------
@@ -50,12 +52,14 @@ Mob_Leveling:
   # -------------------------------------------------
   Scaling:
     Health:
+      Enabled: true
       Base_Multiplier: 1.0
       Per_Level: 0.05 # +5% HP per mob level
 
     Damage:
+      Enabled: true
       Base_Multiplier: 1.0
-      Per_Level: 0.03 # +3% damage per mob level
+      Per_Level: 0.02 # optional suggestion (2% per level)
 
   # -------------------------------------------------
   # EXPERIENCE & ANTI-EXPLOIT RULES
