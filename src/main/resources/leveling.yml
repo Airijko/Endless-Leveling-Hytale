@@ -93,24 +93,10 @@ Mob_Leveling:
     Global_XP_Multiplier: 1.0
 
   # -------------------------------------------------
-  # MOB SPAWN & BEHAVIOR RULES
-  # -------------------------------------------------
-  Spawn_Behavior:
-    Recalculate_On_Spawn: true # Assign level when mob spawns
-    Lock_Level_After_Spawn: true # Prevents level abuse
-    Despawn_When_Too_Far: false
-
-  # -------------------------------------------------
   # VISUALS & PLAYER FEEDBACK
   # -------------------------------------------------
   UI:
     Show_Mob_Level: true
-    Show_Level_In_Name: true
-
-    Level_Color:
-      Lower: GREEN # Mob is lower level
-      Equal: YELLOW # Mob is near player level
-      Higher: RED # Mob is higher level
 
 # DON'T EDIT THIS LINE BELOW
 config_version: 2

@@ -34,9 +34,12 @@ public class MobNameplateSystem extends TickingSystem<EntityStore> {
         }
 
         MobLevelingManager levelingManager = EndlessLeveling.getInstance().getMobLevelingManager();
-        if (levelingManager == null || !levelingManager.isMobLevelingEnabled()) {
+        if (levelingManager == null || !levelingManager.isMobLevelingEnabled()
+                || !levelingManager.shouldShowMobLevelUi()) {
             return; // mob leveling disabled globally
         }
+
+        boolean includeLevelInName = levelingManager.shouldIncludeLevelInNameplate();
 
         store.forEachChunk(ENTITY_QUERY,
                 (ArchetypeChunk<EntityStore> chunk, CommandBuffer<EntityStore> commandBuffer) -> {
@@ -88,7 +91,10 @@ public class MobNameplateSystem extends TickingSystem<EntityStore> {
                         if (nameplate != null) {
                             int mobLevel = levelingManager.resolveMobLevel(ref, commandBuffer);
                             StringBuilder label = new StringBuilder();
-                            label.append("[Lv.").append(mobLevel).append("] ").append(baseName);
+                            if (includeLevelInName) {
+                                label.append("[Lv.").append(mobLevel).append("] ");
+                            }
+                            label.append(baseName);
 
                             // Append health if available
                             EntityStatMap statMap = commandBuffer.getComponent(ref, EntityStatMap.getComponentType());
