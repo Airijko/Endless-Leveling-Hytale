@@ -4,6 +4,7 @@ import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.PartyManager;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.airijko.endlessleveling.managers.MobLevelingManager;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -29,15 +30,18 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
     private final LevelingManager levelingManager;
     private final PartyManager partyManager;
     private final PassiveManager passiveManager;
+    private final MobLevelingManager mobLevelingManager;
 
     public XpEventListener(PlayerDataManager playerDataManager,
             LevelingManager levelingManager,
             PartyManager partyManager,
-            PassiveManager passiveManager) {
+            PassiveManager passiveManager,
+            MobLevelingManager mobLevelingManager) {
         this.playerDataManager = playerDataManager;
         this.levelingManager = levelingManager;
         this.partyManager = partyManager;
         this.passiveManager = passiveManager;
+        this.mobLevelingManager = mobLevelingManager;
     }
 
     @Override
@@ -81,7 +85,15 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
         if (healthStat == null)
             return;
 
+        int mobLevel = mobLevelingManager != null ? mobLevelingManager.resolveMobLevel(ref, commandBuffer) : 1;
+
         double xpGained = Math.max(1, healthStat.getMax());
+        xpGained = levelingManager.applyMobKillXpRules(playerData, mobLevel, xpGained);
+        if (xpGained <= 0.0) {
+            LOGGER.atFine().log("XP gain blocked for player %s due to level gap (player=%d, mob=%d)",
+                    playerUuid, playerData.getLevel(), mobLevel);
+            return;
+        }
         LOGGER.atInfo().log("Granting XP (before party share): %f to player %s", xpGained, playerUuid);
 
         if (partyManager != null) {

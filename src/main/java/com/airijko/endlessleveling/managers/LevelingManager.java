@@ -10,6 +10,7 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.util.EventTitleUtil;
 import com.hypixel.hytale.server.core.util.NotificationUtil;
 
+import java.util.Locale;
 import java.util.UUID;
 
 public class LevelingManager {
@@ -24,6 +25,14 @@ public class LevelingManager {
     private double baseXp;
     private double multiplier;
     private int levelCap;
+    private boolean experienceRulesEnabled;
+    private boolean xpLevelRangeEnabled;
+    private int xpMaxDifference;
+    private double xpBelowRangeMultiplier;
+    private double xpAboveRangeMultiplier;
+    private double globalXpMultiplier;
+    private boolean playerBasedMode;
+    private int playerBasedOffset;
 
     public LevelingManager(PlayerDataManager playerDataManager, PluginFilesManager filesManager,
             SkillManager skillManager, PassiveManager passiveManager) {
@@ -42,6 +51,17 @@ public class LevelingManager {
                 "base * ((log(level)+1) * sqrt(level))^1.5"), 1.5);
         int configuredCap = ((Number) configManager.get("player_level_cap", 100)).intValue();
         levelCap = Math.max(1, configuredCap);
+
+        String levelSourceMode = getString("Mob_Leveling.Level_Source.Mode", "FIXED").toUpperCase(Locale.ROOT);
+        playerBasedMode = "PLAYER".equals(levelSourceMode);
+        playerBasedOffset = getInt("Mob_Leveling.Level_Source.Player_Based.Offset", 0);
+
+        experienceRulesEnabled = getBoolean("Mob_Leveling.Experience.Enabled", true);
+        globalXpMultiplier = getDouble("Mob_Leveling.Experience.Global_XP_Multiplier", 1.0);
+        xpLevelRangeEnabled = getBoolean("Mob_Leveling.Experience.XP_Level_Range.Enabled", true);
+        xpMaxDifference = Math.max(0, getInt("Mob_Leveling.Experience.XP_Level_Range.Max_Difference", 10));
+        xpBelowRangeMultiplier = getDouble("Mob_Leveling.Experience.XP_Level_Range.Below_Range.Multiplier", 0.0);
+        xpAboveRangeMultiplier = getDouble("Mob_Leveling.Experience.XP_Level_Range.Above_Range.Multiplier", 0.0);
 
         LOGGER.atInfo().log("Leveling config loaded: base=%f, multiplier=%f, cap=%d", baseXp, multiplier, levelCap);
     }
@@ -197,5 +217,103 @@ public class LevelingManager {
 
     public int getLevelCap() {
         return levelCap;
+    }
+
+    public double applyMobKillXpRules(PlayerData player, int mobLevel, double baseXpAmount) {
+        if (player == null || baseXpAmount <= 0)
+            return 0.0;
+
+        double adjustedXp = baseXpAmount;
+        if (!experienceRulesEnabled)
+            return adjustedXp;
+
+        if (globalXpMultiplier != 1.0d)
+            adjustedXp *= globalXpMultiplier;
+
+        boolean blockedForBeingTooHigh = false;
+        boolean blockedForBeingTooLow = false;
+        if (xpLevelRangeEnabled) {
+            int mobLvl = Math.max(1, mobLevel);
+            int diff = player.getLevel() - mobLvl;
+            if (playerBasedMode)
+                diff += playerBasedOffset;
+            if (diff > xpMaxDifference) {
+                adjustedXp *= xpAboveRangeMultiplier;
+                blockedForBeingTooHigh = xpAboveRangeMultiplier <= 0.0;
+            } else if (diff < -xpMaxDifference) {
+                adjustedXp *= xpBelowRangeMultiplier;
+                blockedForBeingTooLow = xpBelowRangeMultiplier <= 0.0;
+            }
+        }
+        if (adjustedXp <= 0.0) {
+            if (blockedForBeingTooHigh)
+                notifyXpSuppressed(player, mobLevel, XpSuppressionReason.PLAYER_TOO_HIGH);
+            else if (blockedForBeingTooLow)
+                notifyXpSuppressed(player, mobLevel, XpSuppressionReason.PLAYER_TOO_LOW);
+            return 0.0;
+        }
+        return adjustedXp;
+    }
+
+    private void notifyXpSuppressed(PlayerData player, int mobLevel, XpSuppressionReason reason) {
+        PlayerRef playerRef = Universe.get().getPlayer(player.getUuid());
+        if (playerRef == null)
+            return;
+
+        String messageText = switch (reason) {
+            case PLAYER_TOO_HIGH -> String.format("No XP awarded: your level (%d) is too high for this mob (level %d).",
+                    player.getLevel(), Math.max(1, mobLevel));
+            case PLAYER_TOO_LOW -> String.format(
+                    "No XP awarded: this mob (level %d) is too far above your level (%d).",
+                    Math.max(1, mobLevel), player.getLevel());
+        };
+        playerRef.sendMessage(Message.raw(messageText).color("#ff6666"));
+    }
+
+    private boolean getBoolean(String path, boolean defaultValue) {
+        Object raw = configManager.get(path, defaultValue, false);
+        if (raw instanceof Boolean b)
+            return b;
+        if (raw instanceof Number n)
+            return n.intValue() != 0;
+        if (raw instanceof String s)
+            return Boolean.parseBoolean(s.trim());
+        return defaultValue;
+    }
+
+    private int getInt(String path, int defaultValue) {
+        Object raw = configManager.get(path, defaultValue, false);
+        if (raw instanceof Number n)
+            return n.intValue();
+        if (raw instanceof String s) {
+            try {
+                return Integer.parseInt(s.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return defaultValue;
+    }
+
+    private double getDouble(String path, double defaultValue) {
+        Object raw = configManager.get(path, defaultValue, false);
+        if (raw instanceof Number n)
+            return n.doubleValue();
+        if (raw instanceof String s) {
+            try {
+                return Double.parseDouble(s.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return defaultValue;
+    }
+
+    private String getString(String path, String defaultValue) {
+        Object raw = configManager.get(path, defaultValue, false);
+        return raw != null ? raw.toString() : defaultValue;
+    }
+
+    private enum XpSuppressionReason {
+        PLAYER_TOO_HIGH,
+        PLAYER_TOO_LOW
     }
 }

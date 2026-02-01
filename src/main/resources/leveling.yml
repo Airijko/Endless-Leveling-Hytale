@@ -47,8 +47,8 @@ Mob_Leveling:
     # Mob level is based on the player's level
     Player_Based:
       Offset: 0 # Mob level = player level + offset
-      Min_Difference: -3 # Mobs can be 3 levels lower
-      Max_Difference: 3 # Mobs can be 3 levels higher
+      Min_Difference: -5 # Mobs can be 5 levels lower
+      Max_Difference: 5 # Mobs can be 5 levels higher
 
     # Used when Mode is FIXED
     Fixed_Level:

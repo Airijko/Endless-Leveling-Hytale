@@ -109,7 +109,8 @@ public class EndlessLeveling extends JavaPlugin {
                 luckDoubleDropSystem::onInventoryChange);
         this.getEntityStoreRegistry().registerSystem(new BreakBlockEntitySystem(luckDoubleDropSystem));
         this.getEntityStoreRegistry()
-                .registerSystem(new XpEventListener(playerDataManager, levelingManager, partyManager, passiveManager));
+                .registerSystem(new XpEventListener(playerDataManager, levelingManager, partyManager, passiveManager,
+                        mobLevelingManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerCombatListener(playerDataManager, skillManager, passiveManager));
         this.getEntityStoreRegistry()
