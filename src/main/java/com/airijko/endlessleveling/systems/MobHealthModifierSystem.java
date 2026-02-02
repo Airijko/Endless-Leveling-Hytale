@@ -92,14 +92,28 @@ public class MobHealthModifierSystem extends HolderSystem<EntityStore> {
     }
 
     private String resolveMobType(Holder<EntityStore> holder) {
-        WorldGenId worldGenId = holder.getComponent(WorldGenId.getComponentType());
-        if (worldGenId == null)
-            return null;
-        try {
-            return worldGenId.toString();
-        } catch (Throwable ignored) {
-            return null;
+        NPCEntity npc = holder.getComponent(NPCEntity.getComponentType());
+        if (npc != null) {
+            try {
+                String npcTypeId = npc.getNPCTypeId();
+                if (npcTypeId != null && !npcTypeId.isBlank())
+                    return npcTypeId;
+            } catch (Throwable ignored) {
+            }
         }
+
+        WorldGenId worldGenId = holder.getComponent(WorldGenId.getComponentType());
+        if (worldGenId != null) {
+            try {
+                return Integer.toString(worldGenId.getWorldGenId());
+            } catch (Throwable ignored) {
+                try {
+                    return worldGenId.toString();
+                } catch (Throwable ignored2) {
+                }
+            }
+        }
+        return null;
     }
 
     private Vector3d resolvePosition(Holder<EntityStore> holder) {

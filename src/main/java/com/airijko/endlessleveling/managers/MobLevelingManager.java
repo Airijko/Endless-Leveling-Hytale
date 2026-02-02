@@ -81,14 +81,7 @@ public class MobLevelingManager {
             return false;
 
         // check blacklist
-        String mobType = null;
-        Object worldGen = resolveComponent(ref, store, commandBuffer, WorldGenId.getComponentType());
-        if (worldGen != null) {
-            try {
-                mobType = worldGen.toString();
-            } catch (Throwable ignored) {
-            }
-        }
+        String mobType = resolveMobType(ref, store, commandBuffer);
         if (mobType != null && isMobTypeBlacklisted(mobType))
             return false;
 
@@ -368,6 +361,32 @@ public class MobLevelingManager {
 
         String single = raw.toString();
         return mobType.equalsIgnoreCase(single);
+    }
+
+    private String resolveMobType(Ref<EntityStore> ref, Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        NPCEntity npc = resolveComponent(ref, store, commandBuffer, NPCEntity.getComponentType());
+        if (npc != null) {
+            try {
+                String npcTypeId = npc.getNPCTypeId();
+                if (npcTypeId != null && !npcTypeId.isBlank())
+                    return npcTypeId;
+            } catch (Throwable ignored) {
+            }
+        }
+
+        WorldGenId worldGenId = resolveComponent(ref, store, commandBuffer, WorldGenId.getComponentType());
+        if (worldGenId != null) {
+            try {
+                return Integer.toString(worldGenId.getWorldGenId());
+            } catch (Throwable ignored) {
+                try {
+                    return worldGenId.toString();
+                } catch (Throwable ignored2) {
+                }
+            }
+        }
+        return null;
     }
 
     public double getMobHealthMultiplierForLevel(int level) {

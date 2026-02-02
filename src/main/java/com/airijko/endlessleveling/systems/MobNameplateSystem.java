@@ -53,15 +53,7 @@ public class MobNameplateSystem extends TickingSystem<EntityStore> {
                         }
 
                         // Resolve mob type (if available) and check blacklist
-                        String mobType = null;
-                        var worldGen = commandBuffer.getComponent(ref, WorldGenId.getComponentType());
-                        if (worldGen != null) {
-                            try {
-                                mobType = worldGen.toString();
-                            } catch (Throwable ignored) {
-                            }
-                        }
-
+                        String mobType = resolveMobType(ref, commandBuffer);
                         if (mobType != null && levelingManager.isMobTypeBlacklisted(mobType)) {
                             continue; // explicitly blacklisted
                         }
@@ -118,5 +110,43 @@ public class MobNameplateSystem extends TickingSystem<EntityStore> {
                         }
                     }
                 });
+    }
+
+    private String resolveMobType(Ref<EntityStore> ref, CommandBuffer<EntityStore> commandBuffer) {
+        NPCEntity npc = commandBuffer.getComponent(ref, NPCEntity.getComponentType());
+        if (npc == null) {
+            Store<EntityStore> store = ref.getStore();
+            if (store != null) {
+                npc = store.getComponent(ref, NPCEntity.getComponentType());
+            }
+        }
+        if (npc != null) {
+            try {
+                String npcTypeId = npc.getNPCTypeId();
+                if (npcTypeId != null && !npcTypeId.isBlank()) {
+                    return npcTypeId;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+
+        WorldGenId worldGen = commandBuffer.getComponent(ref, WorldGenId.getComponentType());
+        if (worldGen == null) {
+            Store<EntityStore> store = ref.getStore();
+            if (store != null) {
+                worldGen = store.getComponent(ref, WorldGenId.getComponentType());
+            }
+        }
+        if (worldGen != null) {
+            try {
+                return Integer.toString(worldGen.getWorldGenId());
+            } catch (Throwable ignored) {
+                try {
+                    return worldGen.toString();
+                } catch (Throwable ignored2) {
+                }
+            }
+        }
+        return null;
     }
 }
