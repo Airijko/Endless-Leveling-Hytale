@@ -30,6 +30,9 @@ public class LevelingManager {
     private int xpMaxDifference;
     private double xpBelowRangeMultiplier;
     private double xpAboveRangeMultiplier;
+    private XpScalingMode xpScalingMode;
+    private double xpScalingBonusAtMax;
+    private double xpScalingMinMultiplier;
     private double globalXpMultiplier;
     private boolean playerBasedMode;
     private int playerBasedOffset;
@@ -62,6 +65,9 @@ public class LevelingManager {
         xpMaxDifference = Math.max(0, getInt("Mob_Leveling.Experience.XP_Level_Range.Max_Difference", 10));
         xpBelowRangeMultiplier = getDouble("Mob_Leveling.Experience.XP_Level_Range.Below_Range.Multiplier", 0.0);
         xpAboveRangeMultiplier = getDouble("Mob_Leveling.Experience.XP_Level_Range.Above_Range.Multiplier", 0.0);
+        xpScalingMode = XpScalingMode.fromString(getString("Mob_Leveling.Experience.Scaling.Mode", "NONE"));
+        xpScalingBonusAtMax = Math.max(0.0, getDouble("Mob_Leveling.Experience.Scaling.BonusAtMax", 0.0));
+        xpScalingMinMultiplier = clampMultiplier(getDouble("Mob_Leveling.Experience.Scaling.MinMultiplier", 0.1));
 
         LOGGER.atInfo().log("Leveling config loaded: base=%f, multiplier=%f, cap=%d", baseXp, multiplier, levelCap);
     }
@@ -234,17 +240,25 @@ public class LevelingManager {
         boolean blockedForBeingTooHigh = false;
         boolean blockedForBeingTooLow = false;
         boolean levelKnown = !skipLevelRangeChecks;
-        if (xpLevelRangeEnabled && !skipLevelRangeChecks) {
+        boolean withinAllowedRange = true;
+        Integer relativeDiff = null;
+        if (!skipLevelRangeChecks) {
             int mobLvl = Math.max(1, mobLevel);
             int diff = player.getLevel() - mobLvl;
             if (playerBasedMode)
                 diff += playerBasedOffset;
-            if (diff > xpMaxDifference) {
-                adjustedXp *= xpAboveRangeMultiplier;
-                blockedForBeingTooHigh = xpAboveRangeMultiplier <= 0.0;
-            } else if (diff < -xpMaxDifference) {
-                adjustedXp *= xpBelowRangeMultiplier;
-                blockedForBeingTooLow = xpBelowRangeMultiplier <= 0.0;
+            relativeDiff = diff;
+
+            if (xpLevelRangeEnabled && xpMaxDifference >= 0) {
+                if (diff > xpMaxDifference) {
+                    adjustedXp *= xpAboveRangeMultiplier;
+                    blockedForBeingTooHigh = xpAboveRangeMultiplier <= 0.0;
+                    withinAllowedRange = false;
+                } else if (diff < -xpMaxDifference) {
+                    adjustedXp *= xpBelowRangeMultiplier;
+                    blockedForBeingTooLow = xpBelowRangeMultiplier <= 0.0;
+                    withinAllowedRange = false;
+                }
             }
         }
         if (adjustedXp <= 0.0) {
@@ -253,6 +267,12 @@ public class LevelingManager {
             else if (blockedForBeingTooLow)
                 notifyXpSuppressed(player, mobLevel, levelKnown, XpSuppressionReason.PLAYER_TOO_LOW);
             return 0.0;
+        }
+
+        if (relativeDiff != null && withinAllowedRange) {
+            double scalingMultiplier = resolveScalingMultiplier(relativeDiff);
+            if (scalingMultiplier != 1.0d)
+                adjustedXp *= scalingMultiplier;
         }
         return adjustedXp;
     }
@@ -285,6 +305,40 @@ public class LevelingManager {
         if (raw instanceof String s)
             return Boolean.parseBoolean(s.trim());
         return defaultValue;
+    }
+
+    private double resolveScalingMultiplier(int relativeDiff) {
+        if (xpScalingMode == XpScalingMode.NONE || xpMaxDifference <= 0)
+            return 1.0;
+
+        return switch (xpScalingMode) {
+            case LINEAR -> computeLinearScaling(relativeDiff);
+            case NONE -> 1.0; // kept for completeness
+        };
+    }
+
+    private double computeLinearScaling(int relativeDiff) {
+        int maxDiff = Math.max(1, xpMaxDifference);
+        double normalizedGap = Math.min(1.0, Math.abs(relativeDiff) / (double) maxDiff);
+        if (normalizedGap <= 0.0)
+            return 1.0;
+
+        if (relativeDiff >= 0) {
+            return lerp(1.0, xpScalingMinMultiplier, normalizedGap);
+        }
+        double maxBonusMultiplier = Math.max(1.0, 1.0 + xpScalingBonusAtMax);
+        return lerp(1.0, maxBonusMultiplier, normalizedGap);
+    }
+
+    private double lerp(double start, double end, double ratio) {
+        double clampedRatio = Math.max(0.0, Math.min(1.0, ratio));
+        return start + ((end - start) * clampedRatio);
+    }
+
+    private double clampMultiplier(double value) {
+        if (Double.isNaN(value))
+            return 0.0;
+        return Math.max(0.0, Math.min(1.0, value));
     }
 
     private int getInt(String path, int defaultValue) {
@@ -321,5 +375,19 @@ public class LevelingManager {
     private enum XpSuppressionReason {
         PLAYER_TOO_HIGH,
         PLAYER_TOO_LOW
+    }
+
+    private enum XpScalingMode {
+        NONE,
+        LINEAR;
+
+        static XpScalingMode fromString(String value) {
+            if (value == null)
+                return NONE;
+            return switch (value.trim().toUpperCase(Locale.ROOT)) {
+                case "LINEAR" -> LINEAR;
+                default -> NONE;
+            };
+        }
     }
 }

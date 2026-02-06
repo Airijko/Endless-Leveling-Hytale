@@ -1,7 +1,7 @@
 # This is the leveling formula for the server. It is used to calculate the amount of experience required to level up.
 default:
-  expression: "base * ((log(level)+1) * (sqrt(level)))^1.75"
-  base: 100
+  expression: "base * ((log(level)+1) * (sqrt(level)))^2"
+  base: 50
 
 # If you change these values, make sure to reset everyone to sync the skill points by do "/skills resetskillpointsall"
 baseSkillPoints: 12
@@ -60,6 +60,7 @@ Mob_Leveling:
     - "Sparrow"
     - "Vulture"
     - "Woodpecker"
+    - "Sheep"
 
   # -------------------------------------------------
   # GLOBAL MOB LEVEL RANGE
@@ -113,6 +114,16 @@ Mob_Leveling:
   Experience:
     Enabled: true
 
+    Scaling:
+      Mode: LINEAR
+      BonusAtMax: 3.0
+      # XP bonus applied when the target is at Max_Difference levels above the player
+      # 0.0 = no bonus, 1.0 = +100% XP, 2.0 = +200% XP
+
+      MinMultiplier: 0.2
+      # Minimum XP multiplier applied before hard cutoffs
+      # Does NOT override Above_Range or Below_Range multipliers
+
     # Controls when XP is awarded based on level difference
     XP_Level_Range:
       Enabled: true
@@ -138,4 +149,4 @@ Mob_Leveling:
     Show_Mob_Level: true
 
 # DON'T EDIT THIS LINE BELOW
-config_version: 2
+config_version: 3
