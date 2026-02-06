@@ -1,0 +1,62 @@
+# ============================================================================
+# Race Config Cheat Sheet
+# ----------------------------------------------------------------------------
+# Metadata
+#   race_name        -> Display name for UI and logs.
+#   description      -> Short flavor text shown on selection screens.
+#   enabled          -> Set to true
+# Base Attributes (always-on stats granted by the race)
+#   life_force       -> Flat HP baseline before player-earned attributes.
+#   strength         -> Percentage bonus to outgoing damage.
+#   defense          -> Percentage of damage mitigated innately.
+#   haste            -> Movement speed multiplier that stacks with other effects.
+#   precision        -> Base crit chance (use percent values, e.g., 0.1 = 10%).
+#   ferocity         -> Base crit damage bonus (0.5 = +50%).
+#   stamina          -> Flat stamina pool.
+#   intelligence     -> Flat mana/intelligence pool.
+# ----------------------------------------------------------------------------
+# Passive Reference (declare under `passives:` using `- type: <PASSIVE>`)
+#   XP_BONUS               -> `value`: decimal percent (1.0 = +100% XP).
+#   INCREASED_HEALTH_REGEN -> `value`: flat HP regen/second (2.5 = +2.5 HP/s).
+#   INCREASED_MANA_REGEN   -> `value`: flat mana regen/second.
+#   HEALING_BONUS          -> `value`: decimal percent bonus to healing done/received.
+#   SPECIAL_CHARGE_BONUS   -> `value`: decimal percent faster special-charge gain.
+#   LIFELINE               -> `shield`: absorb value, `cooldown`: seconds between triggers.
+#   FIRST_STRIKE           -> `value`: decimal percent extra damage on the first hit per target.
+#   INCREASED_ATTRIBUTE_GAIN -> `attribute`: one of the keys below, `value`: decimal percent bonus.
+# Valid attribute keys: life_force, strength, defense, haste, precision, ferocity, stamina, intelligence.
+# ============================================================================
+
+race_name: "Example"
+description: "PEEPEE POOPOO"
+enabled: false
+
+attributes: # Base Values
+  life_force: 100.0
+  strength: 1.0
+  defense: 1.0
+  haste: 1.0
+  precision: 0.1
+  ferocity: 0.5
+  stamina: 10.0
+  intelligence: 20.0
+
+passives:
+  - type: XP_BONUS
+    value: 1.0 # +100% XP gain
+  - type: INCREASED_HEALTH_REGEN
+    value: 2.5 # +2.5 HP/sec racial regen
+  - type: INCREASED_MANA_REGEN
+    value: 3.0 # +3 mana/sec
+  - type: HEALING_BONUS
+    value: 0.2 # +20% healing dealt/received
+  - type: SPECIAL_CHARGE_BONUS
+    value: 0.5 # +50% faster special charge
+  - type: LIFELINE
+    shield: 50.0 # absorbs 50 damage
+    cooldown: 60 # seconds between triggers
+  - type: FIRST_STRIKE
+    value: 0.3 # +30% damage on first hit
+  - type: INCREASED_ATTRIBUTE_GAIN
+    attribute: strength
+    value: 0.15 # +15% strength gain from level-ups
