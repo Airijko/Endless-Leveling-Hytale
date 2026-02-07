@@ -16,6 +16,8 @@ public class PlayerData {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
+    public static final String DEFAULT_RACE_ID = "Human";
+
     private final UUID uuid;
     private final String playerName;
 
@@ -25,6 +27,7 @@ public class PlayerData {
 
     private final Map<SkillAttributeType, Integer> attributes;
     private final Map<PassiveType, Integer> passiveLevels;
+    private String raceId;
 
     private boolean playerHudEnabled;
     private boolean criticalNotifEnabled;
@@ -50,6 +53,7 @@ public class PlayerData {
         this.passiveLevelUpNotifEnabled = true;
         this.luckDoubleDropsNotifEnabled = true;
         this.healthRegenNotifEnabled = true;
+        this.raceId = DEFAULT_RACE_ID;
 
         this.attributes = new EnumMap<>(SkillAttributeType.class);
         for (SkillAttributeType type : SkillAttributeType.values()) {
@@ -172,6 +176,18 @@ public class PlayerData {
 
     public Map<PassiveType, Integer> getPassiveLevelsSnapshot() {
         return Collections.unmodifiableMap(passiveLevels);
+    }
+
+    public String getRaceId() {
+        return raceId;
+    }
+
+    public void setRaceId(String raceId) {
+        if (raceId == null || raceId.isBlank()) {
+            this.raceId = DEFAULT_RACE_ID;
+            return;
+        }
+        this.raceId = raceId.trim();
     }
 
     /**

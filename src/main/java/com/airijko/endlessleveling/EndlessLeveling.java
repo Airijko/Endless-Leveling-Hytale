@@ -2,6 +2,7 @@ package com.airijko.endlessleveling;
 
 import com.airijko.endlessleveling.commands.EndlessLevelingCommand;
 import com.airijko.endlessleveling.commands.PartyCommand;
+import com.airijko.endlessleveling.commands.RaceCommand;
 import com.airijko.endlessleveling.listeners.LuckDoubleDropSystem;
 import com.airijko.endlessleveling.listeners.OpenPlayerHudListener;
 import com.airijko.endlessleveling.listeners.PartyListener;
@@ -38,6 +39,7 @@ public class EndlessLeveling extends JavaPlugin {
     private SkillManager skillManager;
     private PassiveManager passiveManager;
     private PartyManager partyManager;
+    private RaceManager raceManager;
 
     // Getter for SkillManager
     public SkillManager getSkillManager() {
@@ -69,6 +71,10 @@ public class EndlessLeveling extends JavaPlugin {
         return configManager;
     }
 
+    public RaceManager getRaceManager() {
+        return raceManager;
+    }
+
     /** Singleton access to the mod instance */
     public static EndlessLeveling getInstance() {
         return INSTANCE;
@@ -88,9 +94,10 @@ public class EndlessLeveling extends JavaPlugin {
         boolean enableLogging = toBoolean(configManager.get("enable_logging", Boolean.FALSE, false), false);
         LoggingManager.configure(enableLogging);
 
+        raceManager = new RaceManager(configManager, filesManager);
         skillManager = new SkillManager(filesManager);
         passiveManager = new PassiveManager(configManager);
-        playerDataManager = new PlayerDataManager(filesManager, skillManager);
+        playerDataManager = new PlayerDataManager(filesManager, skillManager, raceManager);
         levelingManager = new LevelingManager(playerDataManager, filesManager, skillManager, passiveManager);
         mobLevelingManager = new MobLevelingManager(filesManager, playerDataManager);
         partyManager = new PartyManager(playerDataManager, levelingManager, filesManager);
@@ -124,6 +131,7 @@ public class EndlessLeveling extends JavaPlugin {
         // Register commands
         this.getCommandRegistry().registerCommand(new EndlessLevelingCommand("skills", "Skills menu"));
         this.getCommandRegistry().registerCommand(new PartyCommand());
+        this.getCommandRegistry().registerCommand(new RaceCommand(raceManager));
 
         LOGGER.atInfo().log("Plugin initialized! Plugin folder: %s",
                 filesManager.getPluginFolder().getAbsolutePath());

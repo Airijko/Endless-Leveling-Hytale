@@ -3,6 +3,7 @@ package com.airijko.endlessleveling.managers;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
+import com.airijko.endlessleveling.races.RaceDefinition;
 import com.hypixel.hytale.logger.HytaleLogger;
 
 import org.yaml.snakeyaml.DumperOptions;
@@ -25,16 +26,18 @@ public class PlayerDataManager {
 
     private final PluginFilesManager filesManager;
     private final SkillManager skillManager;
+    private final RaceManager raceManager;
     private final Yaml yaml;
     private final Map<UUID, PlayerData> playerCache = new HashMap<>();
 
     // Current schema version for player data files. Increment when adding new
     // fields that require migration. Use this to detect/outdate/migrate files.
-    private static final int CURRENT_PLAYERDATA_VERSION = 1;
+    private static final int CURRENT_PLAYERDATA_VERSION = 2;
 
-    public PlayerDataManager(PluginFilesManager filesManager, SkillManager skillManager) {
+    public PlayerDataManager(PluginFilesManager filesManager, SkillManager skillManager, RaceManager raceManager) {
         this.filesManager = filesManager;
         this.skillManager = skillManager;
+        this.raceManager = raceManager;
 
         DumperOptions options = new DumperOptions();
         options.setIndent(2);
@@ -65,6 +68,8 @@ public class PlayerDataManager {
             data = new PlayerData(uuid, playerName, getStartingSkillPoints());
             LOGGER.atInfo().log("PlayerData for UUID %s created new.", uuid);
         }
+
+        ensureValidRace(data);
 
         // Cache and save
         playerCache.put(uuid, data);
@@ -114,6 +119,10 @@ public class PlayerDataManager {
         options.put("healthRegenNotif", data.isHealthRegenNotifEnabled());
         map.put("options", options);
 
+        Map<String, Object> raceSection = new LinkedHashMap<>();
+        raceSection.put("name", resolveRaceDisplayName(data.getRaceId()));
+        map.put("race", raceSection);
+
         Map<String, Integer> passives = new LinkedHashMap<>();
         for (PassiveType type : PassiveType.values()) {
             passives.put(type.name(), data.getPassiveLevel(type));
@@ -125,6 +134,7 @@ public class PlayerDataManager {
             String yamlContent = buffer.toString()
                     .replace("\nattributes:", "\n\nattributes:")
                     .replace("\noptions:", "\n\noptions:")
+                    .replace("\nrace:", "\n\nrace:")
                     .replace("\npassives:", "\n\npassives:");
             writer.write(yamlContent);
             LOGGER.atFine().log("PlayerData for UUID %s saved to file.", data.getUuid());
@@ -188,6 +198,9 @@ public class PlayerDataManager {
         data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
         data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
         data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
+
+        data.setRaceId(parseRaceId(map.get("race")));
+        ensureValidRace(data);
 
         Map<String, Object> passives = castToStringObjectMap(map.get("passives"));
         if (passives != null) {
@@ -293,6 +306,55 @@ public class PlayerDataManager {
         return result;
     }
 
+    private String parseRaceId(Object raceNode) {
+        if (raceNode instanceof String raceString) {
+            return raceString;
+        }
+
+        Map<String, Object> raceMap = castToStringObjectMap(raceNode);
+        if (raceMap == null) {
+            return PlayerData.DEFAULT_RACE_ID;
+        }
+
+        Object nameValue = raceMap.get("name");
+        if (nameValue instanceof String nameString) {
+            return nameString;
+        }
+
+        Object idValue = raceMap.get("id");
+        if (idValue instanceof String idString) {
+            return idString;
+        }
+
+        Object legacyValue = raceMap.get("race");
+        if (legacyValue instanceof String legacyString) {
+            return legacyString;
+        }
+
+        return PlayerData.DEFAULT_RACE_ID;
+    }
+
+    private void ensureValidRace(PlayerData data) {
+        if (data == null) {
+            return;
+        }
+        String sanitized = raceManager != null
+                ? raceManager.resolveRaceIdentifier(data.getRaceId())
+                : PlayerData.DEFAULT_RACE_ID;
+        data.setRaceId(sanitized);
+    }
+
+    private String resolveRaceDisplayName(String raceId) {
+        if (raceManager == null) {
+            return raceId;
+        }
+        RaceDefinition definition = raceManager.getRace(raceId);
+        if (definition == null) {
+            definition = raceManager.getDefaultRace();
+        }
+        return definition != null ? definition.getDisplayName() : raceId;
+    }
+
     /**
      * Minimal loader used for leaderboards when a player has never joined
      * this server run. Reads name/level/xp/skillPoints from the YAML file.
@@ -348,6 +410,9 @@ public class PlayerDataManager {
                     data.setPassiveLevel(passiveType, level);
                 }
             }
+
+            data.setRaceId(parseRaceId(map.get("race")));
+            ensureValidRace(data);
 
             return data;
         } catch (Exception e) {

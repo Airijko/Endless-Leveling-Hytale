@@ -67,6 +67,9 @@ passives:
     max_level: 10
     tier_interval: 5
 
+# RACES
+enable_races: true # Set to false to disable race loading and default everyone to Human
+
 enable_logging: false # Enable or disable logging
 
 # DON'T EDIT THIS LINE BELOW
