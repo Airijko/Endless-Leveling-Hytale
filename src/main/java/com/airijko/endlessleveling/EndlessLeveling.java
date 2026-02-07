@@ -3,6 +3,7 @@ package com.airijko.endlessleveling;
 import com.airijko.endlessleveling.commands.EndlessLevelingCommand;
 import com.airijko.endlessleveling.commands.PartyCommand;
 import com.airijko.endlessleveling.commands.RaceCommand;
+import com.airijko.endlessleveling.commands.profile.ProfileCommand;
 import com.airijko.endlessleveling.listeners.LuckDoubleDropSystem;
 import com.airijko.endlessleveling.listeners.OpenPlayerHudListener;
 import com.airijko.endlessleveling.listeners.PartyListener;
@@ -144,6 +145,7 @@ public class EndlessLeveling extends JavaPlugin {
 
         // Register commands
         this.getCommandRegistry().registerCommand(new EndlessLevelingCommand("skills", "Skills menu"));
+        this.getCommandRegistry().registerCommand(new ProfileCommand());
         this.getCommandRegistry().registerCommand(new PartyCommand());
         this.getCommandRegistry().registerCommand(new RaceCommand(raceManager, playerDataManager));
 

@@ -69,7 +69,7 @@ public class ProfileSelectSubCommand extends AbstractPlayerCommand {
         if (!playerData.hasProfile(requestedIndex)) {
             playerRef.sendMessage(Message
                     .raw("Profile slot " + requestedIndex
-                            + " has not been created yet. Use /skills profile new <name> first.")
+                            + " has not been created yet. Use /profile new <name> first.")
                     .color("#ff6666"));
             return;
         }
@@ -89,7 +89,7 @@ public class ProfileSelectSubCommand extends AbstractPlayerCommand {
         if (result == ProfileSwitchResult.MISSING_PROFILE) {
             playerRef.sendMessage(Message
                     .raw("Profile slot " + requestedIndex
-                            + " has not been created yet. Use /skills profile new <name> first.")
+                            + " has not been created yet. Use /profile new <name> first.")
                     .color("#ff6666"));
             return;
         }

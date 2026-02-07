@@ -57,7 +57,7 @@ public class ProfileCommand extends AbstractPlayerCommand {
         }
 
         senderRef.sendMessage(Message.raw(
-                "Usage: /skills profile <list|new|select|delete|rename> ...").color("#4fd7f7"));
+                "Usage: /profile <list|new|select|delete|rename> ...").color("#4fd7f7"));
 
         listSubCommand.execute(context, store, ref, senderRef, world);
     }

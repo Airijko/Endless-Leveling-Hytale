@@ -2,7 +2,6 @@ package com.airijko.endlessleveling.commands;
 
 import com.airijko.endlessleveling.commands.subcommands.ApplyModifiersCommand;
 import com.airijko.endlessleveling.commands.subcommands.OpenPageSubCommand;
-import com.airijko.endlessleveling.commands.profile.ProfileCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetAllPlayersCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetLevelCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetSkillPointsCommand;
@@ -37,7 +36,6 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
                 this.addSubCommand(new StatTestCommand());
                 this.addSubCommand(new ResetAllPlayersCommand());
                 this.addSubCommand(new ResetSkillPointsCommand());
-                this.addSubCommand(new ProfileCommand());
 
                 addGuiShortcut("party", "Open the EndlessLeveling Party page",
                                 playerRef -> new PartyUIPage(playerRef, CustomPageLifetime.CanDismiss));

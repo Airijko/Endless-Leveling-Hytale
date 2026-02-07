@@ -74,7 +74,7 @@ public class ProfileListSubCommand extends AbstractPlayerCommand {
 
         if (finalData.getProfileCount() < PlayerData.MAX_PROFILES) {
             senderRef.sendMessage(Message
-                    .raw("Use /skills profile new <name> to create another profile.")
+                    .raw("Use /profile new <name> to create another profile.")
                     .color("#4fd7f7"));
         } else {
             senderRef.sendMessage(Message.raw("All profile slots are currently in use.").color("#ffcc66"));
