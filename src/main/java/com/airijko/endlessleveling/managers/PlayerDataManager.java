@@ -1,6 +1,7 @@
 package com.airijko.endlessleveling.managers;
 
 import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.data.PlayerData.PlayerProfile;
 import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.races.RaceDefinition;
@@ -32,7 +33,7 @@ public class PlayerDataManager {
 
     // Current schema version for player data files. Increment when adding new
     // fields that require migration. Use this to detect/outdate/migrate files.
-    private static final int CURRENT_PLAYERDATA_VERSION = 3;
+    private static final int CURRENT_PLAYERDATA_VERSION = 5;
 
     public PlayerDataManager(PluginFilesManager filesManager, SkillManager skillManager, RaceManager raceManager) {
         this.filesManager = filesManager;
@@ -104,15 +105,7 @@ public class PlayerDataManager {
         // and migrate if needed
         map.put("version", CURRENT_PLAYERDATA_VERSION);
         map.put("playerName", data.getPlayerName());
-        map.put("xp", data.getXp());
-        map.put("level", data.getLevel());
-        map.put("skillPoints", data.getSkillPoints());
-
-        Map<String, Integer> attrs = new LinkedHashMap<>();
-        for (SkillAttributeType type : SkillAttributeType.values()) {
-            attrs.put(type.name(), data.getPlayerSkillAttributeLevel(type));
-        }
-        map.put("attributes", attrs);
+        map.put("activeProfile", data.getActiveProfileIndex());
 
         Map<String, Object> options = new LinkedHashMap<>();
         options.put("playerHud", data.isPlayerHudEnabled());
@@ -123,27 +116,56 @@ public class PlayerDataManager {
         options.put("healthRegenNotif", data.isHealthRegenNotifEnabled());
         map.put("options", options);
 
-        Map<String, Object> raceSection = new LinkedHashMap<>();
-        String raceId = data.getRaceId();
-        raceSection.put("id", raceId);
-        String raceDisplay = resolveRaceDisplayName(raceId);
-        if (raceDisplay != null && !raceDisplay.equalsIgnoreCase(raceId)) {
-            raceSection.put("name", raceDisplay);
-        }
-        raceSection.put("lastChangedEpochSeconds", data.getLastRaceChangeEpochSeconds());
-        map.put("race", raceSection);
+        Map<String, Object> profilesSection = new LinkedHashMap<>();
+        data.getProfiles().entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                    int index = entry.getKey();
+                    PlayerProfile profile = entry.getValue();
+                    if (profile == null) {
+                        return;
+                    }
 
-        Map<String, Integer> passives = new LinkedHashMap<>();
-        for (PassiveType type : PassiveType.values()) {
-            passives.put(type.name(), data.getPassiveLevel(type));
-        }
-        map.put("passives", passives);
+                    Map<String, Object> profileMap = new LinkedHashMap<>();
+                    profileMap.put("xp", profile.getXp());
+                    profileMap.put("level", profile.getLevel());
+                    profileMap.put("skillPoints", profile.getSkillPoints());
+                    profileMap.put("name", profile.getName());
+
+                    Map<String, Integer> profileAttrs = new LinkedHashMap<>();
+                    for (SkillAttributeType type : SkillAttributeType.values()) {
+                        profileAttrs.put(type.name(),
+                                profile.getAttributes().getOrDefault(type, 0));
+                    }
+                    profileMap.put("attributes", profileAttrs);
+
+                    Map<String, Object> raceSection = new LinkedHashMap<>();
+                    String raceId = profile.getRaceId();
+                    raceSection.put("id", raceId);
+                    String raceDisplay = resolveRaceDisplayName(raceId);
+                    if (raceDisplay != null && !raceDisplay.equalsIgnoreCase(raceId)) {
+                        raceSection.put("name", raceDisplay);
+                    }
+                    raceSection.put("lastChangedEpochSeconds", profile.getLastRaceChangeEpochSeconds());
+                    profileMap.put("race", raceSection);
+
+                    Map<String, Integer> profilePassives = new LinkedHashMap<>();
+                    for (PassiveType type : PassiveType.values()) {
+                        profilePassives.put(type.name(), profile.getPassiveLevel(type));
+                    }
+                    profileMap.put("passives", profilePassives);
+
+                    profilesSection.put(String.valueOf(index), profileMap);
+                });
+
+        map.put("profiles", profilesSection);
 
         try (StringWriter buffer = new StringWriter(); FileWriter writer = new FileWriter(file)) {
             yaml.dump(map, buffer);
             String yamlContent = buffer.toString()
                     .replace("\nattributes:", "\n\nattributes:")
                     .replace("\noptions:", "\n\noptions:")
+                    .replace("\nprofiles:", "\n\nprofiles:")
                     .replace("\nrace:", "\n\nrace:")
                     .replace("\npassives:", "\n\npassives:");
             writer.write(yamlContent);
@@ -179,18 +201,12 @@ public class PlayerDataManager {
 
         PlayerData data = new PlayerData(uuid, playerName, getStartingSkillPoints());
 
-        data.setXp(((Number) map.getOrDefault("xp", 0)).doubleValue());
-        data.setLevel((Integer) map.getOrDefault("level", 1));
-        data.setSkillPoints((Integer) map.getOrDefault("skillPoints", 0));
-
-        Map<String, Object> attrs = castToStringObjectMap(map.get("attributes"));
-        if (attrs != null) {
-            for (SkillAttributeType type : SkillAttributeType.values()) {
-                Object value = attrs.get(type.name());
-                int level = value instanceof Number number ? number.intValue() : 0;
-                data.setPlayerSkillAttributeLevel(type, level);
-            }
+        Map<Integer, PlayerProfile> profiles = parseProfiles(map.get("profiles"), data.getBaseSkillPoints());
+        if (profiles.isEmpty()) {
+            profiles = buildLegacyProfiles(map, data.getBaseSkillPoints());
         }
+        int activeProfileIndex = parseActiveProfileIndex(map.get("activeProfile"));
+        data.loadProfilesFromStorage(profiles, activeProfileIndex);
 
         Map<String, Object> options = castToStringObjectMap(map.get("options"));
         Object playerHud = options != null ? options.get("playerHud") : map.get("playerHud");
@@ -209,19 +225,7 @@ public class PlayerDataManager {
         data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
         data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
 
-        Object raceNode = map.get("race");
-        data.setRaceId(parseRaceId(raceNode));
-        data.setLastRaceChangeEpochSeconds(parseRaceLastChanged(raceNode));
         ensureValidRace(data);
-
-        Map<String, Object> passives = castToStringObjectMap(map.get("passives"));
-        if (passives != null) {
-            for (PassiveType passiveType : PassiveType.values()) {
-                Object value = passives.get(passiveType.name());
-                int level = value instanceof Number number ? number.intValue() : 0;
-                data.setPassiveLevel(passiveType, level);
-            }
-        }
         LOGGER.atInfo().log("PlayerData for UUID %s loaded from disk.", uuid);
         return data;
     }
@@ -309,13 +313,134 @@ public class PlayerDataManager {
             return null;
         }
 
-        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
             if (entry.getKey() instanceof String key) {
                 result.put(key, entry.getValue());
             }
         }
         return result;
+    }
+
+    private Map<Integer, PlayerProfile> parseProfiles(Object profilesNode, int baseSkillPoints) {
+        Map<Integer, PlayerProfile> profiles = new LinkedHashMap<>();
+        if (!(profilesNode instanceof Map<?, ?> rawProfiles)) {
+            return profiles;
+        }
+
+        for (Map.Entry<?, ?> entry : rawProfiles.entrySet()) {
+            if (!(entry.getKey() instanceof String key)) {
+                continue;
+            }
+            int index = parseProfileIndex(key);
+            if (!PlayerData.isValidProfileIndex(index)) {
+                continue;
+            }
+            Map<String, Object> profileMap = castToStringObjectMap(entry.getValue());
+            if (profileMap == null) {
+                continue;
+            }
+            PlayerProfile profile = PlayerProfile.fresh(baseSkillPoints, PlayerData.defaultProfileName(index));
+            applyProfileMap(profile, profileMap, index);
+            profiles.put(index, profile);
+        }
+
+        return profiles;
+    }
+
+    private Map<Integer, PlayerProfile> buildLegacyProfiles(Map<String, Object> source, int baseSkillPoints) {
+        Map<Integer, PlayerProfile> profiles = new LinkedHashMap<>();
+        if (source == null) {
+            profiles.put(1, PlayerProfile.fresh(baseSkillPoints, PlayerData.defaultProfileName(1)));
+            return profiles;
+        }
+        PlayerProfile profile = PlayerProfile.fresh(baseSkillPoints, PlayerData.defaultProfileName(1));
+        applyProfileMap(profile, source, 1);
+        profiles.put(1, profile);
+        return profiles;
+    }
+
+    private void applyProfileMap(PlayerProfile profile, Map<String, Object> source, int slot) {
+        if (profile == null || source == null) {
+            return;
+        }
+
+        profile.setXp(parseDouble(source.get("xp"), 0.0));
+        profile.setLevel(parseInt(source.get("level"), 1));
+        profile.setSkillPoints(parseInt(source.get("skillPoints"), profile.getSkillPoints()));
+        profile.setName(PlayerData.normalizeProfileName(parseString(source.get("name")), slot));
+
+        Map<String, Object> attrs = castToStringObjectMap(source.get("attributes"));
+        if (attrs != null) {
+            for (SkillAttributeType type : SkillAttributeType.values()) {
+                Object value = attrs.get(type.name());
+                profile.getAttributes().put(type, parseInt(value, 0));
+            }
+        }
+
+        Map<String, Object> passives = castToStringObjectMap(source.get("passives"));
+        if (passives != null) {
+            for (PassiveType passiveType : PassiveType.values()) {
+                Object value = passives.get(passiveType.name());
+                profile.setPassiveLevel(passiveType, parseInt(value, 0));
+            }
+        }
+
+        Object raceNode = source.get("race");
+        profile.setRaceId(parseRaceId(raceNode));
+        profile.setLastRaceChangeEpochSeconds(parseRaceLastChanged(raceNode));
+    }
+
+    private int parseProfileIndex(String key) {
+        if (key == null) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(key.trim());
+        } catch (NumberFormatException ex) {
+            return -1;
+        }
+    }
+
+    private int parseActiveProfileIndex(Object node) {
+        int parsed = parseInt(node, 1);
+        if (!PlayerData.isValidProfileIndex(parsed)) {
+            return 1;
+        }
+        return parsed;
+    }
+
+    private String parseString(Object value) {
+        if (value instanceof String stringValue) {
+            return stringValue;
+        }
+        return null;
+    }
+
+    private int parseInt(Object value, int defaultValue) {
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value instanceof String stringValue) {
+            try {
+                return Integer.parseInt(stringValue.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return defaultValue;
+    }
+
+    private double parseDouble(Object value, double defaultValue) {
+        if (value instanceof Number number) {
+            return number.doubleValue();
+        }
+        if (value instanceof String stringValue) {
+            try {
+                return Double.parseDouble(stringValue.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return defaultValue;
     }
 
     private String parseRaceId(Object raceNode) {
@@ -381,11 +506,18 @@ public class PlayerDataManager {
         if (data == null) {
             return;
         }
-        if (raceManager != null) {
-            raceManager.setPlayerRace(data, data.getRaceId());
-        } else {
+        if (raceManager == null) {
+            data.getProfiles().values().forEach(profile -> profile.setRaceId(PlayerData.DEFAULT_RACE_ID));
             data.setRaceId(PlayerData.DEFAULT_RACE_ID);
+            return;
         }
+
+        data.getProfiles().values().forEach(profile -> {
+            String resolved = raceManager.resolveRaceIdentifier(profile.getRaceId());
+            profile.setRaceId(resolved);
+        });
+
+        raceManager.setPlayerRace(data, data.getRaceId());
     }
 
     private String resolveRaceDisplayName(String raceId) {
@@ -416,18 +548,12 @@ public class PlayerDataManager {
             String playerName = (String) map.getOrDefault("playerName", uuid.toString());
             PlayerData data = new PlayerData(uuid, playerName, getStartingSkillPoints());
 
-            data.setXp(((Number) map.getOrDefault("xp", 0)).doubleValue());
-            data.setLevel((Integer) map.getOrDefault("level", 1));
-            data.setSkillPoints((Integer) map.getOrDefault("skillPoints", 0));
-
-            Map<String, Object> attrs = castToStringObjectMap(map.get("attributes"));
-            if (attrs != null) {
-                for (SkillAttributeType type : SkillAttributeType.values()) {
-                    Object value = attrs.get(type.name());
-                    int level = value instanceof Number number ? number.intValue() : 0;
-                    data.setPlayerSkillAttributeLevel(type, level);
-                }
+            Map<Integer, PlayerProfile> profiles = parseProfiles(map.get("profiles"), data.getBaseSkillPoints());
+            if (profiles.isEmpty()) {
+                profiles = buildLegacyProfiles(map, data.getBaseSkillPoints());
             }
+            int activeProfileIndex = parseActiveProfileIndex(map.get("activeProfile"));
+            data.loadProfilesFromStorage(profiles, activeProfileIndex);
 
             Map<String, Object> options = castToStringObjectMap(map.get("options"));
             Object playerHud = options != null ? options.get("playerHud") : map.get("playerHud");
@@ -445,19 +571,6 @@ public class PlayerDataManager {
             data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
             data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
             data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
-
-            Map<String, Object> passives = castToStringObjectMap(map.get("passives"));
-            if (passives != null) {
-                for (PassiveType passiveType : PassiveType.values()) {
-                    Object value = passives.get(passiveType.name());
-                    int level = value instanceof Number number ? number.intValue() : 0;
-                    data.setPassiveLevel(passiveType, level);
-                }
-            }
-
-            Object raceNode = map.get("race");
-            data.setRaceId(parseRaceId(raceNode));
-            data.setLastRaceChangeEpochSeconds(parseRaceLastChanged(raceNode));
             ensureValidRace(data);
 
             return data;

@@ -2,6 +2,7 @@ package com.airijko.endlessleveling.commands;
 
 import com.airijko.endlessleveling.commands.subcommands.ApplyModifiersCommand;
 import com.airijko.endlessleveling.commands.subcommands.OpenPageSubCommand;
+import com.airijko.endlessleveling.commands.profile.ProfileCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetAllPlayersCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetLevelCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetSkillPointsCommand;
@@ -36,6 +37,7 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
                 this.addSubCommand(new StatTestCommand());
                 this.addSubCommand(new ResetAllPlayersCommand());
                 this.addSubCommand(new ResetSkillPointsCommand());
+                this.addSubCommand(new ProfileCommand());
 
                 addGuiShortcut("party", "Open the EndlessLeveling Party page",
                                 playerRef -> new PartyUIPage(playerRef, CustomPageLifetime.CanDismiss));
@@ -43,7 +45,7 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
                                 playerRef -> new LeaderboardsUIPage(playerRef, CustomPageLifetime.CanDismiss));
                 addGuiShortcut("settings", "Open the EndlessLeveling Settings page",
                                 playerRef -> new SettingsUIPage(playerRef, CustomPageLifetime.CanDismiss));
-                addGuiShortcut("profile", "Open the EndlessLeveling Profile page",
+                addGuiShortcut("profileui", "Open the EndlessLeveling Profile page",
                                 playerRef -> new ProfileUIPage(playerRef, CustomPageLifetime.CanDismiss));
                 addGuiShortcut("attributes", "Open the EndlessLeveling Skills page",
                                 playerRef -> new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));

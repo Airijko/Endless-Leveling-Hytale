@@ -1,5 +1,6 @@
 package com.airijko.endlessleveling.managers;
 
+import com.airijko.endlessleveling.data.PlayerData;
 import org.yaml.snakeyaml.Yaml;
 import com.hypixel.hytale.logger.HytaleLogger;
 
@@ -63,7 +64,9 @@ public final class PlayerDataMigration {
             String yamlContent = buffer.toString()
                     .replace("\nattributes:", "\n\nattributes:")
                     .replace("\noptions:", "\n\noptions:")
-                    .replace("\npassives:", "\n\npassives:");
+                    .replace("\npassives:", "\n\npassives:")
+                    .replace("\nprofiles:", "\n\nprofiles:")
+                    .replace("\nrace:", "\n\nrace:");
             writer.write(yamlContent);
             LOGGER.atInfo().log("Wrote migrated PlayerData to %s (now v%d).", file.getName(), currentVersion);
         } catch (Exception e) {
@@ -102,12 +105,46 @@ public final class PlayerDataMigration {
                 ensureRaceTimestamp(migrated);
                 LOGGER.atInfo().log("Migrated %s from v2 to v3.", file.getName());
             }
+            case 3 -> {
+                migrateToProfilesSchema(migrated);
+                LOGGER.atInfo().log("Migrated %s from v3 to v4.", file.getName());
+            }
+            case 4 -> {
+                ensureProfileNames(migrated);
+                LOGGER.atInfo().log("Migrated %s from v4 to v5.", file.getName());
+            }
             default -> LOGGER.atInfo().log("Bumped %s from v%d to v%d (default).", file.getName(), fromVersion,
                     fromVersion + 1);
         }
     }
 
     private static void ensureRaceTimestamp(Map<String, Object> migrated) {
+        Object profilesNode = migrated.get("profiles");
+        if (profilesNode instanceof Map<?, ?> profilesMap) {
+            for (Map.Entry<?, ?> entry : profilesMap.entrySet()) {
+                Object profileNode = entry.getValue();
+                if (!(profileNode instanceof Map<?, ?> rawProfile)) {
+                    continue;
+                }
+                @SuppressWarnings("unchecked")
+                Map<String, Object> profileMap = (Map<String, Object>) rawProfile;
+                Map<String, Object> raceMap = toMutableStringObjectMap(profileMap.get("race"));
+                if (raceMap == null) {
+                    raceMap = new LinkedHashMap<>();
+                    Object raceValue = profileMap.get("race");
+                    if (raceValue instanceof String stringValue) {
+                        String trimmed = stringValue.trim();
+                        if (!trimmed.isEmpty()) {
+                            raceMap.put("id", trimmed);
+                        }
+                    }
+                }
+                raceMap.putIfAbsent("lastChangedEpochSeconds", 0L);
+                profileMap.put("race", raceMap);
+            }
+            return;
+        }
+
         Object raceNode = migrated.get("race");
         Map<String, Object> raceMap = toMutableStringObjectMap(raceNode);
         if (raceMap == null) {
@@ -135,5 +172,76 @@ public final class PlayerDataMigration {
             }
         }
         return result;
+    }
+
+    private static void migrateToProfilesSchema(Map<String, Object> migrated) {
+        if (migrated.containsKey("profiles")) {
+            ensureRaceTimestamp(migrated);
+            ensureProfileNames(migrated);
+            return;
+        }
+
+        Map<String, Object> profile = new LinkedHashMap<>();
+        moveIfPresent(migrated, profile, "xp");
+        moveIfPresent(migrated, profile, "level");
+        moveIfPresent(migrated, profile, "skillPoints");
+        moveIfPresent(migrated, profile, "attributes");
+        moveIfPresent(migrated, profile, "passives");
+        moveIfPresent(migrated, profile, "race");
+        profile.put("name", PlayerData.defaultProfileName(1));
+
+        Map<String, Object> profiles = new LinkedHashMap<>();
+        profiles.put("1", profile);
+        migrated.put("profiles", profiles);
+        migrated.put("activeProfile", 1);
+
+        ensureRaceTimestamp(migrated);
+        ensureProfileNames(migrated);
+    }
+
+    private static void moveIfPresent(Map<String, Object> source, Map<String, Object> target, String key) {
+        if (source.containsKey(key)) {
+            target.put(key, source.remove(key));
+        }
+    }
+
+    private static void ensureProfileNames(Map<String, Object> migrated) {
+        Object profilesNode = migrated.get("profiles");
+        if (!(profilesNode instanceof Map<?, ?> rawProfiles)) {
+            return;
+        }
+
+        @SuppressWarnings("unchecked")
+        Map<Object, Object> profilesMap = (Map<Object, Object>) rawProfiles;
+
+        for (Map.Entry<Object, Object> entry : profilesMap.entrySet()) {
+            int slot = parseProfileIndex(entry.getKey());
+            if (slot < 1) {
+                continue;
+            }
+            Map<String, Object> profileMap = toMutableStringObjectMap(entry.getValue());
+            if (profileMap == null) {
+                profileMap = new LinkedHashMap<>();
+            }
+            Object rawName = profileMap.get("name");
+            String normalized = PlayerData.normalizeProfileName(
+                    rawName instanceof String stringValue ? stringValue : null,
+                    slot);
+            profileMap.put("name", normalized);
+            profilesMap.put(entry.getKey(), profileMap);
+        }
+    }
+
+    private static int parseProfileIndex(Object key) {
+        if (key instanceof Number number) {
+            return number.intValue();
+        }
+        if (key instanceof String stringValue) {
+            try {
+                return Integer.parseInt(stringValue.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return -1;
     }
 }

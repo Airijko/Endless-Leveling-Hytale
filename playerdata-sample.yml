@@ -1,0 +1,88 @@
+version: 5
+playerName: Airijko
+activeProfile: 2
+
+options:
+  playerHud: true
+  criticalNotif: true
+  xpNotif: true
+  passiveLevelUpNotif: true
+  luckDoubleDropsNotif: true
+  healthRegenNotif: true
+
+profiles:
+  1:
+    name: "Tank build"
+    xp: 1250.0
+    level: 35
+    skillPoints: 12
+    attributes:
+      LIFE_FORCE: 10
+      STRENGTH: 48
+      DEFENSE: 32
+      HASTE: 6
+      PRECISION: 22
+      FEROCITY: 14
+      STAMINA: 8
+      INTELLIGENCE: 4
+    race:
+      id: Human
+      name: Human
+      lastChangedEpochSeconds: 1770463537
+    passives:
+      LIFE_STEAL: 4
+      REGENERATION: 2
+      SIGNATURE_GAIN: 1
+      LUCK: 0
+      MANA_REGENERATION: 0
+      STAMINA_REGENERATION: 0
+  2:
+    name: "Boss DPS"
+    xp: 98500.0
+    level: 100
+    skillPoints: 0
+    attributes:
+      LIFE_FORCE: 0
+      STRENGTH: 155
+      DEFENSE: 156
+      HASTE: 0
+      PRECISION: 95
+      FEROCITY: 200
+      STAMINA: 0
+      INTELLIGENCE: 0
+    race:
+      id: Golem
+      name: Golem
+      lastChangedEpochSeconds: 1770463537
+    passives:
+      LIFE_STEAL: 10
+      REGENERATION: 10
+      SIGNATURE_GAIN: 10
+      LUCK: 10
+      MANA_REGENERATION: 10
+      STAMINA_REGENERATION: 10
+  3:
+    name: "Fresh alt"
+    xp: 0.0
+    level: 1
+    skillPoints: 8
+    attributes:
+      LIFE_FORCE: 0
+      STRENGTH: 0
+      DEFENSE: 0
+      HASTE: 0
+      PRECISION: 0
+      FEROCITY: 0
+      STAMINA: 0
+      INTELLIGENCE: 0
+    race:
+      id: Celestial
+      name: Celestial
+      lastChangedEpochSeconds: 0
+    passives:
+      LIFE_STEAL: 0
+      REGENERATION: 0
+      SIGNATURE_GAIN: 0
+      LUCK: 0
+      MANA_REGENERATION: 0
+      STAMINA_REGENERATION: 0
