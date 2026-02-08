@@ -113,12 +113,12 @@ Mob_Leveling:
     Health:
       Enabled: true
       Base_Multiplier: 1.0 # Initial health multiplier
-      Per_Level: 0.05 # +5% HP per mob level
+      Per_Level: 0.1 # +10% HP per mob level
 
     Damage:
       Enabled: true
       Base_Multiplier: 1.0 # Initial damage multiplier
-      Per_Level: 0.02 # +2% Damage per mob level
+      Per_Level: 0.05 # +5% Damage per mob level
 
   # -------------------------------------------------
   # EXPERIENCE & ANTI-EXPLOIT RULES
