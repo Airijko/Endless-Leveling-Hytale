@@ -12,6 +12,7 @@ import com.airijko.endlessleveling.data.PlayerData.PlayerProfile;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
+import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.races.RaceDefinition;
@@ -35,6 +36,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
     private final PlayerDataManager playerDataManager;
     private final RaceManager raceManager;
+    private final PassiveManager passiveManager;
 
     public ProfileUIPage(@Nonnull com.hypixel.hytale.server.core.universe.PlayerRef playerRef,
             @Nonnull CustomPageLifetime lifetime) {
@@ -42,6 +44,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         EndlessLeveling plugin = EndlessLeveling.getInstance();
         this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
         this.raceManager = plugin != null ? plugin.getRaceManager() : null;
+        this.passiveManager = plugin != null ? plugin.getPassiveManager() : null;
     }
 
     @Override
@@ -147,7 +150,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set("#AttributeStaminaValue.Text", getAttributeValue(profile, SkillAttributeType.STAMINA));
         ui.set("#AttributeIntelligenceValue.Text", getAttributeValue(profile, SkillAttributeType.INTELLIGENCE));
 
-        List<PassiveEntry> skillEntries = collectSkillPassiveEntries(profile);
+        List<PassiveEntry> skillEntries = collectSkillPassiveEntries(data, profile);
         if (skillEntries.isEmpty()) {
             ui.set("#SkillPassiveSummary.Text", "No skill passives selected");
             ui.set("#SkillPassiveSummary.Visible", true);
@@ -219,16 +222,33 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return raceId == null || raceId.isBlank() ? raceManager.getDefaultRaceId() : raceId;
     }
 
-    private List<PassiveEntry> collectSkillPassiveEntries(@Nonnull PlayerProfile profile) {
+    private List<PassiveEntry> collectSkillPassiveEntries(@Nonnull PlayerData data,
+            @Nonnull PlayerProfile profile) {
         List<PassiveEntry> entries = new ArrayList<>();
         for (PassiveType type : PassiveType.values()) {
             int level = profile.getPassiveLevel(type);
             if (level <= 0) {
                 continue;
             }
-            entries.add(new PassiveEntry(type.getDisplayName(), "Lv " + level));
+            String valueText = "Lv " + level;
+            String formattedValue = formatSkillPassiveValue(data, type);
+            if (!formattedValue.isBlank()) {
+                valueText += " (" + formattedValue + ")";
+            }
+            entries.add(new PassiveEntry(type.getDisplayName(), valueText));
         }
         return entries;
+    }
+
+    private String formatSkillPassiveValue(@Nonnull PlayerData data, @Nonnull PassiveType type) {
+        if (passiveManager == null) {
+            return "";
+        }
+        PassiveManager.PassiveSnapshot snapshot = passiveManager.getSnapshot(data, type);
+        if (snapshot == null || snapshot.value() <= 0.0D) {
+            return "";
+        }
+        return type.formatValue(snapshot.value());
     }
 
     private RacePassiveSummary buildRacePassiveSummary(@Nonnull PlayerProfile profile) {
