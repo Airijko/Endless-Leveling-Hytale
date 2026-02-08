@@ -176,56 +176,72 @@ $C.@PageOverlay {
                                         Anchor: (Height: 20);
                                         Label { Text: "Life Force"; Style: (FontSize: 12, TextColor: #9fb6d3); }
                                         Group { FlexWeight: 1; }
-                                        Label #AttributeLifeForceValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                        Label #AttributeLifeForceValue { Text: "--"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
+                                        Group { Anchor: (Width: 8); }
+                                        Label #AttributeLifeForceLevel { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); Anchor: (Height: 16); }
                                     }
                                     Group {
                                         LayoutMode: Left;
                                         Anchor: (Height: 20);
                                         Label { Text: "Strength"; Style: (FontSize: 12, TextColor: #9fb6d3); }
                                         Group { FlexWeight: 1; }
-                                        Label #AttributeStrengthValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                        Label #AttributeStrengthValue { Text: "--"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
+                                        Group { Anchor: (Width: 8); }
+                                        Label #AttributeStrengthLevel { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); Anchor: (Height: 16); }
                                     }
                                     Group {
                                         LayoutMode: Left;
                                         Anchor: (Height: 20);
                                         Label { Text: "Defense"; Style: (FontSize: 12, TextColor: #9fb6d3); }
                                         Group { FlexWeight: 1; }
-                                        Label #AttributeDefenseValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                        Label #AttributeDefenseValue { Text: "--"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
+                                        Group { Anchor: (Width: 8); }
+                                        Label #AttributeDefenseLevel { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); Anchor: (Height: 16); }
                                     }
                                     Group {
                                         LayoutMode: Left;
                                         Anchor: (Height: 20);
                                         Label { Text: "Haste"; Style: (FontSize: 12, TextColor: #9fb6d3); }
                                         Group { FlexWeight: 1; }
-                                        Label #AttributeHasteValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                        Label #AttributeHasteValue { Text: "--"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
+                                        Group { Anchor: (Width: 8); }
+                                        Label #AttributeHasteLevel { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); Anchor: (Height: 16); }
                                     }
                                     Group {
                                         LayoutMode: Left;
                                         Anchor: (Height: 20);
                                         Label { Text: "Precision"; Style: (FontSize: 12, TextColor: #9fb6d3); }
                                         Group { FlexWeight: 1; }
-                                        Label #AttributePrecisionValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                        Label #AttributePrecisionValue { Text: "--"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
+                                        Group { Anchor: (Width: 8); }
+                                        Label #AttributePrecisionLevel { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); Anchor: (Height: 16); }
                                     }
                                     Group {
                                         LayoutMode: Left;
                                         Anchor: (Height: 20);
                                         Label { Text: "Ferocity"; Style: (FontSize: 12, TextColor: #9fb6d3); }
                                         Group { FlexWeight: 1; }
-                                        Label #AttributeFerocityValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                        Label #AttributeFerocityValue { Text: "--"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
+                                        Group { Anchor: (Width: 8); }
+                                        Label #AttributeFerocityLevel { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); Anchor: (Height: 16); }
                                     }
                                     Group {
                                         LayoutMode: Left;
                                         Anchor: (Height: 20);
                                         Label { Text: "Stamina"; Style: (FontSize: 12, TextColor: #9fb6d3); }
                                         Group { FlexWeight: 1; }
-                                        Label #AttributeStaminaValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                        Label #AttributeStaminaValue { Text: "--"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
+                                        Group { Anchor: (Width: 8); }
+                                        Label #AttributeStaminaLevel { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); Anchor: (Height: 16); }
                                     }
                                     Group {
                                         LayoutMode: Left;
                                         Anchor: (Height: 20);
                                         Label { Text: "Intelligence"; Style: (FontSize: 12, TextColor: #9fb6d3); }
                                         Group { FlexWeight: 1; }
-                                        Label #AttributeIntelligenceValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                        Label #AttributeIntelligenceValue { Text: "--"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
+                                        Group { Anchor: (Width: 8); }
+                                        Label #AttributeIntelligenceLevel { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); Anchor: (Height: 16); }
                                     }
                                 }
 

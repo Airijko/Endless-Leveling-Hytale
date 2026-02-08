@@ -13,8 +13,10 @@ import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.managers.PassiveManager;
+import com.airijko.endlessleveling.managers.PlayerAttributeManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
+import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.races.RaceDefinition;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.component.Ref;
@@ -26,6 +28,8 @@ import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCu
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
+import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 
 import static com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType.Activating;
 import static com.hypixel.hytale.server.core.ui.builder.EventData.of;
@@ -37,6 +41,8 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private final PlayerDataManager playerDataManager;
     private final RaceManager raceManager;
     private final PassiveManager passiveManager;
+    private final SkillManager skillManager;
+    private final PlayerAttributeManager attributeManager;
     private Integer pendingDeleteSlot;
 
     public ProfileUIPage(@Nonnull com.hypixel.hytale.server.core.universe.PlayerRef playerRef,
@@ -46,6 +52,8 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
         this.raceManager = plugin != null ? plugin.getRaceManager() : null;
         this.passiveManager = plugin != null ? plugin.getPassiveManager() : null;
+        this.skillManager = plugin != null ? plugin.getSkillManager() : null;
+        this.attributeManager = plugin != null ? plugin.getPlayerAttributeManager() : null;
         this.pendingDeleteSlot = null;
     }
 
@@ -66,9 +74,11 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         events.addEventBinding(Activating, "#NewProfileButton", of("Action", "profile:new"), false);
 
+        EntityStatMap statMap = store.getComponent(ref, EntityStatMap.getComponentType());
+
         updateSummary(ui, playerData);
         buildProfileList(ui, events, playerData);
-        updateProfileDetailPanel(ui, playerData);
+        updateProfileDetailPanel(ui, playerData, statMap);
     }
 
     private PlayerData resolvePlayerData() {
@@ -143,7 +153,9 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         }
     }
 
-    private void updateProfileDetailPanel(@Nonnull UICommandBuilder ui, @Nonnull PlayerData data) {
+    private void updateProfileDetailPanel(@Nonnull UICommandBuilder ui,
+            @Nonnull PlayerData data,
+            EntityStatMap statMap) {
         PlayerProfile profile = resolveActiveProfile(data);
         if (profile == null) {
             clearDetailPanel(ui, "Select a profile to view stats");
@@ -157,31 +169,36 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set("#DetailXpValue.Text", formatNumber(profile.getXp()) + " XP");
         ui.set("#DetailRaceValue.Text", getRaceDisplay(profile));
 
-        ui.set("#AttributeLifeForceValue.Text", getAttributeValue(profile, SkillAttributeType.LIFE_FORCE));
-        ui.set("#AttributeStrengthValue.Text", getAttributeValue(profile, SkillAttributeType.STRENGTH));
-        ui.set("#AttributeDefenseValue.Text", getAttributeValue(profile, SkillAttributeType.DEFENSE));
-        ui.set("#AttributeHasteValue.Text", getAttributeValue(profile, SkillAttributeType.HASTE));
-        ui.set("#AttributePrecisionValue.Text", getAttributeValue(profile, SkillAttributeType.PRECISION));
-        ui.set("#AttributeFerocityValue.Text", getAttributeValue(profile, SkillAttributeType.FEROCITY));
-        ui.set("#AttributeStaminaValue.Text", getAttributeValue(profile, SkillAttributeType.STAMINA));
-        ui.set("#AttributeIntelligenceValue.Text", getAttributeValue(profile, SkillAttributeType.INTELLIGENCE));
+        applyAttributeDisplay(ui, "#AttributeLifeForceValue", "#AttributeLifeForceLevel",
+                getAttributeDisplay(data, profile, SkillAttributeType.LIFE_FORCE, statMap));
+        applyAttributeDisplay(ui, "#AttributeStrengthValue", "#AttributeStrengthLevel",
+                getAttributeDisplay(data, profile, SkillAttributeType.STRENGTH, statMap));
+        applyAttributeDisplay(ui, "#AttributeDefenseValue", "#AttributeDefenseLevel",
+                getAttributeDisplay(data, profile, SkillAttributeType.DEFENSE, statMap));
+        applyAttributeDisplay(ui, "#AttributeHasteValue", "#AttributeHasteLevel",
+                getAttributeDisplay(data, profile, SkillAttributeType.HASTE, statMap));
+        applyAttributeDisplay(ui, "#AttributePrecisionValue", "#AttributePrecisionLevel",
+                getAttributeDisplay(data, profile, SkillAttributeType.PRECISION, statMap));
+        applyAttributeDisplay(ui, "#AttributeFerocityValue", "#AttributeFerocityLevel",
+                getAttributeDisplay(data, profile, SkillAttributeType.FEROCITY, statMap));
+        applyAttributeDisplay(ui, "#AttributeStaminaValue", "#AttributeStaminaLevel",
+                getAttributeDisplay(data, profile, SkillAttributeType.STAMINA, statMap));
+        applyAttributeDisplay(ui, "#AttributeIntelligenceValue", "#AttributeIntelligenceLevel",
+                getAttributeDisplay(data, profile, SkillAttributeType.INTELLIGENCE, statMap));
 
-        List<PassiveEntry> skillEntries = collectSkillPassiveEntries(data, profile);
+        List<SkillPassiveEntry> skillEntries = collectSkillPassiveEntries(data, profile);
         if (skillEntries.isEmpty()) {
             ui.set("#SkillPassiveSummary.Text", "No skill passives selected");
             ui.set("#SkillPassiveSummary.Visible", true);
         } else {
             ui.set("#SkillPassiveSummary.Visible", false);
         }
-        populatePassiveEntries(ui,
-                "#SkillPassiveEntries",
-                "Pages/Profile/ProfileSkillPassiveEntry.ui",
-                skillEntries);
+        populateSkillPassiveEntries(ui, skillEntries);
 
         RacePassiveSummary raceSummary = buildRacePassiveSummary(profile);
         ui.set("#RacePassiveSummary.Text", raceSummary.summary());
         ui.set("#RacePassiveSummary.Visible", raceSummary.entries().isEmpty());
-        populatePassiveEntries(ui,
+        populateRacePassiveEntries(ui,
                 "#RacePassiveEntries",
                 "Pages/Profile/ProfileRacePassiveEntry.ui",
                 raceSummary.entries());
@@ -205,14 +222,15 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set("#DetailLevelValue.Text", "--");
         ui.set("#DetailXpValue.Text", "--");
         ui.set("#DetailRaceValue.Text", "--");
-        ui.set("#AttributeLifeForceValue.Text", "--");
-        ui.set("#AttributeStrengthValue.Text", "--");
-        ui.set("#AttributeDefenseValue.Text", "--");
-        ui.set("#AttributeHasteValue.Text", "--");
-        ui.set("#AttributePrecisionValue.Text", "--");
-        ui.set("#AttributeFerocityValue.Text", "--");
-        ui.set("#AttributeStaminaValue.Text", "--");
-        ui.set("#AttributeIntelligenceValue.Text", "--");
+        applyAttributeDisplay(ui, "#AttributeLifeForceValue", "#AttributeLifeForceLevel", emptyAttributeDisplay());
+        applyAttributeDisplay(ui, "#AttributeStrengthValue", "#AttributeStrengthLevel", emptyAttributeDisplay());
+        applyAttributeDisplay(ui, "#AttributeDefenseValue", "#AttributeDefenseLevel", emptyAttributeDisplay());
+        applyAttributeDisplay(ui, "#AttributeHasteValue", "#AttributeHasteLevel", emptyAttributeDisplay());
+        applyAttributeDisplay(ui, "#AttributePrecisionValue", "#AttributePrecisionLevel", emptyAttributeDisplay());
+        applyAttributeDisplay(ui, "#AttributeFerocityValue", "#AttributeFerocityLevel", emptyAttributeDisplay());
+        applyAttributeDisplay(ui, "#AttributeStaminaValue", "#AttributeStaminaLevel", emptyAttributeDisplay());
+        applyAttributeDisplay(ui, "#AttributeIntelligenceValue", "#AttributeIntelligenceLevel",
+                emptyAttributeDisplay());
         ui.set("#SkillPassiveSummary.Text", "No skill passives unlocked");
         ui.set("#SkillPassiveSummary.Visible", true);
         ui.set("#RacePassiveSummary.Text", "Select a profile to view race bonuses");
@@ -221,9 +239,47 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.clear("#RacePassiveEntries");
     }
 
-    private String getAttributeValue(@Nonnull PlayerProfile profile, @Nonnull SkillAttributeType type) {
-        int value = profile.getAttributes().getOrDefault(type, 0);
-        return String.valueOf(value);
+    private AttributeDisplay getAttributeDisplay(@Nonnull PlayerData data,
+            @Nonnull PlayerProfile profile,
+            @Nonnull SkillAttributeType type,
+            EntityStatMap statMap) {
+        int level = profile.getAttributes().getOrDefault(type, 0);
+        String levelText = "Lv " + level;
+        String detail = "";
+
+        if (skillManager != null) {
+            if (isResourceAttribute(type)) {
+                double total = resolveResourceTotal(type, data, statMap);
+                detail = Double.isNaN(total) ? "--" : formatNumber(total) + " " + resourceLabel(type);
+            } else {
+                detail = switch (type) {
+                    case STRENGTH -> {
+                        SkillManager.StrengthBreakdown breakdown = skillManager.getStrengthBreakdown(data, level);
+                        yield "+" + formatNumber(breakdown.totalValue()) + "% Damage";
+                    }
+                    case DEFENSE -> {
+                        SkillManager.DefenseBreakdown breakdown = skillManager.getDefenseBreakdown(data, level);
+                        double reduction = breakdown.resistance() * 100.0f;
+                        yield formatNumber(reduction) + "% Reduction";
+                    }
+                    case HASTE -> {
+                        SkillManager.HasteBreakdown breakdown = skillManager.getHasteBreakdown(data, level);
+                        double percent = (breakdown.totalMultiplier() - 1.0f) * 100.0f;
+                        yield "+" + formatNumber(percent) + "% Speed";
+                    }
+                    case PRECISION ->
+                        formatNumber(level * skillManager.getSkillAttributeConfigValue(type)) + "% Crit Chance";
+                    case FEROCITY ->
+                        "+" + formatNumber(level * skillManager.getSkillAttributeConfigValue(type)) + "% Crit Damage";
+                    default -> "--";
+                };
+            }
+        }
+
+        if (detail == null || detail.isBlank()) {
+            detail = "--";
+        }
+        return new AttributeDisplay(detail, levelText);
     }
 
     private String getRaceDisplay(@Nonnull PlayerProfile profile) {
@@ -238,20 +294,17 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return raceId == null || raceId.isBlank() ? raceManager.getDefaultRaceId() : raceId;
     }
 
-    private List<PassiveEntry> collectSkillPassiveEntries(@Nonnull PlayerData data,
+    private List<SkillPassiveEntry> collectSkillPassiveEntries(@Nonnull PlayerData data,
             @Nonnull PlayerProfile profile) {
-        List<PassiveEntry> entries = new ArrayList<>();
+        List<SkillPassiveEntry> entries = new ArrayList<>();
         for (PassiveType type : PassiveType.values()) {
             int level = profile.getPassiveLevel(type);
             if (level <= 0) {
                 continue;
             }
-            String valueText = "Lv " + level;
             String formattedValue = formatSkillPassiveValue(data, type);
-            if (!formattedValue.isBlank()) {
-                valueText += " (" + formattedValue + ")";
-            }
-            entries.add(new PassiveEntry(type.getDisplayName(), valueText));
+            String effectText = formattedValue.isBlank() ? "--" : formattedValue;
+            entries.add(new SkillPassiveEntry(type.getDisplayName(), effectText, "Lv " + level));
         }
         return entries;
     }
@@ -283,12 +336,19 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 if (passive == null || passive.type() == null) {
                     continue;
                 }
-                StringBuilder label = new StringBuilder(toDisplay(passive.type().name()));
-                if (passive.attributeType() != null) {
-                    label.append(" (" + toDisplay(passive.attributeType().name()) + ")");
+                String labelText;
+                if (passive.type() == ArchetypePassiveType.INNATE_ATTRIBUTE_GAIN
+                        && passive.attributeType() != null) {
+                    labelText = toDisplay(passive.attributeType().name());
+                } else {
+                    StringBuilder label = new StringBuilder(toDisplay(passive.type().name()));
+                    if (passive.attributeType() != null) {
+                        label.append(" (" + toDisplay(passive.attributeType().name()) + ")");
+                    }
+                    labelText = label.toString();
                 }
-                String valueText = formatRacePassiveValue(passive);
-                entries.add(new PassiveEntry(label.toString(), valueText));
+                String valueText = formatRacePassiveValue(passive, profile);
+                entries.add(new PassiveEntry(labelText, valueText));
             }
         }
         String summary = entries.isEmpty()
@@ -297,7 +357,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return new RacePassiveSummary(summary, entries);
     }
 
-    private void populatePassiveEntries(@Nonnull UICommandBuilder ui,
+    private void populateRacePassiveEntries(@Nonnull UICommandBuilder ui,
             @Nonnull String containerSelector,
             @Nonnull String template,
             @Nonnull List<PassiveEntry> entries) {
@@ -309,6 +369,31 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             ui.set(base + " #PassiveName.Text", entry.label());
             ui.set(base + " #PassiveValue.Text", entry.value());
         }
+    }
+
+    private void populateSkillPassiveEntries(@Nonnull UICommandBuilder ui,
+            @Nonnull List<SkillPassiveEntry> entries) {
+        ui.clear("#SkillPassiveEntries");
+        for (int i = 0; i < entries.size(); i++) {
+            SkillPassiveEntry entry = entries.get(i);
+            ui.append("#SkillPassiveEntries", "Pages/Profile/ProfileSkillPassiveEntry.ui");
+            String base = "#SkillPassiveEntries[" + i + "]";
+            ui.set(base + " #PassiveName.Text", entry.label());
+            ui.set(base + " #PassiveValue.Text", entry.value());
+            ui.set(base + " #PassiveLevel.Text", entry.level());
+        }
+    }
+
+    private void applyAttributeDisplay(@Nonnull UICommandBuilder ui,
+            @Nonnull String valueSelector,
+            @Nonnull String levelSelector,
+            @Nonnull AttributeDisplay display) {
+        ui.set(valueSelector + ".Text", display.value());
+        ui.set(levelSelector + ".Text", display.level());
+    }
+
+    private AttributeDisplay emptyAttributeDisplay() {
+        return new AttributeDisplay("--", "--");
     }
 
     private String toDisplay(String raw) {
@@ -329,13 +414,88 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return builder.toString();
     }
 
+    private boolean isResourceAttribute(@Nonnull SkillAttributeType type) {
+        return type == SkillAttributeType.LIFE_FORCE
+                || type == SkillAttributeType.STAMINA
+                || type == SkillAttributeType.INTELLIGENCE;
+    }
+
+    private String resourceLabel(@Nonnull SkillAttributeType type) {
+        return switch (type) {
+            case LIFE_FORCE -> "Health";
+            case STAMINA -> "Stamina";
+            case INTELLIGENCE -> "Mana";
+            default -> type.name();
+        };
+    }
+
+    private double resolveResourceTotal(@Nonnull SkillAttributeType type,
+            @Nonnull PlayerData playerData,
+            EntityStatMap statMap) {
+        if (skillManager == null) {
+            return Double.NaN;
+        }
+        PlayerAttributeManager.AttributeSlot slot = toAttributeSlot(type);
+        if (slot == null) {
+            return Double.NaN;
+        }
+
+        double liveStat = getStatMax(statMap, slot);
+        if (!Double.isNaN(liveStat)) {
+            return liveStat;
+        }
+
+        if (attributeManager == null) {
+            return Double.NaN;
+        }
+
+        double skillBonus = switch (type) {
+            case LIFE_FORCE -> skillManager.calculatePlayerHealth(playerData);
+            case STAMINA -> skillManager.calculatePlayerStamina(playerData);
+            case INTELLIGENCE -> skillManager.calculatePlayerIntelligence(playerData);
+            default -> 0.0D;
+        };
+
+        double raceBase = attributeManager.getRaceAttribute(playerData, type, 0.0D);
+        double total = raceBase + skillBonus;
+        return total > 0.0D ? total : Double.NaN;
+    }
+
+    private PlayerAttributeManager.AttributeSlot toAttributeSlot(@Nonnull SkillAttributeType type) {
+        return switch (type) {
+            case LIFE_FORCE -> PlayerAttributeManager.AttributeSlot.LIFE_FORCE;
+            case STAMINA -> PlayerAttributeManager.AttributeSlot.STAMINA;
+            case INTELLIGENCE -> PlayerAttributeManager.AttributeSlot.INTELLIGENCE;
+            default -> null;
+        };
+    }
+
+    private double getStatMax(EntityStatMap statMap, PlayerAttributeManager.AttributeSlot slot) {
+        if (statMap == null || slot == null) {
+            return Double.NaN;
+        }
+        EntityStatValue statValue = statMap.get(slot.statIndex());
+        if (statValue == null) {
+            return Double.NaN;
+        }
+        double max = statValue.getMax();
+        return max > 0.0D ? max : Double.NaN;
+    }
+
     private record PassiveEntry(String label, String value) {
+    }
+
+    private record SkillPassiveEntry(String label, String value, String level) {
     }
 
     private record RacePassiveSummary(String summary, List<PassiveEntry> entries) {
     }
 
-    private String formatRacePassiveValue(@Nonnull RacePassiveDefinition passive) {
+    private record AttributeDisplay(String value, String level) {
+    }
+
+    private String formatRacePassiveValue(@Nonnull RacePassiveDefinition passive,
+            @Nonnull PlayerProfile profile) {
         ArchetypePassiveType type = passive.type();
         double value = passive.value();
         Map<String, Object> props = passive.properties() == null ? Map.of() : passive.properties();
@@ -364,7 +524,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case FIRST_STRIKE -> appendDetails(
                     formatPercentValue(value) + " first hit",
                     formatCooldownDetail(cooldown));
-            case INNATE_ATTRIBUTE_GAIN -> formatSigned(value);
+            case INNATE_ATTRIBUTE_GAIN -> formatInnateAttributeValue(passive, profile);
             case ADRENALINE -> appendDetails(
                     formatPercentValue(value) + " stamina",
                     formatThresholdDetail(threshold, "stamina"),
@@ -386,6 +546,19 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     formatDurationDetail(duration),
                     formatStacksDetail(stacks));
         };
+    }
+
+    private String formatInnateAttributeValue(@Nonnull RacePassiveDefinition passive,
+            @Nonnull PlayerProfile profile) {
+        SkillAttributeType attributeType = passive.attributeType();
+        double gain = passive.value();
+        String gainText = formatSigned(gain);
+        if (attributeType == null) {
+            return gainText;
+        }
+        double current = profile.getAttributes().getOrDefault(attributeType, 0);
+        double total = current + gain;
+        return gainText + " (Total " + formatNumber(total) + ")";
     }
 
     private Double getDoubleProp(@Nonnull Map<String, Object> props, @Nonnull String key) {

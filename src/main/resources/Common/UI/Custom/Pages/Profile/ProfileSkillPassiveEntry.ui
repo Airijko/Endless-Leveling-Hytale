@@ -17,4 +17,12 @@ Group {
         Text: "+0";
         Anchor: (Height: 16);
     }
+
+    Group { Anchor: (Width: 8); }
+
+    Label #PassiveLevel {
+        Style: (FontSize: 12, TextColor: #8aa1bf);
+        Text: "Lv 0";
+        Anchor: (Height: 16);
+    }
 }
