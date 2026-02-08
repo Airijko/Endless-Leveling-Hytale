@@ -13,6 +13,7 @@ import com.airijko.endlessleveling.listeners.PlayerDefenseListener;
 import com.airijko.endlessleveling.listeners.XpEventListener;
 import com.airijko.endlessleveling.listeners.BreakBlockEntitySystem;
 import com.airijko.endlessleveling.managers.*;
+import com.airijko.endlessleveling.passives.ArchetypePassiveManager;
 import com.airijko.endlessleveling.systems.PassiveRegenSystem;
 import com.airijko.endlessleveling.systems.MobNameplateSystem;
 import com.airijko.endlessleveling.systems.PlayerRaceStatSystem;
@@ -42,6 +43,7 @@ public class EndlessLeveling extends JavaPlugin {
     private PassiveManager passiveManager;
     private PartyManager partyManager;
     private RaceManager raceManager;
+    private ArchetypePassiveManager archetypePassiveManager;
     private PlayerAttributeManager playerAttributeManager;
     private PlayerRaceStatSystem playerRaceStatSystem;
 
@@ -87,6 +89,10 @@ public class EndlessLeveling extends JavaPlugin {
         return playerRaceStatSystem;
     }
 
+    public ArchetypePassiveManager getArchetypePassiveManager() {
+        return archetypePassiveManager;
+    }
+
     /** Singleton access to the mod instance */
     public static EndlessLeveling getInstance() {
         return INSTANCE;
@@ -107,11 +113,13 @@ public class EndlessLeveling extends JavaPlugin {
         LoggingManager.configure(enableLogging);
 
         raceManager = new RaceManager(configManager, filesManager);
+        archetypePassiveManager = new ArchetypePassiveManager(raceManager);
         playerAttributeManager = new PlayerAttributeManager(raceManager);
         skillManager = new SkillManager(filesManager, playerAttributeManager);
         passiveManager = new PassiveManager(configManager);
         playerDataManager = new PlayerDataManager(filesManager, skillManager, raceManager);
-        levelingManager = new LevelingManager(playerDataManager, filesManager, skillManager, passiveManager);
+        levelingManager = new LevelingManager(playerDataManager, filesManager, skillManager, passiveManager,
+                archetypePassiveManager);
         mobLevelingManager = new MobLevelingManager(filesManager, playerDataManager);
         partyManager = new PartyManager(playerDataManager, levelingManager, filesManager);
 
@@ -135,7 +143,8 @@ public class EndlessLeveling extends JavaPlugin {
                 .registerSystem(new PlayerCombatListener(playerDataManager, skillManager, passiveManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerDefenseListener(playerDataManager, skillManager, passiveManager));
-        this.getEntityStoreRegistry().registerSystem(new PassiveRegenSystem(playerDataManager, passiveManager));
+        this.getEntityStoreRegistry()
+                .registerSystem(new PassiveRegenSystem(playerDataManager, passiveManager, archetypePassiveManager));
         playerRaceStatSystem = new PlayerRaceStatSystem(playerDataManager, skillManager);
         this.getEntityStoreRegistry().registerSystem(playerRaceStatSystem);
         this.getEntityStoreRegistry().registerSystem(new MobNameplateSystem());

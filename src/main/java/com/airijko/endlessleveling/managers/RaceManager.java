@@ -1,7 +1,9 @@
 package com.airijko.endlessleveling.managers;
 
 import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.passives.ArchetypePassiveType;
 import com.airijko.endlessleveling.races.RaceDefinition;
+import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.logger.HytaleLogger;
 import org.yaml.snakeyaml.Yaml;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
@@ -248,7 +250,8 @@ public class RaceManager {
         }
 
         List<Map<String, Object>> passives = parsePassives(yamlData.get("passives"));
-        return new RaceDefinition(raceId, displayName, description, enabled, attributes, passives);
+        List<RacePassiveDefinition> passiveDefinitions = buildPassiveDefinitions(raceId, passives);
+        return new RaceDefinition(raceId, displayName, description, enabled, attributes, passives, passiveDefinitions);
     }
 
     private List<Map<String, Object>> parsePassives(Object node) {
@@ -263,6 +266,36 @@ public class RaceManager {
             }
         }
         return passives;
+    }
+
+    private List<RacePassiveDefinition> buildPassiveDefinitions(String raceId, List<Map<String, Object>> passives) {
+        List<RacePassiveDefinition> definitions = new ArrayList<>();
+        if (passives == null) {
+            return definitions;
+        }
+
+        for (int index = 0; index < passives.size(); index++) {
+            Map<String, Object> passive = passives.get(index);
+            if (passive == null) {
+                continue;
+            }
+
+            String rawType = safeString(passive.get("type"));
+            if (rawType == null) {
+                LOGGER.atWarning().log("Race %s passive entry %d is missing a type", raceId, index + 1);
+                continue;
+            }
+
+            ArchetypePassiveType type = ArchetypePassiveType.fromConfigKey(rawType);
+            if (type == null) {
+                LOGGER.atWarning().log("Race %s passive type '%s' is not recognized", raceId, rawType);
+                continue;
+            }
+
+            double value = parseDouble(passive.get("value"));
+            definitions.add(new RacePassiveDefinition(type, value, passive));
+        }
+        return definitions;
     }
 
     private Map<String, Object> castToStringObjectMap(Object node) {

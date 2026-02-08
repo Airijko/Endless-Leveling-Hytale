@@ -18,19 +18,25 @@ public class RaceDefinition {
     private final boolean enabled;
     private final Map<SkillAttributeType, Double> baseAttributes;
     private final List<Map<String, Object>> passives;
+    private final List<RacePassiveDefinition> passiveDefinitions;
 
     public RaceDefinition(String id,
             String displayName,
             String description,
             boolean enabled,
             Map<SkillAttributeType, Double> baseAttributes,
-            List<Map<String, Object>> passives) {
+            List<Map<String, Object>> passives,
+            List<RacePassiveDefinition> passiveDefinitions) {
         this.id = Objects.requireNonNull(id, "Race id cannot be null");
         this.displayName = displayName == null ? id : displayName;
         this.description = description == null ? "" : description;
         this.enabled = enabled;
         this.baseAttributes = Collections.unmodifiableMap(new EnumMap<>(baseAttributes));
         this.passives = Collections.unmodifiableList(copyPassives(passives));
+        List<RacePassiveDefinition> typed = passiveDefinitions == null
+                ? new ArrayList<>()
+                : new ArrayList<>(passiveDefinitions);
+        this.passiveDefinitions = Collections.unmodifiableList(typed);
     }
 
     private List<Map<String, Object>> copyPassives(List<Map<String, Object>> source) {
@@ -77,5 +83,9 @@ public class RaceDefinition {
 
     public List<Map<String, Object>> getPassives() {
         return passives;
+    }
+
+    public List<RacePassiveDefinition> getPassiveDefinitions() {
+        return passiveDefinitions;
     }
 }

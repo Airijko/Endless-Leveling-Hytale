@@ -1,6 +1,9 @@
 package com.airijko.endlessleveling.managers;
 
 import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.passives.ArchetypePassiveManager;
+import com.airijko.endlessleveling.passives.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.passives.ArchetypePassiveType;
 import com.airijko.endlessleveling.ui.PlayerHud;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
@@ -21,6 +24,7 @@ public class LevelingManager {
     private final SkillManager skillManager;
     private final PassiveManager passiveManager;
     private final ConfigManager configManager;
+    private final ArchetypePassiveManager archetypePassiveManager;
 
     private double baseXp;
     private double multiplier;
@@ -38,11 +42,13 @@ public class LevelingManager {
     private int playerBasedOffset;
 
     public LevelingManager(PlayerDataManager playerDataManager, PluginFilesManager filesManager,
-            SkillManager skillManager, PassiveManager passiveManager) {
+            SkillManager skillManager, PassiveManager passiveManager,
+            ArchetypePassiveManager archetypePassiveManager) {
         this.playerDataManager = playerDataManager;
         this.configManager = new ConfigManager(filesManager.getLevelingFile(), false);
         this.skillManager = skillManager;
         this.passiveManager = passiveManager;
+        this.archetypePassiveManager = archetypePassiveManager;
 
         loadConfigValues();
     }
@@ -91,6 +97,19 @@ public class LevelingManager {
         if (player == null)
             return;
 
+        double adjustedXp = xpAmount;
+        if (archetypePassiveManager != null) {
+            ArchetypePassiveSnapshot snapshot = archetypePassiveManager.getSnapshot(player);
+            double bonus = snapshot.getValue(ArchetypePassiveType.XP_BONUS);
+            if (bonus != 0.0D) {
+                adjustedXp *= Math.max(0.0D, 1.0D + bonus);
+            }
+        }
+
+        if (adjustedXp <= 0) {
+            return;
+        }
+
         if (player.getLevel() >= levelCap) {
             if (player.getXp() != 0) {
                 player.setXp(0);
@@ -101,10 +120,10 @@ public class LevelingManager {
         }
 
         // Add XP
-        player.setXp(player.getXp() + xpAmount);
+        player.setXp(player.getXp() + adjustedXp);
 
         // Notify XP gain
-        notifyXpGain(player, xpAmount);
+        notifyXpGain(player, adjustedXp);
 
         // Handle level-ups
         while (player.getLevel() < levelCap && player.getXp() >= getXpForNextLevel(player.getLevel())) {

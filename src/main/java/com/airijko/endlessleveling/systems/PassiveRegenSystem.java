@@ -5,6 +5,9 @@ import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PassiveManager.PassiveRuntimeState;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.airijko.endlessleveling.passives.ArchetypePassiveManager;
+import com.airijko.endlessleveling.passives.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.passives.ArchetypePassiveType;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
@@ -34,11 +37,14 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
 
     private final PlayerDataManager playerDataManager;
     private final PassiveManager passiveManager;
+    private final ArchetypePassiveManager archetypePassiveManager;
 
     public PassiveRegenSystem(@Nonnull PlayerDataManager playerDataManager,
-            @Nonnull PassiveManager passiveManager) {
+            @Nonnull PassiveManager passiveManager,
+            ArchetypePassiveManager archetypePassiveManager) {
         this.playerDataManager = playerDataManager;
         this.passiveManager = passiveManager;
+        this.archetypePassiveManager = archetypePassiveManager;
     }
 
     @Override
@@ -66,10 +72,16 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
                             continue;
                         }
 
+                        ArchetypePassiveSnapshot archetypeSnapshot = archetypePassiveManager != null
+                                ? archetypePassiveManager.getSnapshot(playerData)
+                                : ArchetypePassiveSnapshot.empty();
+
                         applyHealthRegeneration(playerRef, playerData, statMap, deltaSeconds);
-                        applyManaRegeneration(playerData, statMap, deltaSeconds);
+                        applyArchetypeHealthRegeneration(playerData, statMap, deltaSeconds, archetypeSnapshot);
+                        applyManaRegeneration(playerData, statMap, deltaSeconds, archetypeSnapshot);
                         applyStaminaRegeneration(playerData, statMap, deltaSeconds);
-                        applySignatureGainBonus(playerData, statMap);
+                        applySignatureGainBonus(playerData, statMap, archetypeSnapshot);
+                        applyHealingBonus(playerData, statMap, archetypeSnapshot);
                     }
                 });
     }
@@ -103,14 +115,35 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         addResource(statMap, DefaultEntityStatTypes.getHealth(), snapshot.value(), deltaSeconds);
     }
 
-    private void applyManaRegeneration(@Nonnull PlayerData playerData,
+    private void applyArchetypeHealthRegeneration(@Nonnull PlayerData playerData,
             @Nonnull EntityStatMap statMap,
-            float deltaSeconds) {
-        PassiveManager.PassiveSnapshot snapshot = passiveManager.getSnapshot(playerData, PassiveType.MANA_REGENERATION);
-        if (!snapshot.isUnlocked() || snapshot.value() <= 0) {
+            float deltaSeconds,
+            @Nonnull ArchetypePassiveSnapshot archetypeSnapshot) {
+        if (archetypeSnapshot.isEmpty() || deltaSeconds <= 0) {
             return;
         }
-        double perSecond = snapshot.value();
+        double perSecond = archetypeSnapshot.getValue(ArchetypePassiveType.INCREASED_HEALTH_REGEN);
+        if (perSecond <= 0) {
+            return;
+        }
+        addResource(statMap, DefaultEntityStatTypes.getHealth(), perSecond, deltaSeconds);
+    }
+
+    private void applyManaRegeneration(@Nonnull PlayerData playerData,
+            @Nonnull EntityStatMap statMap,
+            float deltaSeconds,
+            @Nonnull ArchetypePassiveSnapshot archetypeSnapshot) {
+        double perSecond = 0.0D;
+        PassiveManager.PassiveSnapshot snapshot = passiveManager.getSnapshot(playerData, PassiveType.MANA_REGENERATION);
+        if (snapshot.isUnlocked() && snapshot.value() > 0) {
+            perSecond += snapshot.value();
+        }
+
+        double archetypeBonus = archetypeSnapshot.getValue(ArchetypePassiveType.INCREASED_MANA_REGEN);
+        if (archetypeBonus > 0) {
+            perSecond += archetypeBonus;
+        }
+
         if (perSecond <= 0) {
             return;
         }
@@ -133,7 +166,8 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
     }
 
     private void applySignatureGainBonus(@Nonnull PlayerData playerData,
-            @Nonnull EntityStatMap statMap) {
+            @Nonnull EntityStatMap statMap,
+            @Nonnull ArchetypePassiveSnapshot archetypeSnapshot) {
         PassiveManager.PassiveSnapshot snapshot = passiveManager.getSnapshot(playerData, PassiveType.SIGNATURE_GAIN);
         PassiveRuntimeState runtimeState = passiveManager.getRuntimeState(playerData.getUuid());
         EntityStatValue signatureStat = statMap.get(DefaultEntityStatTypes.getSignatureEnergy());
@@ -154,12 +188,19 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             return;
         }
 
-        if (!snapshot.isUnlocked() || snapshot.value() <= 0) {
+        double passivePercent = snapshot.isUnlocked() && snapshot.value() > 0
+                ? snapshot.value() / 100.0D
+                : 0.0D;
+        double archetypeBonus = Math.max(0.0D,
+                archetypeSnapshot.getValue(ArchetypePassiveType.SPECIAL_CHARGE_BONUS));
+        double totalBonusFactor = passivePercent + archetypeBonus;
+
+        if (totalBonusFactor <= 0.0D) {
             runtimeState.setLastSignatureValue(currentValue);
             return;
         }
 
-        float bonus = (float) (delta * (snapshot.value() / 100.0));
+        float bonus = (float) (delta * totalBonusFactor);
         if (bonus <= 0) {
             runtimeState.setLastSignatureValue(currentValue);
             return;
@@ -169,6 +210,58 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         float newValue = Math.min(maxValue, currentValue + bonus);
         statMap.setStatValue(DefaultEntityStatTypes.getSignatureEnergy(), newValue);
         runtimeState.setLastSignatureValue(newValue);
+    }
+
+    private void applyHealingBonus(@Nonnull PlayerData playerData,
+            @Nonnull EntityStatMap statMap,
+            @Nonnull ArchetypePassiveSnapshot archetypeSnapshot) {
+        PassiveRuntimeState runtimeState = passiveManager.getRuntimeState(playerData.getUuid());
+        if (runtimeState == null) {
+            return;
+        }
+
+        EntityStatValue healthStat = statMap.get(DefaultEntityStatTypes.getHealth());
+        if (healthStat == null) {
+            runtimeState.setLastHealingSample(Float.NaN);
+            return;
+        }
+
+        double healingBonus = archetypeSnapshot.getValue(ArchetypePassiveType.HEALING_BONUS);
+        float currentHealth = healthStat.get();
+        float maxHealth = healthStat.getMax();
+        float lastSample = runtimeState.getLastHealingSample();
+
+        if (healingBonus <= 0 || currentHealth >= maxHealth) {
+            runtimeState.setLastHealingSample(currentHealth);
+            return;
+        }
+
+        if (Float.isNaN(lastSample)) {
+            runtimeState.setLastHealingSample(currentHealth);
+            return;
+        }
+
+        float delta = currentHealth - lastSample;
+        if (delta <= 0) {
+            runtimeState.setLastHealingSample(currentHealth);
+            return;
+        }
+
+        double bonusAmount = delta * Math.max(0.0D, healingBonus);
+        if (bonusAmount <= 0) {
+            runtimeState.setLastHealingSample(currentHealth);
+            return;
+        }
+
+        float applied = (float) Math.min(maxHealth - currentHealth, bonusAmount);
+        if (applied <= 0) {
+            runtimeState.setLastHealingSample(currentHealth);
+            return;
+        }
+
+        float newValue = currentHealth + applied;
+        statMap.setStatValue(DefaultEntityStatTypes.getHealth(), newValue);
+        runtimeState.setLastHealingSample(newValue);
     }
 
     private void addResource(@Nonnull EntityStatMap statMap,

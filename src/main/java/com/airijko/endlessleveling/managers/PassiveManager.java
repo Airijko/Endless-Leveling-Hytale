@@ -308,6 +308,7 @@ public class PassiveManager {
         private boolean regenerationActive;
         private long luckMobDropWindowExpiresAt;
         private int luckMobDropStacks;
+        private float lastHealingSample = Float.NaN;
 
         PassiveRuntimeState(UUID ignored) {
         }
@@ -350,6 +351,14 @@ public class PassiveManager {
 
         public void setLuckMobDropStacks(int luckMobDropStacks) {
             this.luckMobDropStacks = luckMobDropStacks;
+        }
+
+        public float getLastHealingSample() {
+            return lastHealingSample;
+        }
+
+        public void setLastHealingSample(float lastHealingSample) {
+            this.lastHealingSample = lastHealingSample;
         }
     }
 }
