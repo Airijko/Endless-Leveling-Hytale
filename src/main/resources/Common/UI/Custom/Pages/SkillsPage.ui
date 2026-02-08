@@ -85,9 +85,31 @@ $C.@PageOverlay {
                                 Group {
                                     LayoutMode: Left;
                                     Label #LifeForceLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-                                    Label #LifeForceLevel { Style: (TextColor: #94b2ff, FontSize: 13); Anchor: (Width: 70); }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Width: 100);
+                                        Label {
+                                            Text: "Lv.";
+                                            Style: (TextColor: #94b2ff, FontSize: 13);
+                                            Anchor: (Width: 24);
+                                        }
+                                        Label #LifeForceLevel { Style: (TextColor: #94b2ff, FontSize: 13); Anchor: (Width: 70); }
+                                    }
                                     Label #LifeForceValue { Style: (TextColor: #6fe3ff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
-                                    Group { Anchor: (Width: 8); }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #LifeForceDescription {
+                                    Style: (TextColor: #c0cee5, FontSize: 12);
+                                    Text: "Boosts total health.";
+                                }
+
+                                Group { Anchor: (Height: 6); }
+
+                                Group {
+                                    LayoutMode: Left;
+                                    Group { FlexWeight: 1; }
                                     Group #LifeForceButtons {
                                         Anchor: (Width: @ButtonClusterWidth);
                                         LayoutMode: Left;
@@ -118,13 +140,6 @@ $C.@PageOverlay {
                                         }
                                     }
                                 }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #LifeForceDescription {
-                                    Style: (TextColor: #c0cee5, FontSize: 12);
-                                    Text: "Boosts total health.";
-                                }
                             }
 
                             Group { Anchor: (Height: 12); }
@@ -138,9 +153,31 @@ $C.@PageOverlay {
                                 Group {
                                     LayoutMode: Left;
                                     Label #StrengthLabel { Style: (TextColor: #ffe8d7, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-                                    Label #StrengthLevel { Style: (TextColor: #ffc49c, FontSize: 13); Anchor: (Width: 70); }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Width: 100);
+                                        Label {
+                                            Text: "Lv.";
+                                            Style: (TextColor: #ffc49c, FontSize: 13);
+                                            Anchor: (Width: 24);
+                                        }
+                                        Label #StrengthLevel { Style: (TextColor: #ffc49c, FontSize: 13); Anchor: (Width: 70); }
+                                    }
                                     Label #StrengthValue { Style: (TextColor: #ffd2ac, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
-                                    Group { Anchor: (Width: 8); }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #StrengthDescription {
+                                    Style: (TextColor: #ffe0c5, FontSize: 12);
+                                    Text: "Adds damage multipliers to every hit.";
+                                }
+
+                                Group { Anchor: (Height: 6); }
+
+                                Group {
+                                    LayoutMode: Left;
+                                    Group { FlexWeight: 1; }
                                     Group #StrengthButtons {
                                         Anchor: (Width: @ButtonClusterWidth);
                                         LayoutMode: Left;
@@ -171,13 +208,6 @@ $C.@PageOverlay {
                                         }
                                     }
                                 }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #StrengthDescription {
-                                    Style: (TextColor: #ffe0c5, FontSize: 12);
-                                    Text: "Adds damage multipliers to every hit.";
-                                }
                             }
 
                             Group { Anchor: (Height: 12); }
@@ -191,9 +221,31 @@ $C.@PageOverlay {
                                 Group {
                                     LayoutMode: Left;
                                     Label #DefenseLabel { Style: (TextColor: #ddfff3, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-                                    Label #DefenseLevel { Style: (TextColor: #94ffe3, FontSize: 13); Anchor: (Width: 70); }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Width: 100);
+                                        Label {
+                                            Text: "Lv.";
+                                            Style: (TextColor: #94ffe3, FontSize: 13);
+                                            Anchor: (Width: 24);
+                                        }
+                                        Label #DefenseLevel { Style: (TextColor: #94ffe3, FontSize: 13); Anchor: (Width: 70); }
+                                    }
                                     Label #DefenseValue { Style: (TextColor: #68f7c5, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
-                                    Group { Anchor: (Width: 8); }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #DefenseDescription {
+                                    Style: (TextColor: #c7ede4, FontSize: 12);
+                                    Text: "Shrugs off more incoming damage.";
+                                }
+
+                                Group { Anchor: (Height: 6); }
+
+                                Group {
+                                    LayoutMode: Left;
+                                    Group { FlexWeight: 1; }
                                     Group #DefenseButtons {
                                         Anchor: (Width: @ButtonClusterWidth);
                                         LayoutMode: Left;
@@ -224,13 +276,6 @@ $C.@PageOverlay {
                                         }
                                     }
                                 }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #DefenseDescription {
-                                    Style: (TextColor: #c7ede4, FontSize: 12);
-                                    Text: "Shrugs off more incoming damage.";
-                                }
                             }
 
                             Group { Anchor: (Height: 12); }
@@ -244,9 +289,31 @@ $C.@PageOverlay {
                                 Group {
                                     LayoutMode: Left;
                                     Label #HasteLabel { Style: (TextColor: #f7e2ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-                                    Label #HasteLevel { Style: (TextColor: #e0b8ff, FontSize: 13); Anchor: (Width: 70); }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Width: 100);
+                                        Label {
+                                            Text: "Lv.";
+                                            Style: (TextColor: #e0b8ff, FontSize: 13);
+                                            Anchor: (Width: 24);
+                                        }
+                                        Label #HasteLevel { Style: (TextColor: #e0b8ff, FontSize: 13); Anchor: (Width: 70); }
+                                    }
                                     Label #HasteValue { Style: (TextColor: #d598ff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
-                                    Group { Anchor: (Width: 8); }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #HasteDescription {
+                                    Style: (TextColor: #dccdf3, FontSize: 12);
+                                    Text: "Cranks up movement and attack speed.";
+                                }
+
+                                Group { Anchor: (Height: 6); }
+
+                                Group {
+                                    LayoutMode: Left;
+                                    Group { FlexWeight: 1; }
                                     Group #HasteButtons {
                                         Anchor: (Width: @ButtonClusterWidth);
                                         LayoutMode: Left;
@@ -277,13 +344,6 @@ $C.@PageOverlay {
                                         }
                                     }
                                 }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #HasteDescription {
-                                    Style: (TextColor: #dccdf3, FontSize: 12);
-                                    Text: "Cranks up movement and attack speed.";
-                                }
                             }
                         }
 
@@ -302,9 +362,31 @@ $C.@PageOverlay {
                                 Group {
                                     LayoutMode: Left;
                                     Label #PrecisionLabel { Style: (TextColor: #dff6ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-                                    Label #PrecisionLevel { Style: (TextColor: #87dfff, FontSize: 13); Anchor: (Width: 70); }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Width: 100);
+                                        Label {
+                                            Text: "Lv.";
+                                            Style: (TextColor: #87dfff, FontSize: 13);
+                                            Anchor: (Width: 24);
+                                        }
+                                        Label #PrecisionLevel { Style: (TextColor: #87dfff, FontSize: 13); Anchor: (Width: 70); }
+                                    }
                                     Label #PrecisionValue { Style: (TextColor: #6edcff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
-                                    Group { Anchor: (Width: 8); }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #PrecisionDescription {
+                                    Style: (TextColor: #c3dfee, FontSize: 12);
+                                    Text: "Raises crit chance for all attacks.";
+                                }
+
+                                Group { Anchor: (Height: 6); }
+
+                                Group {
+                                    LayoutMode: Left;
+                                    Group { FlexWeight: 1; }
                                     Group #PrecisionButtons {
                                         Anchor: (Width: @ButtonClusterWidth);
                                         LayoutMode: Left;
@@ -335,13 +417,6 @@ $C.@PageOverlay {
                                         }
                                     }
                                 }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #PrecisionDescription {
-                                    Style: (TextColor: #c3dfee, FontSize: 12);
-                                    Text: "Raises crit chance for all attacks.";
-                                }
                             }
 
                             Group { Anchor: (Height: 12); }
@@ -355,9 +430,31 @@ $C.@PageOverlay {
                                 Group {
                                     LayoutMode: Left;
                                     Label #FerocityLabel { Style: (TextColor: #ffdbe9, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-                                    Label #FerocityLevel { Style: (TextColor: #ff9ac0, FontSize: 13); Anchor: (Width: 70); }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Width: 100);
+                                        Label {
+                                            Text: "Lv.";
+                                            Style: (TextColor: #ff9ac0, FontSize: 13);
+                                            Anchor: (Width: 24);
+                                        }
+                                        Label #FerocityLevel { Style: (TextColor: #ff9ac0, FontSize: 13); Anchor: (Width: 70); }
+                                    }
                                     Label #FerocityValue { Style: (TextColor: #ffb0cd, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
-                                    Group { Anchor: (Width: 8); }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #FerocityDescription {
+                                    Style: (TextColor: #fac6da, FontSize: 12);
+                                    Text: "Stacks bonus damage onto crits.";
+                                }
+
+                                Group { Anchor: (Height: 6); }
+
+                                Group {
+                                    LayoutMode: Left;
+                                    Group { FlexWeight: 1; }
                                     Group #FerocityButtons {
                                         Anchor: (Width: @ButtonClusterWidth);
                                         LayoutMode: Left;
@@ -388,13 +485,6 @@ $C.@PageOverlay {
                                         }
                                     }
                                 }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #FerocityDescription {
-                                    Style: (TextColor: #fac6da, FontSize: 12);
-                                    Text: "Stacks bonus damage onto crits.";
-                                }
                             }
 
                             Group { Anchor: (Height: 12); }
@@ -408,9 +498,31 @@ $C.@PageOverlay {
                                 Group {
                                     LayoutMode: Left;
                                     Label #StaminaLabel { Style: (TextColor: #ecffd0, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-                                    Label #StaminaLevel { Style: (TextColor: #d2ff8f, FontSize: 13); Anchor: (Width: 70); }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Width: 100);
+                                        Label {
+                                            Text: "Lv.";
+                                            Style: (TextColor: #d2ff8f, FontSize: 13);
+                                            Anchor: (Width: 24);
+                                        }
+                                        Label #StaminaLevel { Style: (TextColor: #d2ff8f, FontSize: 13); Anchor: (Width: 70); }
+                                    }
                                     Label #StaminaValue { Style: (TextColor: #b7ff6a, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
-                                    Group { Anchor: (Width: 8); }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #StaminaDescription {
+                                    Style: (TextColor: #d8f2b0, FontSize: 12);
+                                    Text: "Extends stamina for dodges and bursts.";
+                                }
+
+                                Group { Anchor: (Height: 6); }
+
+                                Group {
+                                    LayoutMode: Left;
+                                    Group { FlexWeight: 1; }
                                     Group #StaminaButtons {
                                         Anchor: (Width: @ButtonClusterWidth);
                                         LayoutMode: Left;
@@ -441,13 +553,6 @@ $C.@PageOverlay {
                                         }
                                     }
                                 }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #StaminaDescription {
-                                    Style: (TextColor: #d8f2b0, FontSize: 12);
-                                    Text: "Extends stamina for dodges and bursts.";
-                                }
                             }
 
                             Group { Anchor: (Height: 12); }
@@ -461,9 +566,31 @@ $C.@PageOverlay {
                                 Group {
                                     LayoutMode: Left;
                                     Label #IntelligenceLabel { Style: (TextColor: #e1f4ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-                                    Label #IntelligenceLevel { Style: (TextColor: #7edbff, FontSize: 13); Anchor: (Width: 70); }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Width: 100);
+                                        Label {
+                                            Text: "Lv.";
+                                            Style: (TextColor: #7edbff, FontSize: 13);
+                                            Anchor: (Width: 24);
+                                        }
+                                        Label #IntelligenceLevel { Style: (TextColor: #7edbff, FontSize: 13); Anchor: (Width: 70); }
+                                    }
                                     Label #IntelligenceValue { Style: (TextColor: #60d2ff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
-                                    Group { Anchor: (Width: 8); }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #IntelligenceDescription {
+                                    Style: (TextColor: #c1dff5, FontSize: 12);
+                                    Text: "Feeds mana for abilities and spells.";
+                                }
+
+                                Group { Anchor: (Height: 6); }
+
+                                Group {
+                                    LayoutMode: Left;
+                                    Group { FlexWeight: 1; }
                                     Group #IntelligenceButtons {
                                         Anchor: (Width: @ButtonClusterWidth);
                                         LayoutMode: Left;
@@ -493,13 +620,6 @@ $C.@PageOverlay {
                                             Style: @CustomStyle;
                                         }
                                     }
-                                }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #IntelligenceDescription {
-                                    Style: (TextColor: #c1dff5, FontSize: 12);
-                                    Text: "Feeds mana for abilities and spells.";
                                 }
                             }
                         }
