@@ -13,7 +13,7 @@ $Nav = "Nav/LeftNavPanel.ui";
 
 $C.@PageOverlay {
     $C.@DecoratedContainer {
-        Anchor: (Width: 800, Height: 700);
+        Anchor: (Width: 1000, Height: 700);
         #Title {
             Group {
                 $C.@Title {
@@ -54,305 +54,452 @@ $C.@PageOverlay {
                 Group #Main {
                     LayoutMode: Top;
                     FlexWeight: 1;
-                    Padding: (Full: 16);
+                    Padding: (Full: 20);
+                    Background: #0b0f18;
+
+                    Group #SkillsIntro {
+                        LayoutMode: Top;
+                        Background: #111b2d;
+                        Padding: (Full: 12);
+                        Label {
+                            Style: (TextColor: #aaccff, FontSize: 14);
+                            Text: "Allocate points to shape your combat identity.";
+                        }
+                    }
+
+                    Group { Anchor: (Height: 12); }
 
                     Group #Skills {
-                        LayoutMode: Top;
+                        LayoutMode: Left;
 
-                        Group #ColumnHeaders {
-                            LayoutMode: Left;
-                            Padding: (Vertical: 6);
+                        Group #SkillsColumnLeft {
+                            FlexWeight: 1;
+                            LayoutMode: Top;
 
-                            Label { Style: $C.@DefaultLabelStyle; Text: "Skill"; FlexWeight: 1; }
-                            Label #ColumnLevel { Style: $C.@DefaultLabelStyle; Text: "Level"; Anchor: (Width: 60); }
-                            Label #ColumnValue { Style: $C.@DefaultLabelStyle; Text: "Value"; Anchor: (Width: 160); }
-                            Label #ColumnSpacer { Style: $C.@DefaultLabelStyle; Anchor: (Width: @ButtonClusterWidth); }
-                        }
+                            // ---------------- LIFE FORCE ----------------
+                            Group #LifeForce {
+                                LayoutMode: Top;
+                                Background: #0b141f(0.8);
+                                Padding: (Full: 12);
 
-                        // ---------------- LIFE FORCE ----------------
-                        Group #LifeForce {
-                            LayoutMode: Left;
-                            Padding: (Vertical: 8);
+                                Group {
+                                    LayoutMode: Left;
+                                    Label #LifeForceLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+                                    Label #LifeForceLevel { Style: (TextColor: #94b2ff, FontSize: 13); Anchor: (Width: 70); }
+                                    Label #LifeForceValue { Style: (TextColor: #6fe3ff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+                                    Group { Anchor: (Width: 8); }
+                                    Group #LifeForceButtons {
+                                        Anchor: (Width: @ButtonClusterWidth);
+                                        LayoutMode: Left;
 
-                            Label #LifeForceLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
-                            Label #LifeForceLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
-                            Label #LifeForceValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
+                                        $C.@TextButton #LifeForceMinus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "-1";
+                                            Style: @CancelTextButtonStyle;
+                                        }
 
-                            Group #LifeForceButtons {
-                                Anchor: (Width: @ButtonClusterWidth);
-                                LayoutMode: Left;
+                                        Group { Anchor: (Width: 4); }
 
-                                $C.@TextButton #LifeForceMinus1 {
-                                    Anchor: (Left: 10, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "-1";
-                                    Style: @CancelTextButtonStyle;
+                                        $C.@TextButton #LifeForcePlus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+1";
+                                            Style: @CustomStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #LifeForcePlus5 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+5";
+                                            Style: @CustomStyle;
+                                        }
+                                    }
                                 }
 
-                                $C.@TextButton #LifeForcePlus1 {
-                                    Anchor: (Left: 4, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+1";
-                                    Style: @CustomStyle;
+                                Group { Anchor: (Height: 4); }
+
+                                Label #LifeForceDescription {
+                                    Style: (TextColor: #c0cee5, FontSize: 12);
+                                    Text: "Boosts total health.";
+                                }
+                            }
+
+                            Group { Anchor: (Height: 12); }
+
+                            // ---------------- STRENGTH ----------------
+                            Group #Strength {
+                                LayoutMode: Top;
+                                Background: #0b141f(0.8);
+                                Padding: (Full: 12);
+
+                                Group {
+                                    LayoutMode: Left;
+                                    Label #StrengthLabel { Style: (TextColor: #ffe8d7, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+                                    Label #StrengthLevel { Style: (TextColor: #ffc49c, FontSize: 13); Anchor: (Width: 70); }
+                                    Label #StrengthValue { Style: (TextColor: #ffd2ac, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+                                    Group { Anchor: (Width: 8); }
+                                    Group #StrengthButtons {
+                                        Anchor: (Width: @ButtonClusterWidth);
+                                        LayoutMode: Left;
+
+                                        $C.@TextButton #StrengthMinus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "-1";
+                                            Style: @CancelTextButtonStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #StrengthPlus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+1";
+                                            Style: @CustomStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #StrengthPlus5 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+5";
+                                            Style: @CustomStyle;
+                                        }
+                                    }
                                 }
 
-                                $C.@TextButton #LifeForcePlus5 {
-                                    Anchor: (Left: 4, Height: 28, Right: 0);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+5";
-                                    Style: @CustomStyle;
+                                Group { Anchor: (Height: 4); }
+
+                                Label #StrengthDescription {
+                                    Style: (TextColor: #ffe0c5, FontSize: 12);
+                                    Text: "Adds damage multipliers to every hit.";
+                                }
+                            }
+
+                            Group { Anchor: (Height: 12); }
+
+                            // ---------------- DEFENSE ----------------
+                            Group #Defense {
+                                LayoutMode: Top;
+                                Background: #0b141f(0.8);
+                                Padding: (Full: 12);
+
+                                Group {
+                                    LayoutMode: Left;
+                                    Label #DefenseLabel { Style: (TextColor: #ddfff3, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+                                    Label #DefenseLevel { Style: (TextColor: #94ffe3, FontSize: 13); Anchor: (Width: 70); }
+                                    Label #DefenseValue { Style: (TextColor: #68f7c5, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+                                    Group { Anchor: (Width: 8); }
+                                    Group #DefenseButtons {
+                                        Anchor: (Width: @ButtonClusterWidth);
+                                        LayoutMode: Left;
+
+                                        $C.@TextButton #DefenseMinus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "-1";
+                                            Style: @CancelTextButtonStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #DefensePlus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+1";
+                                            Style: @CustomStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #DefensePlus5 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+5";
+                                            Style: @CustomStyle;
+                                        }
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #DefenseDescription {
+                                    Style: (TextColor: #c7ede4, FontSize: 12);
+                                    Text: "Shrugs off more incoming damage.";
+                                }
+                            }
+
+                            Group { Anchor: (Height: 12); }
+
+                            // ---------------- HASTE ----------------
+                            Group #Haste {
+                                LayoutMode: Top;
+                                Background: #0b141f(0.8);
+                                Padding: (Full: 12);
+
+                                Group {
+                                    LayoutMode: Left;
+                                    Label #HasteLabel { Style: (TextColor: #f7e2ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+                                    Label #HasteLevel { Style: (TextColor: #e0b8ff, FontSize: 13); Anchor: (Width: 70); }
+                                    Label #HasteValue { Style: (TextColor: #d598ff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+                                    Group { Anchor: (Width: 8); }
+                                    Group #HasteButtons {
+                                        Anchor: (Width: @ButtonClusterWidth);
+                                        LayoutMode: Left;
+
+                                        $C.@TextButton #HasteMinus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "-1";
+                                            Style: @CancelTextButtonStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #HastePlus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+1";
+                                            Style: @CustomStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #HastePlus5 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+5";
+                                            Style: @CustomStyle;
+                                        }
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #HasteDescription {
+                                    Style: (TextColor: #dccdf3, FontSize: 12);
+                                    Text: "Cranks up movement and attack speed.";
                                 }
                             }
                         }
 
-                        // ---------------- STRENGTH ----------------
-                        Group #Strength {
-                            LayoutMode: Left;
-                            Padding: (Vertical: 8);
+                        Group { Anchor: (Width: 24); }
 
-                            Label #StrengthLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
-                            Label #StrengthLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
-                            Label #StrengthValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
+                        Group #SkillsColumnRight {
+                            FlexWeight: 1;
+                            LayoutMode: Top;
 
-                            Group #StrengthButtons {
-                                Anchor: (Width: @ButtonClusterWidth);
-                                LayoutMode: Left;
+                            // ---------------- PRECISION ----------------
+                            Group #Precision {
+                                LayoutMode: Top;
+                                Background: #0b141f(0.8);
+                                Padding: (Full: 12);
 
-                                $C.@TextButton #StrengthMinus1 {
-                                    Anchor: (Left: 10, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "-1";
-                                    Style: @CancelTextButtonStyle;
+                                Group {
+                                    LayoutMode: Left;
+                                    Label #PrecisionLabel { Style: (TextColor: #dff6ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+                                    Label #PrecisionLevel { Style: (TextColor: #87dfff, FontSize: 13); Anchor: (Width: 70); }
+                                    Label #PrecisionValue { Style: (TextColor: #6edcff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+                                    Group { Anchor: (Width: 8); }
+                                    Group #PrecisionButtons {
+                                        Anchor: (Width: @ButtonClusterWidth);
+                                        LayoutMode: Left;
+
+                                        $C.@TextButton #PrecisionMinus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "-1";
+                                            Style: @CancelTextButtonStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #PrecisionPlus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+1";
+                                            Style: @CustomStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #PrecisionPlus5 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+5";
+                                            Style: @CustomStyle;
+                                        }
+                                    }
                                 }
 
-                                $C.@TextButton #StrengthPlus1 {
-                                    Anchor: (Left: 4, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+1";
-                                    Style: @CustomStyle;
-                                }
+                                Group { Anchor: (Height: 4); }
 
-                                $C.@TextButton #StrengthPlus5 {
-                                    Anchor: (Left: 4, Height: 28, Right: 0);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+5";
-                                    Style: @CustomStyle;
-                                }
-                            }
-                        }
-
-                        // ---------------- DEFENSE ----------------
-                        Group #Defense {
-                            LayoutMode: Left;
-                            Padding: (Vertical: 8);
-
-                            Label #DefenseLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
-                            Label #DefenseLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
-                            Label #DefenseValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
-
-                            Group #DefenseButtons {
-                                Anchor: (Width: @ButtonClusterWidth);
-                                LayoutMode: Left;
-
-                                $C.@TextButton #DefenseMinus1 {
-                                    Anchor: (Left: 10, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "-1";
-                                    Style: @CancelTextButtonStyle;
-                                }
-
-                                $C.@TextButton #DefensePlus1 {
-                                    Anchor: (Left: 4, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+1";
-                                    Style: @CustomStyle;
-                                }
-
-                                $C.@TextButton #DefensePlus5 {
-                                    Anchor: (Left: 4, Height: 28, Right: 0);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+5";
-                                    Style: @CustomStyle;
+                                Label #PrecisionDescription {
+                                    Style: (TextColor: #c3dfee, FontSize: 12);
+                                    Text: "Raises crit chance for all attacks.";
                                 }
                             }
-                        }
 
-                        // ---------------- HASTE ----------------
-                        Group #Haste {
-                            LayoutMode: Left;
-                            Padding: (Vertical: 8);
+                            Group { Anchor: (Height: 12); }
 
-                            Label #HasteLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
-                            Label #HasteLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
-                            Label #HasteValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
+                            // ---------------- FEROCITY ----------------
+                            Group #Ferocity {
+                                LayoutMode: Top;
+                                Background: #0b141f(0.8);
+                                Padding: (Full: 12);
 
-                            Group #HasteButtons {
-                                Anchor: (Width: @ButtonClusterWidth);
-                                LayoutMode: Left;
+                                Group {
+                                    LayoutMode: Left;
+                                    Label #FerocityLabel { Style: (TextColor: #ffdbe9, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+                                    Label #FerocityLevel { Style: (TextColor: #ff9ac0, FontSize: 13); Anchor: (Width: 70); }
+                                    Label #FerocityValue { Style: (TextColor: #ffb0cd, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+                                    Group { Anchor: (Width: 8); }
+                                    Group #FerocityButtons {
+                                        Anchor: (Width: @ButtonClusterWidth);
+                                        LayoutMode: Left;
 
-                                $C.@TextButton #HasteMinus1 {
-                                    Anchor: (Left: 10, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "-1";
-                                    Style: @CancelTextButtonStyle;
+                                        $C.@TextButton #FerocityMinus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "-1";
+                                            Style: @CancelTextButtonStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #FerocityPlus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+1";
+                                            Style: @CustomStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #FerocityPlus5 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+5";
+                                            Style: @CustomStyle;
+                                        }
+                                    }
                                 }
 
-                                $C.@TextButton #HastePlus1 {
-                                    Anchor: (Left: 4, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+1";
-                                    Style: @CustomStyle;
-                                }
+                                Group { Anchor: (Height: 4); }
 
-                                $C.@TextButton #HastePlus5 {
-                                    Anchor: (Left: 4, Height: 28, Right: 0);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+5";
-                                    Style: @CustomStyle;
-                                }
-                            }
-                        }
-
-                        // ---------------- PRECISION ----------------
-                        Group #Precision {
-                            LayoutMode: Left;
-                            Padding: (Vertical: 8);
-
-                            Label #PrecisionLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
-                            Label #PrecisionLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
-                            Label #PrecisionValue { Style: $C.@DefaultLabelStyle; Text: "0.00%"; Anchor: (Width: 160); }
-
-                            Group #PrecisionButtons {
-                                Anchor: (Width: @ButtonClusterWidth);
-                                LayoutMode: Left;
-
-                                $C.@TextButton #PrecisionMinus1 {
-                                    Anchor: (Left: 10, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "-1";
-                                    Style: @CancelTextButtonStyle;
-                                }
-
-                                $C.@TextButton #PrecisionPlus1 {
-                                    Anchor: (Left: 4, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+1";
-                                    Style: @CustomStyle;
-                                }
-
-                                $C.@TextButton #PrecisionPlus5 {
-                                    Anchor: (Left: 4, Height: 28, Right: 0);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+5";
-                                    Style: @CustomStyle;
+                                Label #FerocityDescription {
+                                    Style: (TextColor: #fac6da, FontSize: 12);
+                                    Text: "Stacks bonus damage onto crits.";
                                 }
                             }
-                        }
 
-                        // ---------------- FEROCITY ----------------
-                        Group #Ferocity {
-                            LayoutMode: Left;
-                            Padding: (Vertical: 8);
+                            Group { Anchor: (Height: 12); }
 
-                            Label #FerocityLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
-                            Label #FerocityLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
-                            Label #FerocityValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
+                            // ---------------- STAMINA ----------------
+                            Group #Stamina {
+                                LayoutMode: Top;
+                                Background: #0b141f(0.8);
+                                Padding: (Full: 12);
 
-                            Group #FerocityButtons {
-                                Anchor: (Width: @ButtonClusterWidth);
-                                LayoutMode: Left;
+                                Group {
+                                    LayoutMode: Left;
+                                    Label #StaminaLabel { Style: (TextColor: #ecffd0, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+                                    Label #StaminaLevel { Style: (TextColor: #d2ff8f, FontSize: 13); Anchor: (Width: 70); }
+                                    Label #StaminaValue { Style: (TextColor: #b7ff6a, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+                                    Group { Anchor: (Width: 8); }
+                                    Group #StaminaButtons {
+                                        Anchor: (Width: @ButtonClusterWidth);
+                                        LayoutMode: Left;
 
-                                $C.@TextButton #FerocityMinus1 {
-                                    Anchor: (Left: 10, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "-1";
-                                    Style: @CancelTextButtonStyle;
+                                        $C.@TextButton #StaminaMinus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "-1";
+                                            Style: @CancelTextButtonStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #StaminaPlus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+1";
+                                            Style: @CustomStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #StaminaPlus5 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+5";
+                                            Style: @CustomStyle;
+                                        }
+                                    }
                                 }
 
-                                $C.@TextButton #FerocityPlus1 {
-                                    Anchor: (Left: 4, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+1";
-                                    Style: @CustomStyle;
-                                }
+                                Group { Anchor: (Height: 4); }
 
-                                $C.@TextButton #FerocityPlus5 {
-                                    Anchor: (Left: 4, Height: 28, Right: 0);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+5";
-                                    Style: @CustomStyle;
-                                }
-                            }
-                        }
-
-                        // ---------------- STAMINA ----------------
-                        Group #Stamina {
-                            LayoutMode: Left;
-                            Padding: (Vertical: 8);
-
-                            Label #StaminaLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
-                            Label #StaminaLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
-                            Label #StaminaValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
-
-                            Group #StaminaButtons {
-                                Anchor: (Width: @ButtonClusterWidth);
-                                LayoutMode: Left;
-
-                                $C.@TextButton #StaminaMinus1 {
-                                    Anchor: (Left: 10, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "-1";
-                                    Style: @CancelTextButtonStyle;
-                                }
-
-                                $C.@TextButton #StaminaPlus1 {
-                                    Anchor: (Left: 4, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+1";
-                                    Style: @CustomStyle;
-                                }
-
-                                $C.@TextButton #StaminaPlus5 {
-                                    Anchor: (Left: 4, Height: 28, Right: 0);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+5";
-                                    Style: @CustomStyle;
+                                Label #StaminaDescription {
+                                    Style: (TextColor: #d8f2b0, FontSize: 12);
+                                    Text: "Extends stamina for dodges and bursts.";
                                 }
                             }
-                        }
 
-                        // ---------------- INTELLIGENCE ----------------
-                        Group #Intelligence {
-                            LayoutMode: Left;
-                            Padding: (Vertical: 8);
+                            Group { Anchor: (Height: 12); }
 
-                            Label #IntelligenceLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; }
-                            Label #IntelligenceLevel { Style: $C.@DefaultLabelStyle; Text: "1"; Anchor: (Width: 60); }
-                            Label #IntelligenceValue { Style: $C.@DefaultLabelStyle; Text: "0.00"; Anchor: (Width: 160); }
+                            // ---------------- INTELLIGENCE ----------------
+                            Group #Intelligence {
+                                LayoutMode: Top;
+                                Background: #0b141f(0.8);
+                                Padding: (Full: 12);
 
-                            Group #IntelligenceButtons {
-                                Anchor: (Width: @ButtonClusterWidth);
-                                LayoutMode: Left;
+                                Group {
+                                    LayoutMode: Left;
+                                    Label #IntelligenceLabel { Style: (TextColor: #e1f4ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+                                    Label #IntelligenceLevel { Style: (TextColor: #7edbff, FontSize: 13); Anchor: (Width: 70); }
+                                    Label #IntelligenceValue { Style: (TextColor: #60d2ff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+                                    Group { Anchor: (Width: 8); }
+                                    Group #IntelligenceButtons {
+                                        Anchor: (Width: @ButtonClusterWidth);
+                                        LayoutMode: Left;
 
-                                $C.@TextButton #IntelligenceMinus1 {
-                                    Anchor: (Left: 10, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "-1";
-                                    Style: @CancelTextButtonStyle;
+                                        $C.@TextButton #IntelligenceMinus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "-1";
+                                            Style: @CancelTextButtonStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #IntelligencePlus1 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+1";
+                                            Style: @CustomStyle;
+                                        }
+
+                                        Group { Anchor: (Width: 4); }
+
+                                        $C.@TextButton #IntelligencePlus5 {
+                                            Anchor: (Height: 28, Width: 46);
+                                            Padding: (Horizontal: 12, Vertical: 4);
+                                            Text: "+5";
+                                            Style: @CustomStyle;
+                                        }
+                                    }
                                 }
 
-                                $C.@TextButton #IntelligencePlus1 {
-                                    Anchor: (Left: 4, Height: 28, Right: 4);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+1";
-                                    Style: @CustomStyle;
-                                }
+                                Group { Anchor: (Height: 4); }
 
-                                $C.@TextButton #IntelligencePlus5 {
-                                    Anchor: (Left: 4, Height: 28, Right: 0);
-                                    Padding: (Left: 16, Right: 16, Top: 4, Bottom: 4);
-                                    Text: "+5";
-                                    Style: @CustomStyle;
+                                Label #IntelligenceDescription {
+                                    Style: (TextColor: #c1dff5, FontSize: 12);
+                                    Text: "Feeds mana for abilities and spells.";
                                 }
                             }
                         }

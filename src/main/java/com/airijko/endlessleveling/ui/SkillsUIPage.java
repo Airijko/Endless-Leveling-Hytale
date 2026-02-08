@@ -28,6 +28,8 @@ import java.util.EnumMap;
 
 public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+        private static final EnumMap<SkillAttributeType, String> ATTRIBUTE_DESCRIPTIONS = new EnumMap<>(
+                        SkillAttributeType.class);
         private static final SkillBinding[] SKILL_BINDINGS = {
                         new SkillBinding("LifeForce", SkillAttributeType.LIFE_FORCE),
                         new SkillBinding("Strength", SkillAttributeType.STRENGTH),
@@ -46,6 +48,23 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         private final SkillManager skillManager;
         private final PlayerDataManager playerDataManager;
         private final PlayerAttributeManager attributeManager;
+
+        static {
+                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.LIFE_FORCE,
+                                "Boosts your total health so you can tank more hits.");
+                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.STRENGTH,
+                                "Multiplies weapon and ability damage outputs.");
+                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.DEFENSE,
+                                "Cuts down incoming damage through resistances.");
+                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.HASTE, "Speeds up movement and combat animations.");
+                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.PRECISION,
+                                "Raises critical hit chance for every attack.");
+                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.FEROCITY, "Adds bonus damage to each critical strike.");
+                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.STAMINA,
+                                "Expands stamina for dodges, blocks, and bursts.");
+                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.INTELLIGENCE,
+                                "Increases mana so spells and abilities stay online longer.");
+        }
 
         public SkillsUIPage(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime) {
                 super(playerRef, lifetime, Data.CODEC);
@@ -74,13 +93,21 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 // -----------------------------
 
                 ui.set("#LifeForceLabel.Text", "Life Force");
+                ui.set("#LifeForceDescription.Text", getDescription(SkillAttributeType.LIFE_FORCE));
                 ui.set("#StrengthLabel.Text", "Strength");
+                ui.set("#StrengthDescription.Text", getDescription(SkillAttributeType.STRENGTH));
                 ui.set("#DefenseLabel.Text", "Defense");
+                ui.set("#DefenseDescription.Text", getDescription(SkillAttributeType.DEFENSE));
                 ui.set("#HasteLabel.Text", "Haste");
+                ui.set("#HasteDescription.Text", getDescription(SkillAttributeType.HASTE));
                 ui.set("#PrecisionLabel.Text", "Precision");
+                ui.set("#PrecisionDescription.Text", getDescription(SkillAttributeType.PRECISION));
                 ui.set("#FerocityLabel.Text", "Ferocity");
+                ui.set("#FerocityDescription.Text", getDescription(SkillAttributeType.FEROCITY));
                 ui.set("#StaminaLabel.Text", "Stamina");
+                ui.set("#StaminaDescription.Text", getDescription(SkillAttributeType.STAMINA));
                 ui.set("#IntelligenceLabel.Text", "Intelligence");
+                ui.set("#IntelligenceDescription.Text", getDescription(SkillAttributeType.INTELLIGENCE));
 
                 // Bind all skill buttons in a loop for clarity and maintainability
                 for (SkillBinding binding : SKILL_BINDINGS) {
@@ -399,6 +426,10 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                         formatted = formatted.replaceAll("0+$", "").replaceAll("\\.$", "");
                 }
                 return formatted;
+        }
+
+        private String getDescription(SkillAttributeType type) {
+                return ATTRIBUTE_DESCRIPTIONS.getOrDefault(type, "");
         }
 
         // --------------------------------------------------
