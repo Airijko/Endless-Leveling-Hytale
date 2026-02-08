@@ -1,4 +1,4 @@
-package com.airijko.endlessleveling.passives;
+package com.airijko.endlessleveling.enums;
 
 import java.util.Locale;
 

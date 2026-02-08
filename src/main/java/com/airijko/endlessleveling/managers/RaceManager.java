@@ -1,11 +1,12 @@
 package com.airijko.endlessleveling.managers;
 
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.passives.ArchetypePassiveType;
 import com.airijko.endlessleveling.races.RaceDefinition;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.logger.HytaleLogger;
 import org.yaml.snakeyaml.Yaml;
+
+import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 
 import java.io.File;

@@ -1,10 +1,10 @@
 package com.airijko.endlessleveling.managers;
 
 import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.passives.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.ArchetypePassiveSnapshot;
-import com.airijko.endlessleveling.passives.ArchetypePassiveType;
 import com.airijko.endlessleveling.passives.SwiftnessSettings;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.component.ComponentAccessor;

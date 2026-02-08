@@ -1,0 +1,19 @@
+Group {
+    LayoutMode: Left;
+    Anchor: (Height: 22);
+    Background: #20140a(0.75);
+    Padding: (Left: 10, Right: 10, Top: 3, Bottom: 3);
+
+    Label #PassiveName {
+        FlexWeight: 1;
+        Style: (FontSize: 12, TextColor: #e5c68a);
+        Text: "Race Passive";
+        Anchor: (Height: 16);
+    }
+
+    Label #PassiveValue {
+        Style: (FontSize: 12, TextColor: #ffc300, RenderBold: true);
+        Text: "+0";
+        Anchor: (Height: 16, Width: 100);
+    }
+}

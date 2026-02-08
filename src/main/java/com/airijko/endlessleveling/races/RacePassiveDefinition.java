@@ -1,7 +1,7 @@
 package com.airijko.endlessleveling.races;
 
+import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
-import com.airijko.endlessleveling.passives.ArchetypePassiveType;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

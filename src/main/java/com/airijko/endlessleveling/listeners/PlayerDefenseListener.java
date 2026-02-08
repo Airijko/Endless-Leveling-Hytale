@@ -1,13 +1,13 @@
 package com.airijko.endlessleveling.listeners;
 
 import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PassiveManager.PassiveRuntimeState;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.passives.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.ArchetypePassiveSnapshot;
-import com.airijko.endlessleveling.passives.ArchetypePassiveType;
 import com.airijko.endlessleveling.passives.FirstStrikeSettings;
 import com.airijko.endlessleveling.passives.RetaliationSettings;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;

@@ -2,85 +2,135 @@ $C = "../../Common.ui";
 
 Group {
     LayoutMode: Top;
-    Anchor: (Height: 72);
+    Anchor: (Height: 110);
 
     Group {
         LayoutMode: Left;
-        Anchor: (Height: 56);
-        Background: #000000(0.18);
-        Padding: (Full: 12);
+        Anchor: (Height: 95);
+        Background: #050910(0.85);
+        Padding: (Left: 12, Right: 12, Top: 10, Bottom: 10);
+
+        Group {
+            Anchor: (Width: 4);
+            Background: #4fd7f7(0.9);
+        }
 
         Group {
             FlexWeight: 1;
             LayoutMode: Top;
-            Padding: (Right: 8);
+            Padding: (Left: 10, Right: 12);
 
-            Label #SlotLabel {
-                Style: (FontSize: 12, TextColor: #8aa1bf);
-                Text: "Slot 1";
-                Anchor: (Height: 16);
+            Group {
+                LayoutMode: Left;
+                Anchor: (Height: 18);
+
+                Label #SlotLabel {
+                    Style: (FontSize: 12, TextColor: #8aa1bf, RenderBold: true);
+                    Text: "Slot 1";
+                    Anchor: (Height: 16);
+                }
+
+                Group { Anchor: (Width: 8); }
+
+                Label #StatusBadge {
+                    Anchor: (Height: 18);
+                    Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true);
+                    Text: "";
+                }
             }
 
             Label #ProfileName {
-                Style: (FontSize: 18, TextColor: #ffffff, RenderBold: true);
+                Style: (FontSize: 20, TextColor: #ffffff, RenderBold: true);
                 Text: "Profile";
-                Anchor: (Height: 28);
+                Anchor: (Height: 30);
             }
 
             Group {
                 LayoutMode: Left;
-                Anchor: (Height: 24);
+                Anchor: (Height: 26);
 
-                Label #LevelValue {
-                    Style: $C.@DefaultLabelStyle;
-                    Text: "Level 1";
-                    FlexWeight: 1;
+                Group {
+                    LayoutMode: Top;
+                    Anchor: (Width: 90);
+
+                    Label {
+                        Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
+                        Text: "LEVEL";
+                        Anchor: (Height: 10);
+                    }
+
+                    Label #LevelValue {
+                        Style: (FontSize: 14, TextColor: #ffffff);
+                        Text: "Level 1";
+                        Anchor: (Height: 16);
+                    }
                 }
 
-                Label #XpValue {
-                    Style: $C.@DefaultLabelStyle;
-                    Text: "0 XP";
-                    FlexWeight: 1;
+                Group { Anchor: (Width: 16); }
+
+                Group {
+                    LayoutMode: Top;
+                    Anchor: (Width: 120);
+
+                    Label {
+                        Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
+                        Text: "XP";
+                        Anchor: (Height: 10);
+                    }
+
+                    Label #XpValue {
+                        Style: (FontSize: 14, TextColor: #ffffff);
+                        Text: "0 XP";
+                        Anchor: (Height: 16);
+                    }
                 }
 
-                Label #RaceValue {
-                    Style: $C.@DefaultLabelStyle;
-                    Text: "Human";
-                    FlexWeight: 1;
+                Group { Anchor: (Width: 16); }
+
+                Group {
+                    LayoutMode: Top;
+                    Anchor: (Width: 110);
+
+                    Label {
+                        Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
+                        Text: "RACE";
+                        Anchor: (Height: 10);
+                    }
+
+                    Label #RaceValue {
+                        Style: (FontSize: 14, TextColor: #ffffff);
+                        Text: "Human";
+                        Anchor: (Height: 16);
+                    }
                 }
             }
+        }
+
+        Group {
+            Anchor: (Width: 2);
+            Background: #ffffff(0.08);
         }
 
         Group {
             LayoutMode: Top;
             Anchor: (Width: 200);
-            Padding: (Left: 8);
+            Padding: (Left: 12);
 
-            Label #StatusBadge {
-                Anchor: (Height: 18);
-                Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true);
-                Text: "";
+            Group { Anchor: (Height: 8); }
+
+            $C.@TextButton #SelectButton {
+                Text: "SELECT";
+                Anchor: (Height: 30, Width: 130);
             }
 
-            Group {
-                LayoutMode: Left;
-                Anchor: (Height: 28);
+            Group { Anchor: (Height: 6); }
 
-                $C.@TextButton #SelectButton {
-                    Text: "SELECT";
-                    Anchor: (Height: 28, Width: 90);
-                    Padding: (Left: 12, Right: 12, Top: 3, Bottom: 3);
-                }
-
-                Group { Anchor: (Width: 8); }
-
-                $C.@CancelTextButton #DeleteButton {
-                    Text: "DELETE";
-                    Anchor: (Height: 28, Width: 90);
-                }
+            $C.@CancelTextButton #DeleteButton {
+                Text: "DELETE";
+                Anchor: (Height: 30, Width: 130);
             }
         }
     }
 
-    Group { Anchor: (Height: 6); }
+    Group { Anchor: (Height: 8); }
 }

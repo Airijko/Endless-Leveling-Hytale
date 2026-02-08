@@ -3,7 +3,7 @@ $Nav = "../Nav/LeftNavPanel.ui";
 
 $C.@PageOverlay {
     $C.@DecoratedContainer {
-        Anchor: (Width: 800, Height: 700);
+        Anchor: (Width: 1200, Height: 700);
         #Title {
             Group {
                 $C.@Title {
@@ -25,62 +25,270 @@ $C.@PageOverlay {
                 LayoutMode: Top;
                 Anchor: (Right: 7, Bottom: 7);
 
-                Label #ProfileTitleLabel {
-                    Text: "Profiles";
+                Group {
+                    LayoutMode: Left;
                     Anchor: (Height: 48);
-                    Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true);
                     Padding: (Horizontal: 16, Top: 8);
+
+                    Label #ProfileTitleLabel {
+                        FlexWeight: 1;
+                        Text: "Profiles 0/5";
+                        Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true);
+                    }
+
+                    $C.@TextButton #NewProfileButton {
+                        Text: "NEW PROFILE";
+                        Anchor: (Height: 32, Width: 170);
+                    }
                 }
 
                 Group { Anchor: (Height: 1); Background: #2b3542; }
                 Group { Anchor: (Height: 8); }
 
-                Group #ProfilesHeader {
+                Group #ProfileContent {
                     LayoutMode: Left;
-                    Anchor: (Height: 48);
-                    Padding: (Horizontal: 16);
+                    FlexWeight: 1;
+                    Padding: (Left: 16, Right: 16, Bottom: 12);
 
-                    Label #ProfilesSummary {
-                        FlexWeight: 1;
-                        Style: $C.@DefaultLabelStyle;
-                        Text: "Profiles 0/5";
+                    Group #ProfileListColumn {
+                        LayoutMode: Top;
+                        Anchor: (Width: 420);
+
+                        Group #ProfileListSection {
+                            LayoutMode: Top;
+                            FlexWeight: 1;
+
+                            Label #EmptyStateLabel {
+                                Anchor: (Height: 32);
+                                Style: (FontSize: 15, TextColor: #9fb6d3);
+                                Text: "Loading profiles...";
+                            }
+
+                            Group #ProfileRows {
+                                FlexWeight: 1;
+                                LayoutMode: TopScrolling;
+                                ScrollbarStyle: $C.@DefaultScrollbarStyle;
+
+                                Group #ProfileCards {
+                                    LayoutMode: Top;
+                                }
+                            }
+                        }
                     }
 
                     Group { Anchor: (Width: 16); }
 
-                    $C.@TextButton #NewProfileButton {
-                        Text: "NEW PROFILE";
-                        Anchor: (Height: 32, Width: 170);
-                        Padding: (Left: 18, Right: 18, Top: 4, Bottom: 4);
-                    }
-                }
-
-                Group { Anchor: (Height: 12); }
-
-                Group #ProfileListSection {
-                    LayoutMode: Top;
-                    FlexWeight: 1;
-                    Padding: (Horizontal: 16);
-
-                    Label #EmptyStateLabel {
-                        Anchor: (Height: 32);
-                        Style: (FontSize: 15, TextColor: #9fb6d3);
-                        Text: "Loading profiles...";
-                    }
-
-                    Group #ProfileRows {
+                    Group #ProfileDetailPanel {
                         FlexWeight: 1;
-                        LayoutMode: TopScrolling;
-                        ScrollbarStyle: $C.@DefaultScrollbarStyle;
-                        Padding: (Left: 0);
+                        LayoutMode: Top;
+                        Background: #050910(0.85);
+                        Padding: (Left: 18, Right: 18, Top: 18, Bottom: 18);
 
-                        Group #ProfileCards {
-                            LayoutMode: Top;
+                        Label #DetailTitleLabel {
+                            Text: "Selected Profile";
+                            Style: (FontSize: 18, TextColor: #ffffff, RenderBold: true);
+                            Anchor: (Height: 26);
+                        }
+
+                        Label #DetailSubtitleLabel {
+                            Text: "Select a profile to view stats";
+                            Style: (FontSize: 13, TextColor: #8aa1bf);
+                            Anchor: (Height: 18);
+                        }
+
+                        Group { Anchor: (Height: 10); }
+                        Group { Anchor: (Height: 1); Background: #ffffff(0.08); }
+                        Group { Anchor: (Height: 14); }
+
+                        Group #DetailSummary {
+                            LayoutMode: Left;
+                            Anchor: (Height: 48);
+
+                            Group {
+                                LayoutMode: Top;
+                                Anchor: (Width: 110);
+
+                                Label {
+                                    Text: "LEVEL";
+                                    Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
+                                    Anchor: (Height: 10);
+                                }
+
+                                Label #DetailLevelValue {
+                                    Text: "--";
+                                    Style: (FontSize: 16, TextColor: #ffffff);
+                                    Anchor: (Height: 18);
+                                }
+                            }
+
+                            Group { Anchor: (Width: 16); }
+
+                            Group {
+                                LayoutMode: Top;
+                                Anchor: (Width: 140);
+
+                                Label {
+                                    Text: "TOTAL XP";
+                                    Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
+                                    Anchor: (Height: 10);
+                                }
+
+                                Label #DetailXpValue {
+                                    Text: "--";
+                                    Style: (FontSize: 16, TextColor: #ffffff);
+                                    Anchor: (Height: 18);
+                                }
+                            }
+
+                            Group { Anchor: (Width: 16); }
+
+                            Group {
+                                LayoutMode: Top;
+                                Anchor: (Width: 140);
+
+                                Label {
+                                    Text: "RACE";
+                                    Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
+                                    Anchor: (Height: 10);
+                                }
+
+                                Label #DetailRaceValue {
+                                    Text: "--";
+                                    Style: (FontSize: 16, TextColor: #ffffff);
+                                    Anchor: (Height: 18);
+                                }
+                            }
+                        }
+
+                        Group { Anchor: (Height: 14); }
+
+                        Group #DetailScrollArea {
+                            FlexWeight: 1;
+                            LayoutMode: TopScrolling;
+                            ScrollbarStyle: $C.@DefaultScrollbarStyle;
+                            Group #DetailScrollContent {
+                                LayoutMode: Top;
+
+                                Label {
+                                    Text: "Total Attributes";
+                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                                    Anchor: (Height: 20);
+                                }
+
+                                Group #AttributeList {
+                                    LayoutMode: Top;
+                                    Background: #0b141f(0.7);
+                                    Padding: (Left: 14, Right: 14, Top: 10, Bottom: 10);
+
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 20);
+                                        Label { Text: "Life Force"; Style: (FontSize: 12, TextColor: #9fb6d3); }
+                                        Group { FlexWeight: 1; }
+                                        Label #AttributeLifeForceValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                    }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 20);
+                                        Label { Text: "Strength"; Style: (FontSize: 12, TextColor: #9fb6d3); }
+                                        Group { FlexWeight: 1; }
+                                        Label #AttributeStrengthValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                    }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 20);
+                                        Label { Text: "Defense"; Style: (FontSize: 12, TextColor: #9fb6d3); }
+                                        Group { FlexWeight: 1; }
+                                        Label #AttributeDefenseValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                    }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 20);
+                                        Label { Text: "Haste"; Style: (FontSize: 12, TextColor: #9fb6d3); }
+                                        Group { FlexWeight: 1; }
+                                        Label #AttributeHasteValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                    }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 20);
+                                        Label { Text: "Precision"; Style: (FontSize: 12, TextColor: #9fb6d3); }
+                                        Group { FlexWeight: 1; }
+                                        Label #AttributePrecisionValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                    }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 20);
+                                        Label { Text: "Ferocity"; Style: (FontSize: 12, TextColor: #9fb6d3); }
+                                        Group { FlexWeight: 1; }
+                                        Label #AttributeFerocityValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                    }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 20);
+                                        Label { Text: "Stamina"; Style: (FontSize: 12, TextColor: #9fb6d3); }
+                                        Group { FlexWeight: 1; }
+                                        Label #AttributeStaminaValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                    }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 20);
+                                        Label { Text: "Intelligence"; Style: (FontSize: 12, TextColor: #9fb6d3); }
+                                        Group { FlexWeight: 1; }
+                                        Label #AttributeIntelligenceValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffffff, RenderBold: true); }
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 16); }
+
+                                Label {
+                                    Text: "Skill Passives";
+                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                                    Anchor: (Height: 20);
+                                }
+
+                                Group #SkillPassiveList {
+                                    LayoutMode: Top;
+                                    Background: #0b141f(0.6);
+                                    Padding: (Left: 12, Right: 12, Top: 8, Bottom: 8);
+
+                                    Label #SkillPassiveSummary {
+                                        Text: "No skill passives selected";
+                                        Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
+                                        Anchor: (Height: 18);
+                                    }
+
+                                    Group #SkillPassiveEntries {
+                                        LayoutMode: Top;
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 16); }
+
+                                Label {
+                                    Text: "Race Passives";
+                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                                    Anchor: (Height: 20);
+                                }
+
+                                Group #RacePassiveList {
+                                    LayoutMode: Top;
+                                    Background: #0b141f(0.6);
+                                    Padding: (Left: 12, Right: 12, Top: 8, Bottom: 8);
+
+                                    Label #RacePassiveSummary {
+                                        Text: "Select a profile to view race bonuses";
+                                        Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
+                                        Anchor: (Height: 18);
+                                    }
+
+                                    Group #RacePassiveEntries {
+                                        LayoutMode: Top;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-
-                Group { Anchor: (Height: 12); }
             }
         }
     }

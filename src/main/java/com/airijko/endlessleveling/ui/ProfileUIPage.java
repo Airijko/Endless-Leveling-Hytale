@@ -1,13 +1,20 @@
 package com.airijko.endlessleveling.ui;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.data.PlayerData.PlayerProfile;
+import com.airijko.endlessleveling.enums.PassiveType;
+import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.airijko.endlessleveling.managers.RaceManager;
+import com.airijko.endlessleveling.races.RaceDefinition;
+import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -26,11 +33,14 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
     private final PlayerDataManager playerDataManager;
+    private final RaceManager raceManager;
 
     public ProfileUIPage(@Nonnull com.hypixel.hytale.server.core.universe.PlayerRef playerRef,
             @Nonnull CustomPageLifetime lifetime) {
         super(playerRef, lifetime, SkillsUIPage.Data.CODEC);
-        this.playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
+        this.raceManager = plugin != null ? plugin.getRaceManager() : null;
     }
 
     @Override
@@ -53,6 +63,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         updateSummary(ui, playerData);
         buildProfileList(ui, events, playerData);
+        updateProfileDetailPanel(ui, playerData);
     }
 
     private PlayerData resolvePlayerData() {
@@ -70,7 +81,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private void updateSummary(@Nonnull UICommandBuilder ui, @Nonnull PlayerData data) {
-        ui.set("#ProfilesSummary.Text",
+        ui.set("#ProfileTitleLabel.Text",
                 "Profiles " + data.getProfileCount() + "/" + PlayerData.MAX_PROFILES);
     }
 
@@ -119,6 +130,179 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
             index++;
         }
+    }
+
+    private void updateProfileDetailPanel(@Nonnull UICommandBuilder ui, @Nonnull PlayerData data) {
+        PlayerProfile profile = resolveActiveProfile(data);
+        if (profile == null) {
+            clearDetailPanel(ui, "Select a profile to view stats");
+            return;
+        }
+
+        int slot = data.getActiveProfileIndex();
+        ui.set("#DetailTitleLabel.Text", profile.getName());
+        ui.set("#DetailSubtitleLabel.Text", "Slot " + slot);
+        ui.set("#DetailLevelValue.Text", String.valueOf(profile.getLevel()));
+        ui.set("#DetailXpValue.Text", formatNumber(profile.getXp()) + " XP");
+        ui.set("#DetailRaceValue.Text", getRaceDisplay(profile));
+
+        ui.set("#AttributeLifeForceValue.Text", getAttributeValue(profile, SkillAttributeType.LIFE_FORCE));
+        ui.set("#AttributeStrengthValue.Text", getAttributeValue(profile, SkillAttributeType.STRENGTH));
+        ui.set("#AttributeDefenseValue.Text", getAttributeValue(profile, SkillAttributeType.DEFENSE));
+        ui.set("#AttributeHasteValue.Text", getAttributeValue(profile, SkillAttributeType.HASTE));
+        ui.set("#AttributePrecisionValue.Text", getAttributeValue(profile, SkillAttributeType.PRECISION));
+        ui.set("#AttributeFerocityValue.Text", getAttributeValue(profile, SkillAttributeType.FEROCITY));
+        ui.set("#AttributeStaminaValue.Text", getAttributeValue(profile, SkillAttributeType.STAMINA));
+        ui.set("#AttributeIntelligenceValue.Text", getAttributeValue(profile, SkillAttributeType.INTELLIGENCE));
+
+        List<PassiveEntry> skillEntries = collectSkillPassiveEntries(profile);
+        if (skillEntries.isEmpty()) {
+            ui.set("#SkillPassiveSummary.Text", "No skill passives selected");
+        } else {
+            ui.set("#SkillPassiveSummary.Text", skillEntries.size() + " passive(s) active");
+        }
+        populatePassiveEntries(ui,
+                "#SkillPassiveEntries",
+                "Pages/Profile/ProfileSkillPassiveEntry.ui",
+                skillEntries);
+
+        RacePassiveSummary raceSummary = buildRacePassiveSummary(profile);
+        ui.set("#RacePassiveSummary.Text", raceSummary.summary());
+        populatePassiveEntries(ui,
+                "#RacePassiveEntries",
+                "Pages/Profile/ProfileRacePassiveEntry.ui",
+                raceSummary.entries());
+    }
+
+    private PlayerProfile resolveActiveProfile(@Nonnull PlayerData data) {
+        Map<Integer, PlayerProfile> profiles = data.getProfiles();
+        if (profiles.isEmpty()) {
+            return null;
+        }
+        PlayerProfile profile = profiles.get(data.getActiveProfileIndex());
+        if (profile != null) {
+            return profile;
+        }
+        return profiles.values().stream().findFirst().orElse(null);
+    }
+
+    private void clearDetailPanel(@Nonnull UICommandBuilder ui, @Nonnull String subtitle) {
+        ui.set("#DetailTitleLabel.Text", "Selected Profile");
+        ui.set("#DetailSubtitleLabel.Text", subtitle);
+        ui.set("#DetailLevelValue.Text", "--");
+        ui.set("#DetailXpValue.Text", "--");
+        ui.set("#DetailRaceValue.Text", "--");
+        ui.set("#AttributeLifeForceValue.Text", "--");
+        ui.set("#AttributeStrengthValue.Text", "--");
+        ui.set("#AttributeDefenseValue.Text", "--");
+        ui.set("#AttributeHasteValue.Text", "--");
+        ui.set("#AttributePrecisionValue.Text", "--");
+        ui.set("#AttributeFerocityValue.Text", "--");
+        ui.set("#AttributeStaminaValue.Text", "--");
+        ui.set("#AttributeIntelligenceValue.Text", "--");
+        ui.set("#SkillPassiveSummary.Text", "No skill passives selected");
+        ui.set("#RacePassiveSummary.Text", "Select a profile to view race bonuses");
+        ui.clear("#SkillPassiveEntries");
+        ui.clear("#RacePassiveEntries");
+    }
+
+    private String getAttributeValue(@Nonnull PlayerProfile profile, @Nonnull SkillAttributeType type) {
+        int value = profile.getAttributes().getOrDefault(type, 0);
+        return String.valueOf(value);
+    }
+
+    private String getRaceDisplay(@Nonnull PlayerProfile profile) {
+        String raceId = profile.getRaceId();
+        if (raceManager == null) {
+            return raceId == null || raceId.isBlank() ? PlayerData.DEFAULT_RACE_ID : raceId;
+        }
+        RaceDefinition definition = raceManager.getRace(raceId);
+        if (definition != null) {
+            return definition.getDisplayName();
+        }
+        return raceId == null || raceId.isBlank() ? raceManager.getDefaultRaceId() : raceId;
+    }
+
+    private List<PassiveEntry> collectSkillPassiveEntries(@Nonnull PlayerProfile profile) {
+        List<PassiveEntry> entries = new ArrayList<>();
+        for (PassiveType type : PassiveType.values()) {
+            int level = profile.getPassiveLevel(type);
+            if (level <= 0) {
+                continue;
+            }
+            entries.add(new PassiveEntry(type.getDisplayName(), "Lv " + level));
+        }
+        return entries;
+    }
+
+    private RacePassiveSummary buildRacePassiveSummary(@Nonnull PlayerProfile profile) {
+        List<PassiveEntry> entries = new ArrayList<>();
+        if (raceManager == null || !raceManager.isEnabled()) {
+            return new RacePassiveSummary("Race bonuses unavailable", entries);
+        }
+        RaceDefinition definition = raceManager.getRace(profile.getRaceId());
+        if (definition == null) {
+            String raceId = profile.getRaceId() == null ? PlayerData.DEFAULT_RACE_ID : profile.getRaceId();
+            return new RacePassiveSummary("Race: " + raceId, entries);
+        }
+        List<RacePassiveDefinition> passives = definition.getPassiveDefinitions();
+        if (passives != null) {
+            for (RacePassiveDefinition passive : passives) {
+                if (passive == null || passive.type() == null) {
+                    continue;
+                }
+                StringBuilder label = new StringBuilder(toDisplay(passive.type().name()));
+                if (passive.attributeType() != null) {
+                    label.append(" (" + toDisplay(passive.attributeType().name()) + ")");
+                }
+                String valueText = passive.value() == 0.0D
+                        ? "Passive"
+                        : "+" + formatNumber(passive.value());
+                entries.add(new PassiveEntry(label.toString(), valueText));
+            }
+        }
+        String summary = entries.isEmpty()
+                ? definition.getDisplayName() + " bonuses active"
+                : definition.getDisplayName() + " passives";
+        return new RacePassiveSummary(summary, entries);
+    }
+
+    private void populatePassiveEntries(@Nonnull UICommandBuilder ui,
+            @Nonnull String containerSelector,
+            @Nonnull String template,
+            @Nonnull List<PassiveEntry> entries) {
+        ui.clear(containerSelector);
+        for (int i = 0; i < entries.size(); i++) {
+            PassiveEntry entry = entries.get(i);
+            ui.append(containerSelector, template);
+            String base = containerSelector + "[" + i + "]";
+            ui.set(base + " #PassiveName.Text", entry.label());
+            ui.set(base + " #PassiveValue.Text", entry.value());
+        }
+    }
+
+    private String toDisplay(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder();
+        String[] parts = raw.toLowerCase(Locale.ROOT).split("_");
+        for (String part : parts) {
+            if (part.isBlank()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append(' ');
+            }
+            builder.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
+        }
+        return builder.toString();
+    }
+
+    private record PassiveEntry(String label, String value) {
+    }
+
+    private record RacePassiveSummary(String summary, List<PassiveEntry> entries) {
     }
 
     @Override
