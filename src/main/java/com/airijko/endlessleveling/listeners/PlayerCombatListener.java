@@ -11,6 +11,8 @@ import com.airijko.endlessleveling.passives.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.passives.BerzerkerSettings;
 import com.airijko.endlessleveling.passives.ExecutionerSettings;
 import com.airijko.endlessleveling.passives.FirstStrikeSettings;
+import com.airijko.endlessleveling.passives.RetaliationSettings;
+import com.airijko.endlessleveling.passives.SwiftnessSettings;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
@@ -87,6 +89,8 @@ public class PlayerCombatListener extends DamageEventSystem {
                     FirstStrikeSettings firstStrikeSettings = FirstStrikeSettings.fromSnapshot(archetypeSnapshot);
                     BerzerkerSettings berzerkerSettings = BerzerkerSettings.fromSnapshot(archetypeSnapshot);
                     ExecutionerSettings executionerSettings = ExecutionerSettings.fromSnapshot(archetypeSnapshot);
+                    SwiftnessSettings swiftnessSettings = SwiftnessSettings.fromSnapshot(archetypeSnapshot);
+                    RetaliationSettings retaliationSettings = RetaliationSettings.fromSnapshot(archetypeSnapshot);
 
                     // Calculate strength bonus using SkillManager
                     float baseAmount = skillManager.applyStrengthModifier(damage.getAmount(), playerData);
@@ -96,23 +100,46 @@ public class PlayerCombatListener extends DamageEventSystem {
                     damage.setAmount(finalDamage);
                     applyLifeSteal(attackerRef, commandBuffer, playerData, finalDamage);
 
+                    float damageForBurstPassives = finalDamage;
+
                     if (runtimeState != null && firstStrikeSettings.enabled()) {
                         float bonusDamage = applyFirstStrike(runtimeState, firstStrikeSettings, attackerPlayer,
-                                finalDamage);
+                                damageForBurstPassives);
                         if (bonusDamage > 0) {
                             finalDamage += bonusDamage;
-                            damage.setAmount(finalDamage);
                             applyLifeSteal(attackerRef, commandBuffer, playerData, bonusDamage);
                         }
                     }
-                    float beforeArchetypeDamage = finalDamage;
-                    finalDamage = applyBerzerkerBonus(berzerkerSettings, attackerRef, commandBuffer, finalDamage);
-                    finalDamage = applyExecutionerBonus(executionerSettings, targetRef, commandBuffer, finalDamage);
-                    float bonusFromArchetypes = finalDamage - beforeArchetypeDamage;
-                    if (bonusFromArchetypes > 0f) {
-                        applyLifeSteal(attackerRef, commandBuffer, playerData, bonusFromArchetypes);
+
+                    float berzerkerBonus = computeBerzerkerBonus(berzerkerSettings,
+                            attackerRef,
+                            commandBuffer,
+                            damageForBurstPassives);
+                    if (berzerkerBonus > 0f) {
+                        finalDamage += berzerkerBonus;
+                        applyLifeSteal(attackerRef, commandBuffer, playerData, berzerkerBonus);
                     }
+
+                    if (runtimeState != null) {
+                        float retaliationBonus = consumeRetaliationBonus(runtimeState,
+                                retaliationSettings,
+                                attackerPlayer);
+                        if (retaliationBonus > 0f) {
+                            finalDamage += retaliationBonus;
+                            applyLifeSteal(attackerRef, commandBuffer, playerData, retaliationBonus);
+                        }
+                    }
+
+                    float beforeExecutioner = finalDamage;
+                    finalDamage = applyExecutionerBonus(executionerSettings, targetRef, commandBuffer, finalDamage);
+                    float executionerBonus = finalDamage - beforeExecutioner;
+                    if (executionerBonus > 0f) {
+                        applyLifeSteal(attackerRef, commandBuffer, playerData, executionerBonus);
+                    }
+
                     damage.setAmount(finalDamage);
+
+                    handleSwiftnessKill(runtimeState, swiftnessSettings, targetRef, commandBuffer, finalDamage);
 
                     passiveManager.markCombat(playerData.getUuid());
                 }
@@ -188,38 +215,90 @@ public class PlayerCombatListener extends DamageEventSystem {
         }
     }
 
-    private float applyBerzerkerBonus(@Nonnull BerzerkerSettings settings,
+    private float computeBerzerkerBonus(@Nonnull BerzerkerSettings settings,
             Ref<EntityStore> attackerRef,
             @Nonnull CommandBuffer<EntityStore> commandBuffer,
-            float currentDamage) {
-        if (!settings.enabled() || attackerRef == null || currentDamage <= 0f) {
-            return currentDamage;
+            float baseDamage) {
+        if (!settings.enabled() || attackerRef == null || baseDamage <= 0f) {
+            return 0f;
         }
         EntityStatMap statMap = commandBuffer.getComponent(attackerRef, EntityStatMap.getComponentType());
         if (statMap == null) {
-            return currentDamage;
+            return 0f;
         }
         EntityStatValue healthStat = statMap.get(DefaultEntityStatTypes.getHealth());
         if (healthStat == null) {
-            return currentDamage;
+            return 0f;
         }
         float max = healthStat.getMax();
         float current = healthStat.get();
         if (max <= 0f || current <= 0f) {
-            return currentDamage;
+            return 0f;
         }
         float ratio = current / max;
         double totalBonus = 0.0D;
         for (BerzerkerSettings.Entry entry : settings.entries()) {
-            if (ratio <= entry.thresholdPercent()) {
-                totalBonus += Math.max(0.0D, entry.bonusPercent());
+            double maxBonus = Math.max(0.0D, entry.bonusPercent());
+            if (maxBonus <= 0.0D) {
+                continue;
             }
+
+            double threshold = Math.min(Math.max(0.0D, entry.thresholdPercent()), 0.999D);
+            double scale;
+            if (ratio <= threshold) {
+                scale = 1.0D;
+            } else if (ratio >= 1.0D) {
+                scale = 0.0D;
+            } else {
+                double denominator = 1.0D - threshold;
+                scale = denominator <= 0.0D ? 0.0D : (1.0D - ratio) / denominator;
+            }
+
+            scale = Math.max(0.0D, Math.min(1.0D, scale));
+            totalBonus += maxBonus * scale;
         }
         if (totalBonus <= 0.0D) {
-            return currentDamage;
+            return 0f;
         }
-        float bonusDamage = (float) (currentDamage * totalBonus);
-        return bonusDamage > 0f ? currentDamage + bonusDamage : currentDamage;
+        float bonusDamage = (float) (baseDamage * totalBonus);
+        return bonusDamage > 0f ? bonusDamage : 0f;
+    }
+
+    private float consumeRetaliationBonus(@Nonnull PassiveRuntimeState runtimeState,
+            @Nonnull RetaliationSettings settings,
+            PlayerRef playerRef) {
+        if (!settings.enabled()) {
+            return 0f;
+        }
+
+        long now = System.currentTimeMillis();
+        long windowExpiresAt = runtimeState.getRetaliationWindowExpiresAt();
+        if (windowExpiresAt <= 0L) {
+            return 0f;
+        }
+        if (now > windowExpiresAt) {
+            runtimeState.setRetaliationWindowExpiresAt(0L);
+            runtimeState.setRetaliationDamageStored(0.0D);
+            return 0f;
+        }
+        if (now < runtimeState.getRetaliationCooldownExpiresAt()) {
+            return 0f;
+        }
+
+        double bonus = runtimeState.getRetaliationDamageStored();
+        if (bonus <= 0.0D) {
+            return 0f;
+        }
+
+        runtimeState.setRetaliationDamageStored(0.0D);
+        runtimeState.setRetaliationWindowExpiresAt(0L);
+        runtimeState.setRetaliationCooldownExpiresAt(now + settings.cooldownMillis());
+        runtimeState.setRetaliationReadyNotified(false);
+
+        sendPassiveMessage(playerRef,
+                String.format("Retaliation unleashed! Added %.0f flat damage.", bonus));
+
+        return (float) bonus;
     }
 
     private float applyExecutionerBonus(@Nonnull ExecutionerSettings settings,
@@ -267,6 +346,45 @@ public class PlayerCombatListener extends DamageEventSystem {
         }
         float bonusDamage = (float) (currentDamage * bonusPercent);
         return bonusDamage > 0f ? currentDamage + bonusDamage : currentDamage;
+    }
+
+    private void handleSwiftnessKill(PassiveRuntimeState runtimeState,
+            @Nonnull SwiftnessSettings settings,
+            Ref<EntityStore> targetRef,
+            @Nonnull CommandBuffer<EntityStore> commandBuffer,
+            float expectedDamage) {
+        if (runtimeState == null || targetRef == null || !settings.enabled() || expectedDamage <= 0f) {
+            return;
+        }
+        long durationMillis = settings.durationMillis();
+        if (durationMillis <= 0L) {
+            return;
+        }
+
+        EntityStatMap statMap = commandBuffer.getComponent(targetRef, EntityStatMap.getComponentType());
+        if (statMap == null) {
+            return;
+        }
+
+        EntityStatValue healthStat = statMap.get(DefaultEntityStatTypes.getHealth());
+        if (healthStat == null) {
+            return;
+        }
+
+        float current = healthStat.get();
+        if (current <= 0f) {
+            return;
+        }
+
+        float predicted = Math.max(0f, current - expectedDamage);
+        if (predicted > 0f) {
+            return;
+        }
+
+        int maxStacks = Math.max(1, settings.maxStacks());
+        int newStacks = Math.min(maxStacks, runtimeState.getSwiftnessStacks() + 1);
+        runtimeState.setSwiftnessStacks(newStacks);
+        runtimeState.setSwiftnessActiveUntil(System.currentTimeMillis() + durationMillis);
     }
 
     private void sendPassiveMessage(PlayerRef playerRef, String text) {

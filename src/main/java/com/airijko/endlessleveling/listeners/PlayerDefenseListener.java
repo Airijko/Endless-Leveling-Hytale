@@ -9,6 +9,7 @@ import com.airijko.endlessleveling.passives.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.passives.ArchetypePassiveType;
 import com.airijko.endlessleveling.passives.FirstStrikeSettings;
+import com.airijko.endlessleveling.passives.RetaliationSettings;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
@@ -97,11 +98,16 @@ public class PlayerDefenseListener extends DamageEventSystem {
 				? archetypePassiveManager.getSnapshot(playerData)
 				: ArchetypePassiveSnapshot.empty();
 		FirstStrikeSettings firstStrikeSettings = FirstStrikeSettings.fromSnapshot(archetypeSnapshot);
+		RetaliationSettings retaliationSettings = RetaliationSettings.fromSnapshot(archetypeSnapshot);
 
 		float adjustedAmount = reducedAmount;
 		if (runtimeState != null && statMap != null && !archetypeSnapshot.isEmpty()) {
 			adjustedAmount = applyLastStand(playerData, defenderPlayer, runtimeState, archetypeSnapshot, statMap,
 					reducedAmount);
+		}
+
+		if (runtimeState != null) {
+			handleRetaliation(runtimeState, retaliationSettings, adjustedAmount);
 		}
 
 		damage.setAmount(adjustedAmount);
@@ -240,6 +246,64 @@ public class PlayerDefenseListener extends DamageEventSystem {
 		long cooldownMillis() {
 			return (long) Math.max(0L, Math.round(cooldownSeconds * 1000.0D));
 		}
+	}
+
+	/**
+	 * Collects incoming damage for the Retaliation passive so it can be released on
+	 * the player's next attack.
+	 */
+	private void handleRetaliation(@Nonnull PassiveRuntimeState runtimeState,
+			@Nonnull RetaliationSettings settings,
+			float damageTaken) {
+		double reflectPercent = Math.max(0.0D, settings.reflectPercent());
+		if (!settings.enabled() || reflectPercent <= 0.0D) {
+			clearRetaliationState(runtimeState);
+			return;
+		}
+		if (damageTaken <= 0f) {
+			return;
+		}
+
+		double contribution = damageTaken * reflectPercent;
+		if (contribution <= 0.0D) {
+			return;
+		}
+
+		long now = System.currentTimeMillis();
+		expireRetaliationWindowIfNeeded(runtimeState, now);
+
+		if (now < runtimeState.getRetaliationCooldownExpiresAt()) {
+			return;
+		}
+
+		long windowMillis = settings.windowMillis();
+		if (windowMillis <= 0L) {
+			return;
+		}
+
+		double stored = runtimeState.getRetaliationDamageStored();
+		long windowExpiresAt = runtimeState.getRetaliationWindowExpiresAt();
+		if (stored <= 0.0D || windowExpiresAt <= 0L || now > windowExpiresAt) {
+			runtimeState.setRetaliationDamageStored(contribution);
+			runtimeState.setRetaliationWindowExpiresAt(now + windowMillis);
+		} else {
+			runtimeState.setRetaliationDamageStored(stored + contribution);
+		}
+	}
+
+	private void expireRetaliationWindowIfNeeded(@Nonnull PassiveRuntimeState runtimeState, long now) {
+		long windowExpiresAt = runtimeState.getRetaliationWindowExpiresAt();
+		if (windowExpiresAt > 0L && now > windowExpiresAt) {
+			runtimeState.setRetaliationWindowExpiresAt(0L);
+			runtimeState.setRetaliationDamageStored(0.0D);
+		}
+	}
+
+	private void clearRetaliationState(@Nonnull PassiveRuntimeState runtimeState) {
+		runtimeState.setRetaliationWindowExpiresAt(0L);
+		runtimeState.setRetaliationDamageStored(0.0D);
+		runtimeState.setRetaliationCooldownExpiresAt(0L);
+		runtimeState.setRetaliationReadyNotified(true);
 	}
 
 	private void suppressFirstStrikeIfHit(PassiveRuntimeState runtimeState,

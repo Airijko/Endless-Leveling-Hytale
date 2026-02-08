@@ -37,17 +37,20 @@ public class SkillManager {
     private final ConfigManager config;
     private final PlayerAttributeManager attributeManager;
     private final ArchetypePassiveManager archetypePassiveManager;
+    private final PassiveManager passiveManager;
 
     private int baseSkillPoints;
     private int skillPointsPerLevel;
 
     public SkillManager(PluginFilesManager filesManager,
             PlayerAttributeManager attributeManager,
-            ArchetypePassiveManager archetypePassiveManager) {
+            ArchetypePassiveManager archetypePassiveManager,
+            PassiveManager passiveManager) {
         this.levelingConfig = new LevelingConfigManager(filesManager.getLevelingFile());
         this.config = new ConfigManager(filesManager.getConfigFile());
         this.attributeManager = attributeManager;
         this.archetypePassiveManager = archetypePassiveManager;
+        this.passiveManager = passiveManager;
         loadConfigValues();
     }
 
@@ -512,7 +515,25 @@ public class SkillManager {
         if (!settings.enabled()) {
             return 1.0F;
         }
-        double multiplier = settings.multiplier();
+
+        int stacks = 0;
+        if (passiveManager != null) {
+            PassiveManager.PassiveRuntimeState runtimeState = passiveManager.getRuntimeState(playerData.getUuid());
+            if (runtimeState != null && runtimeState.getSwiftnessStacks() > 0) {
+                long activeUntil = runtimeState.getSwiftnessActiveUntil();
+                if (activeUntil > 0L && System.currentTimeMillis() <= activeUntil) {
+                    stacks = runtimeState.getSwiftnessStacks();
+                } else {
+                    runtimeState.clearSwiftness();
+                }
+            }
+        }
+
+        if (stacks <= 0) {
+            return 1.0F;
+        }
+
+        double multiplier = settings.multiplierForStacks(stacks);
         return multiplier > 0.0D ? (float) multiplier : 1.0F;
     }
 

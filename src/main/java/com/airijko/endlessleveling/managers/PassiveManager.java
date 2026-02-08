@@ -250,7 +250,7 @@ public class PassiveManager {
     }
 
     private boolean appliesResourceDivisor(PassiveType type) {
-        return type == PassiveType.MANA_REGENERATION || type == PassiveType.STAMINA_REGENERATION;
+        return type == PassiveType.MANA_REGENERATION;
     }
 
     private boolean toBoolean(Object value, boolean defaultValue) {
@@ -326,6 +326,8 @@ public class PassiveManager {
         private long firstStrikeCooldownExpiresAt;
         private boolean lastStandReadyNotified = true;
         private boolean firstStrikeReadyNotified = true;
+        private boolean adrenalineReadyNotified = true;
+        private boolean retaliationReadyNotified = true;
         private double lastStandHealPerSecond;
         private double lastStandHealRemaining;
         private long adrenalineCooldownExpiresAt;
@@ -335,6 +337,8 @@ public class PassiveManager {
         private long retaliationCooldownExpiresAt;
         private long retaliationWindowExpiresAt;
         private double retaliationDamageStored;
+        private long swiftnessActiveUntil;
+        private int swiftnessStacks;
 
         PassiveRuntimeState(UUID ignored) {
         }
@@ -427,6 +431,22 @@ public class PassiveManager {
             this.firstStrikeReadyNotified = firstStrikeReadyNotified;
         }
 
+        public boolean isAdrenalineReadyNotified() {
+            return adrenalineReadyNotified;
+        }
+
+        public void setAdrenalineReadyNotified(boolean adrenalineReadyNotified) {
+            this.adrenalineReadyNotified = adrenalineReadyNotified;
+        }
+
+        public boolean isRetaliationReadyNotified() {
+            return retaliationReadyNotified;
+        }
+
+        public void setRetaliationReadyNotified(boolean retaliationReadyNotified) {
+            this.retaliationReadyNotified = retaliationReadyNotified;
+        }
+
         public double getLastStandHealPerSecond() {
             return lastStandHealPerSecond;
         }
@@ -449,6 +469,8 @@ public class PassiveManager {
             this.firstStrikeCooldownExpiresAt = 0L;
             this.lastStandReadyNotified = true;
             this.firstStrikeReadyNotified = true;
+            this.adrenalineReadyNotified = true;
+            this.retaliationReadyNotified = true;
             this.lastStandHealPerSecond = 0.0D;
             this.lastStandHealRemaining = 0.0D;
             this.adrenalineCooldownExpiresAt = 0L;
@@ -458,6 +480,8 @@ public class PassiveManager {
             this.retaliationCooldownExpiresAt = 0L;
             this.retaliationWindowExpiresAt = 0L;
             this.retaliationDamageStored = 0.0D;
+            this.swiftnessActiveUntil = 0L;
+            this.swiftnessStacks = 0;
         }
 
         public long getAdrenalineCooldownExpiresAt() {
@@ -514,6 +538,33 @@ public class PassiveManager {
 
         public void setRetaliationDamageStored(double retaliationDamageStored) {
             this.retaliationDamageStored = Math.max(0.0D, retaliationDamageStored);
+        }
+
+        public long getSwiftnessActiveUntil() {
+            return swiftnessActiveUntil;
+        }
+
+        public void setSwiftnessActiveUntil(long swiftnessActiveUntil) {
+            this.swiftnessActiveUntil = swiftnessActiveUntil;
+            if (swiftnessActiveUntil <= 0L) {
+                this.swiftnessStacks = 0;
+            }
+        }
+
+        public int getSwiftnessStacks() {
+            return swiftnessStacks;
+        }
+
+        public void setSwiftnessStacks(int swiftnessStacks) {
+            this.swiftnessStacks = Math.max(0, swiftnessStacks);
+            if (this.swiftnessStacks == 0) {
+                this.swiftnessActiveUntil = 0L;
+            }
+        }
+
+        public void clearSwiftness() {
+            this.swiftnessActiveUntil = 0L;
+            this.swiftnessStacks = 0;
         }
 
     }

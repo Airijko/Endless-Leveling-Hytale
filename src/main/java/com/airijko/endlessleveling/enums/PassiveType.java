@@ -38,8 +38,7 @@ public enum PassiveType {
             case REGENERATION -> formatNumber(value) + " Health/sec";
             case LUCK -> formatNumber(value) + "% Luck";
             case MANA_REGENERATION -> formatNumber(value * PassiveRegenSystem.RESOURCE_REGEN_DIVISOR) + " Mana/5s";
-            case STAMINA_REGENERATION ->
-                formatNumber(value * PassiveRegenSystem.RESOURCE_REGEN_DIVISOR) + " Stamina/5s";
+            case STAMINA_REGENERATION -> formatNumber(value) + "% Stamina Regen";
         };
     }
 

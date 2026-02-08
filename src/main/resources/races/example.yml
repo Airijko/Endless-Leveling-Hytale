@@ -30,7 +30,7 @@
 #     -> `value`: decimal percent bonus to healing done and received
 
 #   SPECIAL_CHARGE_BONUS
-#     -> `value`: decimal percent faster special-charge gain
+#     -> `value`: decimal percent multiplier applied to the final special-charge bonus from skills (e.g., 1.0 = double the skill bonus)
 
 #   LAST_STAND
 #     -> `value`: decimal percent health healed when below a health threshold
@@ -49,8 +49,8 @@
 #     -> `cooldown`: seconds between triggers
 
 #   BERZERKER
-#     -> `value`: decimal percent damage increase at low health
-#     -> `threshold`: player health percent to activate bonus (e.g., 0.3 = below 30% HP)
+#     -> `value`: decimal percent max damage increase when at or below the threshold
+#     -> `threshold`: health percent where the max bonus applies (scales linearly down to 0% at full HP)
 
 #   RETALIATION
 #     -> `value`: decimal percent of damage taken that is reflected after the window expires
@@ -89,7 +89,7 @@ passives:
   - type: XP_BONUS
     value: 1.0 # +100% XP gain
   - type: INCREASED_HEALTH_REGEN
-    value: 2.5 # +2.5 HP every 5 seconds
+    value: 0.025 # Heal 2.5% of max HP every 5 seconds
   - type: INCREASED_MANA_REGEN
     value: 1.25 # +1.25 mana every 5 seconds
   - type: HEALING_BONUS
@@ -102,25 +102,48 @@ passives:
     duration: 10 # Lasts for 10 seconds
     cooldown: 60 # seconds between triggers
   - type: FIRST_STRIKE
-    value: 1.0 # +100% damage on first hit
+    value: 3.0 # +300% damage on first hit
     cooldown: 20 # seconds between first-strike windows
   - type: ADRENALINE
-    value: 0.25 # Restore 25% of max stamina when drained
-    threshold: 0.3 # Trigger below 30% stamina
-    duration: 5 # Spread recovery over 5 seconds
+    value: 0.8 # Restore 80% of max stamina when drained
+    threshold: 0.2 # Trigger below 20% stamina
+    duration: 3 # Spread recovery over 3 seconds
     cooldown: 45 # Seconds between adrenaline bursts
   - type: BERZERKER
-    value: 0.2 # +20% damage when hurt
-    threshold: 0.35 # Activates below 35% HP
+    value: 0.2 # Up to +20% damage when hurt (full bonus at/below 35% HP)
+    threshold: 0.35 # Health percent required for max bonus; scales to 0% at full health
   - type: RETALIATION
-    value: 0.35 # Reflect 35% of damage taken in the window
+    value: 0.25 # Reflect 25% of damage taken in the window
     window: 4 # Collect damage for 4 seconds before retaliating
     cooldown: 25 # Seconds between retaliations
   - type: EXECUTIONER
     value: 0.25 # Execute targets when fatal blow would leave them at 25% HP
     threshold: 0.25 # Only applies to targets already below 25% HP
   - type: SWIFTNESS
-    value: 0.08 # Passive +8% movement speed applied after haste
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: strength
-    value: 1 # +1 strength value per player level (same as spending 1 point each level)
+    value: 0.2 # Passive +20% movement speed applied after haste
+    duration: 5 # Swiftness bonus lasts for 5 seconds after triggering
+    max_stacks: 5 # Can stack up to 5 times after killing a target for a total of +125% movement speed
+  # - type: INNATE_ATTRIBUTE_GAIN
+  #   attribute: life_force
+  #   value: 2.0
+  # - type: INNATE_ATTRIBUTE_GAIN
+  #   attribute: strength
+  #   value: 2.0
+  # - type: INNATE_ATTRIBUTE_GAIN
+  #   attribute: defense
+  #   value: 2.0
+  # - type: INNATE_ATTRIBUTE_GAIN
+  #   attribute: haste
+  #   value: 2.0
+  # - type: INNATE_ATTRIBUTE_GAIN
+  #   attribute: precision
+  #   value: 2.0
+  # - type: INNATE_ATTRIBUTE_GAIN
+  #   attribute: ferocity
+  #   value: 2.0
+  # - type: INNATE_ATTRIBUTE_GAIN
+  #   attribute: stamina
+  #   value: 2.0
+  # - type: INNATE_ATTRIBUTE_GAIN
+  #   attribute: intelligence
+  #   value: 2.0

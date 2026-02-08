@@ -72,8 +72,8 @@ passives:
   stamina_regeneration:
     enabled: true
     unlock_level: 5
-    base_value: 1.0
-    value_per_level: 0.5
+    base_value: 50.0
+    value_per_level: 50.0
     max_level: 10
     tier_interval: 5
 

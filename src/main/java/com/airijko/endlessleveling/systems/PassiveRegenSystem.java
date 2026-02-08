@@ -87,12 +87,30 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
                         applyManaRegeneration(playerData, statMap, deltaSeconds, archetypeSnapshot);
                         applyStaminaRegeneration(playerData, statMap, deltaSeconds);
                         applyAdrenalineStamina(playerRef, statMap, deltaSeconds, archetypeSnapshot, runtimeState);
+                        expireSwiftnessIfNeeded(runtimeState);
                         applySignatureGainBonus(playerData, statMap, archetypeSnapshot, runtimeState);
                         applyHealingBonus(statMap, archetypeSnapshot, runtimeState);
                         applyLastStandHealing(statMap, runtimeState, deltaSeconds);
                         notifyPassiveCooldowns(playerRef, runtimeState);
                     }
                 });
+    }
+
+    private void expireSwiftnessIfNeeded(@Nonnull PassiveRuntimeState runtimeState) {
+        if (runtimeState == null) {
+            return;
+        }
+        if (runtimeState.getSwiftnessStacks() <= 0) {
+            return;
+        }
+        long activeUntil = runtimeState.getSwiftnessActiveUntil();
+        if (activeUntil <= 0L) {
+            runtimeState.clearSwiftness();
+            return;
+        }
+        if (System.currentTimeMillis() > activeUntil) {
+            runtimeState.clearSwiftness();
+        }
     }
 
     private void applyHealthRegeneration(@Nonnull PlayerRef playerRef,
@@ -128,11 +146,25 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         if (archetypeSnapshot.isEmpty() || deltaSeconds <= 0) {
             return;
         }
-        double perFiveSeconds = archetypeSnapshot.getValue(ArchetypePassiveType.INCREASED_HEALTH_REGEN);
-        if (perFiveSeconds <= 0) {
+        double percentOverFiveSeconds = archetypeSnapshot.getValue(ArchetypePassiveType.INCREASED_HEALTH_REGEN);
+        if (percentOverFiveSeconds <= 0) {
             return;
         }
-        double perSecond = perFiveSeconds / RESOURCE_REGEN_DIVISOR;
+        EntityStatValue healthStat = statMap.get(DefaultEntityStatTypes.getHealth());
+        if (healthStat == null) {
+            return;
+        }
+        float maxHealth = healthStat.getMax();
+        if (maxHealth <= 0f) {
+            return;
+        }
+
+        double totalHeal = maxHealth * percentOverFiveSeconds;
+        if (totalHeal <= 0.0D) {
+            return;
+        }
+
+        double perSecond = totalHeal / RESOURCE_REGEN_DIVISOR;
         if (perSecond <= 0) {
             return;
         }
@@ -168,10 +200,25 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         if (!snapshot.isUnlocked() || snapshot.value() <= 0) {
             return;
         }
-        double perSecond = snapshot.value();
-        if (perSecond <= 0) {
+        EntityStatValue staminaStat = statMap.get(DefaultEntityStatTypes.getStamina());
+        if (staminaStat == null) {
             return;
         }
+        float maxStamina = staminaStat.getMax();
+        if (maxStamina <= 0f) {
+            return;
+        }
+
+        double bonusPercent = snapshot.value() / 100.0D;
+        if (bonusPercent <= 0.0D) {
+            return;
+        }
+
+        double perSecond = (maxStamina * bonusPercent) / RESOURCE_REGEN_DIVISOR;
+        if (perSecond <= 0.0D) {
+            return;
+        }
+
         addResource(statMap, DefaultEntityStatTypes.getStamina(), perSecond, deltaSeconds);
     }
 
@@ -258,6 +305,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         runtimeState.setAdrenalineRestoreRemaining(totalRestore);
         runtimeState.setAdrenalineActiveUntil(now + settings.durationMillis());
         runtimeState.setAdrenalineCooldownExpiresAt(now + settings.cooldownMillis());
+        runtimeState.setAdrenalineReadyNotified(false);
 
         sendAdrenalineMessage(playerRef,
                 restorePercent,
@@ -287,12 +335,14 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             return;
         }
 
-        double passivePercent = snapshot.isUnlocked() && snapshot.value() > 0
-                ? snapshot.value() / 100.0D
+        double skillBonusFactor = snapshot.isUnlocked() && snapshot.value() > 0
+                ? Math.max(0.0D, snapshot.value() / 100.0D)
                 : 0.0D;
         double archetypeBonus = Math.max(0.0D,
                 archetypeSnapshot.getValue(ArchetypePassiveType.SPECIAL_CHARGE_BONUS));
-        double totalBonusFactor = passivePercent + archetypeBonus;
+        double totalBonusFactor = skillBonusFactor > 0.0D
+                ? skillBonusFactor * (1.0D + archetypeBonus)
+                : archetypeBonus;
 
         if (totalBonusFactor <= 0.0D) {
             runtimeState.setLastSignatureValue(currentValue);
@@ -468,6 +518,20 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
                 && now >= runtimeState.getFirstStrikeCooldownExpiresAt()) {
             sendCooldownMessage(playerRef, "First Strike is ready again!");
             runtimeState.setFirstStrikeReadyNotified(true);
+        }
+
+        if (!runtimeState.isAdrenalineReadyNotified()
+                && runtimeState.getAdrenalineCooldownExpiresAt() > 0
+                && now >= runtimeState.getAdrenalineCooldownExpiresAt()) {
+            sendCooldownMessage(playerRef, "Adrenaline is ready again!");
+            runtimeState.setAdrenalineReadyNotified(true);
+        }
+
+        if (!runtimeState.isRetaliationReadyNotified()
+                && runtimeState.getRetaliationCooldownExpiresAt() > 0
+                && now >= runtimeState.getRetaliationCooldownExpiresAt()) {
+            sendCooldownMessage(playerRef, "Retaliation is ready again!");
+            runtimeState.setRetaliationReadyNotified(true);
         }
     }
 
