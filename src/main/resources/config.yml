@@ -72,8 +72,8 @@ passives:
   stamina_gain_bonus:
     enabled: true
     unlock_level: 5
-    base_value: 10.0
-    value_per_level: 10.0
+    base_value: 20.0
+    value_per_level: 20.0
     max_level: 10
     tier_interval: 5
 
