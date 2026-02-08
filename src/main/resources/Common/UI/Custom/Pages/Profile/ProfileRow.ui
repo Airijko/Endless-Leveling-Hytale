@@ -95,16 +95,45 @@ Group {
 
             Group { Anchor: (Height: 5); }
 
-            $C.@TextButton #SelectButton {
-                Text: "SELECT";
-                Anchor: (Height: 30, Width: 130);
+            Group #ActionButtons {
+                LayoutMode: Top;
+
+                $C.@TextButton #SelectButton {
+                    Text: "SELECT";
+                    Anchor: (Height: 30, Width: 130);
+                }
+
+                Group { Anchor: (Height: 6); }
+
+                $C.@CancelTextButton #DeleteButton {
+                    Text: "DELETE";
+                    Anchor: (Height: 30, Width: 130);
+                }
             }
 
-            Group { Anchor: (Height: 6); }
+            Group #ConfirmButtons {
+                LayoutMode: Top;
+                Visible: false;
 
-            $C.@CancelTextButton #DeleteButton {
-                Text: "DELETE";
-                Anchor: (Height: 30, Width: 130);
+                Label #ConfirmDeleteLabel {
+                    Text: "Confirm delete?";
+                    Style: (FontSize: 11, TextColor: #ff9b73, RenderBold: true);
+                    Anchor: (Height: 16);
+                }
+
+                Group { Anchor: (Height: 4); }
+
+                $C.@CancelTextButton #ConfirmDeleteButton {
+                    Text: "CONFIRM";
+                    Anchor: (Height: 28, Width: 130);
+                }
+
+                Group { Anchor: (Height: 4); }
+
+                $C.@TextButton #CancelDeleteButton {
+                    Text: "CANCEL";
+                    Anchor: (Height: 28, Width: 130);
+                }
             }
         }
     }

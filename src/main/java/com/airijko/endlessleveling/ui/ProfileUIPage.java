@@ -37,6 +37,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private final PlayerDataManager playerDataManager;
     private final RaceManager raceManager;
     private final PassiveManager passiveManager;
+    private Integer pendingDeleteSlot;
 
     public ProfileUIPage(@Nonnull com.hypixel.hytale.server.core.universe.PlayerRef playerRef,
             @Nonnull CustomPageLifetime lifetime) {
@@ -45,6 +46,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
         this.raceManager = plugin != null ? plugin.getRaceManager() : null;
         this.passiveManager = plugin != null ? plugin.getPassiveManager() : null;
+        this.pendingDeleteSlot = null;
     }
 
     @Override
@@ -93,6 +95,11 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull PlayerData data) {
         ui.clear("#ProfileCards");
 
+        if (pendingDeleteSlot != null
+                && (!data.hasProfile(pendingDeleteSlot) || data.getProfileCount() <= 1)) {
+            pendingDeleteSlot = null;
+        }
+
         List<Map.Entry<Integer, PlayerProfile>> profiles = data.getProfiles().entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .toList();
@@ -103,6 +110,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             PlayerProfile profile = entry.getValue();
             boolean active = data.isProfileActive(slot);
             boolean canDelete = data.getProfileCount() > 1 && !active;
+            boolean pending = canDelete && pendingDeleteSlot != null && pendingDeleteSlot == slot;
 
             ui.append("#ProfileCards", "Pages/Profile/ProfileRow.ui");
             String base = "#ProfileCards[" + index + "]";
@@ -112,6 +120,10 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             ui.set(base + " #LevelValue.Text", "Level " + profile.getLevel());
             ui.set(base + " #XpValue.Text", formatNumber(profile.getXp()) + " XP");
             ui.set(base + " #StatusBadge.Text", active ? "ACTIVE" : "");
+            ui.set(base + " #ConfirmDeleteLabel.Text", "Delete " + profile.getName() + "?");
+            ui.set(base + " #ActionButtons.Visible", !pending);
+            ui.set(base + " #ConfirmButtons.Visible", pending);
+            ui.set(base + " #DeleteButton.Visible", canDelete);
 
             ui.set(base + " #SelectButton.Text", active ? "ACTIVE" : "SELECT");
             if (!active) {
@@ -120,7 +132,11 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             }
             if (canDelete) {
                 events.addEventBinding(Activating, base + " #DeleteButton",
+                        of("Action", "profile:delete-prompt:" + slot), false);
+                events.addEventBinding(Activating, base + " #ConfirmDeleteButton",
                         of("Action", "profile:delete:" + slot), false);
+                events.addEventBinding(Activating, base + " #CancelDeleteButton",
+                        of("Action", "profile:delete-cancel"), false);
             }
 
             index++;
@@ -494,6 +510,12 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             if (payload.startsWith("select:")) {
                 return handleSelectProfile(playerData, payload);
             }
+            if (payload.startsWith("delete-prompt:")) {
+                return handleDeletePrompt(playerData, payload);
+            }
+            if ("delete-cancel".equalsIgnoreCase(payload)) {
+                return handleDeleteCancel();
+            }
             if (payload.startsWith("delete:")) {
                 return handleDeleteRequest(playerData, payload);
             }
@@ -560,25 +582,28 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return new ProfileActionOutcome(false, false);
     }
 
+    private ProfileActionOutcome handleDeletePrompt(@Nonnull PlayerData playerData,
+            @Nonnull String payload) {
+        int slot = parseSlot(payload, "delete-prompt:");
+        if (!canDeleteSlot(playerData, slot)) {
+            return new ProfileActionOutcome(false, false);
+        }
+
+        pendingDeleteSlot = slot;
+        playerRef.sendMessage(Message.raw("Press CONFIRM to delete profile slot " + slot + ".")
+                .color("#ff9900"));
+        return new ProfileActionOutcome(false, true);
+    }
+
     private ProfileActionOutcome handleDeleteRequest(@Nonnull PlayerData playerData,
             @Nonnull String payload) {
         int slot = parseSlot(payload, "delete:");
-        if (!PlayerData.isValidProfileIndex(slot)) {
-            playerRef.sendMessage(Message.raw("Profile slot must be between 1 and " + PlayerData.MAX_PROFILES + ".")
-                    .color("#ff0000"));
+        if (!canDeleteSlot(playerData, slot)) {
             return new ProfileActionOutcome(false, false);
         }
-        if (!playerData.hasProfile(slot)) {
-            playerRef.sendMessage(Message.raw("Profile slot " + slot + " is already empty.").color("#ff9900"));
-            return new ProfileActionOutcome(false, false);
-        }
-        if (playerData.isProfileActive(slot)) {
-            playerRef.sendMessage(Message.raw("Switch to a different profile before deleting slot " + slot + ".")
+        if (pendingDeleteSlot == null || pendingDeleteSlot != slot) {
+            playerRef.sendMessage(Message.raw("Please confirm the deletion of slot " + slot + " first.")
                     .color("#ff9900"));
-            return new ProfileActionOutcome(false, false);
-        }
-        if (playerData.getProfileCount() <= 1) {
-            playerRef.sendMessage(Message.raw("You must keep at least one profile slot.").color("#ff0000"));
             return new ProfileActionOutcome(false, false);
         }
 
@@ -588,8 +613,44 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             return new ProfileActionOutcome(false, false);
         }
 
+        clearPendingDelete();
         playerRef.sendMessage(Message.raw("Deleted profile slot " + slot + ".").color("#4fd7f7"));
         return new ProfileActionOutcome(true, true);
+    }
+
+    private ProfileActionOutcome handleDeleteCancel() {
+        if (pendingDeleteSlot == null) {
+            return new ProfileActionOutcome(false, false);
+        }
+        clearPendingDelete();
+        playerRef.sendMessage(Message.raw("Profile deletion canceled.").color("#4fd7f7"));
+        return new ProfileActionOutcome(false, true);
+    }
+
+    private boolean canDeleteSlot(@Nonnull PlayerData playerData, int slot) {
+        if (!PlayerData.isValidProfileIndex(slot)) {
+            playerRef.sendMessage(Message.raw("Profile slot must be between 1 and " + PlayerData.MAX_PROFILES + ".")
+                    .color("#ff0000"));
+            return false;
+        }
+        if (!playerData.hasProfile(slot)) {
+            playerRef.sendMessage(Message.raw("Profile slot " + slot + " is already empty.").color("#ff9900"));
+            return false;
+        }
+        if (playerData.isProfileActive(slot)) {
+            playerRef.sendMessage(Message.raw("Switch to a different profile before deleting slot " + slot + ".")
+                    .color("#ff9900"));
+            return false;
+        }
+        if (playerData.getProfileCount() <= 1) {
+            playerRef.sendMessage(Message.raw("You must keep at least one profile slot.").color("#ff0000"));
+            return false;
+        }
+        return true;
+    }
+
+    private void clearPendingDelete() {
+        pendingDeleteSlot = null;
     }
 
     private int parseSlot(@Nonnull String payload, @Nonnull String prefix) {
