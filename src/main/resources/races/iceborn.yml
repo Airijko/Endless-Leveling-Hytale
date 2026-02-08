@@ -13,5 +13,6 @@ attributes:
   intelligence: 10.0
 
 passives:
-  - type: XP_BONUS
-    value: 1.0 # +100% XP gain
+  - type: BERZERKER
+    value: 0.2 # Up to +20% damage when hurt (full bonus at/below 35% HP)
+    threshold: 0.35 # Health percent required for max bonus; scales to 0% at full health

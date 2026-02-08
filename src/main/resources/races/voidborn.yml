@@ -13,5 +13,5 @@ attributes:
   intelligence: 45.0
 
 passives:
-  - type: XP_BONUS
-    value: 1.0 # +100% XP gain
+  - type: MANA_REGEN
+    value: 3.0 # +3.0 mana every 5 seconds

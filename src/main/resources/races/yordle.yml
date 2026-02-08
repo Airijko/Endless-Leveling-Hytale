@@ -13,5 +13,7 @@ attributes:
   intelligence: 60.0
 
 passives:
-  - type: XP_BONUS
-    value: 1.0 # +100% XP gain
+  - type: SWIFTNESS
+    value: 0.2 # Passive +20% movement speed applied after haste
+    duration: 5 # Swiftness bonus lasts for 5 seconds after triggering
+    max_stacks: 5 # Can stack up to 5 times after killing a target for a total of +125% movement speed

@@ -13,5 +13,5 @@ attributes:
   intelligence: 20.0
 
 passives:
-  - type: XP_BONUS
-    value: 1.0 # +100% XP gain
+  - type: SPECIAL_CHARGE_BONUS
+    value: 1.0 # +100% faster special charge
