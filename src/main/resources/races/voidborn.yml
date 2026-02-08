@@ -23,4 +23,4 @@ passives:
     cooldown: 25 # Seconds between retaliations
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: strength
-    value: 1.0
+    value: 1.5

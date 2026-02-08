@@ -3,7 +3,7 @@ description: "Whimsical yet dangerous, Yordles rely on agility, trickery, and ex
 enabled: true
 
 attributes:
-  life_force: 90
+  life_force: 80
   strength: 0.95
   defense: 0.9
   haste: 1.25

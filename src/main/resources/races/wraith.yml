@@ -3,7 +3,7 @@ description: "Cursed spirits tethered to the mortal plane, Wraiths excel at swif
 enabled: true
 
 attributes:
-  life_force: 80
+  life_force: 75
   strength: 1.05
   defense: 0.85
   haste: 1.3
