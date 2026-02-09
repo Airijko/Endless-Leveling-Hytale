@@ -252,7 +252,20 @@ public class RaceManager {
 
         List<Map<String, Object>> passives = parsePassives(yamlData.get("passives"));
         List<RacePassiveDefinition> passiveDefinitions = buildPassiveDefinitions(raceId, passives);
-        return new RaceDefinition(raceId, displayName, description, enabled, attributes, passives, passiveDefinitions);
+
+        Map<String, Object> roleSection = castToStringObjectMap(yamlData.get("roles"));
+        String primaryRole = roleSection == null ? null : safeString(roleSection.get("primary"));
+        String secondaryRole = roleSection == null ? null : safeString(roleSection.get("secondary"));
+
+        return new RaceDefinition(raceId,
+                displayName,
+                description,
+                enabled,
+                attributes,
+                passives,
+                passiveDefinitions,
+                primaryRole,
+                secondaryRole);
     }
 
     private List<Map<String, Object>> parsePassives(Object node) {

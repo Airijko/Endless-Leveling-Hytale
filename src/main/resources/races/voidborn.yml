@@ -2,6 +2,10 @@ race_name: "Voidborn"
 description: "Twisted by the Void, Voidborn adapt rapidly, gaining strength through chaos and corruption."
 enabled: true
 
+roles:
+  primary: "Assassin"
+  secondary: "Corruptor"
+
 attributes:
   life_force: 150
   strength: 1.15

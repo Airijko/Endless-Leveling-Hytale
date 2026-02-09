@@ -2,6 +2,10 @@ race_name: "Vastaya"
 description: "Mysterious and agile, Vastaya are a race of animalistic humanoids with a deep connection to nature."
 enabled: true
 
+roles:
+  primary: "Trickster"
+  secondary: "Skirmisher"
+
 attributes: # Base Values
   life_force: 125
   strength: 1.0

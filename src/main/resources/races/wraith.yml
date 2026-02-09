@@ -2,6 +2,10 @@ race_name: "Wraith"
 description: "Cursed spirits tethered to the mortal plane, Wraiths excel at swift, lethal strikes and evasion."
 enabled: true
 
+roles:
+  primary: "Assassin"
+  secondary: "Saboteur"
+
 attributes:
   life_force: 75
   strength: 1.05

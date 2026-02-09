@@ -2,6 +2,10 @@ race_name: "Celestial"
 description: "Ancient cosmic entities born of starlight, Celestials wield immense magical power and unparalleled resilience."
 enabled: true
 
+roles:
+  primary: "Invoker"
+  secondary: "Support"
+
 attributes:
   life_force: 140
   strength: 0.9

@@ -2,6 +2,10 @@ race_name: "Yordle"
 description: "Whimsical yet dangerous, Yordles rely on agility, trickery, and explosive damage."
 enabled: true
 
+roles:
+  primary: "Artificer"
+  secondary: "Support"
+
 attributes:
   life_force: 80
   strength: 0.95

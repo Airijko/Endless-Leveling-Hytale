@@ -2,6 +2,10 @@ race_name: "Watcher"
 description: "Eldritch entities from beyond reality, Watchers wield incomprehensible power but struggle to endure the physical world."
 enabled: true
 
+roles:
+  primary: "Tactician"
+  secondary: "Controller"
+
 attributes:
   life_force: 110
   strength: 0.8

@@ -2,6 +2,10 @@ race_name: "Human"
 description: "Versatile and ambitious, humans are known for their adaptability and determination."
 enabled: true
 
+roles:
+  primary: "Adventurer"
+  secondary: "Specialist"
+
 attributes:
   life_force: 150
   strength: 1.0

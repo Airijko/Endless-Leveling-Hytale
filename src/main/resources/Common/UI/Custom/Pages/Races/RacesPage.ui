@@ -176,6 +176,57 @@ $C.@PageOverlay {
                                 Group { Anchor: (Height: 16); }
 
                                 Label {
+                                    Text: "Role Focus";
+                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                                    Anchor: (Height: 20);
+                                }
+
+                                Group #RaceRoleSummary {
+                                    LayoutMode: Left;
+                                    Background: #0b141f(0.6);
+                                    Padding: (Left: 14, Right: 14, Top: 10, Bottom: 10);
+                                    Anchor: (Height: 50);
+
+                                    Group {
+                                        LayoutMode: Top;
+                                        Anchor: (Width: 180);
+
+                                        Label {
+                                            Text: "Primary";
+                                            Style: (FontSize: 11, TextColor: #8aa1bf, RenderBold: true, LetterSpacing: 1);
+                                            Anchor: (Height: 14);
+                                        }
+
+                                        Label #RacePrimaryRoleDetailValue {
+                                            Text: "--";
+                                            Style: (FontSize: 13, TextColor: #ffffff, RenderBold: true);
+                                            Anchor: (Height: 20);
+                                        }
+                                    }
+
+                                    Group { Anchor: (Width: 16); }
+
+                                    Group {
+                                        LayoutMode: Top;
+                                        Anchor: (Width: 180);
+
+                                        Label {
+                                            Text: "Secondary";
+                                            Style: (FontSize: 11, TextColor: #8aa1bf, RenderBold: true, LetterSpacing: 1);
+                                            Anchor: (Height: 14);
+                                        }
+
+                                        Label #RaceSecondaryRoleDetailValue {
+                                            Text: "--";
+                                            Style: (FontSize: 13, TextColor: #ffffff, RenderBold: true);
+                                            Anchor: (Height: 20);
+                                        }
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 16); }
+
+                                Label {
                                     Text: "Race Stats";
                                     Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
                                     Anchor: (Height: 20);

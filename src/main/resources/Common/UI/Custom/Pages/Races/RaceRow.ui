@@ -39,6 +39,47 @@ Group {
 
             Group { Anchor: (Height: 10); }
 
+            Group {
+                LayoutMode: Left;
+                Anchor: (Height: 34);
+
+                Group {
+                    LayoutMode: Top;
+                    Anchor: (Width: 150);
+
+                    Label {
+                        Text: "Primary Role";
+                        Style: (FontSize: 11, TextColor: #8aa1bf, RenderBold: true);
+                        Anchor: (Height: 14);
+                    }
+
+                    Label #RacePrimaryRoleLabel {
+                        Text: "--";
+                        Style: (FontSize: 13, TextColor: #ffffff, RenderBold: true);
+                        Anchor: (Height: 18);
+                    }
+                }
+
+                Group { Anchor: (Width: 16); }
+
+                Group {
+                    LayoutMode: Top;
+                    Anchor: (Width: 150);
+
+                    Label {
+                        Text: "Secondary Role";
+                        Style: (FontSize: 11, TextColor: #8aa1bf, RenderBold: true);
+                        Anchor: (Height: 14);
+                    }
+
+                    Label #RaceSecondaryRoleLabel {
+                        Text: "--";
+                        Style: (FontSize: 13, TextColor: #ffffff, RenderBold: true);
+                        Anchor: (Height: 18);
+                    }
+                }
+            }
+
             Group { FlexWeight: 1; }
 
             Group {

@@ -2,6 +2,10 @@ race_name: "Golem"
 description: "Artificial beings of immense durability, Golems are slow but nearly indestructible."
 enabled: true
 
+roles:
+  primary: "Warden"
+  secondary: "Bulwark"
+
 attributes:
   life_force: 200
   strength: 0.7

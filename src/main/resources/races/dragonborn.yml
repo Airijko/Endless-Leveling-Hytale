@@ -2,6 +2,10 @@ race_name: "Dragonborn"
 description: "Born of draconic blood, Dragonborn possess immense strength, resilience, and overwhelming presence in battle."
 enabled: true
 
+roles:
+  primary: "Vanguard"
+  secondary: "Artillery"
+
 attributes:
   life_force: 190
   strength: 1.2
