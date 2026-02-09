@@ -3,6 +3,7 @@ package com.airijko.endlessleveling.passives;
 import com.airijko.endlessleveling.classes.CharacterClassDefinition;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
+import com.airijko.endlessleveling.enums.PassiveStackingStyle;
 import com.airijko.endlessleveling.managers.ClassManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.races.RaceDefinition;
@@ -38,7 +39,7 @@ public class ArchetypePassiveManager {
             return ArchetypePassiveSnapshot.empty();
         }
 
-        EnumMap<ArchetypePassiveType, Double> totals = new EnumMap<>(ArchetypePassiveType.class);
+        EnumMap<ArchetypePassiveType, StackAccumulator> totals = new EnumMap<>(ArchetypePassiveType.class);
         EnumMap<ArchetypePassiveType, List<RacePassiveDefinition>> grouped = new EnumMap<>(ArchetypePassiveType.class);
         for (PassiveSource source : sources) {
             source.collect(playerData, totals, grouped);
@@ -47,7 +48,11 @@ public class ArchetypePassiveManager {
         if (totals.isEmpty() && grouped.isEmpty()) {
             return ArchetypePassiveSnapshot.empty();
         }
-        Map<ArchetypePassiveType, Double> immutableTotals = Collections.unmodifiableMap(totals);
+        Map<ArchetypePassiveType, Double> resolvedTotals = totals.entrySet().stream()
+                .collect(() -> new EnumMap<>(ArchetypePassiveType.class),
+                        (map, entry) -> map.put(entry.getKey(), entry.getValue().value()),
+                        Map::putAll);
+        Map<ArchetypePassiveType, Double> immutableTotals = Collections.unmodifiableMap(resolvedTotals);
         Map<ArchetypePassiveType, List<RacePassiveDefinition>> immutableDefinitions = grouped.entrySet().stream()
                 .collect(() -> new EnumMap<>(ArchetypePassiveType.class),
                         (map, entry) -> map.put(entry.getKey(), List.copyOf(entry.getValue())),
@@ -57,7 +62,7 @@ public class ArchetypePassiveManager {
 
     private interface PassiveSource {
         void collect(PlayerData playerData,
-                EnumMap<ArchetypePassiveType, Double> totals,
+                EnumMap<ArchetypePassiveType, StackAccumulator> totals,
                 EnumMap<ArchetypePassiveType, List<RacePassiveDefinition>> grouped);
     }
 
@@ -70,7 +75,7 @@ public class ArchetypePassiveManager {
 
         @Override
         public void collect(PlayerData playerData,
-                EnumMap<ArchetypePassiveType, Double> totals,
+                EnumMap<ArchetypePassiveType, StackAccumulator> totals,
                 EnumMap<ArchetypePassiveType, List<RacePassiveDefinition>> grouped) {
             if (playerData == null || raceManager == null || !raceManager.isEnabled()) {
                 return;
@@ -94,7 +99,7 @@ public class ArchetypePassiveManager {
 
         @Override
         public void collect(PlayerData playerData,
-                EnumMap<ArchetypePassiveType, Double> totals,
+                EnumMap<ArchetypePassiveType, StackAccumulator> totals,
                 EnumMap<ArchetypePassiveType, List<RacePassiveDefinition>> grouped) {
             if (playerData == null || classManager == null || !classManager.isEnabled()) {
                 return;
@@ -117,7 +122,7 @@ public class ArchetypePassiveManager {
 
     private static void addPassive(RacePassiveDefinition passive,
             double scale,
-            EnumMap<ArchetypePassiveType, Double> totals,
+            EnumMap<ArchetypePassiveType, StackAccumulator> totals,
             EnumMap<ArchetypePassiveType, List<RacePassiveDefinition>> grouped) {
         if (passive == null || passive.type() == null) {
             return;
@@ -126,9 +131,35 @@ public class ArchetypePassiveManager {
         if (scaledValue == 0.0D) {
             return;
         }
-        totals.merge(passive.type(), scaledValue, Double::sum);
+        StackAccumulator accumulator = totals.computeIfAbsent(passive.type(),
+                key -> new StackAccumulator(passive.stackingStyle()));
+        accumulator.addValue(scaledValue);
         RacePassiveDefinition effectiveDefinition = scale == 1.0D ? passive
-                : new RacePassiveDefinition(passive.type(), scaledValue, passive.properties(), passive.attributeType());
+                : new RacePassiveDefinition(passive.type(),
+                        scaledValue,
+                        passive.properties(),
+                        passive.attributeType(),
+                        passive.damageLayer(),
+                        passive.tag(),
+                        passive.stackingStyle());
         grouped.computeIfAbsent(passive.type(), key -> new ArrayList<>()).add(effectiveDefinition);
+    }
+
+    private static final class StackAccumulator {
+        private final PassiveStackingStyle stackingStyle;
+        private double value;
+
+        StackAccumulator(PassiveStackingStyle stackingStyle) {
+            this.stackingStyle = stackingStyle == null ? PassiveStackingStyle.ADDITIVE : stackingStyle;
+            this.value = 0.0D;
+        }
+
+        void addValue(double newValue) {
+            value = stackingStyle.combine(value, newValue);
+        }
+
+        double value() {
+            return value;
+        }
     }
 }

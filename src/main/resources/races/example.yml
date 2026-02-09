@@ -16,6 +16,10 @@
 #   intelligence     -> Flat mana/intelligence pool.
 # ----------------------------------------------------------------------------
 # Passive Reference (declare under `passives:` using `- type: <PASSIVE>`)
+# Optional metadata for every passive entry:
+#   layer: Which damage layer the modifier participates in (BASE, ATTRIBUTE, BONUS, CRITICAL, WEAPON)
+#   tag:   Logical tag to group stacking inside a layer (values with the same tag stack together)
+#   stacking: ADDITIVE (default), DIMINISHING, UNIQUE
 
 #   XP_BONUS
 #     -> `value`: decimal percent bonus XP gained (1.0 = +100% XP)
@@ -102,6 +106,7 @@ passives:
     threshold: 0.2 # Trigger when below 20% HP
     duration: 10 # Lasts for 10 seconds
     cooldown: 60 # seconds between triggers
+    stacking: DIMINISHING
   - type: FIRST_STRIKE
     value: 3.0 # +300% damage on first hit
     cooldown: 20 # seconds between first-strike windows

@@ -4,8 +4,11 @@ import com.airijko.endlessleveling.classes.CharacterClassDefinition;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.ClassWeaponType;
+import com.airijko.endlessleveling.enums.DamageLayer;
+import com.airijko.endlessleveling.enums.PassiveStackingStyle;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
+import com.airijko.endlessleveling.passives.PassiveDefinitionParser;
 import com.hypixel.hytale.logger.HytaleLogger;
 import org.yaml.snakeyaml.Yaml;
 
@@ -423,7 +426,16 @@ public class ClassManager {
                     continue;
                 }
             }
-            definitions.add(new RacePassiveDefinition(type, value, passive, attributeType));
+            DamageLayer damageLayer = PassiveDefinitionParser.resolveDamageLayer(type, passive);
+            String tag = PassiveDefinitionParser.resolveTag(type, passive);
+            PassiveStackingStyle stacking = PassiveDefinitionParser.resolveStacking(type, passive);
+            definitions.add(new RacePassiveDefinition(type,
+                    value,
+                    passive,
+                    attributeType,
+                    damageLayer,
+                    tag,
+                    stacking));
         }
         return definitions;
     }

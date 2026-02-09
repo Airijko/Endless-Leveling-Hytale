@@ -1,8 +1,11 @@
 package com.airijko.endlessleveling.listeners;
 
 import com.airijko.endlessleveling.classes.ClassWeaponResolver;
+import com.airijko.endlessleveling.combat.DamageLayerBuffer;
 import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.ClassWeaponType;
+import com.airijko.endlessleveling.enums.DamageLayer;
 import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.managers.ClassManager;
 import com.airijko.endlessleveling.managers.PassiveManager;
@@ -14,7 +17,9 @@ import com.airijko.endlessleveling.passives.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.passives.BerzerkerSettings;
 import com.airijko.endlessleveling.passives.ExecutionerSettings;
 import com.airijko.endlessleveling.passives.FirstStrikeSettings;
+import com.airijko.endlessleveling.passives.PassiveContributionBlueprint;
 import com.airijko.endlessleveling.passives.RetaliationSettings;
+import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
@@ -34,6 +39,7 @@ import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.Message;
+import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
@@ -98,33 +104,35 @@ public class PlayerCombatListener extends DamageEventSystem {
                     ExecutionerSettings executionerSettings = ExecutionerSettings.fromSnapshot(archetypeSnapshot);
                     RetaliationSettings retaliationSettings = RetaliationSettings.fromSnapshot(archetypeSnapshot);
 
-                    // Calculate strength bonus using SkillManager
                     float weaponMultiplier = resolveClassDamageMultiplier(commandBuffer, attackerRef, playerData);
                     float baseAmount = skillManager.applyStrengthModifier(damage.getAmount(), playerData);
-                    // Apply critical hit system
                     SkillManager.CritResult critResult = skillManager.applyCriticalHit(playerData, baseAmount);
-                    float finalDamage = critResult.damage;
-                    damage.setAmount(finalDamage);
-                    applyLifeSteal(attackerRef, commandBuffer, playerData, finalDamage);
-
-                    float damageForBurstPassives = finalDamage;
+                    float bonusLayerBase = critResult.damage;
+                    DamageLayerBuffer layerBuffer = new DamageLayerBuffer();
+                    float prospectiveDamage = bonusLayerBase;
 
                     if (runtimeState != null && firstStrikeSettings.enabled()) {
                         float bonusDamage = applyFirstStrike(runtimeState, firstStrikeSettings, attackerPlayer,
-                                damageForBurstPassives);
-                        if (bonusDamage > 0) {
-                            finalDamage += bonusDamage;
-                            applyLifeSteal(attackerRef, commandBuffer, playerData, bonusDamage);
+                                bonusLayerBase);
+                        if (bonusDamage > 0f) {
+                            registerLayerBonus(layerBuffer,
+                                    resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.FIRST_STRIKE),
+                                    bonusDamage,
+                                    bonusLayerBase);
+                            prospectiveDamage += bonusDamage;
                         }
                     }
 
                     float berzerkerBonus = computeBerzerkerBonus(berzerkerSettings,
                             attackerRef,
                             commandBuffer,
-                            damageForBurstPassives);
+                            bonusLayerBase);
                     if (berzerkerBonus > 0f) {
-                        finalDamage += berzerkerBonus;
-                        applyLifeSteal(attackerRef, commandBuffer, playerData, berzerkerBonus);
+                        registerLayerBonus(layerBuffer,
+                                resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.BERZERKER),
+                                berzerkerBonus,
+                                bonusLayerBase);
+                        prospectiveDamage += berzerkerBonus;
                     }
 
                     if (runtimeState != null) {
@@ -132,8 +140,11 @@ public class PlayerCombatListener extends DamageEventSystem {
                                 retaliationSettings,
                                 attackerPlayer);
                         if (retaliationBonus > 0f) {
-                            finalDamage += retaliationBonus;
-                            applyLifeSteal(attackerRef, commandBuffer, playerData, retaliationBonus);
+                            registerLayerBonus(layerBuffer,
+                                    resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.RETALIATION),
+                                    retaliationBonus,
+                                    bonusLayerBase);
+                            prospectiveDamage += retaliationBonus;
                         }
                     }
 
@@ -142,23 +153,23 @@ public class PlayerCombatListener extends DamageEventSystem {
                             attackerPlayer,
                             targetRef,
                             commandBuffer,
-                            finalDamage);
+                            prospectiveDamage);
                     if (executionerBonus > 0f) {
-                        finalDamage += executionerBonus;
-                        applyLifeSteal(attackerRef, commandBuffer, playerData, executionerBonus);
+                        registerLayerBonus(layerBuffer,
+                                resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.EXECUTIONER),
+                                executionerBonus,
+                                bonusLayerBase);
+                        prospectiveDamage += executionerBonus;
                     }
 
-                    float damageBeforeWeaponAffinity = finalDamage;
+                    float damageBeforeWeapon = layerBuffer.apply(DamageLayer.BONUS, bonusLayerBase);
+                    float finalDamage = damageBeforeWeapon;
                     if (weaponMultiplier > 0f && Math.abs(weaponMultiplier - 1.0f) > 0.0001f) {
                         finalDamage *= weaponMultiplier;
-                        float extraFromWeapon = finalDamage - damageBeforeWeaponAffinity;
-                        if (extraFromWeapon > 0f) {
-                            applyLifeSteal(attackerRef, commandBuffer, playerData, extraFromWeapon);
-                        }
                     }
 
                     damage.setAmount(finalDamage);
-
+                    applyLifeSteal(attackerRef, commandBuffer, playerData, finalDamage);
                     passiveManager.markCombat(playerData.getUuid());
                 }
             }
@@ -400,6 +411,29 @@ public class PlayerCombatListener extends DamageEventSystem {
                         : String.format("Executioner triggered! +%.0f%% damage.", bonusPercent * 100.0D));
 
         return bonusDamage;
+    }
+
+    private PassiveContributionBlueprint resolveBlueprint(ArchetypePassiveSnapshot snapshot,
+            ArchetypePassiveType type) {
+        List<RacePassiveDefinition> definitions = snapshot == null
+                ? List.of()
+                : snapshot.getDefinitions(type);
+        return PassiveContributionBlueprint.fromDefinitions(type, definitions);
+    }
+
+    private void registerLayerBonus(DamageLayerBuffer buffer,
+            PassiveContributionBlueprint blueprint,
+            float bonusDamage,
+            float baseDamage) {
+        if (buffer == null || blueprint == null || bonusDamage <= 0f) {
+            return;
+        }
+        if (baseDamage <= 0f) {
+            buffer.addFlat(blueprint.layer(), bonusDamage);
+            return;
+        }
+        double percent = bonusDamage / baseDamage;
+        buffer.addPercent(blueprint.layer(), blueprint.tag(), percent, blueprint.stackingStyle());
     }
 
     private void sendPassiveMessage(PlayerRef playerRef, String text) {
