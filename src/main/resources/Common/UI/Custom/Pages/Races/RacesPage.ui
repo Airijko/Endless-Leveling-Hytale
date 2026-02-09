@@ -160,7 +160,6 @@ $C.@PageOverlay {
                                     Text: "Dive into the mythos behind this race.";
                                     Style: (FontSize: 12, TextColor: #9fb6d3);
                                     Anchor: (Height: 48);
-                                    WrapText: true;
                                 }
 
                                 Group { Anchor: (Height: 16); }
