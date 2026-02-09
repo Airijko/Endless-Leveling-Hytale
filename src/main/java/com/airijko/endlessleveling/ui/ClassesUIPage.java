@@ -7,6 +7,7 @@ import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.ClassWeaponType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.managers.ClassManager;
+import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.systems.PlayerRaceStatSystem;
@@ -42,6 +43,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
     private final ClassManager classManager;
     private final PlayerDataManager playerDataManager;
+    private final LevelingManager levelingManager;
     private String selectedClassId;
 
     public ClassesUIPage(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime) {
@@ -49,6 +51,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         EndlessLeveling plugin = EndlessLeveling.getInstance();
         this.classManager = plugin != null ? plugin.getClassManager() : null;
         this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
+        this.levelingManager = plugin != null ? plugin.getLevelingManager() : null;
         this.selectedClassId = null;
     }
 
@@ -596,7 +599,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case FIRST_STRIKE -> appendDetails(
                     formatPercentValue(value) + " opener",
                     formatCooldownDetail(cooldown));
-            case INNATE_ATTRIBUTE_GAIN -> formatInnatePreview(passive, playerData);
+            case INNATE_ATTRIBUTE_GAIN -> formatInnatePreview(passive);
             case ADRENALINE -> appendDetails(
                     formatPercentValue(value) + " stamina",
                     formatThresholdDetail(threshold, "stamina"),
@@ -620,13 +623,13 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         };
     }
 
-    private String formatInnatePreview(RacePassiveDefinition passive, PlayerData playerData) {
+    private String formatInnatePreview(RacePassiveDefinition passive) {
         double perLevel = passive.value();
         String perLevelText = formatSigned(perLevel) + " per level";
-        int level = playerData == null ? 1 : Math.max(1, playerData.getLevel());
-        double total = perLevel * level;
+        int cap = levelingManager != null ? Math.max(1, levelingManager.getLevelCap()) : 1;
+        double total = perLevel * cap;
         String totalText = formatSigned(total);
-        return perLevelText + " (Total " + totalText + " @ Lv " + level + ")";
+        return perLevelText + " (Total " + totalText + " @ Lv " + cap + ")";
     }
 
     private Double getDoubleProp(Map<String, Object> props, String key) {
