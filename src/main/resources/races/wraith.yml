@@ -20,9 +20,3 @@ passives:
   - type: FIRST_STRIKE
     value: 3.0 # +300% damage on first hit
     cooldown: 20 # seconds between first-strike windows
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: haste
-    value: 0.4
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: ferocity
-    value: 1.5

@@ -61,7 +61,6 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         events.addEventBinding(Activating, "#ConfirmPrimaryButton", of("Action", "class:confirm_primary"), false);
         events.addEventBinding(Activating, "#ConfirmSecondaryButton", of("Action", "class:confirm_secondary"), false);
-        events.addEventBinding(Activating, "#ClearSecondaryButton", of("Action", "class:clear_secondary"), false);
 
         if (classManager == null || !classManager.isEnabled()) {
             ui.set("#SelectedClassLabel.Text", "Classes Offline");
@@ -207,7 +206,6 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         ui.set("#ConfirmPrimaryButton.Visible", canPrimary);
         ui.set("#ConfirmSecondaryButton.Visible", canSecondary);
-        ui.set("#ClearSecondaryButton.Visible", data.getSecondaryClassId() != null);
 
         ui.set("#ClassDetailStatus.Text",
                 "Primary classes grant 100% of bonuses. Secondary classes grant 50% of weapon + passive effects.");

@@ -288,7 +288,7 @@ $C.@PageOverlay {
 
                         Group #RaceDetailActions {
                             LayoutMode: Left;
-                            Anchor: (Height: 42);
+                            Anchor: (Height: 45);
 
                             Label #RaceDetailCooldownWarning {
                                 Text: "You will be locked for the remaining cooldown after swapping.";

@@ -16,9 +16,3 @@ passives:
   - type: BERZERKER
     value: 0.2 # Up to +20% damage when hurt (full bonus at/below 35% HP)
     threshold: 0.35 # Health percent required for max bonus; scales to 0% at full health
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: life_force
-    value: 3.5
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: strength
-    value: 1.25

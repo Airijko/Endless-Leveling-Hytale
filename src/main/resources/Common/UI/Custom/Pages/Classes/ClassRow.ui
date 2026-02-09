@@ -1,5 +1,22 @@
 $C = "../../Common.ui";
 
+@CustomLabelStyle = LabelStyle(
+  FontSize: 12,
+  TextColor: #bfcdd5,
+  RenderBold: true,
+  RenderUppercase: true,
+  HorizontalAlignment: Center,
+  VerticalAlignment: Center
+);
+
+@CustomStyle = TextButtonStyle(
+  Default: (Background: $C.@DefaultSquareButtonDefaultBackground, LabelStyle: @CustomLabelStyle),
+  Hovered: (Background: $C.@DefaultSquareButtonHoveredBackground, LabelStyle: @CustomLabelStyle),
+  Pressed: (Background: $C.@DefaultSquareButtonPressedBackground, LabelStyle: @CustomLabelStyle),
+  Disabled: (Background: $C.@DefaultSquareButtonDisabledBackground, LabelStyle: @CustomLabelStyle),
+  Sounds: $C.@ButtonSounds,
+);
+
 Group {
     LayoutMode: Top;
 
@@ -42,25 +59,31 @@ Group {
 
             Group {
                 LayoutMode: Left;
-                Anchor: (Height: 38);
+                Anchor: (Height: 32);
 
                 $C.@TextButton #ViewClassButton {
                     Text: "VIEW";
-                    Anchor: (Height: 34, Width: 110);
+                    Anchor: (Width: 60, Height: 26);
+                    Padding: (Horizontal: 5, Vertical: 2);
+                    Style: @CustomStyle;
                 }
 
-                Group { Anchor: (Width: 10); }
+                Group { Anchor: (Width: 8); }
 
                 $C.@TextButton #SetPrimaryButton {
                     Text: "PRIMARY";
-                    Anchor: (Height: 34, Width: 120);
+                    Anchor: (Width: 90, Height: 26);
+                    Padding: (Horizontal: 5, Vertical: 2);
+                    Style: @CustomStyle;
                 }
 
-                Group { Anchor: (Width: 10); }
+                Group { Anchor: (Width: 8); }
 
                 $C.@TextButton #SetSecondaryButton {
                     Text: "SECONDARY";
-                    Anchor: (Height: 34, Width: 130);
+                    Anchor: (Width: 95, Height: 26);
+                    Padding: (Horizontal: 5, Vertical: 2);
+                    Style: @CustomStyle;
                 }
 
                 Group { FlexWeight: 1; }

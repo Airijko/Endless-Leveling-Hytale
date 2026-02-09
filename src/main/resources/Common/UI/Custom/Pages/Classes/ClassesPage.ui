@@ -1,6 +1,23 @@
 $C = "../../Common.ui";
 $Nav = "../Nav/LeftNavPanel.ui";
 
+@CustomLabelStyle = LabelStyle(
+  FontSize: 15,
+  TextColor: #bfcdd5,
+  RenderBold: true,
+  RenderUppercase: true,
+  HorizontalAlignment: Center,
+  VerticalAlignment: Center
+);
+
+@CustomStyle = TextButtonStyle(
+  Default: (Background: $C.@DefaultSquareButtonDefaultBackground, LabelStyle: @CustomLabelStyle),
+  Hovered: (Background: $C.@DefaultSquareButtonHoveredBackground, LabelStyle: @CustomLabelStyle),
+  Pressed: (Background: $C.@DefaultSquareButtonPressedBackground, LabelStyle: @CustomLabelStyle),
+  Disabled: (Background: $C.@DefaultSquareButtonDisabledBackground, LabelStyle: @CustomLabelStyle),
+  Sounds: $C.@ButtonSounds,
+);
+
 $C.@PageOverlay {
     $C.@DecoratedContainer {
         Anchor: (Width: 1000, Height: 700);
@@ -229,35 +246,36 @@ $C.@PageOverlay {
                         Group { Anchor: (Height: 16); }
 
                         Group #ClassDetailActions {
-                            LayoutMode: Left;
-                            Anchor: (Height: 42);
+                            LayoutMode: Top;
+                            Anchor: (Height: 64);
 
                             Label #ClassDetailStatus {
                                 Text: "Secondary classes grant half value. Changes apply instantly.";
-                                Style: (FontSize: 11, TextColor: #ffc300, RenderBold: true);
+                                Style: (FontSize: 11, TextColor: #ffc300, RenderBold: true, Wrap: true);
                                 FlexWeight: 1;
                             }
 
                             Group { Anchor: (Width: 10); }
 
-                            $C.@TextButton #ClearSecondaryButton {
-                                Text: "CLEAR SECONDARY";
-                                Anchor: (Height: 32, Width: 140);
-                                Visible: false;
-                            }
+                            Group #RaceDetailActions {
+                                LayoutMode: Left;
+                                Anchor: (Height: 48);
+                                FlexWeight: 1;
 
-                            Group { Anchor: (Width: 8); }
+                                $C.@TextButton #ConfirmPrimaryButton {
+                                    Text: "SET PRIMARY";
+                                    Anchor: (Height: 28, Width: 175);
+                                    Style: @CustomStyle;
+                                }
 
-                            $C.@TextButton #ConfirmSecondaryButton {
-                                Text: "SET SECONDARY";
-                                Anchor: (Height: 32, Width: 140);
-                            }
+                                Group { Anchor: (Width: 8); }
 
-                            Group { Anchor: (Width: 8); }
-
-                            $C.@TextButton #ConfirmPrimaryButton {
-                                Text: "SET PRIMARY";
-                                Anchor: (Height: 32, Width: 140);
+                                $C.@TextButton #ConfirmSecondaryButton {
+                                    Text: "SET SECONDARY";
+                                    Anchor: (Height: 28, Width: 200);
+                                    Style: @CustomStyle;
+                                }
+          
                             }
                         }
                     }

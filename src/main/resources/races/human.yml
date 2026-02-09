@@ -22,9 +22,3 @@ passives:
     threshold: 0.2 # Trigger below 20% stamina
     duration: 3 # Seconds to spread stamina recovery over
     cooldown: 45 # Seconds between adrenaline bursts
-  - type: FIRST_STRIKE
-    value: 3.0 # +300% damage on first hit
-    cooldown: 30 # seconds between first-strike windows
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: stamina
-    value: 0.3

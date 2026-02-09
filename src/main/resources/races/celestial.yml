@@ -17,9 +17,3 @@ passives:
     value: 0.025 # Restore 2.5% of max mana every 5 seconds
   - type: SPECIAL_CHARGE_BONUS
     value: 1.0 # +100% faster special charge
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: intelligence
-    value: 1.5
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: precision
-    value: 0.55

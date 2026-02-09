@@ -5,11 +5,11 @@ enabled: true
 
 weapons:
   - type: SWORD
-    damage: 1.18
+    damage: 1.25
   - type: SPEAR
-    damage: 1.18
+    damage: 1.25
   - type: DAGGER
-    damage: 1.08
+    damage: 1.05
 
 passives:
   - type: SWIFTNESS

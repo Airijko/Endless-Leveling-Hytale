@@ -22,6 +22,3 @@ passives:
     threshold: 0.2 # Trigger when below 20% HP
     duration: 15 # Lasts for 15 seconds
     cooldown: 60 # seconds between triggers
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: life_force
-    value: 4.0

@@ -19,12 +19,3 @@ passives:
     max_stacks: 5 # Can stack up to 5 times after killing a target for a total of +125% movement speed
   - type: SPECIAL_CHARGE_BONUS
     value: 2.0 # +200% faster special charge
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: intelligence
-    value: 1.0
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: stamina
-    value: 0.4
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: ferocity
-    value: 0.5
