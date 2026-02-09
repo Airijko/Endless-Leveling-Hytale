@@ -29,6 +29,7 @@ public final class NavUIHelper {
      */
     public static void bindNavEvents(@Nonnull UIEventBuilder events) {
         events.addEventBinding(Activating, "#NavProfile", of("Action", "nav:profile"), false);
+        events.addEventBinding(Activating, "#NavRaces", of("Action", "nav:races"), false);
         events.addEventBinding(Activating, "#NavSkills", of("Action", "nav:skills"), false);
         events.addEventBinding(Activating, "#NavParty", of("Action", "nav:party"), false);
         events.addEventBinding(Activating, "#NavLeaderboards", of("Action", "nav:leaderboards"), false);
@@ -52,7 +53,8 @@ public final class NavUIHelper {
 
         String target = action.substring("nav:".length()).toLowerCase();
 
-        // Resolve the Player entity from the current EntityStore, like other UI pages do
+        // Resolve the Player entity from the current EntityStore, like other UI pages
+        // do
         Player player = store.getComponent(ref, Player.getComponentType());
         if (player == null) {
             LOGGER.atSevere().log("NavUIHelper: player component is null for %s", playerRef.getUuid());
@@ -66,6 +68,8 @@ public final class NavUIHelper {
                     .openCustomPage(ref, store, new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));
             case "profile" -> player.getPageManager()
                     .openCustomPage(ref, store, new ProfileUIPage(playerRef, CustomPageLifetime.CanDismiss));
+            case "races" -> player.getPageManager()
+                    .openCustomPage(ref, store, new RacesUIPage(playerRef, CustomPageLifetime.CanDismiss));
             case "party" -> player.getPageManager()
                     .openCustomPage(ref, store, new PartyUIPage(playerRef, CustomPageLifetime.CanDismiss));
             case "leaderboards" -> player.getPageManager()
