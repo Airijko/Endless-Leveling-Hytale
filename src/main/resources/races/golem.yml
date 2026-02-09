@@ -3,10 +3,10 @@ description: "Artificial beings of immense durability, Golems are slow but nearl
 enabled: true
 
 attributes:
-  life_force: 300
-  strength: 1.3
+  life_force: 200
+  strength: 0.7
   defense: 1.3
-  haste: 0.75
+  haste: 0.65
   precision: 0.0
   ferocity: 0.0
   stamina: 20.0
@@ -24,4 +24,4 @@ passives:
     cooldown: 60 # seconds between triggers
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: life_force
-    value: 5.0
+    value: 4.0
