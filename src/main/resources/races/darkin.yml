@@ -3,7 +3,7 @@ description: "Twisted Ascended bound to cursed weapons, Darkin thrive on carnage
 enabled: true
 
 attributes:
-  life_force: 165
+  life_force: 80
   strength: 1.3
   defense: 0.8
   haste: 1.05

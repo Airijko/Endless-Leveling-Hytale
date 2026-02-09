@@ -44,14 +44,14 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             SkillAttributeType.class);
 
     static {
-        ATTRIBUTE_TAGLINES.put(SkillAttributeType.LIFE_FORCE, "Vitality baseline");
+        ATTRIBUTE_TAGLINES.put(SkillAttributeType.LIFE_FORCE, "Base health");
         ATTRIBUTE_TAGLINES.put(SkillAttributeType.STRENGTH, "Damage scaling");
         ATTRIBUTE_TAGLINES.put(SkillAttributeType.DEFENSE, "Damage reduction");
-        ATTRIBUTE_TAGLINES.put(SkillAttributeType.HASTE, "Speed bonus");
+        ATTRIBUTE_TAGLINES.put(SkillAttributeType.HASTE, "Movement speed");
         ATTRIBUTE_TAGLINES.put(SkillAttributeType.PRECISION, "Crit chance");
         ATTRIBUTE_TAGLINES.put(SkillAttributeType.FEROCITY, "Crit damage");
-        ATTRIBUTE_TAGLINES.put(SkillAttributeType.STAMINA, "Dodge pool");
-        ATTRIBUTE_TAGLINES.put(SkillAttributeType.INTELLIGENCE, "Mana reserve");
+        ATTRIBUTE_TAGLINES.put(SkillAttributeType.STAMINA, "Base stamina");
+        ATTRIBUTE_TAGLINES.put(SkillAttributeType.INTELLIGENCE, "Base mana");
     }
 
     private final RaceManager raceManager;
@@ -112,7 +112,7 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         long remaining = computeCooldownRemaining(data, cooldownSeconds);
         if (remaining > 0) {
             ui.set("#RaceSwapCooldownValue.Text", formatDuration(remaining));
-            ui.set("#RaceSwapCooldownHint.Text", "Swap available once the timer hits zero.");
+            ui.set("#RaceSwapCooldownHint.Text", "Swap in cooldown");
         } else {
             ui.set("#RaceSwapCooldownValue.Text", "Ready");
             if (cooldownSeconds > 0) {
@@ -254,8 +254,9 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull RaceDefinition race,
             @Nonnull SkillAttributeType type,
             @Nonnull String selectorPrefix) {
+        boolean hasAttribute = race.getBaseAttributes().containsKey(type);
         double value = race.getBaseAttribute(type, 0.0D);
-        String formatted = value == 0.0D ? "--" : (value > 0 ? "+" : "") + formatNumber(value);
+        String formatted = hasAttribute ? formatRaceAttributeValue(type, value) : "--";
         ui.set(selectorPrefix + "Value.Text", formatted);
         ui.set(selectorPrefix + "Note.Text",
                 ATTRIBUTE_TAGLINES.getOrDefault(type, toDisplay(type.name())));
@@ -303,6 +304,45 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             data = playerDataManager.loadOrCreate(playerRef.getUuid(), playerRef.getUsername());
         }
         return data;
+    }
+
+    private String formatRaceAttributeValue(@Nonnull SkillAttributeType type, double value) {
+        if (Double.isNaN(value)) {
+            return "--";
+        }
+
+        return switch (type) {
+            case LIFE_FORCE -> formatResourceBase(value);
+            case STAMINA -> formatResourceBase(value);
+            case INTELLIGENCE -> formatResourceBase(value);
+            case STRENGTH -> formatDeltaPercent(value);
+            case DEFENSE -> formatDeltaPercent(value);
+            case HASTE -> formatDeltaPercent(value);
+            case PRECISION -> formatAbsolutePercent(value);
+            case FEROCITY -> formatAbsolutePercent(value);
+            default -> formatNumber(value);
+        };
+    }
+
+    private String formatResourceBase(double amount) {
+        return formatNumber(amount);
+    }
+
+    private String formatDeltaPercent(double multiplier) {
+        double percent = (multiplier - 1.0D) * 100.0D;
+        return formatSignedPercent(percent);
+    }
+
+    private String formatAbsolutePercent(double percentValue) {
+        return formatSignedPercent(percentValue);
+    }
+
+    private String formatSignedPercent(double percent) {
+        if (Math.abs(percent) < 0.0001D) {
+            return "0%";
+        }
+        String prefix = percent > 0 ? "+" : "-";
+        return prefix + formatNumber(Math.abs(percent)) + "%";
     }
 
     private long computeCooldownRemaining(@Nonnull PlayerData data, long cooldownSeconds) {

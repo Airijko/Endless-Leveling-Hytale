@@ -176,7 +176,7 @@ $C.@PageOverlay {
                                 Group { Anchor: (Height: 16); }
 
                                 Label {
-                                    Text: "Attribute Profile";
+                                    Text: "Race Stats";
                                     Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
                                     Anchor: (Height: 20);
                                 }
