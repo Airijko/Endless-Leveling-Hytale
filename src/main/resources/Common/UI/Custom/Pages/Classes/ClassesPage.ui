@@ -52,6 +52,63 @@ $C.@PageOverlay {
                     }
 
                     Group { FlexWeight: 1; }
+
+                    Group #ClassSwapCooldownCard {
+                        LayoutMode: Top;
+                        Anchor: (Width: 320);
+                        Background: #0b141f(0.92);
+                        Padding: (Full: 10);
+
+                        Label {
+                            Text: "Class Swap Cooldown";
+                            Style: (FontSize: 12, TextColor: #8aa1bf, RenderBold: true, LetterSpacing: 1);
+                            Anchor: (Height: 14);
+                        }
+
+                        Group { Anchor: (Height: 4); }
+
+                        Label #ClassSwapCooldownHint {
+                            Text: "Class swaps share a cooldown per slot.";
+                            Style: (FontSize: 11, TextColor: #9fb6d3, Wrap: true);
+                            Anchor: (Height: 28);
+                        }
+
+                        Group { Anchor: (Height: 6); }
+
+                        Group {
+                            LayoutMode: Left;
+                            Anchor: (Height: 22);
+
+                            Label {
+                                Text: "Primary";
+                                Style: (FontSize: 11, TextColor: #6fe3ff, RenderBold: true);
+                            }
+
+                            Group { FlexWeight: 1; }
+
+                            Label #ClassPrimaryCooldownValue {
+                                Text: "--";
+                                Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                            }
+                        }
+
+                        Group {
+                            LayoutMode: Left;
+                            Anchor: (Height: 22);
+
+                            Label {
+                                Text: "Secondary";
+                                Style: (FontSize: 11, TextColor: #d4b5ff, RenderBold: true);
+                            }
+
+                            Group { FlexWeight: 1; }
+
+                            Label #ClassSecondaryCooldownValue {
+                                Text: "--";
+                                Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                            }
+                        }
+                    }
                 }
 
                 Group { Anchor: (Height: 1); Background: #2b3542; }

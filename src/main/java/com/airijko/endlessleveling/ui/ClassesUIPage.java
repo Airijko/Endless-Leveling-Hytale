@@ -72,6 +72,9 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             ui.set("#SelectedClassSubtitle.Text", "Classes are currently disabled in config.yml.");
             ui.set("#ClassLoreText.Text", "Enable classes to browse archetypes.");
             ui.set("#ClassCountLabel.Text", "0 available");
+            ui.set("#ClassSwapCooldownHint.Text", "Enable classes to manage archetypes.");
+            ui.set("#ClassPrimaryCooldownValue.Text", "--");
+            ui.set("#ClassSecondaryCooldownValue.Text", "--");
             ui.clear("#ClassRows");
             ui.clear("#ClassWeaponEntries");
             ui.clear("#ClassPassiveEntries");
@@ -86,6 +89,9 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             ui.set("#SelectedClassSubtitle.Text", "Unable to load your class information right now.");
             ui.set("#ClassLoreText.Text", "Try reopening this page in a few moments.");
             ui.set("#ClassCountLabel.Text", "0 available");
+            ui.set("#ClassSwapCooldownHint.Text", "Try reopening this page in a few moments.");
+            ui.set("#ClassPrimaryCooldownValue.Text", "--");
+            ui.set("#ClassSecondaryCooldownValue.Text", "--");
             ui.clear("#ClassRows");
             ui.clear("#ClassWeaponEntries");
             ui.clear("#ClassPassiveEntries");
@@ -107,6 +113,11 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ? 0L
                 : classManager.getClassCooldownRemaining(playerData, ClassAssignmentSlot.SECONDARY);
 
+        updateCooldownCard(ui,
+                cooldownSeconds,
+                primaryCooldownRemaining,
+                secondaryCooldownRemaining,
+                operatorBypass);
         updateStatusCard(ui, primary, secondary);
         buildClassList(ui,
                 events,
@@ -123,6 +134,27 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 primaryCooldownRemaining,
                 secondaryCooldownRemaining,
                 operatorBypass);
+    }
+
+    private void updateCooldownCard(UICommandBuilder ui,
+            long cooldownSeconds,
+            long primaryCooldownRemaining,
+            long secondaryCooldownRemaining,
+            boolean operatorBypass) {
+        if (operatorBypass) {
+            ui.set("#ClassSwapCooldownHint.Text", "Operator bypass active; cooldowns ignored.");
+            ui.set("#ClassPrimaryCooldownValue.Text", "Bypassed");
+            ui.set("#ClassSecondaryCooldownValue.Text", "Bypassed");
+            return;
+        }
+        ui.set("#ClassPrimaryCooldownValue.Text", formatSlotAvailability(primaryCooldownRemaining));
+        ui.set("#ClassSecondaryCooldownValue.Text", formatSlotAvailability(secondaryCooldownRemaining));
+        if (cooldownSeconds > 0L) {
+            ui.set("#ClassSwapCooldownHint.Text",
+                    "Each swap triggers a " + formatDuration(cooldownSeconds) + " cooldown per slot.");
+        } else {
+            ui.set("#ClassSwapCooldownHint.Text", "Class swapping is unrestricted right now.");
+        }
     }
 
     private void updateStatusCard(UICommandBuilder ui,
@@ -176,7 +208,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                         base + " #SetPrimaryButton",
                         of("Action", "class:set_primary:" + definition.getId()),
                         false);
-                ui.set(base + " #SetPrimaryButton.Enabled", canModifyPrimary);
+                ui.set(base + " #SetPrimaryButton.Text", canModifyPrimary ? "PRIMARY" : "ON COOLDOWN");
             }
 
             boolean showSecondaryButton = !isPrimary;
@@ -186,7 +218,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                         base + " #SetSecondaryButton",
                         of("Action", "class:set_secondary:" + definition.getId()),
                         false);
-                ui.set(base + " #SetSecondaryButton.Enabled", canModifySecondary);
+                ui.set(base + " #SetSecondaryButton.Text", canModifySecondary ? "SECONDARY" : "ON COOLDOWN");
             }
         }
     }
@@ -254,10 +286,8 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         boolean canModifyPrimary = operatorBypass || primaryCooldownRemaining <= 0L;
         boolean canModifySecondary = operatorBypass || secondaryCooldownRemaining <= 0L;
-        ui.set("#ConfirmPrimaryButton.Visible", canPrimary);
-        ui.set("#ConfirmPrimaryButton.Enabled", canModifyPrimary && canPrimary);
-        ui.set("#ConfirmSecondaryButton.Visible", canSecondary);
-        ui.set("#ConfirmSecondaryButton.Enabled", canModifySecondary && canSecondary);
+        ui.set("#ConfirmPrimaryButton.Visible", canPrimary && canModifyPrimary);
+        ui.set("#ConfirmSecondaryButton.Visible", canSecondary && canModifySecondary);
 
         StringBuilder statusBuilder = new StringBuilder(
                 "Primary classes grant 100% of bonuses. Secondary classes grant 50% of weapon + passive effects.");
