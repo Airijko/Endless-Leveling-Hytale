@@ -25,7 +25,7 @@ passives:
     max_stacks: 5
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: precision
-    value: 0.30
+    value: 0.20
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: ferocity
-    value: 1.25
+    value: 1.2

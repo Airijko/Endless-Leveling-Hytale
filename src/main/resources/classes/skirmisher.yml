@@ -17,11 +17,11 @@ passives:
     duration: 8
     max_stacks: 5
   - type: BERZERKER
-    value: 0.25
+    value: 0.35
     threshold: 0.3
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: haste
-    value: 0.30
+    value: 0.40
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: strength
     value: 1.25

@@ -10,6 +10,8 @@ weapons:
     damage: 1.05
 
 passives:
+  - type: HEALTH_REGEN
+    value: 0.03 # Heal 3% of max HP every 5 seconds
   - type: MANA_REGEN
     value: 0.05
   - type: SPECIAL_CHARGE_BONUS
