@@ -5,7 +5,7 @@ Group {
 
     Group {
         LayoutMode: Left;
-        Anchor: (Height: 120);
+        Anchor: (Height: 140);
         Background: #050910(0.88);
         Padding: (Left: 14, Right: 14, Top: 12, Bottom: 12);
 
@@ -17,7 +17,7 @@ Group {
         Group {
             FlexWeight: 1;
             LayoutMode: Top;
-            Padding: (Left: 12, Right: 12);
+            Padding: (Left: 12, Right: 12, Bottom: 12);
 
             Group {
                 LayoutMode: Left;
@@ -29,112 +29,35 @@ Group {
                     FlexWeight: 1;
                 }
 
-                Label #RaceStatusBadge {
+                Label #RaceSelectionStatus {
                     Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true);
-                    Text: "AVAILABLE";
+                    Text: "CURRENT";
                     Anchor: (Height: 18);
+                    Visible: false;
                 }
             }
 
-            Label #RaceTagline {
-                Style: (FontSize: 13, TextColor: #9fb6d3);
-                Text: "Short description highlighting the fantasy and playstyle.";
-                Anchor: (Height: 34);
-            }
+            Group { Anchor: (Height: 10); }
+
+            Group { FlexWeight: 1; }
 
             Group {
                 LayoutMode: Left;
-                Anchor: (Height: 30);
+                Anchor: (Height: 38);
 
-                Group {
-                    LayoutMode: Top;
-                    Anchor: (Width: 90);
-
-                    Label {
-                        Text: "OFFENSE";
-                        Style: (FontSize: 10, TextColor: #6e7f98, RenderBold: true);
-                        Anchor: (Height: 10);
-                    }
-
-                    Label #RaceOffenseValue {
-                        Text: "--";
-                        Style: (FontSize: 13, TextColor: #ffffff);
-                        Anchor: (Height: 16);
-                    }
+                $C.@TextButton #ViewRaceButton {
+                    Text: "VIEW";
+                    Anchor: (Height: 34, Width: 125);
                 }
 
                 Group { Anchor: (Width: 12); }
 
-                Group {
-                    LayoutMode: Top;
-                    Anchor: (Width: 90);
-
-                    Label {
-                        Text: "DEFENSE";
-                        Style: (FontSize: 10, TextColor: #6e7f98, RenderBold: true);
-                        Anchor: (Height: 10);
-                    }
-
-                    Label #RaceDefenseValue {
-                        Text: "--";
-                        Style: (FontSize: 13, TextColor: #ffffff);
-                        Anchor: (Height: 16);
-                    }
-                }
-
-                Group { Anchor: (Width: 12); }
-
-                Group {
-                    LayoutMode: Top;
-                    Anchor: (Width: 110);
-
-                    Label {
-                        Text: "UTILITY";
-                        Style: (FontSize: 10, TextColor: #6e7f98, RenderBold: true);
-                        Anchor: (Height: 10);
-                    }
-
-                    Label #RaceUtilityValue {
-                        Text: "--";
-                        Style: (FontSize: 13, TextColor: #ffffff);
-                        Anchor: (Height: 16);
-                    }
+                $C.@TextButton #ChooseRaceButton {
+                    Text: "CHOOSE";
+                    Anchor: (Height: 34, Width: 125);
                 }
 
                 Group { FlexWeight: 1; }
-
-                Label #RaceCooldownChip {
-                    Text: "Swap ready";
-                    Style: (FontSize: 12, TextColor: #ffc300, RenderBold: true);
-                    Anchor: (Height: 18);
-                }
-            }
-        }
-
-        Group {
-            LayoutMode: Top;
-            Anchor: (Width: 150);
-            Background: #0f1d2d(0.8);
-            Padding: (Left: 10, Right: 10, Top: 12, Bottom: 12);
-
-            $C.@TextButton #ViewRaceButton {
-                Text: "VIEW";
-                Anchor: (Height: 30, Width: 130);
-            }
-
-            Group { Anchor: (Height: 8); }
-
-            $C.@TextButton #ChooseRaceButton {
-                Text: "CHOOSE";
-                Anchor: (Height: 34, Width: 130);
-            }
-
-            Group { Anchor: (Height: 8); }
-
-            Label #RaceRowHint {
-                Text: "Choosing consumes the swap.";
-                Style: (FontSize: 10, TextColor: #8aa1bf);
-                Anchor: (Height: 14);
             }
         }
     }

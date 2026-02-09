@@ -40,21 +40,6 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
-    private static final SkillAttributeType[] OFFENSE_ATTRS = {
-            SkillAttributeType.STRENGTH,
-            SkillAttributeType.FEROCITY,
-            SkillAttributeType.PRECISION
-    };
-    private static final SkillAttributeType[] DEFENSE_ATTRS = {
-            SkillAttributeType.LIFE_FORCE,
-            SkillAttributeType.DEFENSE,
-            SkillAttributeType.STAMINA
-    };
-    private static final SkillAttributeType[] UTILITY_ATTRS = {
-            SkillAttributeType.HASTE,
-            SkillAttributeType.INTELLIGENCE
-    };
-
     private static final EnumMap<SkillAttributeType, String> ATTRIBUTE_TAGLINES = new EnumMap<>(
             SkillAttributeType.class);
 
@@ -162,27 +147,11 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             boolean isSelected = selectedRaceMatches(definition.getId());
 
             ui.set(baseSelector + " #RaceName.Text", displayName);
-            ui.set(baseSelector + " #RaceStatusBadge.Text",
-                    isCurrent ? "CURRENT" : (isSelected ? "VIEWING" : ""));
-            String description = definition.getDescription();
-            ui.set(baseSelector + " #RaceTagline.Text",
-                    description == null || description.isBlank()
-                            ? "No lore entry provided for this race yet."
-                            : description);
 
-            ui.set(baseSelector + " #RaceOffenseValue.Text", formatCompositeScore(definition, OFFENSE_ATTRS));
-            ui.set(baseSelector + " #RaceDefenseValue.Text", formatCompositeScore(definition, DEFENSE_ATTRS));
-            ui.set(baseSelector + " #RaceUtilityValue.Text", formatCompositeScore(definition, UTILITY_ATTRS));
-
-            ui.set(baseSelector + " #RaceCooldownChip.Text",
-                    isCurrent ? "Current Race"
-                            : (canSwap ? "Swap Ready" : "Locked " + formatDuration(remaining)));
-
-            ui.set(baseSelector + " #RaceRowHint.Text",
-                    isCurrent ? "This is your active race."
-                            : (canSwap
-                                    ? "Choosing will start the cooldown."
-                                    : "Unlocks once cooldown ends."));
+            String selectionStatus = isCurrent ? "CURRENT" : (isSelected ? "VIEWING" : "");
+            boolean hasStatus = !selectionStatus.isEmpty();
+            ui.set(baseSelector + " #RaceSelectionStatus.Visible", hasStatus);
+            ui.set(baseSelector + " #RaceSelectionStatus.Text", selectionStatus);
 
             events.addEventBinding(Activating,
                     baseSelector + " #ViewRaceButton",
@@ -350,17 +319,6 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             return 0;
         }
         return availableAt - now;
-    }
-
-    private String formatCompositeScore(@Nonnull RaceDefinition definition, SkillAttributeType[] attributes) {
-        double total = 0.0D;
-        for (SkillAttributeType type : attributes) {
-            total += definition.getBaseAttribute(type, 0.0D);
-        }
-        if (total == 0.0D) {
-            return "--";
-        }
-        return formatNumber(total);
     }
 
     private String buildPassiveLabel(@Nonnull RacePassiveDefinition passive) {

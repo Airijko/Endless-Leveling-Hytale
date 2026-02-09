@@ -28,37 +28,48 @@ $C.@PageOverlay {
                 Group #Header {
                     LayoutMode: Left;
                     Anchor: (Height: 60);
-                    Padding: (Horizontal: 16, Top: 10);
+                    Padding: (Horizontal: 16, Vertical: 10);
 
                     Label #RacesTitleLabel {
                         Text: "Race Archive";
-                        Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true);
+                        Anchor: (Height: 60);
+                        Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
                     }
 
                     Group { FlexWeight: 1; }
 
                     Group #RaceSwapCooldownCard {
-                        LayoutMode: Top;
+                        LayoutMode: Left;
                         Anchor: (Width: 280);
                         Background: #0b141f(0.92);
-                        Padding: (Left: 14, Right: 14, Top: 10, Bottom: 10);
+                        Padding: (Horizontal: 8, Vertical: 8);
 
-                        Label {
-                            Text: "Race Swap Cooldown";
-                            Style: (FontSize: 12, TextColor: #8aa1bf, RenderBold: true, LetterSpacing: 1);
-                            Anchor: (Height: 14);
+                        Group {
+                            LayoutMode: Top;
+                            Anchor: (Height: 26);
+
+                            Label {
+                                Text: "Race Swap Cooldown";
+                                Style: (FontSize: 12, TextColor: #8aa1bf, RenderBold: true, LetterSpacing: 1);
+                                Anchor: (Height: 14);
+                            }
+
+                            Group { FlexWeight: 1; }
+
+                            Label #RaceSwapCooldownHint {
+                                Text: "Swapping again becomes available once the timer hits zero.";
+                                Style: (FontSize: 11, TextColor: #9fb6d3);
+                                Anchor: (Height: 28);
+                            }
                         }
+
+                        Group { Anchor: (Height: 4); }
+                        Group { FlexWeight: 1; }
 
                         Label #RaceSwapCooldownValue {
                             Text: "--";
                             Style: (FontSize: 20, TextColor: #6fe3ff, RenderBold: true);
                             Anchor: (Height: 24);
-                        }
-
-                        Label #RaceSwapCooldownHint {
-                            Text: "Swapping again becomes available once the timer hits zero.";
-                            Style: (FontSize: 11, TextColor: #9fb6d3);
-                            Anchor: (Height: 28);
                         }
                     }
                 }
