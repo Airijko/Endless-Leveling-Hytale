@@ -28,4 +28,4 @@ passives:
     value: 0.35
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: life_force
-    value: 2.5
+    value: 2.25

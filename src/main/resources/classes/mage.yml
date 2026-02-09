@@ -11,14 +11,12 @@ weapons:
 
 passives:
   - type: MANA_REGEN
-    value: 0.04
-  - type: HEALING_BONUS
-    value: 0.10
-  - type: XP_BONUS
-    value: 0.10
+    value: 0.05
+  - type: SPECIAL_CHARGE_BONUS
+    value: 0.75
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: intelligence
     value: 1.50
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: life_force
-    value: 0.20
+    value: 0.4

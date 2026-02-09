@@ -19,13 +19,13 @@ passives:
   - type: SPECIAL_CHARGE_BONUS
     value: 0.5 # +50% faster special charge
   - type: ADRENALINE
-    value: 0.35
-    threshold: 0.3
+    value: 0.8
+    threshold: 0.2
     duration: 2
-    cooldown: 40
+    cooldown: 30
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: strength
     value: 0.5
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: stamina
-    value: 0.25
+    value: 0.7

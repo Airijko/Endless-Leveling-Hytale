@@ -26,4 +26,4 @@ passives:
     value: 0.35
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: ferocity
-    value: 2.0
+    value: 1.4
