@@ -14,7 +14,7 @@ weapons:
     damage: 1.05
 
 passives:
-  - type: LAST_STAND
+  - type: SECOND_WIND
     value: 0.5
     threshold: 0.30
     duration: 4

@@ -28,9 +28,12 @@ public record AdrenalineSettings(boolean enabled,
             return disabled();
         }
 
-        double threshold = DEFAULT_THRESHOLD;
-        double duration = DEFAULT_DURATION;
-        double cooldown = DEFAULT_COOLDOWN;
+        double thresholdSum = 0.0D;
+        int thresholdSources = 0;
+        double durationSum = 0.0D;
+        int durationSources = 0;
+        double cooldownSum = 0.0D;
+        int cooldownSources = 0;
 
         List<RacePassiveDefinition> definitions = snapshot.getDefinitions(ArchetypePassiveType.ADRENALINE);
         for (RacePassiveDefinition definition : definitions) {
@@ -38,13 +41,26 @@ public record AdrenalineSettings(boolean enabled,
                 continue;
             }
             Map<String, Object> props = definition.properties();
-            threshold = Math.max(threshold, parsePositiveDouble(props, "threshold", DEFAULT_THRESHOLD));
-            duration = Math.max(duration, parsePositiveDouble(props, "duration", DEFAULT_DURATION));
+            double thresholdValue = parsePositiveDouble(props, "threshold", 0.0D);
+            if (thresholdValue > 0.0D) {
+                thresholdSum += thresholdValue;
+                thresholdSources++;
+            }
+            double durationValue = parsePositiveDouble(props, "duration", 0.0D);
+            if (durationValue > 0.0D) {
+                durationSum += durationValue;
+                durationSources++;
+            }
             double cooldownCandidate = parsePositiveDouble(props, "cooldown", 0.0D);
             if (cooldownCandidate > 0.0D) {
-                cooldown = cooldown <= 0.0D ? cooldownCandidate : Math.min(cooldown, cooldownCandidate);
+                cooldownSum += cooldownCandidate;
+                cooldownSources++;
             }
         }
+
+        double threshold = thresholdSources > 0 ? thresholdSum / thresholdSources : DEFAULT_THRESHOLD;
+        double duration = durationSources > 0 ? durationSum / durationSources : DEFAULT_DURATION;
+        double cooldown = cooldownSources > 0 ? cooldownSum / cooldownSources : DEFAULT_COOLDOWN;
 
         return new AdrenalineSettings(true, restorePercent, threshold, duration, cooldown);
     }

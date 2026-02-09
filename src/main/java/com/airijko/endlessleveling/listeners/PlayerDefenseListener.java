@@ -102,7 +102,7 @@ public class PlayerDefenseListener extends DamageEventSystem {
 
 		float adjustedAmount = reducedAmount;
 		if (runtimeState != null && statMap != null && !archetypeSnapshot.isEmpty()) {
-			adjustedAmount = applyLastStand(playerData, defenderPlayer, runtimeState, archetypeSnapshot, statMap,
+			adjustedAmount = applySecondWind(playerData, defenderPlayer, runtimeState, archetypeSnapshot, statMap,
 					reducedAmount);
 		}
 
@@ -125,13 +125,13 @@ public class PlayerDefenseListener extends DamageEventSystem {
 				defenderPlayer.getUsername(), adjustedAmount, originalAmount, reducedBy, resistance * 100);
 	}
 
-	private float applyLastStand(@Nonnull PlayerData playerData,
+	private float applySecondWind(@Nonnull PlayerData playerData,
 			@Nonnull PlayerRef defenderPlayer,
 			@Nonnull PassiveRuntimeState runtimeState,
 			@Nonnull ArchetypePassiveSnapshot snapshot,
 			@Nonnull EntityStatMap statMap,
 			float incomingDamage) {
-		LastStandSettings settings = resolveLastStandSettings(snapshot);
+		SecondWindSettings settings = resolveSecondWindSettings(snapshot);
 		if (!settings.enabled() || incomingDamage <= 0) {
 			return incomingDamage;
 		}
@@ -158,8 +158,8 @@ public class PlayerDefenseListener extends DamageEventSystem {
 		}
 
 		long now = System.currentTimeMillis();
-		if (now < runtimeState.getLastStandCooldownExpiresAt()
-				|| now < runtimeState.getLastStandActiveUntil()) {
+		if (now < runtimeState.getSecondWindCooldownExpiresAt()
+				|| now < runtimeState.getSecondWindActiveUntil()) {
 			return incomingDamage;
 		}
 
@@ -171,47 +171,57 @@ public class PlayerDefenseListener extends DamageEventSystem {
 		double durationSeconds = Math.max(0.1D, settings.durationSeconds());
 		double totalHeal = Math.min(healAmount, maxHealth);
 		double perSecond = totalHeal / durationSeconds;
-		runtimeState.setLastStandHealPerSecond(perSecond);
-		runtimeState.setLastStandHealRemaining(totalHeal);
+		runtimeState.setSecondWindHealPerSecond(perSecond);
+		runtimeState.setSecondWindHealRemaining(totalHeal);
 
-		runtimeState.setLastStandCooldownExpiresAt(now + settings.cooldownMillis());
-		runtimeState.setLastStandActiveUntil(now + settings.durationMillis());
-		runtimeState.setLastStandReadyNotified(false);
+		runtimeState.setSecondWindCooldownExpiresAt(now + settings.cooldownMillis());
+		runtimeState.setSecondWindActiveUntil(now + settings.durationMillis());
+		runtimeState.setSecondWindReadyNotified(false);
 		sendPassiveMessage(defenderPlayer,
-				String.format("Last Stand triggered! Healing %.0f%% HP over %.0fs",
+				String.format("Second Wind triggered! Healing %.0f%% HP over %.0fs",
 						settings.healPercent() * 100.0D,
 						settings.durationSeconds()));
-		LOGGER.atFine().log("Last Stand triggered for %s", playerData.getPlayerName());
+		LOGGER.atFine().log("Second Wind triggered for %s", playerData.getPlayerName());
 		return incomingDamage;
 	}
 
-	private LastStandSettings resolveLastStandSettings(ArchetypePassiveSnapshot snapshot) {
-		double healPercent = Math.max(0.0D, snapshot.getValue(ArchetypePassiveType.LAST_STAND));
+	private SecondWindSettings resolveSecondWindSettings(ArchetypePassiveSnapshot snapshot) {
+		double healPercent = Math.max(0.0D, snapshot.getValue(ArchetypePassiveType.SECOND_WIND));
 		if (healPercent <= 0) {
-			return LastStandSettings.disabled();
+			return SecondWindSettings.disabled();
 		}
 
-		List<RacePassiveDefinition> definitions = snapshot.getDefinitions(ArchetypePassiveType.LAST_STAND);
-		double threshold = 0.0D;
-		double durationSeconds = 0.0D;
-		double cooldownSeconds = 0.0D;
+		List<RacePassiveDefinition> definitions = snapshot.getDefinitions(ArchetypePassiveType.SECOND_WIND);
+		double thresholdSum = 0.0D;
+		int thresholdSources = 0;
+		double durationSum = 0.0D;
+		int durationSources = 0;
+		double cooldownSum = 0.0D;
+		int cooldownSources = 0;
 
 		for (RacePassiveDefinition definition : definitions) {
 			Map<String, Object> props = definition.properties();
-			threshold = Math.max(threshold, parsePositiveDouble(props.get("threshold")));
-			durationSeconds = Math.max(durationSeconds, parsePositiveDouble(props.get("duration")));
+			double thresholdValue = parsePositiveDouble(props.get("threshold"));
+			if (thresholdValue > 0.0D) {
+				thresholdSum += thresholdValue;
+				thresholdSources++;
+			}
+			double durationValue = parsePositiveDouble(props.get("duration"));
+			if (durationValue > 0.0D) {
+				durationSum += durationValue;
+				durationSources++;
+			}
 			double cooldownCandidate = parsePositiveDouble(props.get("cooldown"));
-			if (cooldownCandidate > 0) {
-				cooldownSeconds = cooldownSeconds <= 0
-						? cooldownCandidate
-						: Math.min(cooldownSeconds, cooldownCandidate);
+			if (cooldownCandidate > 0.0D) {
+				cooldownSum += cooldownCandidate;
+				cooldownSources++;
 			}
 		}
 
-		double resolvedThreshold = threshold > 0 ? threshold : 0.2D;
-		double resolvedDuration = durationSeconds > 0 ? durationSeconds : 5.0D;
-		double resolvedCooldown = cooldownSeconds > 0 ? cooldownSeconds : 60.0D;
-		return new LastStandSettings(true, healPercent, resolvedThreshold, resolvedDuration, resolvedCooldown);
+		double resolvedThreshold = thresholdSources > 0 ? thresholdSum / thresholdSources : 0.2D;
+		double resolvedDuration = durationSources > 0 ? durationSum / durationSources : 5.0D;
+		double resolvedCooldown = cooldownSources > 0 ? cooldownSum / cooldownSources : 60.0D;
+		return new SecondWindSettings(true, healPercent, resolvedThreshold, resolvedDuration, resolvedCooldown);
 	}
 
 	private double parsePositiveDouble(Object raw) {
@@ -229,14 +239,14 @@ public class PlayerDefenseListener extends DamageEventSystem {
 		return 0.0D;
 	}
 
-	private record LastStandSettings(boolean enabled,
+	private record SecondWindSettings(boolean enabled,
 			double healPercent,
 			double thresholdPercent,
 			double durationSeconds,
 			double cooldownSeconds) {
 
-		static LastStandSettings disabled() {
-			return new LastStandSettings(false, 0.0D, 0.0D, 0.0D, 0.0D);
+		static SecondWindSettings disabled() {
+			return new SecondWindSettings(false, 0.0D, 0.0D, 0.0D, 0.0D);
 		}
 
 		long durationMillis() {

@@ -36,7 +36,7 @@
 #   SPECIAL_CHARGE_BONUS
 #     -> `value`: decimal percent multiplier applied to the final special-charge bonus from skills (e.g., 1.0 = double the skill bonus)
 
-#   LAST_STAND
+#   SECOND_WIND
 #     -> `value`: decimal percent health healed when below a health threshold
 #     -> `threshold`: player health percent to trigger effect
 #     -> `duration`: seconds the restoration is spread over
@@ -101,7 +101,7 @@ passives:
     value: 0.2 # +20% healing dealt/received
   - type: SPECIAL_CHARGE_BONUS
     value: 1.0 # +100% faster special charge
-  - type: LAST_STAND
+  - type: SECOND_WIND
     value: 0.5 # Heal 50% of max HP
     threshold: 0.2 # Trigger when below 20% HP
     duration: 10 # Lasts for 10 seconds

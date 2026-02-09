@@ -47,7 +47,15 @@ public enum PassiveStackingStyle {
             return ADDITIVE;
         }
         return switch (type) {
-            case LAST_STAND -> DIMINISHING;
+            case XP_BONUS, HEALING_BONUS, RETALIATION -> ADDITIVE;
+            case HEALTH_REGEN,
+                    MANA_REGEN,
+                    SPECIAL_CHARGE_BONUS,
+                    SECOND_WIND,
+                    BERZERKER,
+                    SWIFTNESS ->
+                DIMINISHING;
+            case FIRST_STRIKE, EXECUTIONER -> UNIQUE;
             default -> ADDITIVE;
         };
     }

@@ -94,7 +94,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
                         expireSwiftnessIfNeeded(playerRef, ref, commandBuffer, playerData, runtimeState);
                         applySignatureGainBonus(playerData, statMap, archetypeSnapshot, runtimeState);
                         applyHealingBonus(statMap, archetypeSnapshot, runtimeState);
-                        applyLastStandHealing(statMap, runtimeState, deltaSeconds);
+                        applySecondWindHealing(statMap, runtimeState, deltaSeconds);
                         notifyPassiveCooldowns(playerRef, runtimeState);
                     }
                 });
@@ -518,23 +518,23 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         NotificationUtil.sendNotification(packetHandler, primary, secondary, icon);
     }
 
-    private void applyLastStandHealing(@Nonnull EntityStatMap statMap,
+    private void applySecondWindHealing(@Nonnull EntityStatMap statMap,
             PassiveRuntimeState runtimeState,
             float deltaSeconds) {
         if (runtimeState == null || deltaSeconds <= 0) {
             return;
         }
 
-        double perSecond = runtimeState.getLastStandHealPerSecond();
-        double remaining = runtimeState.getLastStandHealRemaining();
+        double perSecond = runtimeState.getSecondWindHealPerSecond();
+        double remaining = runtimeState.getSecondWindHealRemaining();
         if (perSecond <= 0.0D || remaining <= 0.0D) {
             return;
         }
 
-        long activeUntil = runtimeState.getLastStandActiveUntil();
+        long activeUntil = runtimeState.getSecondWindActiveUntil();
         if (activeUntil > 0 && System.currentTimeMillis() > activeUntil) {
-            runtimeState.setLastStandHealPerSecond(0.0D);
-            runtimeState.setLastStandHealRemaining(0.0D);
+            runtimeState.setSecondWindHealPerSecond(0.0D);
+            runtimeState.setSecondWindHealRemaining(0.0D);
             return;
         }
 
@@ -561,10 +561,10 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         }
 
         statMap.setStatValue(DefaultEntityStatTypes.getHealth(), current + applied);
-        runtimeState.setLastStandHealRemaining(remaining - applied);
-        if (runtimeState.getLastStandHealRemaining() <= 0.0001D) {
-            runtimeState.setLastStandHealPerSecond(0.0D);
-            runtimeState.setLastStandHealRemaining(0.0D);
+        runtimeState.setSecondWindHealRemaining(remaining - applied);
+        if (runtimeState.getSecondWindHealRemaining() <= 0.0001D) {
+            runtimeState.setSecondWindHealPerSecond(0.0D);
+            runtimeState.setSecondWindHealRemaining(0.0D);
         }
     }
 
@@ -574,11 +574,11 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         }
 
         long now = System.currentTimeMillis();
-        if (!runtimeState.isLastStandReadyNotified()
-                && runtimeState.getLastStandCooldownExpiresAt() > 0
-                && now >= runtimeState.getLastStandCooldownExpiresAt()) {
-            sendCooldownMessage(playerRef, "Last Stand is ready again!");
-            runtimeState.setLastStandReadyNotified(true);
+        if (!runtimeState.isSecondWindReadyNotified()
+                && runtimeState.getSecondWindCooldownExpiresAt() > 0
+                && now >= runtimeState.getSecondWindCooldownExpiresAt()) {
+            sendCooldownMessage(playerRef, "Second Wind is ready again!");
+            runtimeState.setSecondWindReadyNotified(true);
         }
 
         if (!runtimeState.isFirstStrikeReadyNotified()

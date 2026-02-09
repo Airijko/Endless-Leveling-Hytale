@@ -22,14 +22,15 @@ public record ExecutionerSettings(List<Entry> entries, double cooldownSeconds) {
 
     public static ExecutionerSettings fromSnapshot(ArchetypePassiveSnapshot snapshot) {
         List<Entry> entries = new ArrayList<>();
-        double cooldown = DEFAULT_COOLDOWN;
+        double cooldownSum = 0.0D;
+        int cooldownSources = 0;
         if (snapshot == null) {
-            return new ExecutionerSettings(List.of(), cooldown);
+            return new ExecutionerSettings(List.of(), DEFAULT_COOLDOWN);
         }
 
         List<RacePassiveDefinition> definitions = snapshot.getDefinitions(ArchetypePassiveType.EXECUTIONER);
         if (definitions.isEmpty()) {
-            return new ExecutionerSettings(List.of(), cooldown);
+            return new ExecutionerSettings(List.of(), DEFAULT_COOLDOWN);
         }
 
         for (RacePassiveDefinition definition : definitions) {
@@ -49,9 +50,11 @@ public record ExecutionerSettings(List<Entry> entries, double cooldownSeconds) {
 
             double cooldownCandidate = parsePositiveDouble(props, "cooldown", 0.0D);
             if (cooldownCandidate > 0.0D) {
-                cooldown = cooldown <= 0.0D ? cooldownCandidate : Math.min(cooldown, cooldownCandidate);
+                cooldownSum += cooldownCandidate;
+                cooldownSources++;
             }
         }
+        double cooldown = cooldownSources > 0 ? cooldownSum / cooldownSources : DEFAULT_COOLDOWN;
         return new ExecutionerSettings(List.copyOf(entries), cooldown);
     }
 

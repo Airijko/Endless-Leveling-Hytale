@@ -34,7 +34,7 @@ passives:
     value: 0.2 # +20% healing dealt/received
   - type: SPECIAL_CHARGE_BONUS
     value: 1.0 # +100% faster special charge
-  - type: LAST_STAND
+  - type: SECOND_WIND
     value: 0.5 # Heal 50% of max HP
     threshold: 0.2 # Trigger when below 20% HP
     duration: 10 # Lasts for 10 seconds

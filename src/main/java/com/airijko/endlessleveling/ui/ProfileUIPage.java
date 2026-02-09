@@ -516,7 +516,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case MANA_REGEN -> formatPercentValue(value) + " max mana/5s";
             case HEALING_BONUS -> formatPercentValue(value) + " healing";
             case SPECIAL_CHARGE_BONUS -> formatPercentValue(value) + " charge rate";
-            case LAST_STAND -> appendDetails(
+            case SECOND_WIND -> appendDetails(
                     formatPercentValue(value) + " heal",
                     formatThresholdDetail(threshold, "HP"),
                     formatDurationDetail(duration),

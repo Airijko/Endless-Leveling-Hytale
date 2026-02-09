@@ -17,7 +17,7 @@ passives:
     value: 0.25 # Reflect 25% of damage taken in the window
     window: 4 # Collect damage for 4 seconds before retaliating
     cooldown: 30 # Seconds between retaliations
-  - type: LAST_STAND
+  - type: SECOND_WIND
     value: 0.5 # Heal 50% of max HP
     threshold: 0.2 # Trigger when below 20% HP
     duration: 15 # Lasts for 15 seconds

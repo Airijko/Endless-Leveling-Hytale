@@ -25,20 +25,29 @@ public record RetaliationSettings(boolean enabled,
             return disabled();
         }
 
-        double window = DEFAULT_WINDOW;
-        double cooldown = DEFAULT_COOLDOWN;
+        double windowSum = 0.0D;
+        int windowSources = 0;
+        double cooldownSum = 0.0D;
+        int cooldownSources = 0;
         List<RacePassiveDefinition> definitions = snapshot.getDefinitions(ArchetypePassiveType.RETALIATION);
         for (RacePassiveDefinition definition : definitions) {
             if (definition == null) {
                 continue;
             }
             Map<String, Object> props = definition.properties();
-            window = Math.max(window, parsePositiveDouble(props, "window", DEFAULT_WINDOW));
+            double windowCandidate = parsePositiveDouble(props, "window", 0.0D);
+            if (windowCandidate > 0.0D) {
+                windowSum += windowCandidate;
+                windowSources++;
+            }
             double cooldownCandidate = parsePositiveDouble(props, "cooldown", 0.0D);
             if (cooldownCandidate > 0.0D) {
-                cooldown = cooldown <= 0.0D ? cooldownCandidate : Math.min(cooldown, cooldownCandidate);
+                cooldownSum += cooldownCandidate;
+                cooldownSources++;
             }
         }
+        double window = windowSources > 0 ? windowSum / windowSources : DEFAULT_WINDOW;
+        double cooldown = cooldownSources > 0 ? cooldownSum / cooldownSources : DEFAULT_COOLDOWN;
         return new RetaliationSettings(true, reflectPercent, window, cooldown);
     }
 

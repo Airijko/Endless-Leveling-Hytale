@@ -322,16 +322,16 @@ public class PassiveManager {
         private int luckMobDropStacks;
         private float lastHealingSample = Float.NaN;
         private float lastStaminaSample = Float.NaN;
-        private long lastStandCooldownExpiresAt;
-        private long lastStandActiveUntil;
+        private long secondWindCooldownExpiresAt;
+        private long secondWindActiveUntil;
         private long firstStrikeCooldownExpiresAt;
-        private boolean lastStandReadyNotified = true;
+        private boolean secondWindReadyNotified = true;
         private boolean firstStrikeReadyNotified = true;
         private boolean adrenalineReadyNotified = true;
         private boolean executionerReadyNotified = true;
         private boolean retaliationReadyNotified = true;
-        private double lastStandHealPerSecond;
-        private double lastStandHealRemaining;
+        private double secondWindHealPerSecond;
+        private double secondWindHealRemaining;
         private long adrenalineCooldownExpiresAt;
         private long adrenalineActiveUntil;
         private double adrenalineRestorePerSecond;
@@ -402,20 +402,20 @@ public class PassiveManager {
             this.lastStaminaSample = lastStaminaSample;
         }
 
-        public long getLastStandCooldownExpiresAt() {
-            return lastStandCooldownExpiresAt;
+        public long getSecondWindCooldownExpiresAt() {
+            return secondWindCooldownExpiresAt;
         }
 
-        public void setLastStandCooldownExpiresAt(long lastStandCooldownExpiresAt) {
-            this.lastStandCooldownExpiresAt = lastStandCooldownExpiresAt;
+        public void setSecondWindCooldownExpiresAt(long secondWindCooldownExpiresAt) {
+            this.secondWindCooldownExpiresAt = secondWindCooldownExpiresAt;
         }
 
-        public long getLastStandActiveUntil() {
-            return lastStandActiveUntil;
+        public long getSecondWindActiveUntil() {
+            return secondWindActiveUntil;
         }
 
-        public void setLastStandActiveUntil(long lastStandActiveUntil) {
-            this.lastStandActiveUntil = lastStandActiveUntil;
+        public void setSecondWindActiveUntil(long secondWindActiveUntil) {
+            this.secondWindActiveUntil = secondWindActiveUntil;
         }
 
         public long getFirstStrikeCooldownExpiresAt() {
@@ -426,12 +426,12 @@ public class PassiveManager {
             this.firstStrikeCooldownExpiresAt = firstStrikeCooldownExpiresAt;
         }
 
-        public boolean isLastStandReadyNotified() {
-            return lastStandReadyNotified;
+        public boolean isSecondWindReadyNotified() {
+            return secondWindReadyNotified;
         }
 
-        public void setLastStandReadyNotified(boolean lastStandReadyNotified) {
-            this.lastStandReadyNotified = lastStandReadyNotified;
+        public void setSecondWindReadyNotified(boolean secondWindReadyNotified) {
+            this.secondWindReadyNotified = secondWindReadyNotified;
         }
 
         public boolean isFirstStrikeReadyNotified() {
@@ -466,33 +466,33 @@ public class PassiveManager {
             this.retaliationReadyNotified = retaliationReadyNotified;
         }
 
-        public double getLastStandHealPerSecond() {
-            return lastStandHealPerSecond;
+        public double getSecondWindHealPerSecond() {
+            return secondWindHealPerSecond;
         }
 
-        public void setLastStandHealPerSecond(double lastStandHealPerSecond) {
-            this.lastStandHealPerSecond = Math.max(0.0D, lastStandHealPerSecond);
+        public void setSecondWindHealPerSecond(double secondWindHealPerSecond) {
+            this.secondWindHealPerSecond = Math.max(0.0D, secondWindHealPerSecond);
         }
 
-        public double getLastStandHealRemaining() {
-            return lastStandHealRemaining;
+        public double getSecondWindHealRemaining() {
+            return secondWindHealRemaining;
         }
 
-        public void setLastStandHealRemaining(double lastStandHealRemaining) {
-            this.lastStandHealRemaining = Math.max(0.0D, lastStandHealRemaining);
+        public void setSecondWindHealRemaining(double secondWindHealRemaining) {
+            this.secondWindHealRemaining = Math.max(0.0D, secondWindHealRemaining);
         }
 
         public void clearPassiveCooldowns() {
-            this.lastStandCooldownExpiresAt = 0L;
-            this.lastStandActiveUntil = 0L;
+            this.secondWindCooldownExpiresAt = 0L;
+            this.secondWindActiveUntil = 0L;
             this.firstStrikeCooldownExpiresAt = 0L;
-            this.lastStandReadyNotified = true;
+            this.secondWindReadyNotified = true;
             this.firstStrikeReadyNotified = true;
             this.adrenalineReadyNotified = true;
             this.executionerReadyNotified = true;
             this.retaliationReadyNotified = true;
-            this.lastStandHealPerSecond = 0.0D;
-            this.lastStandHealRemaining = 0.0D;
+            this.secondWindHealPerSecond = 0.0D;
+            this.secondWindHealRemaining = 0.0D;
             this.adrenalineCooldownExpiresAt = 0L;
             this.adrenalineActiveUntil = 0L;
             this.adrenalineRestorePerSecond = 0.0D;

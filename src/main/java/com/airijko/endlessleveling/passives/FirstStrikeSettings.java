@@ -23,7 +23,8 @@ public record FirstStrikeSettings(boolean enabled, double bonusPercent, long coo
         }
 
         List<RacePassiveDefinition> definitions = snapshot.getDefinitions(ArchetypePassiveType.FIRST_STRIKE);
-        double cooldownSeconds = 0.0D;
+        double cooldownSum = 0.0D;
+        int cooldownSources = 0;
         for (RacePassiveDefinition definition : definitions) {
             if (definition == null) {
                 continue;
@@ -31,11 +32,14 @@ public record FirstStrikeSettings(boolean enabled, double bonusPercent, long coo
             Map<String, Object> props = definition.properties();
             double candidate = parsePositiveDouble(props != null ? props.get("cooldown") : null);
             if (candidate > 0) {
-                cooldownSeconds = cooldownSeconds <= 0 ? candidate : Math.min(cooldownSeconds, candidate);
+                cooldownSum += candidate;
+                cooldownSources++;
             }
         }
 
-        double resolvedSeconds = cooldownSeconds > 0 ? cooldownSeconds : DEFAULT_COOLDOWN_SECONDS;
+        double resolvedSeconds = cooldownSources > 0
+                ? cooldownSum / cooldownSources
+                : DEFAULT_COOLDOWN_SECONDS;
         long cooldownMillis = (long) Math.max(0L, Math.round(resolvedSeconds * 1000.0D));
         return new FirstStrikeSettings(true, bonusPercent, cooldownMillis);
     }

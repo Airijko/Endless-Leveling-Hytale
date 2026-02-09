@@ -27,7 +27,8 @@ public record SwiftnessSettings(boolean enabled,
             return disabled();
         }
 
-        double duration = DEFAULT_DURATION_SECONDS;
+        double durationSum = 0.0D;
+        int durationSources = 0;
         int maxStacks = DEFAULT_MAX_STACKS;
 
         for (RacePassiveDefinition definition : definitions) {
@@ -35,7 +36,11 @@ public record SwiftnessSettings(boolean enabled,
                 continue;
             }
             Map<String, Object> props = definition.properties();
-            duration = Math.max(duration, parsePositiveDouble(props, "duration", duration));
+            double durationValue = parsePositiveDouble(props, "duration", 0.0D);
+            if (durationValue > 0.0D) {
+                durationSum += durationValue;
+                durationSources++;
+            }
             maxStacks = Math.max(maxStacks, parsePositiveInt(props, "max_stacks", maxStacks));
         }
 
@@ -43,6 +48,7 @@ public record SwiftnessSettings(boolean enabled,
             maxStacks = DEFAULT_MAX_STACKS;
         }
 
+        double duration = durationSources > 0 ? durationSum / durationSources : DEFAULT_DURATION_SECONDS;
         return new SwiftnessSettings(true, bonusPercent, duration, maxStacks);
     }
 
