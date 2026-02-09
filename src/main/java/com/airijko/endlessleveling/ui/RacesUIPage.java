@@ -213,7 +213,7 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ui.append("#RacePassiveEntries", "Pages/Profile/ProfileRacePassiveEntry.ui");
                 String base = "#RacePassiveEntries[" + index + "]";
                 ui.set(base + " #PassiveName.Text", buildPassiveLabel(passive));
-                ui.set(base + " #PassiveValue.Text", formatPassiveDescription(passive));
+                ui.set(base + " #PassiveValue.Text", formatPassiveDescription(passive, data));
             }
         }
 
@@ -375,7 +375,8 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return toDisplay(type.name());
     }
 
-    private String formatPassiveDescription(@Nonnull RacePassiveDefinition passive) {
+    private String formatPassiveDescription(@Nonnull RacePassiveDefinition passive,
+            @Nonnull PlayerData playerData) {
         ArchetypePassiveType type = passive.type();
         double value = passive.value();
         Map<String, Object> props = passive.properties() == null ? Map.of() : passive.properties();
@@ -404,7 +405,7 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case FIRST_STRIKE -> appendDetails(
                     formatPercentValue(value) + " opener",
                     formatCooldownDetail(cooldown));
-            case INNATE_ATTRIBUTE_GAIN -> formatInnatePreview(passive);
+            case INNATE_ATTRIBUTE_GAIN -> formatInnatePreview(passive, playerData);
             case ADRENALINE -> appendDetails(
                     formatPercentValue(value) + " stamina",
                     formatThresholdDetail(threshold, "stamina"),
@@ -428,10 +429,15 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         };
     }
 
-    private String formatInnatePreview(@Nonnull RacePassiveDefinition passive) {
-        SkillAttributeType attributeType = passive.attributeType();
-        String label = attributeType == null ? "Attribute" : toDisplay(attributeType.name());
-        return formatSigned(passive.value()) + " " + label;
+    private String formatInnatePreview(@Nonnull RacePassiveDefinition passive,
+            @Nonnull PlayerData playerData) {
+        double perLevel = passive.value();
+        String perLevelText = formatSigned(perLevel) + " per level";
+
+        int level = playerData == null ? 1 : Math.max(1, playerData.getLevel());
+        int effectiveLevels = Math.max(0, level - 1);
+        double total = perLevel * effectiveLevels;
+        return perLevelText + " (Total " + formatSigned(total) + " @ Lv " + level + ")";
     }
 
     private Double getDoubleProp(@Nonnull Map<String, Object> props, @Nonnull String key) {

@@ -294,15 +294,10 @@ $C.@PageOverlay {
                                 FlexWeight: 1;
                             }
 
-                            $C.@CancelTextButton #CancelRaceButton {
-                                Text: "CANCEL";
-                                Anchor: (Height: 32, Width: 110);
-                            }
-
                             Group { Anchor: (Width: 10); }
 
                             $C.@TextButton #ConfirmRaceButton {
-                                Text: "SWAP RACE";
+                                Text: "SWAP";
                                 Anchor: (Height: 32, Width: 140);
                             }
                         }
