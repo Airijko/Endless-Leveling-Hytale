@@ -35,58 +35,6 @@ $C.@PageOverlay {
                     }
 
                     Group { FlexWeight: 1; }
-
-                    Group #ClassStatusCard {
-                        LayoutMode: Top;
-                        Anchor: (Width: 320);
-                        Background: #0b141f(0.92);
-                        Padding: (Full: 10);
-
-                        Label {
-                            Text: "Class Assignments";
-                            Style: (FontSize: 12, TextColor: #8aa1bf, RenderBold: true, LetterSpacing: 1);
-                            Anchor: (Height: 12);
-                        }
-
-                        Group { Anchor: (Height: 8); }
-
-                        Group {
-                            LayoutMode: Left;
-                            Anchor: (Height: 20);
-                            Label {
-                                Text: "Primary";
-                                Style: (FontSize: 11, TextColor: #6fe3ff, RenderBold: true);
-                            }
-                            Group { Anchor: (Width: 8); }
-                            Label #CurrentPrimaryValue {
-                                Text: "--";
-                                Style: (FontSize: 13, TextColor: #ffffff, RenderBold: true);
-                                FlexWeight: 1;
-                            }
-                        }
-
-                        Group {
-                            LayoutMode: Left;
-                            Anchor: (Height: 20);
-                            Label {
-                                Text: "Secondary";
-                                Style: (FontSize: 11, TextColor: #d4b5ff, RenderBold: true);
-                            }
-                            Group { Anchor: (Width: 8); }
-                            Label #CurrentSecondaryValue {
-                                Text: "None";
-                                Style: (FontSize: 13, TextColor: #ffffff, RenderBold: true);
-                                FlexWeight: 1;
-                            }
-                        }
-
-                        Group { Anchor: (Height: 6); }
-                        Label {
-                            Text: "Secondary classes share 50% of bonuses.";
-                            Style: (FontSize: 11, TextColor: #9fb6d3);
-                            Anchor: (Height: 14);
-                        }
-                    }
                 }
 
                 Group { Anchor: (Height: 1); Background: #2b3542; }
@@ -118,15 +66,55 @@ $C.@PageOverlay {
                             }
                         }
 
-                        Group {
+                        Group #ClassStatusCard {
                             LayoutMode: Top;
-                            Background: #0b141f(0.6);
-                            Padding: (Left: 14, Right: 14, Top: 10, Bottom: 10);
+                            Anchor: (Width: 320);
+                            Background: #0b141f(0.92);
+                            Padding: (Full: 10);
 
                             Label {
-                                Text: "View a class to inspect its role, weapon affinities, and passives. Assign it as primary or secondary to apply bonuses.";
-                                Style: (FontSize: 12, TextColor: #8aa1bf, Wrap: true);
-                                FlexWeight: 1;
+                                Text: "Class Assignments";
+                                Style: (FontSize: 12, TextColor: #8aa1bf, RenderBold: true, LetterSpacing: 1);
+                                Anchor: (Height: 12);
+                            }
+
+                            Group { Anchor: (Height: 8); }
+
+                            Group {
+                                LayoutMode: Left;
+                                Anchor: (Height: 20);
+                                Label {
+                                    Text: "Primary";
+                                    Style: (FontSize: 11, TextColor: #6fe3ff, RenderBold: true);
+                                }
+                                Group { Anchor: (Width: 8); }
+                                Label #CurrentPrimaryValue {
+                                    Text: "--";
+                                    Style: (FontSize: 13, TextColor: #ffffff, RenderBold: true);
+                                    FlexWeight: 1;
+                                }
+                            }
+
+                            Group {
+                                LayoutMode: Left;
+                                Anchor: (Height: 20);
+                                Label {
+                                    Text: "Secondary";
+                                    Style: (FontSize: 11, TextColor: #d4b5ff, RenderBold: true);
+                                }
+                                Group { Anchor: (Width: 8); }
+                                Label #CurrentSecondaryValue {
+                                    Text: "None";
+                                    Style: (FontSize: 13, TextColor: #ffffff, RenderBold: true);
+                                    FlexWeight: 1;
+                                }
+                            }
+
+                            Group { Anchor: (Height: 6); }
+                            Label {
+                                Text: "Secondary classes share 50% of bonuses.";
+                                Style: (FontSize: 11, TextColor: #9fb6d3);
+                                Anchor: (Height: 14);
                             }
                         }
 

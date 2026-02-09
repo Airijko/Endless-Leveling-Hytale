@@ -1,0 +1,31 @@
+class_name: "Vanguard"
+description: "A stalwart line-holder that drives forward with crushing blows."
+role: "Vanguard"
+enabled: true
+
+weapons:
+  - type: MACE
+    damage: 1.30
+  - type: AXE
+    damage: 1.20
+  - type: SWORD
+    damage: 1.10
+  - type: SPEAR
+    damage: 1.05
+
+passives:
+  - type: LAST_STAND
+    value: 0.5
+    threshold: 0.30
+    duration: 4
+    cooldown: 45
+  - type: RETALIATION
+    value: 0.15
+    window: 4
+    cooldown: 30
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: defense
+    value: 0.35
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: life_force
+    value: 2.5

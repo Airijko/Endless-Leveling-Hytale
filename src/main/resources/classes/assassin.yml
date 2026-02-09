@@ -1,0 +1,31 @@
+class_name: "Assassin"
+description: "A silent blade master who thrives on opening strikes and brutal finishers."
+role: "Assassin"
+enabled: true
+
+weapons:
+  - type: DAGGER
+    damage: 1.25
+  - type: SWORD
+    damage: 1.10
+  - type: BOW
+    damage: 1.05
+
+passives:
+  - type: FIRST_STRIKE
+    value: 3.00
+    cooldown: 25
+  - type: EXECUTIONER
+    value: 100 # +10000% damage to targets below the threshold
+    threshold: 0.2 # Only applies to targets already below 20% HP
+    cooldown: 45 # Seconds between executioner procs
+  - type: SWIFTNESS
+    value: 0.2
+    duration: 8
+    max_stacks: 5
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: precision
+    value: 0.30
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: ferocity
+    value: 1.5

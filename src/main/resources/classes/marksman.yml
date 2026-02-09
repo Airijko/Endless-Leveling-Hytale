@@ -1,0 +1,29 @@
+class_name: "Marksman"
+description: "An eagle-eyed sharpshooter who controls the fight from afar."
+role: "Marksman"
+enabled: true
+
+weapons:
+  - type: BOW
+    damage: 1.25
+  - type: CROSSBOW
+    damage: 1.25
+  - type: DAGGER
+    damage: 1.05
+
+passives:
+  - type: FIRST_STRIKE
+    value: 2.5
+    cooldown: 15
+  - type: SWIFTNESS
+    value: 0.15
+    duration: 8
+    max_stacks: 5
+  - type: SPECIAL_CHARGE_BONUS
+    value: 0.25
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: precision
+    value: 0.35
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: ferocity
+    value: 2.0

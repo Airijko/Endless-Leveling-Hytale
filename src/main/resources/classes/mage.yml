@@ -1,0 +1,24 @@
+class_name: "Mage"
+description: "A spellcasting prodigy who channels pure arcane force through staves."
+role: "Mage"
+enabled: true
+
+weapons:
+  - type: STAFF
+    damage: 1.30
+  - type: DAGGER
+    damage: 1.05
+
+passives:
+  - type: MANA_REGEN
+    value: 0.04
+  - type: HEALING_BONUS
+    value: 0.10
+  - type: XP_BONUS
+    value: 0.10
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: intelligence
+    value: 1.50
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: life_force
+    value: 0.20

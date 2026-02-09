@@ -7,15 +7,17 @@ weapons:
   - type: SWORD
     damage: 1.10
   - type: BOW
-    damage: 1.05
+    damage: 1.10
   - type: STAFF
-    damage: 1.05
+    damage: 1.10
   - type: DAGGER
-    damage: 1.08
+    damage: 1.10
 
 passives:
   - type: XP_BONUS
-    value: 0.15 # +15% XP gain
+    value: 0.50 # +50% XP gain
+  - type: SPECIAL_CHARGE_BONUS
+    value: 0.5 # +50% faster special charge
   - type: ADRENALINE
     value: 0.35
     threshold: 0.3
@@ -23,10 +25,7 @@ passives:
     cooldown: 40
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: strength
-    value: 0.25
+    value: 0.5
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: stamina
     value: 0.25
-  - type: INNATE_ATTRIBUTE_GAIN
-    attribute: precision
-    value: 0.20

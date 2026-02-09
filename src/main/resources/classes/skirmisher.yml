@@ -1,0 +1,27 @@
+class_name: "Skirmisher"
+description: "A mobile duelist who dances between sword and spear strikes."
+role: "Skirmisher"
+enabled: true
+
+weapons:
+  - type: SWORD
+    damage: 1.18
+  - type: SPEAR
+    damage: 1.18
+  - type: DAGGER
+    damage: 1.08
+
+passives:
+  - type: SWIFTNESS
+    value: 0.15
+    duration: 8
+    max_stacks: 5
+  - type: BERZERKER
+    value: 0.25
+    threshold: 0.3
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: haste
+    value: 0.30
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: strength
+    value: 1.0
