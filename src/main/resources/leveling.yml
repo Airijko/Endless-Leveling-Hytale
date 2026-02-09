@@ -1,7 +1,7 @@
 # This is the leveling formula for the server. It is used to calculate the amount of experience required to level up.
 default:
   expression: "base * ((log(level)+1) * (sqrt(level)))^2"
-  base: 50
+  base: 100
 
 # If you change these values, make sure to reset everyone to sync the skill points by do "/skills resetskillpointsall"
 baseSkillPoints: 12
@@ -118,7 +118,7 @@ Mob_Leveling:
     Damage:
       Enabled: true
       Base_Multiplier: 1.0 # Initial damage multiplier
-      Per_Level: 0.05 # +5% Damage per mob level
+      Per_Level: 0.075 # +7.5% Damage per mob level
 
   # -------------------------------------------------
   # EXPERIENCE & ANTI-EXPLOIT RULES
