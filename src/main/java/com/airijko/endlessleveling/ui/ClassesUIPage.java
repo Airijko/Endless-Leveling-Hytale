@@ -735,9 +735,9 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
     private String formatSlotAvailability(long remainingSeconds) {
         if (remainingSeconds <= 0L) {
-            return "ready now";
+            return "Ready";
         }
-        return "ready in " + formatDuration(remainingSeconds);
+        return formatDuration(remainingSeconds);
     }
 
     private String formatPercentValue(double ratio) {
