@@ -5,9 +5,8 @@ Group {
 
     Group {
         LayoutMode: Left;
-        Anchor: (Height: 100);
-        Background: #050910(0.88);
-        Padding: (Horizontal: 14, Vertical: 12);
+        Background: #0b141f(0.8);
+        Padding: (Full: 14);
 
         Group {
             Anchor: (Width: 4);
@@ -15,13 +14,12 @@ Group {
         }
 
         Group {
-            FlexWeight: 1;
             LayoutMode: Top;
-            Padding: (Left: 12, Right: 12, Bottom: 12);
+            Padding: (Horizontal: 12);
+            FlexWeight: 1;
 
             Group {
                 LayoutMode: Left;
-                Anchor: (Height: 22);
 
                 Label #RaceName {
                     Style: (FontSize: 18, TextColor: #ffffff, RenderBold: true);
@@ -37,27 +35,22 @@ Group {
                 }
             }
 
-            Group { Anchor: (Height: 10); }
-
-            Group { FlexWeight: 1; }
+            Group { Anchor: (Height: 5); }
 
             Group {
                 LayoutMode: Left;
-                Anchor: (Height: 38);
 
                 $C.@TextButton #ViewRaceButton {
                     Text: "VIEW";
                     Anchor: (Height: 34, Width: 125);
                 }
 
-                Group { Anchor: (Width: 12); }
+                Group { Anchor: (Width: 8); }
 
                 $C.@TextButton #ChooseRaceButton {
                     Text: "CHOOSE";
                     Anchor: (Height: 34, Width: 125);
                 }
-
-                Group { FlexWeight: 1; }
             }
         }
     }

@@ -341,6 +341,7 @@ public class ClassManager {
         String role = safeString(yamlData.get("role"));
         boolean enabled = parseBoolean(yamlData.getOrDefault("enabled", Boolean.TRUE), true);
 
+        String iconItemId = parseIconId(yamlData);
         Map<ClassWeaponType, Double> weaponMultipliers = parseWeaponSection(yamlData);
         List<Map<String, Object>> passives = parsePassives(yamlData.get("passives"));
         List<RacePassiveDefinition> passiveDefinitions = buildPassiveDefinitions(classId, passives);
@@ -350,9 +351,24 @@ public class ClassManager {
                 description,
                 role,
                 enabled,
+                iconItemId,
                 weaponMultipliers,
                 passives,
                 passiveDefinitions);
+    }
+
+    private String parseIconId(Map<String, Object> yamlData) {
+        if (yamlData == null) {
+            return null;
+        }
+        Object value = yamlData.get("icon");
+        if (value == null) {
+            value = yamlData.get("icon_id");
+        }
+        if (value == null) {
+            value = yamlData.get("item_icon");
+        }
+        return safeString(value);
     }
 
     private Map<ClassWeaponType, Double> parseWeaponSection(Map<String, Object> yamlData) {

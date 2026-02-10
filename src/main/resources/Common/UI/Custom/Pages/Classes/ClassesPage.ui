@@ -55,9 +55,9 @@ $C.@PageOverlay {
 
                     Group #ClassSwapCooldownCard {
                         LayoutMode: Left;
-                        Anchor: (Width: 475);
+                        Anchor: (Width: 450);
                         Background: #0b141f(0.92);
-                        Padding: (Full: 8);
+                        Padding: (Full: 12);
 
                         Group {
                             LayoutMode: Top;
@@ -80,7 +80,7 @@ $C.@PageOverlay {
 
                         Group {
                             LayoutMode: Top;
-                            Anchor: (Height: 26, Width: 140);
+                            Anchor: (Height: 26, Width: 125);
 
                             Group {
                                 LayoutMode: Left;
@@ -96,7 +96,7 @@ $C.@PageOverlay {
 
                                 Label #ClassPrimaryCooldownValue {
                                     Text: "--";
-                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
+                                    Style: (FontSize: 11, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
                                 }
                             }
 
@@ -116,7 +116,7 @@ $C.@PageOverlay {
 
                                 Label #ClassSecondaryCooldownValue {
                                     Text: "--";
-                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
+                                    Style: (FontSize: 11, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
                                 }
                             }
                         }
@@ -154,7 +154,6 @@ $C.@PageOverlay {
 
                         Group #ClassStatusCard {
                             LayoutMode: Top;
-                            Anchor: (Width: 320);
                             Background: #0b141f(0.92);
                             Padding: (Full: 10);
 
@@ -330,7 +329,6 @@ $C.@PageOverlay {
 
                         Group #ClassDetailActions {
                             LayoutMode: Top;
-                            Anchor: (Height: 64);
 
                             Label #ClassDetailStatus {
                                 Text: "Secondary classes grant half value. Changes apply instantly.";
@@ -338,7 +336,7 @@ $C.@PageOverlay {
                                 FlexWeight: 1;
                             }
 
-                            Group { Anchor: (Width: 10); }
+                            Group { Anchor: (Height: 8); }
 
                             Group #RaceDetailActions {
                                 LayoutMode: Left;

@@ -2,6 +2,7 @@ class_name: "Mage"
 description: "A spellcasting prodigy who channels pure arcane force through staves."
 role: "Mage"
 enabled: true
+icon: "Prototype_Tool_Book_Mana"
 
 weapons:
   - type: STAFF

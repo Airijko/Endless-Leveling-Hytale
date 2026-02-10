@@ -1,7 +1,7 @@
 $C = "../../Common.ui";
 
 @CustomLabelStyle = LabelStyle(
-  FontSize: 12,
+  FontSize: 18,
   TextColor: #bfcdd5,
   RenderBold: true,
   RenderUppercase: true,
@@ -22,17 +22,24 @@ Group {
 
     Group {
         LayoutMode: Left;
-        Background: #050910(0.88);
+        Background: #0b141f(0.8);
         Padding: (Full: 14);
 
         Group {
-            Anchor: (Width: 4);
-            Background: #4fd7f7(0.95);
+            Anchor: (Width: 56, Height: 56);
+            Background: #060b13(0.92);
+            LayoutMode: Middle;
+            Padding: (Full: 8);
+
+            ItemIcon #ClassIcon {
+                Anchor: (Width: 40, Height: 40);
+                Visible: false;
+            }
         }
 
         Group {
             LayoutMode: Top;
-            Padding: (Horizontal: 12);
+            Padding: (Left: 12);
             FlexWeight: 1;
 
             Group {
@@ -44,43 +51,22 @@ Group {
                     FlexWeight: 1;
                 }
 
-                Label #ClassSelectionStatus {
-                    Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true);
-                    Text: "PRIMARY";
-                    Anchor: (Height: 18);
-                    Visible: false;
+                $C.@TextButton #ViewClassButton {
+                    Text: "VIEW";
+                    Anchor: (Width: 70, Height: 32);
+                    Padding: (Horizontal: 3, Vertical: 2);
+                    Style: @CustomStyle;
                 }
             }
 
-            Group { Anchor: (Height: 12); }
+            Group { FlexWeight: 1; }
 
-            Group {
-                LayoutMode: Left;
 
-                $C.@TextButton #ViewClassButton {
-                    Text: "VIEW";
-                    Anchor: (Width: 60, Height: 26);
-                    Padding: (Horizontal: 5, Vertical: 2);
-                    Style: @CustomStyle;
-                }
-
-                Group { Anchor: (Width: 8); }
-
-                $C.@TextButton #SetPrimaryButton {
-                    Text: "PRIMARY";
-                    Anchor: (Width: 90, Height: 26);
-                    Padding: (Horizontal: 5, Vertical: 2);
-                    Style: @CustomStyle;
-                }
-
-                Group { Anchor: (Width: 8); }
-
-                $C.@TextButton #SetSecondaryButton {
-                    Text: "SECONDARY";
-                    Anchor: (Width: 95, Height: 26);
-                    Padding: (Horizontal: 5, Vertical: 2);
-                    Style: @CustomStyle;
-                }
+            Label #ClassSelectionStatus {
+                Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true);
+                Text: "PRIMARY";
+                Anchor: (Height: 18);
+                Visible: false;
             }
         }
     }

@@ -2,6 +2,7 @@ class_name: "Marksman"
 description: "An eagle-eyed sharpshooter who controls the fight from afar."
 role: "Marksman"
 enabled: true
+icon: "Weapon_Shortbow_Combat"
 
 weapons:
   - type: BOW

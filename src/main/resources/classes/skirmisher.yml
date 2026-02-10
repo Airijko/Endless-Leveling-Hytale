@@ -2,6 +2,7 @@ class_name: "Skirmisher"
 description: "A mobile duelist who dances between sword and spear strikes."
 role: "Skirmisher"
 enabled: true
+icon: "Weapon_Spear_Tribal"
 
 weapons:
   - type: SWORD

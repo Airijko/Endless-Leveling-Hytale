@@ -2,6 +2,7 @@ class_name: "Vanguard"
 description: "A stalwart line-holder that drives forward with crushing blows."
 role: "Vanguard"
 enabled: true
+icon: "Weapon_Battleaxe_Mithril"
 
 weapons:
   - type: MACE

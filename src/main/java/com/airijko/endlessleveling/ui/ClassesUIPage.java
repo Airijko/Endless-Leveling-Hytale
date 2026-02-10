@@ -28,6 +28,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -39,6 +40,8 @@ import static com.hypixel.hytale.server.core.ui.builder.EventData.of;
  * UI page for browsing and selecting EndlessLeveling classes.
  */
 public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
+
+    private static final Map<String, String> DEFAULT_CLASS_ICONS = new HashMap<>();
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
@@ -54,6 +57,18 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
         this.levelingManager = plugin != null ? plugin.getLevelingManager() : null;
         this.selectedClassId = null;
+    }
+
+    static {
+        DEFAULT_CLASS_ICONS.put("*", "Weapon_Longsword_Adamantite_Saurian");
+        DEFAULT_CLASS_ICONS.put("adventurer", "Ingredient_Life_Essence");
+        DEFAULT_CLASS_ICONS.put("assassin", "Weapon_Daggers_Mithril");
+        DEFAULT_CLASS_ICONS.put("juggernaut", "Weapon_Battleaxe_Mithril");
+        DEFAULT_CLASS_ICONS.put("mage", "Weapon_Staff_Bronze");
+        DEFAULT_CLASS_ICONS.put("marksman", "Weapon_Shortbow_Combat");
+        DEFAULT_CLASS_ICONS.put("skirmisher", "Weapon_Longsword_Mithril");
+        DEFAULT_CLASS_ICONS.put("vanguard", "Weapon_Mace_Prisma");
+        DEFAULT_CLASS_ICONS.put("example", "Potion_Health");
     }
 
     @Override
@@ -196,31 +211,44 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ui.set(base + " #ClassSelectionStatus.Text", status);
             }
 
+            applyClassIcon(ui, base, definition);
+
             events.addEventBinding(Activating,
                     base + " #ViewClassButton",
                     of("Action", "class:view:" + definition.getId()),
                     false);
 
-            boolean showPrimaryButton = !isPrimary;
-            ui.set(base + " #SetPrimaryButton.Visible", showPrimaryButton);
-            if (showPrimaryButton) {
-                events.addEventBinding(Activating,
-                        base + " #SetPrimaryButton",
-                        of("Action", "class:set_primary:" + definition.getId()),
-                        false);
-                ui.set(base + " #SetPrimaryButton.Text", canModifyPrimary ? "PRIMARY" : "COOLDOWN");
-            }
-
-            boolean showSecondaryButton = !isPrimary;
-            ui.set(base + " #SetSecondaryButton.Visible", showSecondaryButton);
-            if (showSecondaryButton) {
-                events.addEventBinding(Activating,
-                        base + " #SetSecondaryButton",
-                        of("Action", "class:set_secondary:" + definition.getId()),
-                        false);
-                ui.set(base + " #SetSecondaryButton.Text", canModifySecondary ? "SECONDARY" : "COOLDOWN");
-            }
         }
+    }
+
+    private void applyClassIcon(UICommandBuilder ui, String baseSelector, CharacterClassDefinition definition) {
+        String selector = baseSelector + " #ClassIcon";
+        String iconId = resolveClassIcon(definition);
+        if (iconId == null || iconId.isBlank()) {
+            ui.set(selector + ".Visible", false);
+            return;
+        }
+        ui.set(selector + ".ItemId", iconId);
+        ui.set(selector + ".Visible", true);
+    }
+
+    private String resolveClassIcon(CharacterClassDefinition definition) {
+        if (definition == null) {
+            return null;
+        }
+        String configured = definition.getIconItemId();
+        if (configured != null && !configured.isBlank()) {
+            return configured.trim();
+        }
+        String fallback = DEFAULT_CLASS_ICONS.get(normalizeClassId(definition.getId()));
+        if (fallback != null && !fallback.isBlank()) {
+            return fallback;
+        }
+        return DEFAULT_CLASS_ICONS.get("*");
+    }
+
+    private static String normalizeClassId(String raw) {
+        return raw == null ? "" : raw.trim().toLowerCase(Locale.ROOT);
     }
 
     private void updateClassDetailPanel(UICommandBuilder ui,

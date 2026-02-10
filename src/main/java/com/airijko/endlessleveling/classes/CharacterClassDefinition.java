@@ -21,6 +21,7 @@ public class CharacterClassDefinition {
     private final String description;
     private final String role;
     private final boolean enabled;
+    private final String iconItemId;
     private final Map<ClassWeaponType, Double> weaponMultipliers;
     private final List<Map<String, Object>> passives;
     private final List<RacePassiveDefinition> passiveDefinitions;
@@ -30,6 +31,7 @@ public class CharacterClassDefinition {
             String description,
             String role,
             boolean enabled,
+            String iconItemId,
             Map<ClassWeaponType, Double> weaponMultipliers,
             List<Map<String, Object>> passives,
             List<RacePassiveDefinition> passiveDefinitions) {
@@ -38,6 +40,7 @@ public class CharacterClassDefinition {
         this.description = description == null ? "" : description;
         this.role = role == null ? "" : role;
         this.enabled = enabled;
+        this.iconItemId = iconItemId == null ? "" : iconItemId.trim();
         this.weaponMultipliers = Collections.unmodifiableMap(new EnumMap<>(weaponMultipliers));
         this.passives = Collections.unmodifiableList(copyPassives(passives));
         List<RacePassiveDefinition> typed = passiveDefinitions == null
@@ -79,6 +82,10 @@ public class CharacterClassDefinition {
 
     public boolean isEnabled() {
         return enabled;
+    }
+
+    public String getIconItemId() {
+        return iconItemId;
     }
 
     public Map<ClassWeaponType, Double> getWeaponMultipliers() {

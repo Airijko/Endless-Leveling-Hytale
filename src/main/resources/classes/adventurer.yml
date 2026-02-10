@@ -2,6 +2,7 @@ class_name: "Adventurer"
 description: "A flexible pathfinder who blends martial training with survival instincts."
 role: "Vanguard"
 enabled: true
+icon: "Weapon_Longsword_Adamantite_Saurian"
 
 weapons:
   - type: SWORD

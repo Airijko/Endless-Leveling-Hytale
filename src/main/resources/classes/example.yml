@@ -2,6 +2,7 @@ class_name: "Example"
 description: "Template class showcasing supported fields."
 role: "Template"
 enabled: false
+icon: "Potion_Health"
 
 weapons:
   - type: SWORD
