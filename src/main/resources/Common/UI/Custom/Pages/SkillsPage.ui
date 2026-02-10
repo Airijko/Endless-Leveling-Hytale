@@ -48,16 +48,6 @@ $C.@PageOverlay {
                     }
 
                     Group { FlexWeight: 1; }
-                }
-
-                Group { Anchor: (Height: 1); Background: #2b3542; }
-
-                // -------- SKILLS --------
-                Group #Main {
-                    FlexWeight: 1;
-                    LayoutMode: TopScrolling;
-                    ScrollbarStyle: $C.@DefaultScrollbarStyle;
-                    Padding: (Full: 16);
 
                     Group #SkillsIntro {
                         LayoutMode: Top;
@@ -68,8 +58,16 @@ $C.@PageOverlay {
                             Text: "Allocate points to shape your combat identity.";
                         }
                     }
+                }
 
-                    Group { Anchor: (Height: 12); }
+                Group { Anchor: (Height: 1); Background: #2b3542; }
+
+                // -------- SKILLS --------
+                Group #Main {
+                    FlexWeight: 1;
+                    LayoutMode: TopScrolling;
+                    ScrollbarStyle: $C.@DefaultScrollbarStyle;
+                    Padding: (Full: 16);
 
                     Group #Skills {
                         LayoutMode: Left;
@@ -93,7 +91,7 @@ $C.@PageOverlay {
                                         LayoutMode: Middle;
                                         Padding: (Full: 8);
                                         ItemIcon #LifeForceIcon {
-                                            Anchor: (Width: 40, Height: 40);
+                                            Anchor: (Width: 36, Height: 36);
                                             Visible: false;
                                         }
                                     }
@@ -192,7 +190,7 @@ $C.@PageOverlay {
                                         LayoutMode: Middle;
                                         Padding: (Full: 8);
                                         ItemIcon #StrengthIcon {
-                                            Anchor: (Width: 40, Height: 40);
+                                            Anchor: (Width: 36, Height: 36);
                                             Visible: false;
                                         }
                                     }
@@ -292,7 +290,7 @@ $C.@PageOverlay {
                                         LayoutMode: Middle;
                                         Padding: (Full: 8);
                                         ItemIcon #DefenseIcon {
-                                            Anchor: (Width: 40, Height: 40);
+                                            Anchor: (Width: 36, Height: 36);
                                             Visible: false;
                                         }
                                     }
@@ -392,7 +390,7 @@ $C.@PageOverlay {
                                         LayoutMode: Middle;
                                         Padding: (Full: 8);
                                         ItemIcon #HasteIcon {
-                                            Anchor: (Width: 40, Height: 40);
+                                            Anchor: (Width: 36, Height: 36);
                                             Visible: false;
                                         }
                                     }
@@ -497,7 +495,7 @@ $C.@PageOverlay {
                                         LayoutMode: Middle;
                                         Padding: (Full: 8);
                                         ItemIcon #PrecisionIcon {
-                                            Anchor: (Width: 40, Height: 40);
+                                            Anchor: (Width: 36, Height: 36);
                                             Visible: false;
                                         }
                                     }
@@ -597,7 +595,7 @@ $C.@PageOverlay {
                                         LayoutMode: Middle;
                                         Padding: (Full: 8);
                                         ItemIcon #FerocityIcon {
-                                            Anchor: (Width: 40, Height: 40);
+                                            Anchor: (Width: 36, Height: 36);
                                             Visible: false;
                                         }
                                     }
@@ -697,7 +695,7 @@ $C.@PageOverlay {
                                         LayoutMode: Middle;
                                         Padding: (Full: 8);
                                         ItemIcon #StaminaIcon {
-                                            Anchor: (Width: 40, Height: 40);
+                                            Anchor: (Width: 36, Height: 36);
                                             Visible: false;
                                         }
                                     }
@@ -797,7 +795,7 @@ $C.@PageOverlay {
                                         LayoutMode: Middle;
                                         Padding: (Full: 8);
                                         ItemIcon #IntelligenceIcon {
-                                            Anchor: (Width: 40, Height: 40);
+                                            Anchor: (Width: 36, Height: 36);
                                             Visible: false;
                                         }
                                     }

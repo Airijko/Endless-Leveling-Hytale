@@ -95,18 +95,6 @@ choose_class_cooldown: 1800 # Cooldown (seconds) before changing class again
 # ------------------------------------------------------------
 # UI SETTINGS
 # ------------------------------------------------------------
-ui:
-  skill_icons:
-    life_force: "items/resources/heart_crystal"
-    strength: "items/weapons/iron_greatsword"
-    defense: "items/armor/iron_shield"
-    haste: "items/armor/swift_boots"
-    precision: "items/weapons/marksman_scope"
-    ferocity: "items/accessories/predator_claw"
-    stamina: "items/consumables/stamina_potion"
-    intelligence: "items/tools/arcane_focus"
-    # Use Buuz135's Advanced Item Info UI to grab canonical item ids.
-
 # ------------------------------------------------------------
 # DEBUG / LOGGING
 # ------------------------------------------------------------

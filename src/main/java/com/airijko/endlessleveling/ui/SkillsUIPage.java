@@ -3,7 +3,6 @@ package com.airijko.endlessleveling.ui;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
-import com.airijko.endlessleveling.managers.ConfigManager;
 import com.airijko.endlessleveling.managers.PlayerAttributeManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.SkillManager;
@@ -34,14 +33,14 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         private static final EnumMap<SkillAttributeType, String> DEFAULT_ATTRIBUTE_ICONS = new EnumMap<>(
                         SkillAttributeType.class);
         private static final SkillBinding[] SKILL_BINDINGS = {
-                        new SkillBinding("LifeForce", SkillAttributeType.LIFE_FORCE),
-                        new SkillBinding("Strength", SkillAttributeType.STRENGTH),
-                        new SkillBinding("Defense", SkillAttributeType.DEFENSE),
-                        new SkillBinding("Haste", SkillAttributeType.HASTE),
-                        new SkillBinding("Precision", SkillAttributeType.PRECISION),
-                        new SkillBinding("Ferocity", SkillAttributeType.FEROCITY),
-                        new SkillBinding("Stamina", SkillAttributeType.STAMINA),
-                        new SkillBinding("Intelligence", SkillAttributeType.INTELLIGENCE) };
+                        new SkillBinding("LifeForce", "#LifeForceIcon", SkillAttributeType.LIFE_FORCE),
+                        new SkillBinding("Strength", "#StrengthIcon", SkillAttributeType.STRENGTH),
+                        new SkillBinding("Defense", "#DefenseIcon", SkillAttributeType.DEFENSE),
+                        new SkillBinding("Haste", "#HasteIcon", SkillAttributeType.HASTE),
+                        new SkillBinding("Precision", "#PrecisionIcon", SkillAttributeType.PRECISION),
+                        new SkillBinding("Ferocity", "#FerocityIcon", SkillAttributeType.FEROCITY),
+                        new SkillBinding("Stamina", "#StaminaIcon", SkillAttributeType.STAMINA),
+                        new SkillBinding("Intelligence", "#IntelligenceIcon", SkillAttributeType.INTELLIGENCE) };
 
         private final EnumMap<SkillAttributeType, Integer> previewLevels = new EnumMap<>(SkillAttributeType.class);
         private int previewSkillPoints = 0;
@@ -59,7 +58,7 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                 "Multiplies weapon and ability damage outputs.");
                 ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.DEFENSE,
                                 "Cuts down incoming damage through resistances.");
-                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.HASTE, "Increase movement speed");
+                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.HASTE, "Increases movement speed");
                 ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.PRECISION,
                                 "Raises critical hit chance for every attack.");
                 ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.FEROCITY, "Adds bonus damage to each critical strike.");
@@ -68,14 +67,14 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.INTELLIGENCE,
                                 "Increases mana so spells and abilities stay online longer.");
 
-                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.LIFE_FORCE, "items/resources/heart_crystal");
-                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.STRENGTH, "items/weapons/iron_greatsword");
-                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.DEFENSE, "items/armor/iron_shield");
-                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.HASTE, "items/armor/swift_boots");
-                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.PRECISION, "items/weapons/marksman_scope");
-                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.FEROCITY, "items/accessories/predator_claw");
-                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.STAMINA, "items/consumables/stamina_potion");
-                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.INTELLIGENCE, "items/tools/arcane_focus");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.LIFE_FORCE, "Potion_Health");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.STRENGTH, "Weapon_Longsword_Adamantite");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.DEFENSE, "Weapon_Shield_Orbis_Knight");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.HASTE, "Spawn_Temple_Helix");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.PRECISION, "Weapon_Shortbow_Combat");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.FEROCITY, "Weapon_Battleaxe_Mithril");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.STAMINA, "Potion_Stamina");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.INTELLIGENCE, "Prototype_Tool_Book_Mana");
         }
 
         public SkillsUIPage(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime) {
@@ -559,44 +558,26 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         }
 
         private void applySkillIcons(UICommandBuilder ui) {
-                EnumMap<SkillAttributeType, String> icons = resolveSkillIconIds();
+                LOGGER.atInfo().log("Applying %d skill icon bindings", SKILL_BINDINGS.length);
                 for (SkillBinding binding : SKILL_BINDINGS) {
-                        String iconSelector = "#" + binding.uiPrefix() + "Icon";
-                        String itemId = icons.get(binding.attribute());
-                        if (itemId != null && !itemId.isBlank()) {
-                                ui.set(iconSelector + ".ItemId", itemId);
-                                ui.set(iconSelector + ".Visible", true);
-                        } else {
-                                ui.set(iconSelector + ".Visible", false);
+                        String selector = binding.iconSelector();
+                        SkillAttributeType attribute = binding.attribute();
+                        String rawId = DEFAULT_ATTRIBUTE_ICONS.get(attribute);
+                        if (rawId == null || rawId.isBlank()) {
+                                LOGGER.atWarning().log(
+                                                "Icon lookup miss: attribute=%s selector=%s (no default mapping)",
+                                                attribute.name(), selector);
+                                ui.set(selector + ".Visible", false);
+                                continue;
                         }
-                }
-        }
 
-        private EnumMap<SkillAttributeType, String> resolveSkillIconIds() {
-                EnumMap<SkillAttributeType, String> icons = new EnumMap<>(SkillAttributeType.class);
-                ConfigManager configManager = EndlessLeveling.getInstance().getConfigManager();
-                for (SkillAttributeType type : SkillAttributeType.values()) {
-                        String override = readSkillIconOverride(configManager, type.getConfigKey());
-                        String fallback = DEFAULT_ATTRIBUTE_ICONS.get(type);
-                        if (override != null && !override.isBlank()) {
-                                icons.put(type, override);
-                        } else if (fallback != null && !fallback.isBlank()) {
-                                icons.put(type, fallback);
-                        }
+                        String resolved = rawId.trim();
+                        LOGGER.atInfo().log(
+                                        "Icon mapping match: attribute=%s selector=%s assetId=%s (raw=%s)",
+                                        attribute.name(), selector, resolved, rawId);
+                        ui.set(selector + ".ItemId", resolved);
+                        ui.set(selector + ".Visible", true);
                 }
-                return icons;
-        }
-
-        private String readSkillIconOverride(ConfigManager configManager, String key) {
-                if (configManager == null) {
-                        return null;
-                }
-                Object raw = configManager.get("ui.skill_icons." + key, null, false);
-                if (raw instanceof String str) {
-                        String trimmed = str.trim();
-                        return trimmed.isEmpty() ? null : trimmed;
-                }
-                return null;
         }
 
         // --------------------------------------------------
@@ -627,7 +608,7 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                 .build();
         }
 
-        private record SkillBinding(String uiPrefix, SkillAttributeType attribute) {
+        private record SkillBinding(String uiPrefix, String iconSelector, SkillAttributeType attribute) {
         }
 
 }
