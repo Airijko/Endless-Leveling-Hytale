@@ -105,7 +105,7 @@
 
   // ---- Footer ----
   Label {
-    Text: "v5.0";
+    Text: "v5.2";
     Anchor: (Height: 20);
     Padding: (Left: 16);
     Style: (FontSize: 10, TextColor: #4a5568);
