@@ -3,6 +3,7 @@ package com.airijko.endlessleveling.ui;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
+import com.airijko.endlessleveling.managers.ConfigManager;
 import com.airijko.endlessleveling.managers.PlayerAttributeManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.SkillManager;
@@ -30,6 +31,8 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
         private static final EnumMap<SkillAttributeType, String> ATTRIBUTE_DESCRIPTIONS = new EnumMap<>(
                         SkillAttributeType.class);
+        private static final EnumMap<SkillAttributeType, String> DEFAULT_ATTRIBUTE_ICONS = new EnumMap<>(
+                        SkillAttributeType.class);
         private static final SkillBinding[] SKILL_BINDINGS = {
                         new SkillBinding("LifeForce", SkillAttributeType.LIFE_FORCE),
                         new SkillBinding("Strength", SkillAttributeType.STRENGTH),
@@ -56,7 +59,7 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                 "Multiplies weapon and ability damage outputs.");
                 ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.DEFENSE,
                                 "Cuts down incoming damage through resistances.");
-                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.HASTE, "Speeds up movement and combat animations.");
+                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.HASTE, "Increase movement speed");
                 ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.PRECISION,
                                 "Raises critical hit chance for every attack.");
                 ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.FEROCITY, "Adds bonus damage to each critical strike.");
@@ -64,6 +67,15 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                 "Expands stamina for dodges, blocks, and bursts.");
                 ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.INTELLIGENCE,
                                 "Increases mana so spells and abilities stay online longer.");
+
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.LIFE_FORCE, "items/resources/heart_crystal");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.STRENGTH, "items/weapons/iron_greatsword");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.DEFENSE, "items/armor/iron_shield");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.HASTE, "items/armor/swift_boots");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.PRECISION, "items/weapons/marksman_scope");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.FEROCITY, "items/accessories/predator_claw");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.STAMINA, "items/consumables/stamina_potion");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.INTELLIGENCE, "items/tools/arcane_focus");
         }
 
         public SkillsUIPage(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime) {
@@ -108,6 +120,8 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ui.set("#StaminaDescription.Text", getDescription(SkillAttributeType.STAMINA));
                 ui.set("#IntelligenceLabel.Text", "Intelligence");
                 ui.set("#IntelligenceDescription.Text", getDescription(SkillAttributeType.INTELLIGENCE));
+
+                applySkillIcons(ui);
 
                 // Bind all skill buttons in a loop for clarity and maintainability
                 for (SkillBinding binding : SKILL_BINDINGS) {
@@ -542,6 +556,47 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         private String getDescription(SkillAttributeType type) {
                 return ATTRIBUTE_DESCRIPTIONS.getOrDefault(type, "");
+        }
+
+        private void applySkillIcons(UICommandBuilder ui) {
+                EnumMap<SkillAttributeType, String> icons = resolveSkillIconIds();
+                for (SkillBinding binding : SKILL_BINDINGS) {
+                        String iconSelector = "#" + binding.uiPrefix() + "Icon";
+                        String itemId = icons.get(binding.attribute());
+                        if (itemId != null && !itemId.isBlank()) {
+                                ui.set(iconSelector + ".ItemId", itemId);
+                                ui.set(iconSelector + ".Visible", true);
+                        } else {
+                                ui.set(iconSelector + ".Visible", false);
+                        }
+                }
+        }
+
+        private EnumMap<SkillAttributeType, String> resolveSkillIconIds() {
+                EnumMap<SkillAttributeType, String> icons = new EnumMap<>(SkillAttributeType.class);
+                ConfigManager configManager = EndlessLeveling.getInstance().getConfigManager();
+                for (SkillAttributeType type : SkillAttributeType.values()) {
+                        String override = readSkillIconOverride(configManager, type.getConfigKey());
+                        String fallback = DEFAULT_ATTRIBUTE_ICONS.get(type);
+                        if (override != null && !override.isBlank()) {
+                                icons.put(type, override);
+                        } else if (fallback != null && !fallback.isBlank()) {
+                                icons.put(type, fallback);
+                        }
+                }
+                return icons;
+        }
+
+        private String readSkillIconOverride(ConfigManager configManager, String key) {
+                if (configManager == null) {
+                        return null;
+                }
+                Object raw = configManager.get("ui.skill_icons." + key, null, false);
+                if (raw instanceof String str) {
+                        String trimmed = str.trim();
+                        return trimmed.isEmpty() ? null : trimmed;
+                }
+                return null;
         }
 
         // --------------------------------------------------

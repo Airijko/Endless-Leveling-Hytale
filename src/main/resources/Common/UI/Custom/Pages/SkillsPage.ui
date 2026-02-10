@@ -54,8 +54,9 @@ $C.@PageOverlay {
 
                 // -------- SKILLS --------
                 Group #Main {
-                    LayoutMode: Top;
                     FlexWeight: 1;
+                    LayoutMode: TopScrolling;
+                    ScrollbarStyle: $C.@DefaultScrollbarStyle;
                     Padding: (Full: 16);
 
                     Group #SkillsIntro {
@@ -85,18 +86,49 @@ $C.@PageOverlay {
 
                                 Group {
                                     LayoutMode: Left;
-                                    Label #LifeForceLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
                                     Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Width: 100);
-                                        Label {
-                                            Text: "Lv.";
-                                            Style: (TextColor: #94b2ff, FontSize: 13);
-                                            Anchor: (Width: 24);
+                                        Anchor: (Width: 56, Height: 56);
+                                        Background: #050b16(0.85);
+                                        LayoutMode: Middle;
+                                        Padding: (Full: 8);
+                                        ItemIcon #LifeForceIcon {
+                                            Anchor: (Width: 40, Height: 40);
+                                            Visible: false;
                                         }
-                                        Label #LifeForceLevel { Style: (TextColor: #94b2ff, FontSize: 13); Anchor: (Width: 70); }
                                     }
-                                    Label #LifeForceValue { Style: (TextColor: #6fe3ff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                    Group { Anchor: (Width: 12); }
+
+                                    Group {
+                                        LayoutMode: Top;
+                                        FlexWeight: 1;
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #LifeForceLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+                                            
+                                            Group { FlexWeight: 1; }
+                                            
+                                            Label {
+                                                Text: "Lv.";
+                                                Style: (TextColor: #94b2ff, FontSize: 13);
+                                                Anchor: (Width: 24);
+                                            }
+                                            
+                                            Label #LifeForceLevel { Style: (TextColor: #94b2ff, FontSize: 13); Anchor: (Width: 70); }
+                                        }
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+                                 
+                                            Label #LifeForceValue { Style: (TextColor: #6fe3ff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                            Group { FlexWeight: 1; }
+                                        }
+                                    }
                                 }
 
                                 Group { Anchor: (Height: 4); }
@@ -154,18 +186,49 @@ $C.@PageOverlay {
 
                                 Group {
                                     LayoutMode: Left;
-                                    Label #StrengthLabel { Style: (TextColor: #ffe8d7, FontSize: 16, RenderBold: true); FlexWeight: 1; }
                                     Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Width: 100);
-                                        Label {
-                                            Text: "Lv.";
-                                            Style: (TextColor: #ffc49c, FontSize: 13);
-                                            Anchor: (Width: 24);
+                                        Anchor: (Width: 56, Height: 56);
+                                        Background: #050b16(0.85);
+                                        LayoutMode: Middle;
+                                        Padding: (Full: 8);
+                                        ItemIcon #StrengthIcon {
+                                            Anchor: (Width: 40, Height: 40);
+                                            Visible: false;
                                         }
-                                        Label #StrengthLevel { Style: (TextColor: #ffc49c, FontSize: 13); Anchor: (Width: 70); }
                                     }
-                                    Label #StrengthValue { Style: (TextColor: #ffd2ac, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                    Group { Anchor: (Width: 12); }
+
+                                    Group {
+                                        LayoutMode: Top;
+                                        FlexWeight: 1;
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #StrengthLabel { Style: (TextColor: #ffe8d7, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                            Group { FlexWeight: 1; }
+
+                                            Label {
+                                                Text: "Lv.";
+                                                Style: (TextColor: #ffc49c, FontSize: 13);
+                                                Anchor: (Width: 24);
+                                            }
+
+                                            Label #StrengthLevel { Style: (TextColor: #ffc49c, FontSize: 13); Anchor: (Width: 70); }
+                                        }
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #StrengthValue { Style: (TextColor: #ffd2ac, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                            Group { FlexWeight: 1; }
+                                        }
+                                    }
                                 }
 
                                 Group { Anchor: (Height: 4); }
@@ -223,18 +286,49 @@ $C.@PageOverlay {
 
                                 Group {
                                     LayoutMode: Left;
-                                    Label #DefenseLabel { Style: (TextColor: #ddfff3, FontSize: 16, RenderBold: true); FlexWeight: 1; }
                                     Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Width: 100);
-                                        Label {
-                                            Text: "Lv.";
-                                            Style: (TextColor: #94ffe3, FontSize: 13);
-                                            Anchor: (Width: 24);
+                                        Anchor: (Width: 56, Height: 56);
+                                        Background: #050b16(0.85);
+                                        LayoutMode: Middle;
+                                        Padding: (Full: 8);
+                                        ItemIcon #DefenseIcon {
+                                            Anchor: (Width: 40, Height: 40);
+                                            Visible: false;
                                         }
-                                        Label #DefenseLevel { Style: (TextColor: #94ffe3, FontSize: 13); Anchor: (Width: 70); }
                                     }
-                                    Label #DefenseValue { Style: (TextColor: #68f7c5, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                    Group { Anchor: (Width: 12); }
+
+                                    Group {
+                                        LayoutMode: Top;
+                                        FlexWeight: 1;
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #DefenseLabel { Style: (TextColor: #ddfff3, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                            Group { FlexWeight: 1; }
+
+                                            Label {
+                                                Text: "Lv.";
+                                                Style: (TextColor: #94ffe3, FontSize: 13);
+                                                Anchor: (Width: 24);
+                                            }
+
+                                            Label #DefenseLevel { Style: (TextColor: #94ffe3, FontSize: 13); Anchor: (Width: 70); }
+                                        }
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #DefenseValue { Style: (TextColor: #68f7c5, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                            Group { FlexWeight: 1; }
+                                        }
+                                    }
                                 }
 
                                 Group { Anchor: (Height: 4); }
@@ -292,18 +386,49 @@ $C.@PageOverlay {
 
                                 Group {
                                     LayoutMode: Left;
-                                    Label #HasteLabel { Style: (TextColor: #f7e2ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
                                     Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Width: 100);
-                                        Label {
-                                            Text: "Lv.";
-                                            Style: (TextColor: #e0b8ff, FontSize: 13);
-                                            Anchor: (Width: 24);
+                                        Anchor: (Width: 56, Height: 56);
+                                        Background: #050b16(0.85);
+                                        LayoutMode: Middle;
+                                        Padding: (Full: 8);
+                                        ItemIcon #HasteIcon {
+                                            Anchor: (Width: 40, Height: 40);
+                                            Visible: false;
                                         }
-                                        Label #HasteLevel { Style: (TextColor: #e0b8ff, FontSize: 13); Anchor: (Width: 70); }
                                     }
-                                    Label #HasteValue { Style: (TextColor: #d598ff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                    Group { Anchor: (Width: 12); }
+
+                                    Group {
+                                        LayoutMode: Top;
+                                        FlexWeight: 1;
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #HasteLabel { Style: (TextColor: #f7e2ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                            Group { FlexWeight: 1; }
+
+                                            Label {
+                                                Text: "Lv.";
+                                                Style: (TextColor: #e0b8ff, FontSize: 13);
+                                                Anchor: (Width: 24);
+                                            }
+
+                                            Label #HasteLevel { Style: (TextColor: #e0b8ff, FontSize: 13); Anchor: (Width: 70); }
+                                        }
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #HasteValue { Style: (TextColor: #d598ff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                            Group { FlexWeight: 1; }
+                                        }
+                                    }
                                 }
 
                                 Group { Anchor: (Height: 4); }
@@ -366,18 +491,49 @@ $C.@PageOverlay {
 
                                 Group {
                                     LayoutMode: Left;
-                                    Label #PrecisionLabel { Style: (TextColor: #dff6ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
                                     Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Width: 100);
-                                        Label {
-                                            Text: "Lv.";
-                                            Style: (TextColor: #87dfff, FontSize: 13);
-                                            Anchor: (Width: 24);
+                                        Anchor: (Width: 56, Height: 56);
+                                        Background: #050b16(0.85);
+                                        LayoutMode: Middle;
+                                        Padding: (Full: 8);
+                                        ItemIcon #PrecisionIcon {
+                                            Anchor: (Width: 40, Height: 40);
+                                            Visible: false;
                                         }
-                                        Label #PrecisionLevel { Style: (TextColor: #87dfff, FontSize: 13); Anchor: (Width: 70); }
                                     }
-                                    Label #PrecisionValue { Style: (TextColor: #6edcff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                    Group { Anchor: (Width: 12); }
+
+                                    Group {
+                                        LayoutMode: Top;
+                                        FlexWeight: 1;
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #PrecisionLabel { Style: (TextColor: #dff6ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                            Group { FlexWeight: 1; }
+
+                                            Label {
+                                                Text: "Lv.";
+                                                Style: (TextColor: #87dfff, FontSize: 13);
+                                                Anchor: (Width: 24);
+                                            }
+
+                                            Label #PrecisionLevel { Style: (TextColor: #87dfff, FontSize: 13); Anchor: (Width: 70); }
+                                        }
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #PrecisionValue { Style: (TextColor: #6edcff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                            Group { FlexWeight: 1; }
+                                        }
+                                    }
                                 }
 
                                 Group { Anchor: (Height: 4); }
@@ -435,18 +591,49 @@ $C.@PageOverlay {
 
                                 Group {
                                     LayoutMode: Left;
-                                    Label #FerocityLabel { Style: (TextColor: #ffdbe9, FontSize: 16, RenderBold: true); FlexWeight: 1; }
                                     Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Width: 100);
-                                        Label {
-                                            Text: "Lv.";
-                                            Style: (TextColor: #ff9ac0, FontSize: 13);
-                                            Anchor: (Width: 24);
+                                        Anchor: (Width: 56, Height: 56);
+                                        Background: #050b16(0.85);
+                                        LayoutMode: Middle;
+                                        Padding: (Full: 8);
+                                        ItemIcon #FerocityIcon {
+                                            Anchor: (Width: 40, Height: 40);
+                                            Visible: false;
                                         }
-                                        Label #FerocityLevel { Style: (TextColor: #ff9ac0, FontSize: 13); Anchor: (Width: 70); }
                                     }
-                                    Label #FerocityValue { Style: (TextColor: #ffb0cd, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                    Group { Anchor: (Width: 12); }
+
+                                    Group {
+                                        LayoutMode: Top;
+                                        FlexWeight: 1;
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #FerocityLabel { Style: (TextColor: #ffdbe9, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                            Group { FlexWeight: 1; }
+
+                                            Label {
+                                                Text: "Lv.";
+                                                Style: (TextColor: #ff9ac0, FontSize: 13);
+                                                Anchor: (Width: 24);
+                                            }
+
+                                            Label #FerocityLevel { Style: (TextColor: #ff9ac0, FontSize: 13); Anchor: (Width: 70); }
+                                        }
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #FerocityValue { Style: (TextColor: #ffb0cd, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                            Group { FlexWeight: 1; }
+                                        }
+                                    }
                                 }
 
                                 Group { Anchor: (Height: 4); }
@@ -504,18 +691,49 @@ $C.@PageOverlay {
 
                                 Group {
                                     LayoutMode: Left;
-                                    Label #StaminaLabel { Style: (TextColor: #ecffd0, FontSize: 16, RenderBold: true); FlexWeight: 1; }
                                     Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Width: 100);
-                                        Label {
-                                            Text: "Lv.";
-                                            Style: (TextColor: #d2ff8f, FontSize: 13);
-                                            Anchor: (Width: 24);
+                                        Anchor: (Width: 56, Height: 56);
+                                        Background: #050b16(0.85);
+                                        LayoutMode: Middle;
+                                        Padding: (Full: 8);
+                                        ItemIcon #StaminaIcon {
+                                            Anchor: (Width: 40, Height: 40);
+                                            Visible: false;
                                         }
-                                        Label #StaminaLevel { Style: (TextColor: #d2ff8f, FontSize: 13); Anchor: (Width: 70); }
                                     }
-                                    Label #StaminaValue { Style: (TextColor: #b7ff6a, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                    Group { Anchor: (Width: 12); }
+
+                                    Group {
+                                        LayoutMode: Top;
+                                        FlexWeight: 1;
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #StaminaLabel { Style: (TextColor: #ecffd0, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                            Group { FlexWeight: 1; }
+
+                                            Label {
+                                                Text: "Lv.";
+                                                Style: (TextColor: #d2ff8f, FontSize: 13);
+                                                Anchor: (Width: 24);
+                                            }
+
+                                            Label #StaminaLevel { Style: (TextColor: #d2ff8f, FontSize: 13); Anchor: (Width: 70); }
+                                        }
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #StaminaValue { Style: (TextColor: #b7ff6a, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                            Group { FlexWeight: 1; }
+                                        }
+                                    }
                                 }
 
                                 Group { Anchor: (Height: 4); }
@@ -573,18 +791,49 @@ $C.@PageOverlay {
 
                                 Group {
                                     LayoutMode: Left;
-                                    Label #IntelligenceLabel { Style: (TextColor: #e1f4ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
                                     Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Width: 100);
-                                        Label {
-                                            Text: "Lv.";
-                                            Style: (TextColor: #7edbff, FontSize: 13);
-                                            Anchor: (Width: 24);
+                                        Anchor: (Width: 56, Height: 56);
+                                        Background: #050b16(0.85);
+                                        LayoutMode: Middle;
+                                        Padding: (Full: 8);
+                                        ItemIcon #IntelligenceIcon {
+                                            Anchor: (Width: 40, Height: 40);
+                                            Visible: false;
                                         }
-                                        Label #IntelligenceLevel { Style: (TextColor: #7edbff, FontSize: 13); Anchor: (Width: 70); }
                                     }
-                                    Label #IntelligenceValue { Style: (TextColor: #60d2ff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                    Group { Anchor: (Width: 12); }
+
+                                    Group {
+                                        LayoutMode: Top;
+                                        FlexWeight: 1;
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #IntelligenceLabel { Style: (TextColor: #e1f4ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                            Group { FlexWeight: 1; }
+
+                                            Label {
+                                                Text: "Lv.";
+                                                Style: (TextColor: #7edbff, FontSize: 13);
+                                                Anchor: (Width: 24);
+                                            }
+
+                                            Label #IntelligenceLevel { Style: (TextColor: #7edbff, FontSize: 13); Anchor: (Width: 70); }
+                                        }
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            FlexWeight: 1;
+
+                                            Label #IntelligenceValue { Style: (TextColor: #60d2ff, FontSize: 13, RenderBold: true); Anchor: (Width: 120); }
+
+                                            Group { FlexWeight: 1; }
+                                        }
+                                    }
                                 }
 
                                 Group { Anchor: (Height: 4); }
