@@ -27,6 +27,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class PlayerDataManager {
 
@@ -39,6 +43,11 @@ public class PlayerDataManager {
     private final Yaml yaml;
     private final ConcurrentHashMap<UUID, PlayerData> playerCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, ReentrantLock> playerLocks = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, Long> lastAutoBackupMs = new ConcurrentHashMap<>();
+
+    private static final int AUTO_BACKUP_RETENTION = 5; // keep latest N per player
+    private static final long AUTO_BACKUP_MIN_INTERVAL_MS = 10 * 60 * 1000L; // 10 minutes between backups per player
+    private static final DateTimeFormatter AUTO_BACKUP_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
     // Current schema version for player data files. Increment when adding new
     // fields that require migration. Use this to detect/outdate/migrate files.
@@ -155,6 +164,16 @@ public class PlayerDataManager {
                         .replace("\nprofiles:", "\n\nprofiles:")
                         .replace("\nrace:", "\n\nrace:")
                         .replace("\npassives:", "\n\npassives:");
+
+                if (!isYamlRoundTripSafe(yamlContent)) {
+                    LOGGER.atSevere().log(
+                            "Aborting save for %s: generated YAML failed validation; file left unchanged.",
+                            data.getUuid());
+                    return;
+                }
+
+                // Create a rolling backup of the previous on-disk file before overwriting.
+                createAutoBackupIfNeeded(file, data.getUuid());
 
                 writeAtomically(file.toPath(), yamlContent);
                 LOGGER.atFine().log("PlayerData for UUID %s saved to file.", data.getUuid());
@@ -772,6 +791,79 @@ public class PlayerDataManager {
         data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
         data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
         data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
+    }
+
+    /**
+     * Quick safety check: ensure the YAML we emit can be loaded back by SnakeYAML.
+     * If this fails we skip writing to avoid corrupting the on-disk file.
+     */
+    private boolean isYamlRoundTripSafe(String yamlContent) {
+        if (yamlContent == null || yamlContent.isEmpty()) {
+            return false;
+        }
+        try (StringReader reader = new StringReader(yamlContent)) {
+            Object loaded = yaml.load(reader);
+            return loaded instanceof Map<?, ?>;
+        } catch (Exception ex) {
+            LOGGER.atSevere().log("Round-trip YAML validation failed: %s", ex.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Rolling backup policy: keep the latest few copies per player in
+     * plugins/EndlessLeveling/playerdata/backups/auto/<uuid>/.
+     * - Throttled to avoid copying on every save (10m default).
+     * - Retention limited to AUTO_BACKUP_RETENTION newest files.
+     */
+    private void createAutoBackupIfNeeded(File sourceFile, UUID uuid) {
+        if (sourceFile == null || uuid == null) {
+            return;
+        }
+        if (!sourceFile.exists()) {
+            return; // nothing on disk yet to back up
+        }
+
+        long now = System.currentTimeMillis();
+        long last = lastAutoBackupMs.getOrDefault(uuid, 0L);
+        if (now - last < AUTO_BACKUP_MIN_INTERVAL_MS) {
+            return; // throttle
+        }
+
+        Path backupDir = filesManager.getPlayerDataFolder().toPath()
+                .resolve("backups")
+                .resolve("auto")
+                .resolve(uuid.toString());
+        try {
+            Files.createDirectories(backupDir);
+            String timestamp = LocalDateTime.now().format(AUTO_BACKUP_FORMATTER);
+            Path target = backupDir.resolve(sourceFile.getName() + "." + timestamp + ".yml");
+            Files.copy(sourceFile.toPath(), target, StandardCopyOption.REPLACE_EXISTING);
+            lastAutoBackupMs.put(uuid, now);
+            pruneAutoBackups(backupDir);
+            LOGGER.atFine().log("Auto-backed up playerdata %s to %s", sourceFile.getName(), target);
+        } catch (Exception ex) {
+            LOGGER.atWarning().log("Auto-backup failed for %s: %s", sourceFile.getName(), ex.getMessage());
+        }
+    }
+
+    private void pruneAutoBackups(Path backupDir) {
+        try (Stream<Path> stream = Files.list(backupDir)) {
+            var backups = stream
+                    .filter(Files::isRegularFile)
+                    .sorted((a, b) -> Long.compare(b.toFile().lastModified(), a.toFile().lastModified()))
+                    .collect(Collectors.toList());
+
+            for (int i = AUTO_BACKUP_RETENTION; i < backups.size(); i++) {
+                try {
+                    Files.deleteIfExists(backups.get(i));
+                } catch (Exception ignored) {
+                    // Best-effort cleanup
+                }
+            }
+        } catch (Exception ex) {
+            LOGGER.atWarning().log("Failed to prune auto-backups in %s: %s", backupDir, ex.getMessage());
+        }
     }
 
 }

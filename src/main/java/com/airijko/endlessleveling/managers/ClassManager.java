@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 public class ClassManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final int BUILTIN_CLASSES_VERSION = 3;
+    private static final int BUILTIN_CLASSES_VERSION = 4;
     private static final String CLASSES_VERSION_FILE = "classes.version";
 
     private final PluginFilesManager filesManager;

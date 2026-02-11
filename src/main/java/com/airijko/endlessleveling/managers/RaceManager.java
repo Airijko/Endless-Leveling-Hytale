@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 public class RaceManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final int BUILTIN_RACES_VERSION = 3;
+    private static final int BUILTIN_RACES_VERSION = 4;
     private static final String RACES_VERSION_FILE = "races.version";
 
     private final PluginFilesManager filesManager;
