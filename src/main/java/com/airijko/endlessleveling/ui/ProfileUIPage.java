@@ -23,6 +23,7 @@ import com.airijko.endlessleveling.passives.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.races.RaceDefinition;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
+import com.airijko.endlessleveling.systems.PlayerRaceStatSystem;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -49,6 +50,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private final SkillManager skillManager;
     private final PlayerAttributeManager attributeManager;
     private final ArchetypePassiveManager archetypePassiveManager;
+    private final PlayerRaceStatSystem playerRaceStatSystem;
     private Integer pendingDeleteSlot;
 
     public ProfileUIPage(@Nonnull com.hypixel.hytale.server.core.universe.PlayerRef playerRef,
@@ -61,6 +63,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         this.skillManager = plugin != null ? plugin.getSkillManager() : null;
         this.attributeManager = plugin != null ? plugin.getPlayerAttributeManager() : null;
         this.archetypePassiveManager = plugin != null ? plugin.getArchetypePassiveManager() : null;
+        this.playerRaceStatSystem = plugin != null ? plugin.getPlayerRaceStatSystem() : null;
         this.pendingDeleteSlot = null;
     }
 
@@ -756,7 +759,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             return;
         }
 
-        ProfileActionOutcome outcome = handleProfileAction(data.action, playerData);
+        ProfileActionOutcome outcome = handleProfileAction(ref, store, data.action, playerData);
         if (outcome.requiresSave() && playerDataManager != null) {
             playerDataManager.save(playerData);
         }
@@ -765,16 +768,18 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         }
     }
 
-    private ProfileActionOutcome handleProfileAction(@Nonnull String action,
+    private ProfileActionOutcome handleProfileAction(@Nonnull Ref<EntityStore> ref,
+            @Nonnull Store<EntityStore> store,
+            @Nonnull String action,
             @Nonnull PlayerData playerData) {
         String payload = action.substring("profile:".length());
 
         try {
             if ("new".equalsIgnoreCase(payload)) {
-                return handleNewProfile(playerData);
+                return handleNewProfile(ref, store, playerData);
             }
             if (payload.startsWith("select:")) {
-                return handleSelectProfile(playerData, payload);
+                return handleSelectProfile(ref, store, playerData, payload);
             }
             if (payload.startsWith("delete-prompt:")) {
                 return handleDeletePrompt(playerData, payload);
@@ -793,7 +798,9 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return new ProfileActionOutcome(false, false);
     }
 
-    private ProfileActionOutcome handleNewProfile(@Nonnull PlayerData playerData) {
+    private ProfileActionOutcome handleNewProfile(@Nonnull Ref<EntityStore> ref,
+            @Nonnull Store<EntityStore> store,
+            @Nonnull PlayerData playerData) {
         if (playerData.getProfileCount() >= PlayerData.MAX_PROFILES) {
             playerRef.sendMessage(Message.raw("All profile slots are already in use. Delete one first.")
                     .color("#ff9900"));
@@ -815,10 +822,14 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         playerRef.sendMessage(Message.raw("Created and activated profile slot " + nextSlot + ".")
                 .color("#4fd7f7"));
         PlayerHud.refreshHud(playerData.getUuid());
+        reapplyProfileModifiers(ref, store, playerData);
         return new ProfileActionOutcome(true, true);
     }
 
-    private ProfileActionOutcome handleSelectProfile(@Nonnull PlayerData playerData, @Nonnull String payload) {
+    private ProfileActionOutcome handleSelectProfile(@Nonnull Ref<EntityStore> ref,
+            @Nonnull Store<EntityStore> store,
+            @Nonnull PlayerData playerData,
+            @Nonnull String payload) {
         int slot = parseSlot(payload, "select:");
         if (!PlayerData.isValidProfileIndex(slot)) {
             playerRef.sendMessage(Message.raw("Profile slot must be between 1 and " + PlayerData.MAX_PROFILES + ".")
@@ -843,11 +854,24 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     "Switched to profile slot " + slot + " (" + playerData.getProfileName(slot) + ").")
                     .color("#00ff00"));
             PlayerHud.refreshHud(playerData.getUuid());
+            reapplyProfileModifiers(ref, store, playerData);
             return new ProfileActionOutcome(true, true);
         }
 
         playerRef.sendMessage(Message.raw("Unable to switch to that slot right now.").color("#ff0000"));
         return new ProfileActionOutcome(false, false);
+    }
+
+    private void reapplyProfileModifiers(@Nonnull Ref<EntityStore> ref,
+            @Nonnull Store<EntityStore> store,
+            @Nonnull PlayerData playerData) {
+        if (skillManager == null) {
+            return;
+        }
+        boolean applied = skillManager.applyAllSkillModifiers(ref, store, playerData);
+        if (!applied && playerRaceStatSystem != null) {
+            playerRaceStatSystem.scheduleRetry(playerData.getUuid());
+        }
     }
 
     private ProfileActionOutcome handleDeletePrompt(@Nonnull PlayerData playerData,

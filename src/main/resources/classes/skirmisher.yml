@@ -14,9 +14,9 @@ weapons:
 
 passives:
   - type: SWIFTNESS
-    value: 0.15
-    duration: 8
-    max_stacks: 5
+    value: 0.075
+    duration: 5
+    max_stacks: 8
   - type: BERZERKER
     value: 0.35
     threshold: 0.3

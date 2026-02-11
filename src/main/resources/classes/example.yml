@@ -60,9 +60,9 @@ passives:
     threshold: 0.2 # Only applies to targets already below 20% HP
     cooldown: 45 # Seconds between executioner procs
   - type: SWIFTNESS
-    value: 0.2 # Passive +20% movement speed applied after haste
+    value: 0.1 # Passive +10% movement speed applied after haste
     duration: 8 # Seconds after killing a target to maintain swiftness bonus
-    max_stacks: 5 # Can stack up to 5 times after killing a target for a total of +100% movement speed
+    max_stacks: 8 # Can stack up to 8 times after killing a target for a total of +80% movement speed
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: life_force
     value: 2.0

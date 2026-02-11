@@ -17,9 +17,9 @@ passives:
     value: 2.5
     cooldown: 15
   - type: SWIFTNESS
-    value: 0.15
-    duration: 8
-    max_stacks: 5
+    value: 0.075
+    duration: 5
+    max_stacks: 8
   - type: SPECIAL_CHARGE_BONUS
     value: 0.25
   - type: INNATE_ATTRIBUTE_GAIN
