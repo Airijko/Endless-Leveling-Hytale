@@ -48,6 +48,10 @@ public class PlayerHud extends CustomUIHud {
             return; // HUD has not finished building, so skip pushing state to avoid missing element
                     // errors.
         }
+        PlayerData data = getPlayerData();
+        if (data == null || !data.isPlayerHudEnabled()) {
+            return; // Do not push updates when the HUD is disabled or data is unavailable.
+        }
         uiCommandBuilder.set("#Level.Text", resolveHudLabel());
         double progress = resolveXpProgress();
         uiCommandBuilder.set("#ProgressBar.Value", progress);
@@ -125,9 +129,16 @@ public class PlayerHud extends CustomUIHud {
         }
 
         PlayerHud hud = ACTIVE_HUDS.get(uuid);
-        if (hud != null) {
-            hud.refreshHud();
+        if (hud == null || !hud.built.get()) {
+            return;
         }
+
+        PlayerData data = hud.getPlayerData();
+        if (data == null || !data.isPlayerHudEnabled()) {
+            return;
+        }
+
+        hud.refreshHud();
     }
 
     public static void unregister(UUID uuid) {

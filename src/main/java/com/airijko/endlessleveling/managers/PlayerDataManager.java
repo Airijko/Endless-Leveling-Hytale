@@ -78,10 +78,19 @@ public class PlayerDataManager {
 
             File file = filesManager.getPlayerDataFile(uuid);
             PlayerData data;
+            boolean safeToSave = true; // avoid overwriting if load failed
 
             if (file.exists()) {
                 data = loadFromFile(uuid, playerName, file);
-                LOGGER.atInfo().log("PlayerData for UUID %s loaded from file.", uuid);
+                if (data == null) {
+                    safeToSave = false;
+                    data = new PlayerData(uuid, playerName, getStartingSkillPoints());
+                    LOGGER.atSevere().log(
+                            "PlayerData for UUID %s could not be parsed; using in-memory fallback and will NOT overwrite %s. Please fix the YAML or restore a backup.",
+                            uuid, file.getName());
+                } else {
+                    LOGGER.atInfo().log("PlayerData for UUID %s loaded from file.", uuid);
+                }
             } else {
                 data = new PlayerData(uuid, playerName, getStartingSkillPoints());
                 LOGGER.atInfo().log("PlayerData for UUID %s created new.", uuid);
@@ -92,8 +101,13 @@ public class PlayerDataManager {
 
             // Cache and save
             playerCache.put(uuid, data);
-            save(data);
-            LOGGER.atInfo().log("PlayerData for UUID %s cached and saved.", uuid);
+            if (safeToSave) {
+                save(data);
+                LOGGER.atInfo().log("PlayerData for UUID %s cached and saved.", uuid);
+            } else {
+                LOGGER.atWarning().log("PlayerData for UUID %s cached only; not saved to avoid overwriting original.",
+                        uuid);
+            }
 
             return data;
         } finally {
@@ -162,21 +176,41 @@ public class PlayerDataManager {
             LOGGER.atSevere().log("Failed to load PlayerData for UUID %s from %s: %s", uuid,
                     file.getName(), e.getMessage());
             e.printStackTrace();
-            backupCorruptFile(file, "parse-error");
-            return new PlayerData(uuid, playerName, getStartingSkillPoints());
+            var backupPath = backupCorruptFile(file, "parse-error");
+            if (backupPath != null) {
+                LOGGER.atWarning().log("Backed up unreadable playerdata to %s; original left untouched.",
+                        backupPath.toString());
+            }
+            return null; // signal caller to avoid overwriting
         }
 
         if (map == null) {
-            LOGGER.atWarning().log("PlayerData file %s for UUID %s is empty; creating new data.", file.getName(),
+            LOGGER.atWarning().log("PlayerData file %s for UUID %s is empty; skipping load.", file.getName(),
                     uuid);
-            backupCorruptFile(file, "empty-file");
-            return new PlayerData(uuid, playerName, getStartingSkillPoints());
+            var backupPath = backupCorruptFile(file, "empty-file");
+            if (backupPath != null) {
+                LOGGER.atWarning().log("Backed up empty playerdata to %s; original left untouched.",
+                        backupPath.toString());
+            }
+            return null;
         }
 
-        // Close reader before attempting backup/copy on Windows.
-        // Migrate file if it's an older schema version. This will create
-        // a backup of the original file and write a migrated file in-place.
-        map = PlayerDataMigration.migrateIfNeeded(file, map, yaml, CURRENT_PLAYERDATA_VERSION);
+        try {
+            // Migrate file if it's an older schema version. This will create
+            // a backup of the original file and write a migrated file in-place.
+            map = PlayerDataMigration.migrateIfNeeded(file, map, yaml, CURRENT_PLAYERDATA_VERSION);
+        } catch (Exception e) {
+            LOGGER.atSevere().log("Failed to migrate PlayerData for UUID %s from %s: %s", uuid,
+                    file.getName(), e.getMessage());
+            e.printStackTrace();
+            var backupPath = backupCorruptFile(file, "migration-error");
+            if (backupPath != null) {
+                LOGGER.atWarning().log(
+                        "Backed up playerdata prior to migration failure at %s; original left untouched.",
+                        backupPath.toString());
+            }
+            return null;
+        }
 
         PlayerData data = new PlayerData(uuid, playerName, getStartingSkillPoints());
 
@@ -703,9 +737,9 @@ public class PlayerDataManager {
         }
     }
 
-    private void backupCorruptFile(File file, String reason) {
+    private Path backupCorruptFile(File file, String reason) {
         if (file == null || !file.exists()) {
-            return;
+            return null;
         }
         try {
             Path source = file.toPath();
@@ -713,9 +747,11 @@ public class PlayerDataManager {
             Path backup = source.resolveSibling(source.getFileName().toString() + suffix);
             Files.copy(source, backup, StandardCopyOption.REPLACE_EXISTING);
             LOGGER.atWarning().log("Backed up potentially corrupt playerdata %s to %s (%s)", source, backup, reason);
+            return backup;
         } catch (Exception e) {
             LOGGER.atWarning().log("Failed to back up corrupt playerdata %s (%s): %s", file.getName(), reason,
                     e.getMessage());
+            return null;
         }
     }
 
