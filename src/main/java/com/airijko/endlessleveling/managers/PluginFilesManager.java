@@ -53,8 +53,8 @@ public class PluginFilesManager {
         this.levelingFile = initYamlFile("leveling.yml");
         this.partyDataFile = initPartyDataFile();
 
-        exportResourceDirectory("races", racesFolder);
-        exportResourceDirectory("classes", classesFolder);
+        exportResourceDirectory("races", racesFolder, false);
+        exportResourceDirectory("classes", classesFolder, false);
     }
 
     /** Create the plugin folder and player data folder */
@@ -109,7 +109,7 @@ public class PluginFilesManager {
         return partyDataFile;
     }
 
-    private void exportResourceDirectory(String resourceRoot, File destination) {
+    public void exportResourceDirectory(String resourceRoot, File destination, boolean overwriteExisting) {
         try {
             Files.createDirectories(destination.toPath());
             CodeSource codeSource = plugin.getClass().getProtectionDomain().getCodeSource();
@@ -126,7 +126,7 @@ public class PluginFilesManager {
                             sourcePath);
                     return;
                 }
-                copyDirectory(resourcePath, destination.toPath());
+                copyDirectory(resourcePath, destination.toPath(), overwriteExisting);
                 return;
             }
 
@@ -146,7 +146,7 @@ public class PluginFilesManager {
 
                         Path relativePath = Paths.get(name.substring(prefix.length()));
                         Path targetPath = destination.toPath().resolve(relativePath.toString());
-                        if (Files.exists(targetPath)) {
+                        if (!overwriteExisting && Files.exists(targetPath)) {
                             continue;
                         }
 
@@ -155,7 +155,11 @@ public class PluginFilesManager {
                             Files.createDirectories(parent);
                         }
 
-                        Files.copy(jarStream, targetPath);
+                        if (overwriteExisting) {
+                            Files.copy(jarStream, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        } else {
+                            Files.copy(jarStream, targetPath);
+                        }
                     } finally {
                         jarStream.closeEntry();
                     }
@@ -166,20 +170,20 @@ public class PluginFilesManager {
         }
     }
 
-    private void copyDirectory(Path source, Path destination) throws IOException {
+    private void copyDirectory(Path source, Path destination, boolean overwriteExisting) throws IOException {
         if (!Files.exists(source)) {
             LOGGER.atWarning().log("Source directory %s does not exist when exporting resources.", source);
             return;
         }
         try (Stream<Path> stream = Files.walk(source)) {
-            stream.filter(Files::isRegularFile).forEach(path -> copyFile(path, source, destination));
+            stream.filter(Files::isRegularFile).forEach(path -> copyFile(path, source, destination, overwriteExisting));
         }
     }
 
-    private void copyFile(Path file, Path sourceRoot, Path destinationRoot) {
+    private void copyFile(Path file, Path sourceRoot, Path destinationRoot, boolean overwriteExisting) {
         Path relative = sourceRoot.relativize(file);
         Path target = destinationRoot.resolve(relative.toString());
-        if (Files.exists(target)) {
+        if (!overwriteExisting && Files.exists(target)) {
             return;
         }
         try {
@@ -187,7 +191,11 @@ public class PluginFilesManager {
             if (parent != null) {
                 Files.createDirectories(parent);
             }
-            Files.copy(file, target);
+            if (overwriteExisting) {
+                Files.copy(file, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            } else {
+                Files.copy(file, target);
+            }
         } catch (IOException e) {
             LOGGER.atWarning().log("Failed to copy resource %s: %s", relative, e.getMessage());
         }

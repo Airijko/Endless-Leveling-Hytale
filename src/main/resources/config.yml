@@ -93,6 +93,9 @@ default_primary_class: "Adventurer" # Class assigned to new players
 default_secondary_class: "" # Optional secondary class; leave blank for none
 choose_class_cooldown: 1800 # Cooldown (seconds) before changing class again
 
+# IF YOU WANT TO CREATE CUSTOM CLASSES, SET THIS TO FALSE AND ADD YOUR CLASS FILES TO src/main/resources/classes/
+force_builtin_classes: true # If true, ignore custom class files and keep bundled classes in sync with updates
+
 # ------------------------------------------------------------
 # UI SETTINGS
 # ------------------------------------------------------------
@@ -105,4 +108,4 @@ enable_logging: false # Enable detailed logging output
 # INTERNAL CONFIG VERSION
 # DO NOT MODIFY
 # ------------------------------------------------------------
-config_version: 6
+config_version: 7

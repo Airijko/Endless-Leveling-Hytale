@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -37,9 +38,12 @@ import java.util.stream.Stream;
 public class ClassManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+    private static final int BUILTIN_CLASSES_VERSION = 2;
+    private static final String CLASSES_VERSION_FILE = "classes.version";
 
     private final PluginFilesManager filesManager;
     private final boolean classesEnabled;
+    private final boolean forceBuiltinClasses;
     private final Map<String, CharacterClassDefinition> classesByKey = new HashMap<>();
     private final Yaml yaml = new Yaml();
 
@@ -53,6 +57,8 @@ public class ClassManager {
         Objects.requireNonNull(configManager, "ConfigManager is required");
         this.filesManager = Objects.requireNonNull(filesManager, "PluginFilesManager is required");
         this.classesEnabled = parseBoolean(configManager.get("enable_classes", Boolean.TRUE, false), true);
+        this.forceBuiltinClasses = parseBoolean(configManager.get("force_builtin_classes", Boolean.FALSE, false),
+                false);
 
         Object primaryConfig = configManager.get("default_primary_class", PlayerData.DEFAULT_PRIMARY_CLASS_ID, false);
         String configuredPrimary = safeString(primaryConfig);
@@ -71,6 +77,7 @@ public class ClassManager {
             return;
         }
 
+        syncBuiltinClassesIfNeeded();
         loadClasses();
     }
 
@@ -307,6 +314,70 @@ public class ClassManager {
         }
 
         LOGGER.atInfo().log("Loaded %d class definition(s).", classesByKey.size());
+    }
+
+    private void syncBuiltinClassesIfNeeded() {
+        if (!forceBuiltinClasses) {
+            return;
+        }
+        File classesFolder = filesManager.getClassesFolder();
+        if (classesFolder == null) {
+            LOGGER.atWarning().log("Classes folder is null; cannot sync built-in classes.");
+            return;
+        }
+
+        int storedVersion = readClassesVersion(classesFolder);
+        if (storedVersion == BUILTIN_CLASSES_VERSION) {
+            return; // up to date
+        }
+
+        clearDirectory(classesFolder.toPath());
+        filesManager.exportResourceDirectory("classes", classesFolder, true);
+        writeClassesVersion(classesFolder, BUILTIN_CLASSES_VERSION);
+        LOGGER.atInfo().log("Synced built-in classes to version %d (force_builtin_classes=true)",
+                BUILTIN_CLASSES_VERSION);
+    }
+
+    private int readClassesVersion(File classesFolder) {
+        Path versionPath = classesFolder.toPath().resolve(CLASSES_VERSION_FILE);
+        if (!Files.exists(versionPath)) {
+            return -1;
+        }
+        try {
+            String text = Files.readString(versionPath).trim();
+            return Integer.parseInt(text);
+        } catch (Exception e) {
+            LOGGER.atWarning().log("Failed to read classes version file: %s", e.getMessage());
+            return -1;
+        }
+    }
+
+    private void writeClassesVersion(File classesFolder, int version) {
+        Path versionPath = classesFolder.toPath().resolve(CLASSES_VERSION_FILE);
+        try {
+            Files.writeString(versionPath, Integer.toString(version));
+        } catch (IOException e) {
+            LOGGER.atWarning().log("Failed to write classes version file: %s", e.getMessage());
+        }
+    }
+
+    private void clearDirectory(Path root) {
+        if (root == null || !Files.exists(root)) {
+            return;
+        }
+        try (Stream<Path> stream = Files.walk(root)) {
+            stream.sorted(Comparator.reverseOrder())
+                    .filter(path -> !path.equals(root))
+                    .forEach(path -> {
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            LOGGER.atWarning().log("Failed to delete %s: %s", path, e.getMessage());
+                        }
+                    });
+        } catch (IOException e) {
+            LOGGER.atWarning().log("Failed to clear classes directory: %s", e.getMessage());
+        }
     }
 
     private void loadClassFromFile(Path path) {
