@@ -11,15 +11,22 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class PlayerDataManager {
 
@@ -30,7 +37,8 @@ public class PlayerDataManager {
     private final RaceManager raceManager;
     private final ClassManager classManager;
     private final Yaml yaml;
-    private final Map<UUID, PlayerData> playerCache = new HashMap<>();
+    private final ConcurrentHashMap<UUID, PlayerData> playerCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, ReentrantLock> playerLocks = new ConcurrentHashMap<>();
 
     // Current schema version for player data files. Increment when adding new
     // fields that require migration. Use this to detect/outdate/migrate files.
@@ -60,43 +68,55 @@ public class PlayerDataManager {
 
     // --- Load or create a player ---
     public PlayerData loadOrCreate(UUID uuid, String playerName) {
-        if (playerCache.containsKey(uuid)) {
-            return playerCache.get(uuid);
+        ReentrantLock lock = lockFor(uuid);
+        lock.lock();
+        try {
+            PlayerData cached = playerCache.get(uuid);
+            if (cached != null) {
+                return cached;
+            }
+
+            File file = filesManager.getPlayerDataFile(uuid);
+            PlayerData data;
+
+            if (file.exists()) {
+                data = loadFromFile(uuid, playerName, file);
+                LOGGER.atInfo().log("PlayerData for UUID %s loaded from file.", uuid);
+            } else {
+                data = new PlayerData(uuid, playerName, getStartingSkillPoints());
+                LOGGER.atInfo().log("PlayerData for UUID %s created new.", uuid);
+            }
+
+            ensureValidRace(data);
+            ensureValidClasses(data);
+
+            // Cache and save
+            playerCache.put(uuid, data);
+            save(data);
+            LOGGER.atInfo().log("PlayerData for UUID %s cached and saved.", uuid);
+
+            return data;
+        } finally {
+            lock.unlock();
         }
-
-        File file = filesManager.getPlayerDataFile(uuid);
-        PlayerData data;
-
-        if (file.exists()) {
-            data = loadFromFile(uuid, playerName, file);
-            LOGGER.atInfo().log("PlayerData for UUID %s loaded from file.", uuid);
-        } else {
-            data = new PlayerData(uuid, playerName, getStartingSkillPoints());
-            LOGGER.atInfo().log("PlayerData for UUID %s created new.", uuid);
-        }
-
-        ensureValidRace(data);
-        ensureValidClasses(data);
-        ensureValidClasses(data);
-
-        // Cache and save
-        playerCache.put(uuid, data);
-        save(data);
-        LOGGER.atInfo().log("PlayerData for UUID %s cached and saved.", uuid);
-
-        return data;
     }
 
     // --- Get player from cache ---
     public PlayerData get(UUID uuid) {
-        PlayerData data = playerCache.get(uuid);
-        return data;
+        return playerCache.get(uuid);
     }
 
     // --- Remove player from cache ---
     public void remove(UUID uuid) {
-        playerCache.remove(uuid);
-        LOGGER.atInfo().log("PlayerData for UUID %s removed from cache.", uuid);
+        ReentrantLock lock = lockFor(uuid);
+        lock.lock();
+        try {
+            playerCache.remove(uuid);
+            playerLocks.remove(uuid);
+            LOGGER.atInfo().log("PlayerData for UUID %s removed from cache.", uuid);
+        } finally {
+            lock.unlock();
+        }
     }
 
     // --- Save a player ---
@@ -104,95 +124,102 @@ public class PlayerDataManager {
         if (data == null) {
             return;
         }
-        ensureValidRace(data);
-        ensureValidClasses(data);
-        File file = filesManager.getPlayerDataFile(data.getUuid());
+        ReentrantLock lock = lockFor(data.getUuid());
+        lock.lock();
+        try {
+            ensureValidRace(data);
+            ensureValidClasses(data);
+            File file = filesManager.getPlayerDataFile(data.getUuid());
 
-        Map<String, Object> map = new LinkedHashMap<>();
-        // write current version into the file so future loads can detect schema
-        // and migrate if needed
-        map.put("version", CURRENT_PLAYERDATA_VERSION);
-        map.put("playerName", data.getPlayerName());
-        map.put("activeProfile", data.getActiveProfileIndex());
+            Map<String, Object> map = new LinkedHashMap<>();
+            // write current version into the file so future loads can detect schema
+            // and migrate if needed
+            map.put("version", CURRENT_PLAYERDATA_VERSION);
+            map.put("playerName", data.getPlayerName());
+            map.put("activeProfile", data.getActiveProfileIndex());
 
-        Map<String, Object> options = new LinkedHashMap<>();
-        options.put("playerHud", data.isPlayerHudEnabled());
-        options.put("criticalNotif", data.isCriticalNotifEnabled());
-        options.put("xpNotif", data.isXpNotifEnabled());
-        options.put("passiveLevelUpNotif", data.isPassiveLevelUpNotifEnabled());
-        options.put("luckDoubleDropsNotif", data.isLuckDoubleDropsNotifEnabled());
-        options.put("healthRegenNotif", data.isHealthRegenNotifEnabled());
-        map.put("options", options);
+            Map<String, Object> options = new LinkedHashMap<>();
+            options.put("playerHud", data.isPlayerHudEnabled());
+            options.put("criticalNotif", data.isCriticalNotifEnabled());
+            options.put("xpNotif", data.isXpNotifEnabled());
+            options.put("passiveLevelUpNotif", data.isPassiveLevelUpNotifEnabled());
+            options.put("luckDoubleDropsNotif", data.isLuckDoubleDropsNotifEnabled());
+            options.put("healthRegenNotif", data.isHealthRegenNotifEnabled());
+            map.put("options", options);
 
-        Map<String, Object> profilesSection = new LinkedHashMap<>();
-        data.getProfiles().entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .forEach(entry -> {
-                    int index = entry.getKey();
-                    PlayerProfile profile = entry.getValue();
-                    if (profile == null) {
-                        return;
-                    }
+            Map<String, Object> profilesSection = new LinkedHashMap<>();
+            data.getProfiles().entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry -> {
+                        int index = entry.getKey();
+                        PlayerProfile profile = entry.getValue();
+                        if (profile == null) {
+                            return;
+                        }
 
-                    Map<String, Object> profileMap = new LinkedHashMap<>();
-                    profileMap.put("xp", profile.getXp());
-                    profileMap.put("level", profile.getLevel());
-                    profileMap.put("skillPoints", profile.getSkillPoints());
-                    profileMap.put("name", profile.getName());
+                        Map<String, Object> profileMap = new LinkedHashMap<>();
+                        profileMap.put("xp", profile.getXp());
+                        profileMap.put("level", profile.getLevel());
+                        profileMap.put("skillPoints", profile.getSkillPoints());
+                        profileMap.put("name", profile.getName());
 
-                    Map<String, Integer> profileAttrs = new LinkedHashMap<>();
-                    for (SkillAttributeType type : SkillAttributeType.values()) {
-                        profileAttrs.put(type.name(),
-                                profile.getAttributes().getOrDefault(type, 0));
-                    }
-                    profileMap.put("attributes", profileAttrs);
+                        Map<String, Integer> profileAttrs = new LinkedHashMap<>();
+                        for (SkillAttributeType type : SkillAttributeType.values()) {
+                            profileAttrs.put(type.name(),
+                                    profile.getAttributes().getOrDefault(type, 0));
+                        }
+                        profileMap.put("attributes", profileAttrs);
 
-                    Map<String, Object> raceSection = new LinkedHashMap<>();
-                    String raceId = profile.getRaceId();
-                    raceSection.put("id", raceId);
-                    String raceDisplay = resolveRaceDisplayName(raceId);
-                    if (raceDisplay != null && !raceDisplay.equalsIgnoreCase(raceId)) {
-                        raceSection.put("name", raceDisplay);
-                    }
-                    raceSection.put("lastChangedEpochSeconds", profile.getLastRaceChangeEpochSeconds());
-                    profileMap.put("race", raceSection);
+                        Map<String, Object> raceSection = new LinkedHashMap<>();
+                        String raceId = profile.getRaceId();
+                        raceSection.put("id", raceId);
+                        String raceDisplay = resolveRaceDisplayName(raceId);
+                        if (raceDisplay != null && !raceDisplay.equalsIgnoreCase(raceId)) {
+                            raceSection.put("name", raceDisplay);
+                        }
+                        raceSection.put("lastChangedEpochSeconds", profile.getLastRaceChangeEpochSeconds());
+                        profileMap.put("race", raceSection);
 
-                    Map<String, Object> classesSection = new LinkedHashMap<>();
-                    classesSection.put("primary", profile.getPrimaryClassId());
-                    if (profile.getSecondaryClassId() != null) {
-                        classesSection.put("secondary", profile.getSecondaryClassId());
-                    }
-                    long primaryChanged = profile.getLastPrimaryClassChangeEpochSeconds();
-                    long secondaryChanged = profile.getLastSecondaryClassChangeEpochSeconds();
-                    classesSection.put("primaryLastChangedEpochSeconds", primaryChanged);
-                    classesSection.put("secondaryLastChangedEpochSeconds", secondaryChanged);
-                    classesSection.put("lastChangedEpochSeconds", Math.max(primaryChanged, secondaryChanged));
-                    profileMap.put("classes", classesSection);
+                        Map<String, Object> classesSection = new LinkedHashMap<>();
+                        classesSection.put("primary", profile.getPrimaryClassId());
+                        if (profile.getSecondaryClassId() != null) {
+                            classesSection.put("secondary", profile.getSecondaryClassId());
+                        }
+                        long primaryChanged = profile.getLastPrimaryClassChangeEpochSeconds();
+                        long secondaryChanged = profile.getLastSecondaryClassChangeEpochSeconds();
+                        classesSection.put("primaryLastChangedEpochSeconds", primaryChanged);
+                        classesSection.put("secondaryLastChangedEpochSeconds", secondaryChanged);
+                        classesSection.put("lastChangedEpochSeconds", Math.max(primaryChanged, secondaryChanged));
+                        profileMap.put("classes", classesSection);
 
-                    Map<String, Integer> profilePassives = new LinkedHashMap<>();
-                    for (PassiveType type : PassiveType.values()) {
-                        profilePassives.put(type.name(), profile.getPassiveLevel(type));
-                    }
-                    profileMap.put("passives", profilePassives);
+                        Map<String, Integer> profilePassives = new LinkedHashMap<>();
+                        for (PassiveType type : PassiveType.values()) {
+                            profilePassives.put(type.name(), profile.getPassiveLevel(type));
+                        }
+                        profileMap.put("passives", profilePassives);
 
-                    profilesSection.put(String.valueOf(index), profileMap);
-                });
+                        profilesSection.put(String.valueOf(index), profileMap);
+                    });
 
-        map.put("profiles", profilesSection);
+            map.put("profiles", profilesSection);
 
-        try (StringWriter buffer = new StringWriter(); FileWriter writer = new FileWriter(file)) {
-            yaml.dump(map, buffer);
-            String yamlContent = buffer.toString()
-                    .replace("\nattributes:", "\n\nattributes:")
-                    .replace("\noptions:", "\n\noptions:")
-                    .replace("\nprofiles:", "\n\nprofiles:")
-                    .replace("\nrace:", "\n\nrace:")
-                    .replace("\npassives:", "\n\npassives:");
-            writer.write(yamlContent);
-            LOGGER.atFine().log("PlayerData for UUID %s saved to file.", data.getUuid());
-        } catch (IOException e) {
-            LOGGER.atSevere().log("Failed to save PlayerData for UUID %s: %s", data.getUuid(), e.getMessage());
-            e.printStackTrace();
+            try (StringWriter buffer = new StringWriter()) {
+                yaml.dump(map, buffer);
+                String yamlContent = buffer.toString()
+                        .replace("\nattributes:", "\n\nattributes:")
+                        .replace("\noptions:", "\n\noptions:")
+                        .replace("\nprofiles:", "\n\nprofiles:")
+                        .replace("\nrace:", "\n\nrace:")
+                        .replace("\npassives:", "\n\npassives:");
+
+                writeAtomically(file.toPath(), yamlContent);
+                LOGGER.atFine().log("PlayerData for UUID %s saved to file.", data.getUuid());
+            } catch (IOException e) {
+                LOGGER.atSevere().log("Failed to save PlayerData for UUID %s: %s", data.getUuid(), e.getMessage());
+                e.printStackTrace();
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -205,12 +232,14 @@ public class PlayerDataManager {
             LOGGER.atSevere().log("Failed to load PlayerData for UUID %s from %s: %s", uuid,
                     file.getName(), e.getMessage());
             e.printStackTrace();
+            backupCorruptFile(file, "parse-error");
             return new PlayerData(uuid, playerName, getStartingSkillPoints());
         }
 
         if (map == null) {
             LOGGER.atWarning().log("PlayerData file %s for UUID %s is empty; creating new data.", file.getName(),
                     uuid);
+            backupCorruptFile(file, "empty-file");
             return new PlayerData(uuid, playerName, getStartingSkillPoints());
         }
 
@@ -676,6 +705,43 @@ public class PlayerDataManager {
 
     private int getStartingSkillPoints() {
         return skillManager != null ? skillManager.getBaseSkillPoints() : 0;
+    }
+
+    private ReentrantLock lockFor(UUID uuid) {
+        return playerLocks.computeIfAbsent(uuid, key -> new ReentrantLock());
+    }
+
+    private void writeAtomically(Path target, String content) throws IOException {
+        Path temp = target.resolveSibling(target.getFileName() + ".tmp");
+
+        try (OutputStream out = Files.newOutputStream(temp, StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+                OutputStreamWriter writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
+            writer.write(content);
+            writer.flush();
+        }
+
+        try {
+            Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException ex) {
+            Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private void backupCorruptFile(File file, String reason) {
+        if (file == null || !file.exists()) {
+            return;
+        }
+        try {
+            Path source = file.toPath();
+            String suffix = ".corrupt-" + System.currentTimeMillis();
+            Path backup = source.resolveSibling(source.getFileName().toString() + suffix);
+            Files.copy(source, backup, StandardCopyOption.REPLACE_EXISTING);
+            LOGGER.atWarning().log("Backed up potentially corrupt playerdata %s to %s (%s)", source, backup, reason);
+        } catch (Exception e) {
+            LOGGER.atWarning().log("Failed to back up corrupt playerdata %s (%s): %s", file.getName(), reason,
+                    e.getMessage());
+        }
     }
 
 }
