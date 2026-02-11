@@ -143,6 +143,21 @@ $C.@PageOverlay {
                             Style: @CustomStyle;
                         }
                     }
+
+                    Group #RaceModelRow {
+                        LayoutMode: Left;
+                        Padding: (Vertical: 8);
+
+                        Label #RaceModelLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "Race Model Visuals"; }
+                        Label #RaceModelValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+
+                        $C.@TextButton #RaceModelToggle {
+                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
+                            Padding: (Horizontal: @ButtonPadding);
+                            Text: "Toggle";
+                            Style: @CustomStyle;
+                        }
+                    }
                 }
             }
         }

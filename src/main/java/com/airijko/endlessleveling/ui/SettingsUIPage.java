@@ -53,6 +53,7 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         events.addEventBinding(Activating, "#LuckDoubleDropsNotifToggle", of("Action", "toggle:luckDoubleDropsNotif"),
                 false);
         events.addEventBinding(Activating, "#HealthRegenNotifToggle", of("Action", "toggle:healthRegenNotif"), false);
+        events.addEventBinding(Activating, "#RaceModelToggle", of("Action", "toggle:raceModel"), false);
 
         // Populate current values from PlayerData
         PlayerRef player = Universe.get().getPlayer(playerRef.getUuid());
@@ -85,6 +86,9 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         ui.set("#HealthRegenNotifLabel.Text", "Health Regen Notifications");
         ui.set("#HealthRegenNotifValue.Text", data.isHealthRegenNotifEnabled() ? "ON" : "OFF");
+
+        ui.set("#RaceModelLabel.Text", "Race Model Visuals");
+        ui.set("#RaceModelValue.Text", data.isUseRaceModel() ? "ON" : "OFF");
     }
 
     @Override
@@ -119,6 +123,7 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             LOGGER.atWarning().log("SettingsUIPage: PlayerData is null for %s", playerRef.getUuid());
             return;
         }
+        var raceManager = EndlessLeveling.getInstance().getRaceManager();
 
         boolean changed = false;
         if ("toggle:playerHud".equalsIgnoreCase(action)) {
@@ -168,6 +173,23 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             player.sendMessage(Message
                     .raw("Health regen notifications " + (newValue ? "enabled" : "disabled"))
                     .color("#ffc300"));
+        } else if ("toggle:raceModel".equalsIgnoreCase(action)) {
+            boolean newValue = !playerData.isUseRaceModel();
+            playerData.setUseRaceModel(newValue);
+            changed = true;
+            if (newValue) {
+                if (raceManager != null) {
+                    raceManager.applyRaceModelIfEnabled(playerData);
+                }
+                player.sendMessage(Message
+                        .raw("Race model visuals enabled").color("#4fd7f7"));
+            } else {
+                if (raceManager != null) {
+                    raceManager.resetRaceModelIfOnline(playerData);
+                }
+                player.sendMessage(Message
+                        .raw("Race model visuals disabled").color("#ff9900"));
+            }
         }
 
         if (changed) {

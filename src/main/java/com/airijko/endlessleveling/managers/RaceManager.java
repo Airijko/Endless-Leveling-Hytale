@@ -170,6 +170,20 @@ public class RaceManager {
         return Collections.unmodifiableCollection(racesByKey.values());
     }
 
+    /**
+     * Resets the player's model to default if they are online.
+     */
+    public void resetRaceModelIfOnline(PlayerData data) {
+        if (data == null) {
+            return;
+        }
+        PlayerRef playerRef = Universe.get().getPlayer(data.getUuid());
+        if (playerRef == null) {
+            return;
+        }
+        resetPlayerModel(playerRef);
+    }
+
     public RaceDefinition findRaceByUserInput(String userInput) {
         if (!isEnabled() || userInput == null) {
             return null;
