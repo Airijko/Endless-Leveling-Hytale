@@ -1,0 +1,25 @@
+class_name: "Arcanist"
+description: "A master of pure arcane energy who amplifies spell power through disciplined mana control."
+role: "Mage"
+enabled: true
+icon: "Prototype_Tool_Book_Arcane"
+
+weapons:
+  - type: STAFF
+    damage: 1.35
+  - type: DAGGER
+    damage: 1.05
+
+passives:
+  - type: MANA_REGEN
+    value: 0.03
+  - type: EXECUTIONER
+    value: 5.00 # +500%damage to targets below the threshold
+    threshold: 0.2 # Only applies to targets already below 20% HP
+    cooldown: 45 # Seconds between executioner procs
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: intelligence
+    value: 0.4
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: sorcery
+    value: 1.40

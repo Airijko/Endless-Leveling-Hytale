@@ -1,0 +1,30 @@
+class_name: "BattleMage"
+description: "A relentless arcane warrior who draws devastating power from the brink of death, blending melee combat with volatile sorcery."
+role: "Mage"
+enabled: true
+icon: "Prototype_Tool_Book_Fire"
+
+weapons:
+  - type: STAFF
+    damage: 1.25
+  - type: SWORD
+    damage: 1.15
+  - type: DAGGER
+    damage: 1.10
+
+passives:
+  - type: HEALTH_REGEN
+    value: 0.03
+  - type: BERZERKER
+    value: 0.35
+    threshold: 0.3
+  - type: RETALIATION
+    value: 0.20
+    window: 4
+    cooldown: 30
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: sorcery
+    value: 1.35
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: life_force
+    value: 1.5

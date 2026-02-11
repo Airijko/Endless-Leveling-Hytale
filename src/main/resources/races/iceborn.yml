@@ -13,6 +13,8 @@ attributes:
   intelligence: 10.0
 
 passives:
+  - type: HEALTH_REGEN
+    value: 0.03 # Heal 3% of max HP every 5 seconds
   - type: BERZERKER
     value: 0.2 # Up to +20% damage when hurt (full bonus at/below 35% HP)
     threshold: 0.35 # Health percent required for max bonus; scales to 0% at full health

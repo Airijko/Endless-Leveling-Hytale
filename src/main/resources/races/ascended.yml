@@ -16,6 +16,6 @@ passives:
   - type: SPECIAL_CHARGE_BONUS
     value: 1.0 # +100% faster special charge
   - type: EXECUTIONER
-    value: 100 # +10000% damage to targets below the threshold
+    value: 5.00 # +500% damage to targets below the threshold
     threshold: 0.2 # Only applies to targets already below 20% HP
     cooldown: 45 # Seconds between executioner procs

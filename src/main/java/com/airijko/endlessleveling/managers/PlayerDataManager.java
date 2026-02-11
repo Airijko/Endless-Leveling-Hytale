@@ -131,77 +131,7 @@ public class PlayerDataManager {
             ensureValidClasses(data);
             File file = filesManager.getPlayerDataFile(data.getUuid());
 
-            Map<String, Object> map = new LinkedHashMap<>();
-            // write current version into the file so future loads can detect schema
-            // and migrate if needed
-            map.put("version", CURRENT_PLAYERDATA_VERSION);
-            map.put("playerName", data.getPlayerName());
-            map.put("activeProfile", data.getActiveProfileIndex());
-
-            Map<String, Object> options = new LinkedHashMap<>();
-            options.put("playerHud", data.isPlayerHudEnabled());
-            options.put("criticalNotif", data.isCriticalNotifEnabled());
-            options.put("xpNotif", data.isXpNotifEnabled());
-            options.put("passiveLevelUpNotif", data.isPassiveLevelUpNotifEnabled());
-            options.put("luckDoubleDropsNotif", data.isLuckDoubleDropsNotifEnabled());
-            options.put("healthRegenNotif", data.isHealthRegenNotifEnabled());
-            map.put("options", options);
-
-            Map<String, Object> profilesSection = new LinkedHashMap<>();
-            data.getProfiles().entrySet().stream()
-                    .sorted(Map.Entry.comparingByKey())
-                    .forEach(entry -> {
-                        int index = entry.getKey();
-                        PlayerProfile profile = entry.getValue();
-                        if (profile == null) {
-                            return;
-                        }
-
-                        Map<String, Object> profileMap = new LinkedHashMap<>();
-                        profileMap.put("xp", profile.getXp());
-                        profileMap.put("level", profile.getLevel());
-                        profileMap.put("skillPoints", profile.getSkillPoints());
-                        profileMap.put("name", profile.getName());
-
-                        Map<String, Integer> profileAttrs = new LinkedHashMap<>();
-                        for (SkillAttributeType type : SkillAttributeType.values()) {
-                            profileAttrs.put(type.name(),
-                                    profile.getAttributes().getOrDefault(type, 0));
-                        }
-                        profileMap.put("attributes", profileAttrs);
-
-                        Map<String, Object> raceSection = new LinkedHashMap<>();
-                        String raceId = profile.getRaceId();
-                        raceSection.put("id", raceId);
-                        String raceDisplay = resolveRaceDisplayName(raceId);
-                        if (raceDisplay != null && !raceDisplay.equalsIgnoreCase(raceId)) {
-                            raceSection.put("name", raceDisplay);
-                        }
-                        raceSection.put("lastChangedEpochSeconds", profile.getLastRaceChangeEpochSeconds());
-                        profileMap.put("race", raceSection);
-
-                        Map<String, Object> classesSection = new LinkedHashMap<>();
-                        classesSection.put("primary", profile.getPrimaryClassId());
-                        if (profile.getSecondaryClassId() != null) {
-                            classesSection.put("secondary", profile.getSecondaryClassId());
-                        }
-                        long primaryChanged = profile.getLastPrimaryClassChangeEpochSeconds();
-                        long secondaryChanged = profile.getLastSecondaryClassChangeEpochSeconds();
-                        classesSection.put("primaryLastChangedEpochSeconds", primaryChanged);
-                        classesSection.put("secondaryLastChangedEpochSeconds", secondaryChanged);
-                        classesSection.put("lastChangedEpochSeconds", Math.max(primaryChanged, secondaryChanged));
-                        profileMap.put("classes", classesSection);
-
-                        Map<String, Integer> profilePassives = new LinkedHashMap<>();
-                        for (PassiveType type : PassiveType.values()) {
-                            profilePassives.put(type.name(), profile.getPassiveLevel(type));
-                        }
-                        profileMap.put("passives", profilePassives);
-
-                        profilesSection.put(String.valueOf(index), profileMap);
-                    });
-
-            map.put("profiles", profilesSection);
+            Map<String, Object> map = buildYamlMap(data);
 
             try (StringWriter buffer = new StringWriter()) {
                 yaml.dump(map, buffer);
@@ -256,24 +186,7 @@ public class PlayerDataManager {
         }
         int activeProfileIndex = parseActiveProfileIndex(map.get("activeProfile"));
         data.loadProfilesFromStorage(profiles, activeProfileIndex);
-
-        Map<String, Object> options = castToStringObjectMap(map.get("options"));
-        Object playerHud = options != null ? options.get("playerHud") : map.get("playerHud");
-        Object criticalNotif = options != null ? options.get("criticalNotif") : map.get("criticalNotif");
-        Object xpNotif = options != null ? options.get("xpNotif") : map.get("xpNotif");
-        Object passiveLevelUpNotif = options != null ? options.get("passiveLevelUpNotif")
-                : map.get("passiveLevelUpNotif");
-        Object luckDoubleDropsNotif = options != null ? options.get("luckDoubleDropsNotif")
-                : map.get("luckDoubleDropsNotif");
-        Object healthRegenNotif = options != null ? options.get("healthRegenNotif")
-                : map.get("healthRegenNotif");
-        data.setPlayerHudEnabled(parseBoolean(playerHud, true));
-        data.setCriticalNotifEnabled(parseBoolean(criticalNotif, true));
-        data.setXpNotifEnabled(parseBoolean(xpNotif, true));
-        data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
-        data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
-        data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
-
+        applyOptions(map, data);
         ensureValidRace(data);
         LOGGER.atInfo().log("PlayerData for UUID %s loaded from disk.", uuid);
         return data;
@@ -675,22 +588,7 @@ public class PlayerDataManager {
             int activeProfileIndex = parseActiveProfileIndex(map.get("activeProfile"));
             data.loadProfilesFromStorage(profiles, activeProfileIndex);
 
-            Map<String, Object> options = castToStringObjectMap(map.get("options"));
-            Object playerHud = options != null ? options.get("playerHud") : map.get("playerHud");
-            Object criticalNotif = options != null ? options.get("criticalNotif") : map.get("criticalNotif");
-            Object xpNotif = options != null ? options.get("xpNotif") : map.get("xpNotif");
-            Object passiveLevelUpNotif = options != null ? options.get("passiveLevelUpNotif")
-                    : map.get("passiveLevelUpNotif");
-            Object luckDoubleDropsNotif = options != null ? options.get("luckDoubleDropsNotif")
-                    : map.get("luckDoubleDropsNotif");
-            Object healthRegenNotif = options != null ? options.get("healthRegenNotif")
-                    : map.get("healthRegenNotif");
-            data.setPlayerHudEnabled(parseBoolean(playerHud, true));
-            data.setCriticalNotifEnabled(parseBoolean(criticalNotif, true));
-            data.setXpNotifEnabled(parseBoolean(xpNotif, true));
-            data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
-            data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
-            data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
+            applyOptions(map, data);
             ensureValidRace(data);
             ensureValidClasses(data);
 
@@ -705,6 +603,83 @@ public class PlayerDataManager {
 
     private int getStartingSkillPoints() {
         return skillManager != null ? skillManager.getBaseSkillPoints() : 0;
+    }
+
+    private Map<String, Object> buildYamlMap(PlayerData data) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("version", CURRENT_PLAYERDATA_VERSION);
+        map.put("playerName", data.getPlayerName());
+        map.put("activeProfile", data.getActiveProfileIndex());
+
+        Map<String, Object> options = new LinkedHashMap<>();
+        options.put("playerHud", data.isPlayerHudEnabled());
+        options.put("criticalNotif", data.isCriticalNotifEnabled());
+        options.put("xpNotif", data.isXpNotifEnabled());
+        options.put("passiveLevelUpNotif", data.isPassiveLevelUpNotifEnabled());
+        options.put("luckDoubleDropsNotif", data.isLuckDoubleDropsNotifEnabled());
+        options.put("healthRegenNotif", data.isHealthRegenNotifEnabled());
+        map.put("options", options);
+
+        map.put("profiles", buildProfilesSection(data));
+        return map;
+    }
+
+    private Map<String, Object> buildProfilesSection(PlayerData data) {
+        Map<String, Object> profilesSection = new LinkedHashMap<>();
+        data.getProfiles().entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                    int index = entry.getKey();
+                    PlayerProfile profile = entry.getValue();
+                    if (profile == null) {
+                        return;
+                    }
+
+                    Map<String, Object> profileMap = new LinkedHashMap<>();
+                    profileMap.put("xp", profile.getXp());
+                    profileMap.put("level", profile.getLevel());
+                    profileMap.put("skillPoints", profile.getSkillPoints());
+                    profileMap.put("name", profile.getName());
+
+                    Map<String, Integer> profileAttrs = new LinkedHashMap<>();
+                    for (SkillAttributeType type : SkillAttributeType.values()) {
+                        profileAttrs.put(type.name(),
+                                profile.getAttributes().getOrDefault(type, 0));
+                    }
+                    profileMap.put("attributes", profileAttrs);
+
+                    Map<String, Object> raceSection = new LinkedHashMap<>();
+                    String raceId = profile.getRaceId();
+                    raceSection.put("id", raceId);
+                    String raceDisplay = resolveRaceDisplayName(raceId);
+                    if (raceDisplay != null && !raceDisplay.equalsIgnoreCase(raceId)) {
+                        raceSection.put("name", raceDisplay);
+                    }
+                    raceSection.put("lastChangedEpochSeconds", profile.getLastRaceChangeEpochSeconds());
+                    profileMap.put("race", raceSection);
+
+                    Map<String, Object> classesSection = new LinkedHashMap<>();
+                    classesSection.put("primary", profile.getPrimaryClassId());
+                    if (profile.getSecondaryClassId() != null) {
+                        classesSection.put("secondary", profile.getSecondaryClassId());
+                    }
+                    long primaryChanged = profile.getLastPrimaryClassChangeEpochSeconds();
+                    long secondaryChanged = profile.getLastSecondaryClassChangeEpochSeconds();
+                    classesSection.put("primaryLastChangedEpochSeconds", primaryChanged);
+                    classesSection.put("secondaryLastChangedEpochSeconds", secondaryChanged);
+                    classesSection.put("lastChangedEpochSeconds", Math.max(primaryChanged, secondaryChanged));
+                    profileMap.put("classes", classesSection);
+
+                    Map<String, Integer> profilePassives = new LinkedHashMap<>();
+                    for (PassiveType type : PassiveType.values()) {
+                        profilePassives.put(type.name(), profile.getPassiveLevel(type));
+                    }
+                    profileMap.put("passives", profilePassives);
+
+                    profilesSection.put(String.valueOf(index), profileMap);
+                });
+
+        return profilesSection;
     }
 
     private ReentrantLock lockFor(UUID uuid) {
@@ -742,6 +717,25 @@ public class PlayerDataManager {
             LOGGER.atWarning().log("Failed to back up corrupt playerdata %s (%s): %s", file.getName(), reason,
                     e.getMessage());
         }
+    }
+
+    private void applyOptions(Map<String, Object> map, PlayerData data) {
+        Map<String, Object> options = castToStringObjectMap(map.get("options"));
+        Object playerHud = options != null ? options.get("playerHud") : map.get("playerHud");
+        Object criticalNotif = options != null ? options.get("criticalNotif") : map.get("criticalNotif");
+        Object xpNotif = options != null ? options.get("xpNotif") : map.get("xpNotif");
+        Object passiveLevelUpNotif = options != null ? options.get("passiveLevelUpNotif")
+                : map.get("passiveLevelUpNotif");
+        Object luckDoubleDropsNotif = options != null ? options.get("luckDoubleDropsNotif")
+                : map.get("luckDoubleDropsNotif");
+        Object healthRegenNotif = options != null ? options.get("healthRegenNotif")
+                : map.get("healthRegenNotif");
+        data.setPlayerHudEnabled(parseBoolean(playerHud, true));
+        data.setCriticalNotifEnabled(parseBoolean(criticalNotif, true));
+        data.setXpNotifEnabled(parseBoolean(xpNotif, true));
+        data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
+        data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
+        data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
     }
 
 }

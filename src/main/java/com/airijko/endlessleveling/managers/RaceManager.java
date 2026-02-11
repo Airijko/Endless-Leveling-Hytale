@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -32,9 +33,12 @@ import java.util.stream.Stream;
 public class RaceManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+    private static final int BUILTIN_RACES_VERSION = 3;
+    private static final String RACES_VERSION_FILE = "races.version";
 
     private final PluginFilesManager filesManager;
     private final boolean racesEnabled;
+    private final boolean forceBuiltinRaces;
     private final Map<String, RaceDefinition> racesByKey = new HashMap<>();
     private final Yaml yaml = new Yaml();
 
@@ -45,6 +49,8 @@ public class RaceManager {
         Objects.requireNonNull(configManager, "ConfigManager is required");
         this.filesManager = Objects.requireNonNull(filesManager, "PluginFilesManager is required");
         this.racesEnabled = parseBoolean(configManager.get("enable_races", Boolean.TRUE, false), true);
+        this.forceBuiltinRaces = parseBoolean(configManager.get("force_builtin_races", Boolean.FALSE, false),
+                false);
         Object defaultRaceConfig = configManager.get("default_race", PlayerData.DEFAULT_RACE_ID, false);
         String configuredDefault = safeString(defaultRaceConfig);
         if (configuredDefault != null) {
@@ -58,6 +64,7 @@ public class RaceManager {
             return;
         }
 
+        syncBuiltinRacesIfNeeded();
         loadRaces();
     }
 
@@ -212,6 +219,69 @@ public class RaceManager {
         }
 
         LOGGER.atInfo().log("Loaded %d race definition(s).", racesByKey.size());
+    }
+
+    private void syncBuiltinRacesIfNeeded() {
+        if (!forceBuiltinRaces) {
+            return;
+        }
+        File racesFolder = filesManager.getRacesFolder();
+        if (racesFolder == null) {
+            LOGGER.atWarning().log("Races folder is null; cannot sync built-in races.");
+            return;
+        }
+
+        int storedVersion = readRacesVersion(racesFolder);
+        if (storedVersion == BUILTIN_RACES_VERSION) {
+            return; // up to date
+        }
+
+        clearDirectory(racesFolder.toPath());
+        filesManager.exportResourceDirectory("races", racesFolder, true);
+        writeRacesVersion(racesFolder, BUILTIN_RACES_VERSION);
+        LOGGER.atInfo().log("Synced built-in races to version %d (force_builtin_races=true)", BUILTIN_RACES_VERSION);
+    }
+
+    private int readRacesVersion(File racesFolder) {
+        Path versionPath = racesFolder.toPath().resolve(RACES_VERSION_FILE);
+        if (!Files.exists(versionPath)) {
+            return -1;
+        }
+        try {
+            String text = Files.readString(versionPath).trim();
+            return Integer.parseInt(text);
+        } catch (Exception e) {
+            LOGGER.atWarning().log("Failed to read races version file: %s", e.getMessage());
+            return -1;
+        }
+    }
+
+    private void writeRacesVersion(File racesFolder, int version) {
+        Path versionPath = racesFolder.toPath().resolve(RACES_VERSION_FILE);
+        try {
+            Files.writeString(versionPath, Integer.toString(version));
+        } catch (IOException e) {
+            LOGGER.atWarning().log("Failed to write races version file: %s", e.getMessage());
+        }
+    }
+
+    private void clearDirectory(Path root) {
+        if (root == null || !Files.exists(root)) {
+            return;
+        }
+        try (Stream<Path> stream = Files.walk(root)) {
+            stream.sorted(Comparator.reverseOrder())
+                    .filter(path -> !path.equals(root))
+                    .forEach(path -> {
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            LOGGER.atWarning().log("Failed to delete %s: %s", path, e.getMessage());
+                        }
+                    });
+        } catch (IOException e) {
+            LOGGER.atWarning().log("Failed to clear races directory: %s", e.getMessage());
+        }
     }
 
     private void loadRaceFromFile(Path path) {

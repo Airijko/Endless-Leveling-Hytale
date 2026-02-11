@@ -11,15 +11,13 @@ weapons:
     damage: 1.05
 
 passives:
-  - type: HEALTH_REGEN
-    value: 0.03 # Heal 3% of max HP every 5 seconds
   - type: MANA_REGEN
-    value: 0.05
-  - type: SPECIAL_CHARGE_BONUS
-    value: 0.75
+    value: 0.04
+  - type: HEALTH_REGEN
+    value: 0.02
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: intelligence
     value: 1.50
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: sorcery
-    value: 1.25
+    value: 1.2

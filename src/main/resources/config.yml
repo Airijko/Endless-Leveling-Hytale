@@ -85,6 +85,9 @@ enable_races: true # Enable or disable the race system
 default_race: "Human" # Race assigned to new players
 choose_race_cooldown: 3600 # Cooldown (seconds) before changing race again
 
+# IF YOU WANT TO CREATE CUSTOM RACES, SET THIS TO FALSE AND ADD YOUR RACE FILES TO /EndlessLeveling/races/
+force_builtin_races: true # If true, ignore custom race files and keep bundled races in sync with updates
+
 # ------------------------------------------------------------
 # CLASS SETTINGS
 # ------------------------------------------------------------
@@ -93,7 +96,7 @@ default_primary_class: "Adventurer" # Class assigned to new players
 default_secondary_class: "" # Optional secondary class; leave blank for none
 choose_class_cooldown: 1800 # Cooldown (seconds) before changing class again
 
-# IF YOU WANT TO CREATE CUSTOM CLASSES, SET THIS TO FALSE AND ADD YOUR CLASS FILES TO src/main/resources/classes/
+# IF YOU WANT TO CREATE CUSTOM CLASSES, SET THIS TO FALSE AND ADD YOUR CLASS FILES TO /EndlessLeveling/races/
 force_builtin_classes: true # If true, ignore custom class files and keep bundled classes in sync with updates
 
 # ------------------------------------------------------------
