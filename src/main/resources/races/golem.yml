@@ -11,6 +11,7 @@ attributes:
   ferocity: 0.0
   stamina: 20.0
   intelligence: 5.0
+  sorcery: 0.8
 
 passives:
   - type: RETALIATION

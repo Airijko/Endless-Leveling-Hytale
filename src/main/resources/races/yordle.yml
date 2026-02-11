@@ -10,7 +10,8 @@ attributes:
   precision: 25.0
   ferocity: 10.0
   stamina: 17.5
-  intelligence: 60.0
+  intelligence: 45.0
+  sorcery: 1.1
 
 passives:
   - type: SWIFTNESS

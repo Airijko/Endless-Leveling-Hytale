@@ -10,13 +10,14 @@ attributes:
   precision: 5.0
   ferocity: 60.0
   stamina: 15.0
-  intelligence: 20.0
+  intelligence: 15.0
+  sorcery: 1.1
 
 passives:
   - type: SWIFTNESS
-    value: 0.2 # Passive +20% movement speed applied after haste
-    duration: 8 # Seconds after killing a target to maintain swiftness bonus
-    max_stacks: 5 # Can stack up to 5 times after killing a target for a total of +100% movement speed
+    value: 0.075 # Passive +7.5% movement speed applied after haste
+    duration: 5 # Seconds after killing a target to maintain swiftness bonus
+    max_stacks: 8 # Can stack up to 8 times after killing a target for a total of +60% movement speed
   - type: SECOND_WIND
     value: 0.5 # Heal 50% of max HP
     threshold: 0.2 # Trigger when below 20% HP

@@ -44,9 +44,8 @@ public final class PassiveDefinitionParser {
     }
 
     public static PassiveStackingStyle resolveStacking(ArchetypePassiveType type, Map<String, Object> passive) {
-        Object stackingNode = passive != null ? passive.get("stacking") : null;
-        PassiveStackingStyle fallback = PassiveStackingStyle.defaultFor(type);
-        return PassiveStackingStyle.fromConfig(stackingNode, fallback);
+        // Stacking style is authoritative in code; YAML overrides are ignored.
+        return PassiveStackingStyle.defaultFor(type);
     }
 
     private static DamageLayer defaultDamageLayer(ArchetypePassiveType type) {

@@ -11,6 +11,7 @@ attributes:
   ferocity: 75.0
   stamina: 12.5
   intelligence: 10.0
+  sorcery: 1.0
 
 passives:
   - type: HEALING_BONUS

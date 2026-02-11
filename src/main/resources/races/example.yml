@@ -89,6 +89,7 @@ attributes: # Base Values
   ferocity: 50.0
   stamina: 10.0
   intelligence: 20.0
+  sorcery: 1.0
 
 passives:
   - type: XP_BONUS
@@ -106,7 +107,6 @@ passives:
     threshold: 0.2 # Trigger when below 20% HP
     duration: 10 # Lasts for 10 seconds
     cooldown: 60 # seconds between triggers
-    stacking: DIMINISHING
   - type: FIRST_STRIKE
     value: 3.0 # +300% damage on first hit
     cooldown: 20 # seconds between first-strike windows

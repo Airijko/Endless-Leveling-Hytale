@@ -10,7 +10,7 @@ attributes:
   precision: 10.0
   ferocity: 50.0
   stamina: 10.0
-  intelligence: 25.0
+  intelligence: 20.0
 
 passives:
   - type: XP_BONUS

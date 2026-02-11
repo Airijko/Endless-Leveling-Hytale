@@ -11,6 +11,7 @@ attributes:
   ferocity: 10.0
   stamina: 15.0
   intelligence: 20.0
+  sorcery: 1.05
 
 passives:
   - type: SPECIAL_CHARGE_BONUS

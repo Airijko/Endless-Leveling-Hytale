@@ -3,14 +3,15 @@ description: "Ancient cosmic entities born of starlight, Celestials wield immens
 enabled: true
 
 attributes:
-  life_force: 140
+  life_force: 90
   strength: 0.9
   defense: 1.1
   haste: 1.0
   precision: 5.0
   ferocity: 40.0
   stamina: 8.0
-  intelligence: 70.0
+  intelligence: 35.0
+  sorcery: 1.25
 
 passives:
   - type: MANA_REGEN

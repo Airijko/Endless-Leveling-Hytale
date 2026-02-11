@@ -3,19 +3,18 @@ description: "Eldritch entities from beyond reality, Watchers wield incomprehens
 enabled: true
 
 attributes:
-  life_force: 110
+  life_force: 120
   strength: 0.8
   defense: 0.9
   haste: 0.9
   precision: 5.0
   ferocity: 30.0
   stamina: 6.0
-  intelligence: 90.0
+  intelligence: 50.0
+  sorcery: 1.1
 
 passives:
   - type: MANA_REGEN
     value: 0.03 # Restore 3% of max mana every 5 seconds
-  - type: EXECUTIONER
-    value: 5.00 # +500% damage to targets below the threshold
-    threshold: 0.2 # Only applies to targets already below 20% HP
-    cooldown: 45 # Seconds between executioner procs
+  - type: XP_BONUS
+    value: 0.4 # +40% XP gain
