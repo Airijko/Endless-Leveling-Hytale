@@ -118,6 +118,10 @@ public class RaceChooseCommand extends AbstractPlayerCommand {
             }
         }
 
+        if (raceManager != null) {
+            raceManager.applyRaceModelIfEnabled(data);
+        }
+
         String displayName = desiredRace.getDisplayName() != null ? desiredRace.getDisplayName() : desiredRace.getId();
         senderRef.sendMessage(Message.join(
                 Message.raw("[Races] ").color("#4fd7f7"),

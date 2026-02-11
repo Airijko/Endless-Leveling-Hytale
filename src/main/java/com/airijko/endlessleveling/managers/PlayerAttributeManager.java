@@ -143,10 +143,6 @@ public class PlayerAttributeManager {
         statMap.setStatValue(slot.statIndex(), newValue);
         statMap.update();
 
-        LOGGER.atInfo().log(
-                "PlayerAttributeManager: %s -> base=%.2f, race=%.2f, skill=%.2f, finalMax=%.2f for %s",
-                slot.name(), computation.hytaleBase(), computation.raceBase(), computation.skillBonus(), newMax,
-                playerData.getPlayerName());
         return true;
     }
 

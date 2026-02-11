@@ -35,6 +35,7 @@ public class PlayerData {
     private boolean passiveLevelUpNotifEnabled;
     private boolean luckDoubleDropsNotifEnabled;
     private boolean healthRegenNotifEnabled;
+    private boolean useRaceModel;
 
     public PlayerData(UUID uuid, String playerName) {
         this(uuid, playerName, 0);
@@ -53,6 +54,7 @@ public class PlayerData {
         this.passiveLevelUpNotifEnabled = true;
         this.luckDoubleDropsNotifEnabled = true;
         this.healthRegenNotifEnabled = true;
+        this.useRaceModel = true;
         LOGGER.atInfo().log("PlayerData created for player: %s (UUID: %s) with profile slot 1", playerName, uuid);
     }
 
@@ -325,6 +327,14 @@ public class PlayerData {
 
     public void setHealthRegenNotifEnabled(boolean healthRegenNotifEnabled) {
         this.healthRegenNotifEnabled = healthRegenNotifEnabled;
+    }
+
+    public boolean isUseRaceModel() {
+        return useRaceModel;
+    }
+
+    public void setUseRaceModel(boolean useRaceModel) {
+        this.useRaceModel = useRaceModel;
     }
 
     // --- Skill Level handling ---

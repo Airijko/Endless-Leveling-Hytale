@@ -133,7 +133,8 @@ public class EndlessLeveling extends JavaPlugin {
         partyManager = new PartyManager(playerDataManager, levelingManager, filesManager);
 
         // Register event listeners
-        PlayerDataListener playerDataListener = new PlayerDataListener(playerDataManager, passiveManager, skillManager);
+        PlayerDataListener playerDataListener = new PlayerDataListener(playerDataManager, passiveManager, skillManager,
+                raceManager);
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, playerDataListener::onPlayerReady);
         this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, playerDataListener::onPlayerDisconnect);
 

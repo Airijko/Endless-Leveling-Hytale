@@ -92,7 +92,6 @@ public class SkillManager {
 
         if (value instanceof Number number) {
             double result = number.doubleValue();
-            LOGGER.atInfo().log("getSkillAttributeConfigValue: path=%s, value=%.2f", path, result);
             return result;
         } else {
             LOGGER.atWarning().log("getSkillAttributeConfigValue: Invalid value at path=%s, defaulting to 0", path);
@@ -128,7 +127,7 @@ public class SkillManager {
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.SORCERY);
         float totalBonusSorcery = (float) ((sorceryLevel * perPointValue) + innateBonus);
 
-        LOGGER.atInfo().log(
+        LOGGER.atFine().log(
                 "calculatePlayerSorcery: SORCERY level=%d, perPointValue=%.2f, innate=%.2f, totalBonusSorcery=%.2f for player %s",
                 sorceryLevel, perPointValue, innateBonus, totalBonusSorcery, playerData.getPlayerName());
 
@@ -142,7 +141,7 @@ public class SkillManager {
      */
     public float getSorceryDamageModifier(PlayerData playerData) {
         float bonus = calculatePlayerSorcery(playerData);
-        LOGGER.atInfo().log("getSorceryDamageModifier: bonus=%.2f for player %s", bonus,
+        LOGGER.atFine().log("getSorceryDamageModifier: bonus=%.2f for player %s", bonus,
                 playerData.getPlayerName());
         return bonus;
     }
@@ -162,10 +161,6 @@ public class SkillManager {
 
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.LIFE_FORCE);
         float totalBonusHealth = (float) ((lifeForceLevel * perPointValue) + innateBonus);
-
-        LOGGER.atInfo().log(
-                "calculatePlayerHealth: LIFE_FORCE level=%d, perPointValue=%.2f, innate=%.2f, totalBonusHealth=%.2f for player %s",
-                lifeForceLevel, perPointValue, innateBonus, totalBonusHealth, playerData.getPlayerName());
 
         return totalBonusHealth;
     }
@@ -187,10 +182,6 @@ public class SkillManager {
 
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.STAMINA);
         float totalBonusStamina = (float) ((staminaLevel * perPointValue) + innateBonus);
-
-        LOGGER.atInfo().log(
-                "calculatePlayerStamina: STAMINA level=%d, perPointValue=%.2f, innate=%.2f, totalBonusStamina=%.2f for player %s",
-                staminaLevel, perPointValue, innateBonus, totalBonusStamina, playerData.getPlayerName());
 
         return totalBonusStamina;
     }
@@ -250,10 +241,6 @@ public class SkillManager {
         PlayerRef playerRef = componentAccessor.getComponent(ref, PlayerRef.getComponentType());
         if (playerRef != null) {
             movementManager.update(playerRef.getPacketHandler());
-            LOGGER.atInfo().log(
-                    "applyMovementSpeedModifier: base=%.3f, skill=%.3f, swiftness=%.3f, final=%.4f for player %s",
-                    hasteBreakdown.raceMultiplier(), hasteBreakdown.skillBonus(), swiftnessMultiplier,
-                    clampedMultiplier, playerData.getPlayerName());
             return true;
         } else {
             LOGGER.atWarning().log("applyMovementSpeedModifier: PlayerRef missing for %s", ref);
@@ -271,10 +258,6 @@ public class SkillManager {
 
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.INTELLIGENCE);
         float totalBonusIntelligence = (float) ((intelligenceLevel * perPointValue) + innateBonus);
-
-        LOGGER.atInfo().log(
-                "calculatePlayerIntelligence: INTELLIGENCE level=%d, perPointValue=%.2f, innate=%.2f, totalBonusIntelligence=%.2f for player %s",
-                intelligenceLevel, perPointValue, innateBonus, totalBonusIntelligence, playerData.getPlayerName());
 
         return totalBonusIntelligence;
     }
@@ -311,7 +294,7 @@ public class SkillManager {
             return 0.0F;
 
         StrengthBreakdown breakdown = getStrengthBreakdown(playerData);
-        LOGGER.atInfo().log(
+        LOGGER.atFine().log(
                 "calculatePlayerStrength: raceMultiplier=%.2f, skill=%.2f, total=%.2f for player %s",
                 breakdown.raceMultiplier(), breakdown.skillValue(), breakdown.totalValue(), playerData.getPlayerName());
 
@@ -325,7 +308,7 @@ public class SkillManager {
      */
     public float getStrengthDamageModifier(PlayerData playerData) {
         float bonus = calculatePlayerStrength(playerData);
-        LOGGER.atInfo().log("getStrengthDamageModifier: bonus=%.2f for player %s", bonus,
+        LOGGER.atFine().log("getStrengthDamageModifier: bonus=%.2f for player %s", bonus,
                 playerData.getPlayerName());
         return bonus;
     }
@@ -364,7 +347,7 @@ public class SkillManager {
             return 0.0F;
 
         PrecisionBreakdown breakdown = getPrecisionBreakdown(playerData);
-        LOGGER.atInfo().log(
+        LOGGER.atFine().log(
                 "getPrecisionCritChance: basePercent=%.4f, skillPercent=%.4f, totalPercent=%.4f, critChance=%.4f for player %s",
                 breakdown.racePercent(), breakdown.skillPercent(), breakdown.totalPercent(), breakdown.critChance(),
                 playerData.getPlayerName());
@@ -399,7 +382,7 @@ public class SkillManager {
             return 0.0F;
 
         FerocityBreakdown breakdown = getFerocityBreakdown(playerData);
-        LOGGER.atInfo().log(
+        LOGGER.atFine().log(
                 "getPlayerFerocity: base=%.2f, skill=%.2f, total=%.2f for player %s",
                 breakdown.raceValue(), breakdown.skillValue(), breakdown.totalValue(), playerData.getPlayerName());
         return breakdown.totalValue();
@@ -458,7 +441,7 @@ public class SkillManager {
             float ferocity = calculatePlayerFerocity(playerData); // e.g., 50 = +50%
             float multiplier = 1.0F + (ferocity / 100.0F);
             finalDamage = baseDamage * multiplier;
-            LOGGER.atInfo().log("CRITICAL HIT! base=%.2f, ferocity=%.2f%%, multiplier=%.2f, final=%.2f for player %s",
+            LOGGER.atFine().log("CRITICAL HIT! base=%.2f, ferocity=%.2f%%, multiplier=%.2f, final=%.2f for player %s",
                     baseDamage, ferocity, multiplier, finalDamage, playerData.getPlayerName());
 
             // Notify player of critical hit using Hytale's notification system
@@ -646,10 +629,7 @@ public class SkillManager {
         boolean movementApplied = applyMovementSpeedModifier(ref, componentAccessor, playerData);
         boolean intelligenceApplied = applyIntelligenceModifiers(ref, componentAccessor, playerData);
         boolean success = healthApplied && staminaApplied && movementApplied && intelligenceApplied;
-        if (success) {
-            LOGGER.atInfo().log("applyAllSkillModifiers: Applied all skill modifiers for player %s",
-                    playerData.getPlayerName());
-        } else {
+        if (!success) {
             LOGGER.atFine().log(
                     "applyAllSkillModifiers: deferred or partial application for player %s (health=%s, stamina=%s, movement=%s, intelligence=%s)",
                     playerData.getPlayerName(), healthApplied, staminaApplied, movementApplied, intelligenceApplied);

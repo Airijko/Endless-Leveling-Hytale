@@ -671,6 +671,7 @@ public class PlayerDataManager {
         options.put("passiveLevelUpNotif", data.isPassiveLevelUpNotifEnabled());
         options.put("luckDoubleDropsNotif", data.isLuckDoubleDropsNotifEnabled());
         options.put("healthRegenNotif", data.isHealthRegenNotifEnabled());
+        options.put("useRaceModel", data.isUseRaceModel());
         map.put("options", options);
 
         map.put("profiles", buildProfilesSection(data));
@@ -785,12 +786,14 @@ public class PlayerDataManager {
                 : map.get("luckDoubleDropsNotif");
         Object healthRegenNotif = options != null ? options.get("healthRegenNotif")
                 : map.get("healthRegenNotif");
+        Object useRaceModel = options != null ? options.get("useRaceModel") : map.get("useRaceModel");
         data.setPlayerHudEnabled(parseBoolean(playerHud, true));
         data.setCriticalNotifEnabled(parseBoolean(criticalNotif, true));
         data.setXpNotifEnabled(parseBoolean(xpNotif, true));
         data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
         data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
         data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
+        data.setUseRaceModel(parseBoolean(useRaceModel, true));
     }
 
     /**

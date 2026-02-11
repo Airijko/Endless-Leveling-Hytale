@@ -1,5 +1,6 @@
 race_name: "Yordle"
 description: "Whimsical yet dangerous, Yordles rely on agility, trickery, and explosive damage."
+model: "Kweebec_Sapling"
 enabled: true
 
 attributes:

@@ -5,6 +5,7 @@ import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.data.PlayerData.ProfileSwitchResult;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.systems.PlayerRaceStatSystem;
 import com.airijko.endlessleveling.ui.PlayerHud;
@@ -27,6 +28,7 @@ public class ProfileSelectSubCommand extends AbstractPlayerCommand {
     private final SkillManager skillManager;
     private final PassiveManager passiveManager;
     private final PlayerRaceStatSystem playerRaceStatSystem;
+    private final RaceManager raceManager;
 
     private final RequiredArg<Integer> profileIndexArg = this.withRequiredArg("slot", "Profile slot to activate",
             ArgTypes.INTEGER);
@@ -38,6 +40,7 @@ public class ProfileSelectSubCommand extends AbstractPlayerCommand {
         this.skillManager = EndlessLeveling.getInstance().getSkillManager();
         this.passiveManager = EndlessLeveling.getInstance().getPassiveManager();
         this.playerRaceStatSystem = EndlessLeveling.getInstance().getPlayerRaceStatSystem();
+        this.raceManager = EndlessLeveling.getInstance().getRaceManager();
     }
 
     @Override
@@ -108,6 +111,10 @@ public class ProfileSelectSubCommand extends AbstractPlayerCommand {
         }
 
         PlayerHud.refreshHud(playerData.getUuid());
+
+        if (raceManager != null) {
+            raceManager.applyRaceModelIfEnabled(playerData);
+        }
 
         String profileName = playerData.getProfileName(requestedIndex);
         playerRef.sendMessage(Message

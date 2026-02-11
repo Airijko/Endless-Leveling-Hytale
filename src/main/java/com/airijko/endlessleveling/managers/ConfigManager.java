@@ -94,7 +94,7 @@ public class ConfigManager {
         }
 
         if (logAccess) {
-            LOGGER.atInfo().log("ConfigManager.get: path='%s', value=%s", path, value);
+            // Intentionally silent to avoid log spam on frequent config lookups
         }
         return value;
     }

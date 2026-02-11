@@ -4,6 +4,7 @@ import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
@@ -25,12 +26,14 @@ public class PlayerDataListener {
     private final PlayerDataManager playerDataManager;
     private final PassiveManager passiveManager;
     private final SkillManager skillManager;
+    private final RaceManager raceManager;
 
     public PlayerDataListener(PlayerDataManager playerDataManager, PassiveManager passiveManager,
-            SkillManager skillManager) {
+            SkillManager skillManager, RaceManager raceManager) {
         this.playerDataManager = playerDataManager;
         this.passiveManager = passiveManager;
         this.skillManager = skillManager;
+        this.raceManager = raceManager;
     }
 
     /** Called when a player joins */
@@ -71,6 +74,10 @@ public class PlayerDataListener {
                 LOGGER.atWarning().log("Failed to apply skill modifiers for %s: %s", playerRef.getUsername(),
                         e.getMessage());
             }
+        }
+
+        if (raceManager != null) {
+            raceManager.applyRaceModelIfEnabled(playerData);
         }
 
         LOGGER.atInfo().log("Loaded PlayerData for player: %s", playerRef.getUsername());
