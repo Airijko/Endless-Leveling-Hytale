@@ -64,7 +64,10 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         DEFAULT_CLASS_ICONS.put("adventurer", "Ingredient_Life_Essence");
         DEFAULT_CLASS_ICONS.put("assassin", "Weapon_Daggers_Mithril");
         DEFAULT_CLASS_ICONS.put("juggernaut", "Weapon_Battleaxe_Mithril");
-        DEFAULT_CLASS_ICONS.put("mage", "Weapon_Staff_Bronze");
+        DEFAULT_CLASS_ICONS.put("mage", "Weapon_Spellbook_Grimoire_Brown");
+        DEFAULT_CLASS_ICONS.put("arcanist", "Weapon_Staff_Bronze");
+        DEFAULT_CLASS_ICONS.put("battlemage", "Weapon_Staff_Onyxium");
+        DEFAULT_CLASS_ICONS.put("oracle", "Weapon_Daggers_Mithril");
         DEFAULT_CLASS_ICONS.put("marksman", "Weapon_Shortbow_Combat");
         DEFAULT_CLASS_ICONS.put("skirmisher", "Weapon_Longsword_Mithril");
         DEFAULT_CLASS_ICONS.put("vanguard", "Weapon_Mace_Prisma");

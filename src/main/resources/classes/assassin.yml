@@ -2,7 +2,7 @@ class_name: "Assassin"
 description: "A silent blade master who thrives on opening strikes and brutal finishers."
 role: "Assassin"
 enabled: true
-icon: "Weapon_Dagger_Serpent"
+icon: "Weapon_Daggers_Mithril"
 
 weapons:
   - type: DAGGER

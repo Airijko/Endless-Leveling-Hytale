@@ -2,7 +2,7 @@ class_name: "Oracle"
 description: "A divine seer who empowers magic through foresight and blessing, excelling in sustained spellcasting."
 role: "Mage"
 enabled: true
-icon: "Prototype_Tool_Book_Light"
+icon: "Weapon_Daggers_Mithril"
 
 weapons:
   - type: STAFF

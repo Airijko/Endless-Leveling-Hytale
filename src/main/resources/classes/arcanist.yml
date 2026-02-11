@@ -2,7 +2,7 @@ class_name: "Arcanist"
 description: "A master of pure arcane energy who amplifies spell power through disciplined mana control."
 role: "Mage"
 enabled: true
-icon: "Prototype_Tool_Book_Arcane"
+icon: "Weapon_Staff_Bronze"
 
 weapons:
   - type: STAFF

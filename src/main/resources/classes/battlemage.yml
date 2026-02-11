@@ -2,7 +2,7 @@ class_name: "BattleMage"
 description: "A relentless arcane warrior who draws devastating power from the brink of death, blending melee combat with volatile sorcery."
 role: "Mage"
 enabled: true
-icon: "Prototype_Tool_Book_Fire"
+icon: "Weapon_Staff_Onyxium"
 
 weapons:
   - type: STAFF
