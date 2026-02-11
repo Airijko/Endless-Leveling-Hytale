@@ -1,5 +1,6 @@
 race_name: "Watcher"
 description: "Eldritch entities from beyond reality, Watchers wield incomprehensible power but struggle to endure the physical world."
+model: "Hedera"
 enabled: true
 
 attributes:

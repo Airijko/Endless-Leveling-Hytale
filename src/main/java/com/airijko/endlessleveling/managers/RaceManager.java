@@ -431,21 +431,44 @@ public class RaceManager {
         if (data == null || race == null) {
             return;
         }
-        String modelId = race.getModelId();
-        if (modelId == null || modelId.isBlank()) {
-            return;
-        }
-
         PlayerRef playerRef = Universe.get().getPlayer(data.getUuid());
         if (playerRef == null) {
             return; // player not online yet
+        }
+
+        String modelId = race.getModelId();
+        if (modelId == null || modelId.isBlank()) {
+            resetPlayerModel(playerRef);
+            return;
         }
 
         String baseCommand = "model set " + modelId + " " + playerRef.getUsername();
         LOGGER.atFine().log("RaceManager: applying model %s to %s using command '%s'", modelId,
                 playerRef.getUsername(), baseCommand);
 
-        String commandNoSlash = baseCommand.startsWith("/") ? baseCommand.substring(1) : baseCommand;
+        if (!dispatchModelCommand(playerRef, baseCommand)) {
+            LOGGER.atWarning().log("RaceManager: failed to dispatch model command '%s' for %s", baseCommand,
+                    data.getPlayerName());
+            logCommandIntrospection();
+        }
+    }
+
+    private boolean resetPlayerModel(PlayerRef playerRef) {
+        if (playerRef == null) {
+            return false;
+        }
+        String command = "model reset " + playerRef.getUsername();
+        LOGGER.atFine().log("RaceManager: resetting model for %s using command '%s'", playerRef.getUsername(), command);
+        return dispatchModelCommand(playerRef, command);
+    }
+
+    private boolean dispatchModelCommand(PlayerRef playerRef, String commandWithOptionalSlash) {
+        if (commandWithOptionalSlash == null || commandWithOptionalSlash.isBlank()) {
+            return false;
+        }
+        String commandNoSlash = commandWithOptionalSlash.startsWith("/")
+                ? commandWithOptionalSlash.substring(1)
+                : commandWithOptionalSlash;
 
         boolean dispatched = runCommandAsConsole("/" + commandNoSlash);
         if (!dispatched) {
@@ -460,12 +483,7 @@ public class RaceManager {
         if (!dispatched) {
             dispatched = runCommandViaReflection(playerRef, commandNoSlash);
         }
-
-        if (!dispatched) {
-            LOGGER.atWarning().log("RaceManager: failed to dispatch model command '%s' for %s", baseCommand,
-                    data.getPlayerName());
-            logCommandIntrospection();
-        }
+        return dispatched;
     }
 
     private boolean runCommandAsConsole(String command) {

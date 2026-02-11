@@ -1,5 +1,6 @@
 race_name: "Voidborn"
 description: "Twisted by the Void, Voidborn adapt rapidly, gaining strength through chaos and corruption."
+model: "Spawn_Void"
 enabled: true
 
 attributes:
