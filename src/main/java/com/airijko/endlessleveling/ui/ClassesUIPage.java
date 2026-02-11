@@ -77,6 +77,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull UIEventBuilder events,
             @Nonnull Store<EntityStore> store) {
         ui.append("Pages/Classes/ClassesPage.ui");
+        NavUIHelper.applyNavVersion(ui);
         NavUIHelper.bindNavEvents(events);
 
         events.addEventBinding(Activating, "#ConfirmPrimaryButton", of("Action", "class:confirm_primary"), false);

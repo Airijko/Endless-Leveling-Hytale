@@ -42,6 +42,7 @@ public class PartyUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull Store<EntityStore> store) {
 
         ui.append("Pages/Party/PartyPage.ui");
+        NavUIHelper.applyNavVersion(ui);
         NavUIHelper.bindNavEvents(events);
 
         // Party-specific buttons
@@ -141,15 +142,19 @@ public class PartyUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         }
 
         if (partyManager.invitePlayer(sender.getUuid(), targetUuid)) {
-            sender.sendMessage(Message.raw("You invited " + resolveName(targetUuid) + " to your party.").color("#00ff00"));
+            sender.sendMessage(
+                    Message.raw("You invited " + resolveName(targetUuid) + " to your party.").color("#00ff00"));
 
             PlayerRef targetRef = Universe.get().getPlayer(targetUuid);
             if (targetRef != null) {
-                targetRef.sendMessage(Message.raw(resolveName(sender.getUuid()) + " invited you to their party. Use /skills party join "
-                        + resolveName(sender.getUuid()) + " to accept.").color("#4fd7f7"));
+                targetRef.sendMessage(Message
+                        .raw(resolveName(sender.getUuid()) + " invited you to their party. Use /skills party join "
+                                + resolveName(sender.getUuid()) + " to accept.")
+                        .color("#4fd7f7"));
             }
         } else {
-            sender.sendMessage(Message.raw("Could not send party invite. Make sure you are the party leader.").color("#ff0000"));
+            sender.sendMessage(
+                    Message.raw("Could not send party invite. Make sure you are the party leader.").color("#ff0000"));
         }
     }
 
@@ -212,4 +217,3 @@ public class PartyUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return uuid.toString();
     }
 }
-

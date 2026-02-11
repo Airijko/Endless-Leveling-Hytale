@@ -104,8 +104,8 @@
   Group { FlexWeight: 1; }
 
   // ---- Footer ----
-  Label {
-    Text: "v5.4";
+  Label #NavVersion {
+    Text: "v?.?";
     Anchor: (Height: 20);
     Padding: (Left: 16);
     Style: (FontSize: 10, TextColor: #4a5568);

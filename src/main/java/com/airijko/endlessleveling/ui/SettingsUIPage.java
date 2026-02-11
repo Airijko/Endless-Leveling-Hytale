@@ -39,6 +39,7 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull Store<EntityStore> store) {
 
         ui.append("Pages/SettingsPage.ui");
+        NavUIHelper.applyNavVersion(ui);
 
         // Bind navigation on the left side
         NavUIHelper.bindNavEvents(events);

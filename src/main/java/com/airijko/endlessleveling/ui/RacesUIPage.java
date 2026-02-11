@@ -74,6 +74,7 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull Store<EntityStore> store) {
 
         ui.append("Pages/Races/RacesPage.ui");
+        NavUIHelper.applyNavVersion(ui);
         NavUIHelper.bindNavEvents(events);
         events.addEventBinding(Activating,
                 "#ConfirmRaceButton",
