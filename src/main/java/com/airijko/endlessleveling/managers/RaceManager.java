@@ -46,6 +46,7 @@ public class RaceManager {
     private final boolean forceBuiltinRaces;
     private final Map<String, RaceDefinition> racesByKey = new HashMap<>();
     private final Yaml yaml = new Yaml();
+    private final RaceModelDefaultMode raceModelDefaultMode;
 
     private String defaultRaceId = PlayerData.DEFAULT_RACE_ID;
     private final long chooseRaceCooldownSeconds;
@@ -56,6 +57,8 @@ public class RaceManager {
         this.racesEnabled = parseBoolean(configManager.get("enable_races", Boolean.TRUE, false), true);
         this.forceBuiltinRaces = parseBoolean(configManager.get("force_builtin_races", Boolean.FALSE, false),
                 false);
+        Object raceModelDefaultConfig = configManager.get("race_model_default", "off", false);
+        this.raceModelDefaultMode = parseRaceModelDefault(raceModelDefaultConfig);
         Object defaultRaceConfig = configManager.get("default_race", PlayerData.DEFAULT_RACE_ID, false);
         String configuredDefault = safeString(defaultRaceConfig);
         if (configuredDefault != null) {
@@ -99,6 +102,18 @@ public class RaceManager {
     public String getDefaultRaceId() {
         RaceDefinition defaultRace = getDefaultRace();
         return defaultRace != null ? defaultRace.getId() : PlayerData.DEFAULT_RACE_ID;
+    }
+
+    public RaceModelDefaultMode getRaceModelDefaultMode() {
+        return raceModelDefaultMode;
+    }
+
+    public boolean isRaceModelDefaultEnabled() {
+        return raceModelDefaultMode.isEnabledByDefault();
+    }
+
+    public boolean isRaceModelGloballyDisabled() {
+        return raceModelDefaultMode.isGloballyDisabled();
     }
 
     public String resolveRaceId(String requestedId) {
@@ -223,7 +238,14 @@ public class RaceManager {
      * race defines one.
      */
     public void applyRaceModelIfEnabled(PlayerData data) {
-        if (data == null || !data.isUseRaceModel()) {
+        if (data == null) {
+            return;
+        }
+        if (isRaceModelGloballyDisabled()) {
+            resetRaceModelIfOnline(data);
+            return;
+        }
+        if (!data.isUseRaceModel()) {
             return;
         }
         RaceDefinition race = getPlayerRace(data);
@@ -254,6 +276,55 @@ public class RaceManager {
         }
 
         LOGGER.atInfo().log("Loaded %d race definition(s).", racesByKey.size());
+    }
+
+    private RaceModelDefaultMode parseRaceModelDefault(Object rawValue) {
+        if (rawValue instanceof RaceModelDefaultMode mode) {
+            return mode;
+        }
+
+        String normalized = null;
+        if (rawValue instanceof String str) {
+            normalized = str.trim().toLowerCase(Locale.ROOT);
+        } else if (rawValue instanceof Boolean bool) {
+            normalized = bool ? "on" : "off";
+        } else if (rawValue instanceof Number number) {
+            normalized = number.intValue() != 0 ? "on" : "off";
+        }
+
+        if (normalized != null) {
+            switch (normalized) {
+                case "on":
+                case "true":
+                case "enabled":
+                    return RaceModelDefaultMode.ON;
+                case "disabled":
+                    return RaceModelDefaultMode.DISABLED;
+                case "off":
+                case "false":
+                case "default":
+                    return RaceModelDefaultMode.OFF;
+                default:
+                    LOGGER.atWarning().log("Invalid race_model_default '%s'; defaulting to OFF.", normalized);
+                    return RaceModelDefaultMode.OFF;
+            }
+        }
+
+        return RaceModelDefaultMode.OFF;
+    }
+
+    public enum RaceModelDefaultMode {
+        ON,
+        OFF,
+        DISABLED;
+
+        public boolean isEnabledByDefault() {
+            return this == ON;
+        }
+
+        public boolean isGloballyDisabled() {
+            return this == DISABLED;
+        }
     }
 
     private void syncBuiltinRacesIfNeeded() {

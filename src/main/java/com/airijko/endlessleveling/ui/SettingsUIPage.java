@@ -69,6 +69,9 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             return;
         }
 
+        var raceManager = EndlessLeveling.getInstance().getRaceManager();
+        boolean raceModelsDisabled = raceManager != null && raceManager.isRaceModelGloballyDisabled();
+
         ui.set("#PlayerHudLabel.Text", "Player HUD");
         ui.set("#PlayerHudValue.Text", data.isPlayerHudEnabled() ? "ON" : "OFF");
 
@@ -88,7 +91,7 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set("#HealthRegenNotifValue.Text", data.isHealthRegenNotifEnabled() ? "ON" : "OFF");
 
         ui.set("#RaceModelLabel.Text", "Race Model Visuals");
-        ui.set("#RaceModelValue.Text", data.isUseRaceModel() ? "ON" : "OFF");
+        ui.set("#RaceModelValue.Text", raceModelsDisabled ? "DISABLED" : data.isUseRaceModel() ? "ON" : "OFF");
     }
 
     @Override
@@ -174,6 +177,16 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     .raw("Health regen notifications " + (newValue ? "enabled" : "disabled"))
                     .color("#ffc300"));
         } else if ("toggle:raceModel".equalsIgnoreCase(action)) {
+            if (raceManager != null && raceManager.isRaceModelGloballyDisabled()) {
+                player.sendMessage(Message
+                        .raw("Race model visuals are disabled by the server configuration.")
+                        .color("#ff6666"));
+                if (raceManager != null) {
+                    raceManager.resetRaceModelIfOnline(playerData);
+                }
+                rebuild();
+                return;
+            }
             boolean newValue = !playerData.isUseRaceModel();
             playerData.setUseRaceModel(newValue);
             changed = true;

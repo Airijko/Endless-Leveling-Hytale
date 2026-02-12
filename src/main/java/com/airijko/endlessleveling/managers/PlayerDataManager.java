@@ -94,6 +94,7 @@ public class PlayerDataManager {
                 if (data == null) {
                     safeToSave = false;
                     data = new PlayerData(uuid, playerName, getStartingSkillPoints());
+                    applyConfigDefaults(data);
                     LOGGER.atSevere().log(
                             "PlayerData for UUID %s could not be parsed; using in-memory fallback and will NOT overwrite %s. Please fix the YAML or restore a backup.",
                             uuid, file.getName());
@@ -102,6 +103,7 @@ public class PlayerDataManager {
                 }
             } else {
                 data = new PlayerData(uuid, playerName, getStartingSkillPoints());
+                applyConfigDefaults(data);
                 LOGGER.atInfo().log("PlayerData for UUID %s created new.", uuid);
             }
 
@@ -232,6 +234,7 @@ public class PlayerDataManager {
         }
 
         PlayerData data = new PlayerData(uuid, playerName, getStartingSkillPoints());
+        applyConfigDefaults(data);
 
         Map<Integer, PlayerProfile> profiles = parseProfiles(map.get("profiles"), data.getBaseSkillPoints());
         if (profiles.isEmpty()) {
@@ -321,6 +324,28 @@ public class PlayerDataManager {
             return numberValue.intValue() != 0;
         }
         return defaultValue;
+    }
+
+    private boolean isRaceModelGloballyDisabled() {
+        return raceManager != null && raceManager.isRaceModelGloballyDisabled();
+    }
+
+    private boolean defaultUseRaceModel() {
+        if (raceManager == null) {
+            return false;
+        }
+        return raceManager.isRaceModelDefaultEnabled();
+    }
+
+    private void applyConfigDefaults(PlayerData data) {
+        if (data == null) {
+            return;
+        }
+        boolean useRaceModelDefault = defaultUseRaceModel();
+        if (isRaceModelGloballyDisabled()) {
+            useRaceModelDefault = false;
+        }
+        data.setUseRaceModel(useRaceModelDefault);
     }
 
     private Map<String, Object> castToStringObjectMap(Object value) {
@@ -633,6 +658,7 @@ public class PlayerDataManager {
             // perform migration when needed.
             String playerName = (String) map.getOrDefault("playerName", uuid.toString());
             PlayerData data = new PlayerData(uuid, playerName, getStartingSkillPoints());
+            applyConfigDefaults(data);
 
             Map<Integer, PlayerProfile> profiles = parseProfiles(map.get("profiles"), data.getBaseSkillPoints());
             if (profiles.isEmpty()) {
@@ -793,7 +819,11 @@ public class PlayerDataManager {
         data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
         data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
         data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
-        data.setUseRaceModel(parseBoolean(useRaceModel, true));
+        boolean useRaceModelValue = parseBoolean(useRaceModel, defaultUseRaceModel());
+        if (isRaceModelGloballyDisabled()) {
+            useRaceModelValue = false;
+        }
+        data.setUseRaceModel(useRaceModelValue);
     }
 
     /**

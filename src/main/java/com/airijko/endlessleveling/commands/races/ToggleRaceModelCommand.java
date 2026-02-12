@@ -54,6 +54,13 @@ public class ToggleRaceModelCommand extends AbstractPlayerCommand {
             return;
         }
 
+        if (raceManager != null && raceManager.isRaceModelGloballyDisabled()) {
+            senderRef.sendMessage(Message.raw("Race models are disabled by the server configuration.")
+                    .color("#ff6666"));
+            raceManager.resetRaceModelIfOnline(data);
+            return;
+        }
+
         boolean newValue = !data.isUseRaceModel();
         data.setUseRaceModel(newValue);
         playerDataManager.save(data);

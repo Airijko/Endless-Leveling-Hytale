@@ -84,6 +84,7 @@ passives:
 enable_races: true # Enable or disable the race system
 default_race: "Human" # Race assigned to new players
 choose_race_cooldown: 3600 # Cooldown (seconds) before changing race again
+race_model_default: "off" # Default race model visuals for new players: on, off, or disabled (disables visuals globally)
 
 # IF YOU WANT TO CREATE CUSTOM RACES, SET THIS TO FALSE AND ADD YOUR RACE FILES TO /EndlessLeveling/races/
 force_builtin_races: true # If true, ignore custom race files and keep bundled races in sync with updates
@@ -111,4 +112,4 @@ enable_logging: false # Enable detailed logging output
 # INTERNAL CONFIG VERSION
 # DO NOT MODIFY
 # ------------------------------------------------------------
-config_version: 8
+config_version: 9
