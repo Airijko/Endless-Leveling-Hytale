@@ -77,7 +77,7 @@ public class PlayerDataListener {
         }
 
         if (raceManager != null) {
-            raceManager.applyRaceModelIfEnabledOnce(playerData);
+            raceManager.applyRaceModelOnLogin(playerData);
         }
 
         LOGGER.atInfo().log("Loaded PlayerData for player: %s", playerRef.getUsername());

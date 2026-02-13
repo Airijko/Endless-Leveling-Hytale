@@ -42,6 +42,7 @@ public class RaceManager {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final int BUILTIN_RACES_VERSION = 4;
     private static final String RACES_VERSION_FILE = "races.version";
+    private final ConcurrentHashMap<UUID, Long> modelApplyTimestamps = new ConcurrentHashMap<>();
 
     private final PluginFilesManager filesManager;
     private final boolean racesEnabled;
@@ -167,6 +168,14 @@ public class RaceManager {
     }
 
     public RaceDefinition setPlayerRace(PlayerData data, String requestedValue) {
+        return setPlayerRace(data, requestedValue, true);
+    }
+
+    public RaceDefinition setPlayerRaceSilently(PlayerData data, String requestedValue) {
+        return setPlayerRace(data, requestedValue, false);
+    }
+
+    private RaceDefinition setPlayerRace(PlayerData data, String requestedValue, boolean applyModel) {
         if (data == null) {
             return null;
         }
@@ -177,7 +186,9 @@ public class RaceManager {
         }
         if (resolved != null) {
             data.setRaceId(resolved.getId());
-            applyRaceModelIfEnabled(data);
+            if (applyModel) {
+                applyRaceModelIfEnabled(data);
+            }
         } else {
             data.setRaceId(PlayerData.DEFAULT_RACE_ID);
         }
@@ -258,25 +269,49 @@ public class RaceManager {
         applyRaceModelToPlayer(data, race);
     }
 
+    private boolean shouldThrottleModelApply(UUID uuid, long windowMillis) {
+        if (uuid == null || windowMillis <= 0L) {
+            return false;
+        }
+        long now = System.currentTimeMillis();
+        Long last = modelApplyTimestamps.get(uuid);
+        if (last != null && (now - last) < windowMillis) {
+            return true;
+        }
+        modelApplyTimestamps.put(uuid, now);
+        return false;
+    }
+
     /**
-     * Apply the race model at most once per session for a player (guarded by UUID)
-     * to avoid duplicate dispatches on join.
+     * Apply the race model once on login with a session guard and a short throttle
+     * window to collapse duplicate triggers fired during join.
      */
-    public void applyRaceModelIfEnabledOnce(PlayerData data) {
+    public void applyRaceModelOnLogin(PlayerData data) {
         if (data == null) {
             return;
         }
         UUID uuid = data.getUuid();
-        if (uuid != null && modelApplyGuard.putIfAbsent(uuid, Boolean.TRUE) != null) {
+        if (uuid == null) {
+            return;
+        }
+
+        if (modelApplyGuard.putIfAbsent(uuid, Boolean.TRUE) != null) {
             LOGGER.atFine().log("RaceManager: skipping duplicate model apply for %s due to guard", uuid);
             return;
         }
+
+        if (shouldThrottleModelApply(uuid, 1500L)) {
+            LOGGER.atFine().log("RaceManager: throttled model apply for %s during login window", uuid);
+            return;
+        }
+
         applyRaceModelIfEnabled(data);
     }
 
     public void clearModelApplyGuard(UUID uuid) {
         if (uuid != null) {
             modelApplyGuard.remove(uuid);
+            modelApplyTimestamps.remove(uuid);
         }
     }
 

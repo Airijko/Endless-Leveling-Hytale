@@ -600,7 +600,7 @@ public class PlayerDataManager {
             profile.setRaceId(resolved);
         });
 
-        raceManager.setPlayerRace(data, data.getRaceId());
+        raceManager.setPlayerRaceSilently(data, data.getRaceId());
     }
 
     private void ensureValidClasses(PlayerData data) {
