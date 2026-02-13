@@ -30,3 +30,62 @@ Group {
     Text: "MyText";
   }
 }
+
+// Player level, race, class info
+Group #InfoPanel {
+  LayoutMode: Top;
+  Anchor: (Bottom: 20, Left: 20, Width: 260, Height: 80);
+  Padding: (Full: 4);
+
+  Label #InfoLevel {
+    Anchor: (Height: 16);
+    Style: (FontSize: 12, TextColor: #ffffff);
+    Text: "Level --";
+  }
+
+  Group #InfoRace {
+    LayoutMode: Left;
+    Anchor: (Height: 18, Top: 4);
+
+    Label #InfoRacePrefix {
+      Style: (FontSize: 11, TextColor: #4fd7f7);
+      Text: "Race: ";
+    }
+
+    Label #InfoRaceValue {
+      Anchor: (Left: 2);
+      Style: (FontSize: 11, TextColor: #dbe4e7);
+      Text: "--";
+    }
+  }
+
+  Group {
+    LayoutMode: Left;
+
+    ItemIcon #PrimaryIcon {
+      Anchor: (Width: 16, Height: 16, Top: 1);
+      Visible: false;
+    }
+
+    Label #PrimaryClass {
+      Anchor: (Height: 18, Left: 6);
+      Style: (FontSize: 11, TextColor: #dbe4e7);
+      Text: "--";
+    }
+  }
+
+  Group {
+    LayoutMode: Left;
+
+    ItemIcon #SecondaryIcon {
+      Anchor: (Width: 16, Height: 16, Top: 1);
+      Visible: false;
+    }
+
+    Label #SecondaryClass {
+      Anchor: (Height: 18, Left: 6);
+      Style: (FontSize: 11, TextColor: #dbe4e7);
+      Text: "--";
+    }
+  }
+}

@@ -5,6 +5,10 @@ import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.airijko.endlessleveling.managers.ClassManager;
+import com.airijko.endlessleveling.managers.RaceManager;
+import com.airijko.endlessleveling.classes.CharacterClassDefinition;
+import com.airijko.endlessleveling.races.RaceDefinition;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.entities.player.hud.CustomUIHud;
@@ -21,9 +25,24 @@ public class PlayerHud extends CustomUIHud {
     public static final String ID = "EndlessLeveling:PlayerHud";
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final Map<UUID, PlayerHud> ACTIVE_HUDS = new ConcurrentHashMap<>();
+    private static final Map<String, String> DEFAULT_CLASS_ICONS = Map.ofEntries(
+            Map.entry("*", "Weapon_Longsword_Adamantite_Saurian"),
+            Map.entry("adventurer", "Ingredient_Life_Essence"),
+            Map.entry("assassin", "Weapon_Daggers_Mithril"),
+            Map.entry("juggernaut", "Weapon_Battleaxe_Mithril"),
+            Map.entry("mage", "Weapon_Spellbook_Grimoire_Brown"),
+            Map.entry("arcanist", "Weapon_Staff_Bronze"),
+            Map.entry("battlemage", "Weapon_Staff_Onyxium"),
+            Map.entry("oracle", "Weapon_Daggers_Mithril"),
+            Map.entry("marksman", "Weapon_Shortbow_Combat"),
+            Map.entry("skirmisher", "Weapon_Longsword_Mithril"),
+            Map.entry("vanguard", "Weapon_Mace_Prisma"),
+            Map.entry("example", "Potion_Health"));
 
     private final PlayerDataManager playerDataManager;
     private final LevelingManager levelingManager;
+    private final RaceManager raceManager;
+    private final ClassManager classManager;
     private final PlayerRef targetPlayerRef;
     private final java.util.concurrent.atomic.AtomicBoolean built = new java.util.concurrent.atomic.AtomicBoolean(
             false);
@@ -32,6 +51,8 @@ public class PlayerHud extends CustomUIHud {
         super(playerRef);
         this.playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
         this.levelingManager = EndlessLeveling.getInstance().getLevelingManager();
+        this.raceManager = EndlessLeveling.getInstance().getRaceManager();
+        this.classManager = EndlessLeveling.getInstance().getClassManager();
         this.targetPlayerRef = playerRef;
     }
 
@@ -56,7 +77,111 @@ public class PlayerHud extends CustomUIHud {
         double progress = resolveXpProgress();
         uiCommandBuilder.set("#ProgressBar.Value", progress);
         uiCommandBuilder.set("#ProgressBarEffect.Value", progress);
+        uiCommandBuilder.set("#InfoLevel.Text", "Level " + resolveLevelValue());
+        uiCommandBuilder.set("#InfoRaceValue.Text", resolveRaceLabel());
+        uiCommandBuilder.set("#PrimaryClass.Text", resolveClassLabel(true));
+        uiCommandBuilder.set("#SecondaryClass.Text", resolveClassLabel(false));
+        setClassIcon(uiCommandBuilder, "#PrimaryIcon", resolveClassIconId(true));
+        setClassIcon(uiCommandBuilder, "#SecondaryIcon", resolveClassIconId(false));
         update(false, uiCommandBuilder);
+    }
+
+    private String resolveLevelValue() {
+        PlayerData data = getPlayerData();
+        if (data == null) {
+            return "--";
+        }
+        return Integer.toString(data.getLevel());
+    }
+
+    private String resolveRaceLabel() {
+        PlayerData data = getPlayerData();
+        if (data == null) {
+            return "--";
+        }
+        if (raceManager != null && raceManager.isEnabled()) {
+            RaceDefinition race = raceManager.getRace(data.getRaceId());
+            if (race == null) {
+                race = raceManager.getDefaultRace();
+            }
+            if (race != null) {
+                String display = race.getDisplayName();
+                if (display != null && !display.isBlank()) {
+                    return display;
+                }
+                return race.getId();
+            }
+        }
+        String id = data.getRaceId();
+        return (id == null || id.isBlank()) ? "Unknown" : id;
+    }
+
+    private String resolveClassLabel(boolean primary) {
+        PlayerData data = getPlayerData();
+        if (data == null) {
+            return "--";
+        }
+        if (classManager != null && classManager.isEnabled()) {
+            CharacterClassDefinition def = primary
+                    ? classManager.getPlayerPrimaryClass(data)
+                    : classManager.getPlayerSecondaryClass(data);
+            if (def != null) {
+                String display = def.getDisplayName();
+                if (display != null && !display.isBlank()) {
+                    return display;
+                }
+                return def.getId();
+            }
+        }
+        String id = primary ? data.getPrimaryClassId() : data.getSecondaryClassId();
+        return (id == null || id.isBlank()) ? "None" : id;
+    }
+
+    private void setClassIcon(UICommandBuilder uiCommandBuilder, String selector, String itemId) {
+        if (itemId == null || itemId.isBlank()) {
+            uiCommandBuilder.set(selector + ".Visible", false);
+            return;
+        }
+        uiCommandBuilder.set(selector + ".ItemId", itemId);
+        uiCommandBuilder.set(selector + ".Visible", true);
+    }
+
+    private String resolveClassIconId(boolean primary) {
+        PlayerData data = getPlayerData();
+        if (data == null) {
+            return null;
+        }
+
+        CharacterClassDefinition definition = null;
+        if (classManager != null && classManager.isEnabled()) {
+            definition = primary ? classManager.getPlayerPrimaryClass(data)
+                    : classManager.getPlayerSecondaryClass(data);
+        }
+
+        if (definition != null) {
+            String configured = definition.getIconItemId();
+            if (configured != null && !configured.isBlank()) {
+                return configured.trim();
+            }
+            String fallback = DEFAULT_CLASS_ICONS.get(normalizeClassId(definition.getId()));
+            if (fallback != null && !fallback.isBlank()) {
+                return fallback;
+            }
+        }
+
+        String id = primary ? data.getPrimaryClassId() : data.getSecondaryClassId();
+        if (id != null && !id.isBlank()) {
+            String fallback = DEFAULT_CLASS_ICONS.get(normalizeClassId(id));
+            if (fallback != null && !fallback.isBlank()) {
+                return fallback;
+            }
+        }
+
+        return DEFAULT_CLASS_ICONS.get("*");
+    }
+
+    private static String normalizeClassId(String raw) {
+        return raw == null ? "" : raw.trim().toLowerCase(java.util.Locale.ROOT);
     }
 
     private String resolveHudLabel() {
