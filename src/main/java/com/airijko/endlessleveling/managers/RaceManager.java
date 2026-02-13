@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.lang.reflect.Method;
 
@@ -47,6 +49,7 @@ public class RaceManager {
     private final Map<String, RaceDefinition> racesByKey = new HashMap<>();
     private final Yaml yaml = new Yaml();
     private final RaceModelDefaultMode raceModelDefaultMode;
+    private final Map<UUID, Boolean> modelApplyGuard = new ConcurrentHashMap<>();
 
     private String defaultRaceId = PlayerData.DEFAULT_RACE_ID;
     private final long chooseRaceCooldownSeconds;
@@ -253,6 +256,28 @@ public class RaceManager {
             return;
         }
         applyRaceModelToPlayer(data, race);
+    }
+
+    /**
+     * Apply the race model at most once per session for a player (guarded by UUID)
+     * to avoid duplicate dispatches on join.
+     */
+    public void applyRaceModelIfEnabledOnce(PlayerData data) {
+        if (data == null) {
+            return;
+        }
+        UUID uuid = data.getUuid();
+        if (uuid != null && modelApplyGuard.putIfAbsent(uuid, Boolean.TRUE) != null) {
+            LOGGER.atFine().log("RaceManager: skipping duplicate model apply for %s due to guard", uuid);
+            return;
+        }
+        applyRaceModelIfEnabled(data);
+    }
+
+    public void clearModelApplyGuard(UUID uuid) {
+        if (uuid != null) {
+            modelApplyGuard.remove(uuid);
+        }
     }
 
     private void loadRaces() {

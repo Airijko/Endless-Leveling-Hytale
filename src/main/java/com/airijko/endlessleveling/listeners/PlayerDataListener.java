@@ -77,7 +77,7 @@ public class PlayerDataListener {
         }
 
         if (raceManager != null) {
-            raceManager.applyRaceModelIfEnabled(playerData);
+            raceManager.applyRaceModelIfEnabledOnce(playerData);
         }
 
         LOGGER.atInfo().log("Loaded PlayerData for player: %s", playerRef.getUsername());
@@ -97,6 +97,10 @@ public class PlayerDataListener {
             playerDataManager.save(data); // persist to uuid.yml
             playerDataManager.remove(uuid); // remove from cache
             LOGGER.atInfo().log("Saved and removed PlayerData for %s on disconnect.", uuid);
+        }
+
+        if (raceManager != null) {
+            raceManager.clearModelApplyGuard(uuid);
         }
 
         if (passiveManager != null) {
