@@ -198,6 +198,8 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 getAttributeDisplay(data, profile, SkillAttributeType.STAMINA, statMap));
         applyAttributeDisplay(ui, "#AttributeIntelligenceValue", "#AttributeIntelligenceLevel",
                 getAttributeDisplay(data, profile, SkillAttributeType.INTELLIGENCE, statMap));
+        applyAttributeDisplay(ui, "#AttributeDisciplineValue", "#AttributeDisciplineLevel",
+                getAttributeDisplay(data, profile, SkillAttributeType.DISCIPLINE, statMap));
 
         List<SkillPassiveEntry> skillEntries = collectSkillPassiveEntries(data, profile);
         if (skillEntries.isEmpty()) {
@@ -249,6 +251,8 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         applyAttributeDisplay(ui, "#AttributeStaminaValue", "#AttributeStaminaLevel", emptyAttributeDisplay());
         applyAttributeDisplay(ui, "#AttributeIntelligenceValue", "#AttributeIntelligenceLevel",
                 emptyAttributeDisplay());
+        applyAttributeDisplay(ui, "#AttributeDisciplineValue", "#AttributeDisciplineLevel",
+                emptyAttributeDisplay());
         ui.set("#SkillPassiveSummary.Text", "No skill passives unlocked");
         ui.set("#SkillPassiveSummary.Visible", true);
         ui.set("#PassiveSummary.Text", "Select a profile to view passive bonuses");
@@ -271,13 +275,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (skillManager != null) {
             if (isResourceAttribute(type)) {
                 double total = resolveResourceTotal(type, data, statMap);
-                if (type == SkillAttributeType.INTELLIGENCE) {
-                    double xpBonus = skillManager.getIntelligenceXpBonusPercent(level);
-                    String manaText = Double.isNaN(total) ? "--" : formatNumber(total) + " Mana";
-                    detail = manaText + (xpBonus > 0.0D ? ", +" + formatNumber(xpBonus) + "% XP Gain" : "");
-                } else {
-                    detail = Double.isNaN(total) ? "--" : formatNumber(total) + " " + resourceLabel(type);
-                }
+                detail = Double.isNaN(total) ? "--" : formatNumber(total) + " " + resourceLabel(type);
             } else {
                 detail = switch (type) {
                     case STRENGTH -> {
@@ -304,6 +302,10 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     }
                     case FEROCITY ->
                         "+" + formatNumber(level * skillManager.getSkillAttributeConfigValue(type)) + "% Crit Damage";
+                    case DISCIPLINE -> {
+                        double xpBonus = skillManager.getDisciplineXpBonusPercent(level);
+                        yield "+" + formatNumber(xpBonus) + "% XP Gain";
+                    }
                     default -> "--";
                 };
             }

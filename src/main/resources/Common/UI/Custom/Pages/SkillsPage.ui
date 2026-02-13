@@ -909,6 +909,96 @@ $C.@PageOverlay {
                             }
 
                             Group { Anchor: (Height: 12); }
+
+                            // ---------------- DISCIPLINE ----------------
+                            Group #Discipline {
+                                LayoutMode: Top;
+                                Background: #0b141f(0.8);
+                                Padding: (Full: 12);
+
+                                Group {
+                                    LayoutMode: Left;
+                                    Group {
+                                        Anchor: (Width: 56, Height: 56);
+                                        Background: #050b16(0.85);
+                                        LayoutMode: Middle;
+                                        Padding: (Full: 8);
+                                        ItemIcon #DisciplineIcon {
+                                            Anchor: (Width: 36, Height: 36);
+                                            Visible: false;
+                                        }
+                                    }
+
+                                    Group { Anchor: (Width: 12); }
+
+                                    Group {
+                                        LayoutMode: Top;
+                                        FlexWeight: 1;
+
+                                        Group {
+                                            LayoutMode: Left;
+
+                                            Label #DisciplineLabel { Style: (TextColor: #f4f4ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                            Group {
+                                                LayoutMode: Left;
+
+                                                Label {
+                                                    Text: "Lv.";
+                                                    Style: (TextColor: #d5dfff, FontSize: 13);
+                                                }
+
+                                                Group { Anchor: (Width: 2); }
+
+                                                Label #DisciplineLevel { Style: (TextColor: #d5dfff, FontSize: 13); }
+                                            }
+                                        }
+
+                                        Group {
+                                            LayoutMode: Left;
+
+                                            Label #DisciplineValue { Style: (TextColor: #9fe0ff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
+
+                                            Group #DisciplineButtons {
+                                                LayoutMode: Left;
+
+                                                $C.@TextButton #DisciplineMinus1 {
+                                                    Anchor: (Height: 28, Width: 46);
+                                                    Padding: (Horizontal: 12, Vertical: 4);
+                                                    Text: "-1";
+                                                    Style: @CancelTextButtonStyle;
+                                                }
+
+                                                Group { Anchor: (Width: 4); }
+
+                                                $C.@TextButton #DisciplinePlus1 {
+                                                    Anchor: (Height: 28, Width: 46);
+                                                    Padding: (Horizontal: 12, Vertical: 4);
+                                                    Text: "+1";
+                                                    Style: @CustomStyle;
+                                                }
+
+                                                Group { Anchor: (Width: 4); }
+
+                                                $C.@TextButton #DisciplinePlus5 {
+                                                    Anchor: (Height: 28, Width: 46);
+                                                    Padding: (Horizontal: 12, Vertical: 4);
+                                                    Text: "+5";
+                                                    Style: @CustomStyle;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #DisciplineDescription {
+                                    Style: (TextColor: #cde8ff, FontSize: 12);
+                                    Text: "Boosts XP gain from all sources.";
+                                }
+
+                            }
                         }
                     }
                 }

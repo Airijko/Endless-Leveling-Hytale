@@ -53,7 +53,8 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ATTRIBUTE_TAGLINES.put(SkillAttributeType.PRECISION, "Crit chance");
         ATTRIBUTE_TAGLINES.put(SkillAttributeType.FEROCITY, "Crit damage");
         ATTRIBUTE_TAGLINES.put(SkillAttributeType.STAMINA, "Base stamina");
-        ATTRIBUTE_TAGLINES.put(SkillAttributeType.INTELLIGENCE, "Base mana & XP gain");
+        ATTRIBUTE_TAGLINES.put(SkillAttributeType.INTELLIGENCE, "Base mana");
+        ATTRIBUTE_TAGLINES.put(SkillAttributeType.DISCIPLINE, "XP gain");
     }
 
     private final RaceManager raceManager;
@@ -220,6 +221,7 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         applyAttributePreview(ui, selection, SkillAttributeType.FEROCITY, "#RaceAttributeFerocity");
         applyAttributePreview(ui, selection, SkillAttributeType.STAMINA, "#RaceAttributeStamina");
         applyAttributePreview(ui, selection, SkillAttributeType.INTELLIGENCE, "#RaceAttributeIntelligence");
+        applyAttributePreview(ui, selection, SkillAttributeType.DISCIPLINE, "#RaceAttributeDiscipline");
 
         List<RacePassiveDefinition> passives = selection.getPassiveDefinitions();
         if (passives == null || passives.isEmpty()) {
@@ -266,6 +268,7 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set("#RaceAttributeFerocityValue.Text", "--");
         ui.set("#RaceAttributeStaminaValue.Text", "--");
         ui.set("#RaceAttributeIntelligenceValue.Text", "--");
+        ui.set("#RaceAttributeDisciplineValue.Text", "--");
 
         ui.set("#RaceAttributeLifeForceNote.Text", "--");
         ui.set("#RaceAttributeStrengthNote.Text", "--");
@@ -276,6 +279,7 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set("#RaceAttributeFerocityNote.Text", "--");
         ui.set("#RaceAttributeStaminaNote.Text", "--");
         ui.set("#RaceAttributeIntelligenceNote.Text", "--");
+        ui.set("#RaceAttributeDisciplineNote.Text", "--");
     }
 
     private void applyAttributePreview(@Nonnull UICommandBuilder ui,
@@ -349,6 +353,7 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case PRECISION -> formatAbsolutePercent(value);
             case FEROCITY -> formatAbsolutePercent(value);
             case SORCERY -> formatDeltaPercent(value);
+            case DISCIPLINE -> formatAbsolutePercent(value);
             default -> formatNumber(value);
         };
     }

@@ -16,6 +16,7 @@ skill_attributes:
   stamina: 0.2 # Stamina per level
   sorcery: 0.75 # Magic damage per level (staffs only)
   intelligence: 0.5 # Mana per level
+  discipline: 0.5 # XP gain bonus percent per level
 
 # ------------------------------------------------------------
 # PASSIVE SKILLS
@@ -119,4 +120,4 @@ enable_logging: false # Enable detailed logging output
 # INTERNAL CONFIG VERSION
 # DO NOT MODIFY
 # ------------------------------------------------------------
-config_version: 11
+config_version: 12

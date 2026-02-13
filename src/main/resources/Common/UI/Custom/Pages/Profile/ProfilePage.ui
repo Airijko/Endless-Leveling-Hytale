@@ -252,6 +252,15 @@ $C.@PageOverlay {
                                         Group { Anchor: (Width: 8); }
                                         Label #AttributeIntelligenceLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #7dd6ff, RenderBold: true); }
                                     }
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 20);
+                                        Label { Text: "Discipline"; Style: (FontSize: 12, TextColor: #d5dfff); }
+                                        Group { FlexWeight: 1; }
+                                        Label #AttributeDisciplineValue { Text: "--"; Style: (FontSize: 12, TextColor: #9fe0ff, RenderBold: true); }
+                                        Group { Anchor: (Width: 8); }
+                                        Label #AttributeDisciplineLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #d5dfff, RenderBold: true); }
+                                    }
                                 }
 
                                 Group { Anchor: (Height: 16); }

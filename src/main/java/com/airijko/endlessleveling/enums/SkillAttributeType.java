@@ -10,6 +10,7 @@ public enum SkillAttributeType {
     PRECISION("precision"),
     FEROCITY("ferocity"),
     STAMINA("stamina"),
+    DISCIPLINE("discipline"),
     INTELLIGENCE("intelligence"),
     SORCERY("sorcery");
 

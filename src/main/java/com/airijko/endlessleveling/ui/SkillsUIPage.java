@@ -41,7 +41,8 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                         new SkillBinding("Precision", "#PrecisionIcon", SkillAttributeType.PRECISION),
                         new SkillBinding("Ferocity", "#FerocityIcon", SkillAttributeType.FEROCITY),
                         new SkillBinding("Stamina", "#StaminaIcon", SkillAttributeType.STAMINA),
-                        new SkillBinding("Intelligence", "#IntelligenceIcon", SkillAttributeType.INTELLIGENCE) };
+                        new SkillBinding("Intelligence", "#IntelligenceIcon", SkillAttributeType.INTELLIGENCE),
+                        new SkillBinding("Discipline", "#DisciplineIcon", SkillAttributeType.DISCIPLINE) };
 
         private final EnumMap<SkillAttributeType, Integer> previewLevels = new EnumMap<>(SkillAttributeType.class);
         private int previewSkillPoints = 0;
@@ -69,6 +70,8 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                 "Expands stamina for dodges, blocks, and bursts.");
                 ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.INTELLIGENCE,
                                 "Increases mana so spells and abilities stay online longer.");
+                ATTRIBUTE_DESCRIPTIONS.put(SkillAttributeType.DISCIPLINE,
+                                "Increases XP gain rate from all sources.");
 
                 DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.LIFE_FORCE, "Potion_Health");
                 DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.STRENGTH, "Weapon_Longsword_Adamantite_Saurian");
@@ -79,6 +82,7 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.FEROCITY, "Weapon_Battleaxe_Mithril");
                 DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.STAMINA, "Potion_Stamina");
                 DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.INTELLIGENCE, "Prototype_Tool_Book_Mana");
+                DEFAULT_ATTRIBUTE_ICONS.put(SkillAttributeType.DISCIPLINE, "Prototype_Tool_Scroll");
         }
 
         public SkillsUIPage(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime) {
@@ -126,6 +130,8 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ui.set("#StaminaDescription.Text", getDescription(SkillAttributeType.STAMINA));
                 ui.set("#IntelligenceLabel.Text", "Intelligence");
                 ui.set("#IntelligenceDescription.Text", getDescription(SkillAttributeType.INTELLIGENCE));
+                ui.set("#DisciplineLabel.Text", "Discipline");
+                ui.set("#DisciplineDescription.Text", getDescription(SkillAttributeType.DISCIPLINE));
 
                 applySkillIcons(ui);
 
@@ -225,6 +231,11 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                 intLevel);
                 ui.set("#IntelligenceLevel.Text", String.valueOf(intLevel));
                 ui.set("#IntelligenceValue.Text", formatResourceDisplay(intelligenceTotal, "Mana"));
+
+                int discLevel = getPreviewLevel(SkillAttributeType.DISCIPLINE);
+                double discBonus = skillManager.getDisciplineXpBonusPercent(discLevel);
+                ui.set("#DisciplineLevel.Text", String.valueOf(discLevel));
+                ui.set("#DisciplineValue.Text", "+" + formatNumber(discBonus) + "% XP Gain");
         }
 
         @Override

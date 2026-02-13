@@ -32,7 +32,7 @@ public class SkillManager {
     private static final double DEFENSE_SHARP_CURVE_START = 70.0;
     private static final double DEFENSE_MID_SEGMENT_SLOPE = 20.0 / 45.0;
     private static final double DEFENSE_FINAL_SEGMENT_SLOPE = 0.2;
-    private static final double INTELLIGENCE_XP_BONUS_PER_LEVEL_PERCENT = 0.5D;
+    private static final double DEFAULT_DISCIPLINE_XP_BONUS_PER_LEVEL_PERCENT = 0.5D;
 
     private final LevelingConfigManager levelingConfig;
     private final ConfigManager config;
@@ -289,19 +289,23 @@ public class SkillManager {
                 componentAccessor, playerData, skillBonus);
     }
 
-    public double getIntelligenceXpBonusPercent(int intelligenceLevel) {
-        if (intelligenceLevel <= 0) {
+    public double getDisciplineXpBonusPercent(int disciplineLevel) {
+        if (disciplineLevel <= 0) {
             return 0.0D;
         }
-        return Math.max(0.0D, intelligenceLevel * INTELLIGENCE_XP_BONUS_PER_LEVEL_PERCENT);
+        double perLevelPercent = getSkillAttributeConfigValue(SkillAttributeType.DISCIPLINE);
+        if (perLevelPercent <= 0.0D) {
+            perLevelPercent = DEFAULT_DISCIPLINE_XP_BONUS_PER_LEVEL_PERCENT;
+        }
+        return Math.max(0.0D, disciplineLevel * perLevelPercent);
     }
 
     public double getXpGainMultiplier(PlayerData playerData) {
         if (playerData == null) {
             return 1.0D;
         }
-        int intelligenceLevel = playerData.getPlayerSkillAttributeLevel(SkillAttributeType.INTELLIGENCE);
-        double bonusPercent = getIntelligenceXpBonusPercent(intelligenceLevel);
+        int disciplineLevel = playerData.getPlayerSkillAttributeLevel(SkillAttributeType.DISCIPLINE);
+        double bonusPercent = getDisciplineXpBonusPercent(disciplineLevel);
         return 1.0D + (bonusPercent / 100.0D);
     }
 
