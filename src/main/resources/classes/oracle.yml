@@ -8,19 +8,18 @@ weapons:
   - type: STAFF
     damage: 1.2
   - type: DAGGER
-    damage: 1.00
+    damage: 1.05
 
 passives:
   - type: MANA_REGEN
-    value: 0.05
+    value: 0.075
   - type: HEALING_BONUS
     value: 0.5 # +50% healing dealt/received
   - type: SPECIAL_CHARGE_BONUS
     value: 0.75
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: flow
-    value: 1.25
+    value: 2.5
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: sorcery
     value: 1.0
-
