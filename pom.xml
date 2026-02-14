@@ -6,7 +6,7 @@
 
     <groupId>com.airijko</groupId>
     <artifactId>EndlessLeveling</artifactId>
-    <version>5.7</version>
+    <version>5.8</version>
     <packaging>jar</packaging>
 
     <name>EndlessLevelingHytale</name>

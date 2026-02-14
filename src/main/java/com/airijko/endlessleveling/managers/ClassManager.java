@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 public class ClassManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final int BUILTIN_CLASSES_VERSION = 6;
+    private static final int BUILTIN_CLASSES_VERSION = 7;
     private static final String CLASSES_VERSION_FILE = "classes.version";
 
     private final PluginFilesManager filesManager;
