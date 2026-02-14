@@ -10,6 +10,7 @@ import com.airijko.endlessleveling.enums.PassiveStackingStyle;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.passives.PassiveDefinitionParser;
+import com.airijko.endlessleveling.managers.ConfigManager;
 import com.hypixel.hytale.logger.HytaleLogger;
 import org.yaml.snakeyaml.Yaml;
 
@@ -42,6 +43,7 @@ public class ClassManager {
     private static final String CLASSES_VERSION_FILE = "classes.version";
 
     private final PluginFilesManager filesManager;
+    private final ConfigManager configManager;
     private final boolean classesEnabled;
     private final boolean forceBuiltinClasses;
     private final Map<String, CharacterClassDefinition> classesByKey = new HashMap<>();
@@ -54,9 +56,26 @@ public class ClassManager {
     private final long chooseClassCooldownSeconds;
     private final int maxClassSwitches;
 
+    private void reloadDefaultsFromConfig() {
+        if (configManager == null) {
+            return;
+        }
+
+        String configuredPrimary = safeString(
+                configManager.get("default_primary_class", defaultPrimaryClassId, false));
+        if (configuredPrimary != null) {
+            defaultPrimaryClassId = configuredPrimary;
+        }
+
+        String configuredSecondary = safeString(configManager.get("default_secondary_class", defaultSecondaryClassId,
+                false));
+        defaultSecondaryClassId = configuredSecondary;
+    }
+
     public ClassManager(ConfigManager configManager, PluginFilesManager filesManager) {
         Objects.requireNonNull(configManager, "ConfigManager is required");
         this.filesManager = Objects.requireNonNull(filesManager, "PluginFilesManager is required");
+        this.configManager = configManager;
         this.classesEnabled = parseBoolean(configManager.get("enable_classes", Boolean.TRUE, false), true);
         this.forceBuiltinClasses = parseBoolean(configManager.get("force_builtin_classes", Boolean.FALSE, false),
                 false);
@@ -79,6 +98,19 @@ public class ClassManager {
             return;
         }
 
+        syncBuiltinClassesIfNeeded();
+        loadClasses();
+    }
+
+    /** Reload class definitions and refresh defaults from config.yml. */
+    public synchronized void reload() {
+        if (!classesEnabled) {
+            LOGGER.atInfo().log("Class system is disabled; skipping reload.");
+            return;
+        }
+
+        reloadDefaultsFromConfig();
+        classesByKey.clear();
         syncBuiltinClassesIfNeeded();
         loadClasses();
     }

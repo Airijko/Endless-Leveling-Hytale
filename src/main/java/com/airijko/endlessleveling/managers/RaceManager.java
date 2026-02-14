@@ -46,6 +46,7 @@ public class RaceManager {
     private final ConcurrentHashMap<UUID, Long> modelApplyTimestamps = new ConcurrentHashMap<>();
 
     private final PluginFilesManager filesManager;
+    private final ConfigManager configManager;
     private final boolean racesEnabled;
     private final boolean forceBuiltinRaces;
     private final Map<String, RaceDefinition> racesByKey = new HashMap<>();
@@ -60,6 +61,7 @@ public class RaceManager {
     public RaceManager(ConfigManager configManager, PluginFilesManager filesManager) {
         Objects.requireNonNull(configManager, "ConfigManager is required");
         this.filesManager = Objects.requireNonNull(filesManager, "PluginFilesManager is required");
+        this.configManager = configManager;
         this.racesEnabled = parseBoolean(configManager.get("enable_races", Boolean.TRUE, false), true);
         this.forceBuiltinRaces = parseBoolean(configManager.get("force_builtin_races", Boolean.FALSE, false),
                 false);
@@ -79,6 +81,29 @@ public class RaceManager {
             return;
         }
 
+        syncBuiltinRacesIfNeeded();
+        loadRaces();
+    }
+
+    private void reloadDefaultsFromConfig() {
+        if (configManager == null) {
+            return;
+        }
+        String configuredDefault = safeString(configManager.get("default_race", defaultRaceId, false));
+        if (configuredDefault != null) {
+            defaultRaceId = configuredDefault;
+        }
+    }
+
+    /** Reload race definitions and refresh defaults from config.yml. */
+    public synchronized void reload() {
+        if (!racesEnabled) {
+            LOGGER.atInfo().log("Race system is disabled; skipping reload.");
+            return;
+        }
+
+        reloadDefaultsFromConfig();
+        racesByKey.clear();
         syncBuiltinRacesIfNeeded();
         loadRaces();
     }

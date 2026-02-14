@@ -55,6 +55,12 @@ public class LevelingManager {
         loadConfigValues();
     }
 
+    /** Reload leveling.yml and refresh cached values. */
+    public void reloadConfig() {
+        configManager.load();
+        loadConfigValues();
+    }
+
     /** Load numeric values from leveling.yml via ConfigManager */
     public void loadConfigValues() {
         baseXp = ((Number) configManager.get("default.base", 50)).doubleValue();

@@ -57,6 +57,14 @@ public class SkillManager {
         loadConfigValues();
     }
 
+    /** Reload both leveling.yml and config.yml-backed skill settings. */
+    public synchronized void reload() {
+        levelingConfig.load();
+        config.load();
+        ensureFlowConfigLine();
+        loadConfigValues();
+    }
+
     /** Load skill point values from leveling.yml */
     public void loadConfigValues() {
         try {
