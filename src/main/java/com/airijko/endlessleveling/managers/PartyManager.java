@@ -2,9 +2,14 @@ package com.airijko.endlessleveling.managers;
 
 import com.airijko.endlessleveling.data.PlayerData;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -260,6 +265,92 @@ public class PartyManager {
 
         LOGGER.atInfo().log("Distributed %f XP from %s among %d active party members (%.3f each).",
                 totalXp, sourcePlayerUuid, activeMembers.size(), share);
+    }
+
+    /**
+     * XP sharing with a range limit. Only party members in the same world and
+     * within maxDistance of the source player's position receive a share. If no
+     * members are in range, grants full XP to the source.
+     */
+    public synchronized void handleXpGainInRange(@Nonnull UUID sourcePlayerUuid, double totalXp,
+            double maxDistance) {
+        if (totalXp <= 0.0) {
+            return;
+        }
+
+        PlayerRef sourceRef = Universe.get().getPlayer(sourcePlayerUuid);
+        if (sourceRef == null || !sourceRef.isValid()) {
+            levelingManager.addXp(sourcePlayerUuid, totalXp);
+            return;
+        }
+
+        Ref<EntityStore> sourceEntity = sourceRef.getReference();
+        Store<EntityStore> sourceStore = sourceEntity != null ? sourceEntity.getStore() : null;
+        Vector3d sourcePos = resolvePosition(sourceEntity, sourceStore);
+
+        Party party = membershipIndex.get(sourcePlayerUuid);
+        if (party == null || party.members.isEmpty() || sourcePos == null) {
+            levelingManager.addXp(sourcePlayerUuid, totalXp);
+            return;
+        }
+
+        double radius = Math.max(0.0D, maxDistance);
+        double radiusSq = radius <= 0.0D ? 0.0D : radius * radius;
+
+        List<UUID> nearbyMembers = new ArrayList<>();
+        for (UUID member : party.members) {
+            PlayerRef memberRef = Universe.get().getPlayer(member);
+            if (memberRef == null || !memberRef.isValid()) {
+                continue;
+            }
+            Ref<EntityStore> memberEntity = memberRef.getReference();
+            if (memberEntity == null) {
+                continue;
+            }
+            if (sourceStore != null && memberEntity.getStore() != sourceStore) {
+                continue;
+            }
+            Vector3d pos = resolvePosition(memberEntity, memberEntity.getStore());
+            if (pos == null) {
+                continue;
+            }
+            if (radiusSq > 0.0D) {
+                double dx = pos.getX() - sourcePos.getX();
+                double dy = pos.getY() - sourcePos.getY();
+                double dz = pos.getZ() - sourcePos.getZ();
+                double distSq = (dx * dx) + (dy * dy) + (dz * dz);
+                if (distSq > radiusSq) {
+                    continue;
+                }
+            }
+            nearbyMembers.add(member);
+        }
+
+        if (nearbyMembers.isEmpty()) {
+            levelingManager.addXp(sourcePlayerUuid, totalXp);
+            return;
+        }
+
+        double share = totalXp / (double) nearbyMembers.size();
+        for (UUID member : nearbyMembers) {
+            levelingManager.addXp(member, share);
+        }
+
+        LOGGER.atInfo().log(
+                "Distributed %f XP in-range from %s among %d party members (%.3f each, radius=%.1f).",
+                totalXp, sourcePlayerUuid, nearbyMembers.size(), share, maxDistance);
+    }
+
+    private Vector3d resolvePosition(Ref<EntityStore> ref, Store<EntityStore> store) {
+        if (ref == null || store == null) {
+            return null;
+        }
+        try {
+            TransformComponent transform = store.getComponent(ref, TransformComponent.getComponentType());
+            return transform != null ? transform.getPosition() : null;
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private void internalLeave(@Nonnull UUID memberUuid, @Nonnull Party party) {

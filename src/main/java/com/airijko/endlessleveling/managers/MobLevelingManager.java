@@ -18,6 +18,7 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +33,8 @@ public class MobLevelingManager {
     private final Set<Integer> applied = new HashSet<>();
     private final Map<Integer, Integer> cachedPlayerDiffs = new ConcurrentHashMap<>();
     private final Map<Long, Integer> cachedPosDiffs = new ConcurrentHashMap<>();
+    private final Map<String, AreaOverride> areaOverrides = new ConcurrentHashMap<>();
+    private final Map<Integer, Integer> entityLevelOverrides = new ConcurrentHashMap<>();
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private final ConfigManager configManager;
     private final PlayerDataManager playerDataManager;
@@ -183,6 +186,11 @@ public class MobLevelingManager {
     }
 
     public int resolveMobLevel(Store<EntityStore> store, Vector3d mobPosition, Integer entityId) {
+        Integer override = resolveExternalOverride(store, mobPosition, entityId);
+        if (override != null && override > 0) {
+            return override;
+        }
+
         LevelSourceMode mode = getLevelSourceMode();
         int level;
         try {
@@ -196,6 +204,60 @@ public class MobLevelingManager {
             level = getFixedLevel();
         }
         return clampToConfiguredRange(level);
+    }
+
+    private Integer resolveExternalOverride(Store<EntityStore> store, Vector3d mobPosition, Integer entityId) {
+        if (entityId != null) {
+            Integer direct = entityLevelOverrides.get(entityId);
+            if (direct != null) {
+                return Math.max(1, direct);
+            }
+        }
+
+        if (areaOverrides.isEmpty()) {
+            return null;
+        }
+
+        String worldId = resolveWorldId(store);
+        for (AreaOverride override : areaOverrides.values()) {
+            if (override == null) {
+                continue;
+            }
+            if (override.worldId != null && worldId != null
+                    && !override.worldId.equalsIgnoreCase(worldId)) {
+                continue;
+            }
+            if (mobPosition == null) {
+                continue;
+            }
+            double dx = mobPosition.getX() - override.centerX;
+            double dz = mobPosition.getZ() - override.centerZ;
+            double distSq = (dx * dx) + (dz * dz);
+            if (distSq > override.radiusSq) {
+                continue;
+            }
+            int sampled = sampleLevel(override.minLevel, override.maxLevel, entityId, mobPosition);
+            return Math.max(1, sampled);
+        }
+        return null;
+    }
+
+    private int sampleLevel(int minLevel, int maxLevel, Integer entityId, Vector3d mobPosition) {
+        int min = Math.max(1, Math.min(minLevel, maxLevel));
+        int max = Math.max(min, Math.max(minLevel, maxLevel));
+        if (min == max) {
+            return min;
+        }
+        long seed = 0L;
+        if (entityId != null) {
+            seed = entityId.longValue();
+        } else if (mobPosition != null) {
+            seed = hashPosition(mobPosition);
+        }
+        long scrambled = seed ^ (seed << 21) ^ (seed >>> 7) ^ (seed << 3);
+        long span = (long) (max - min + 1);
+        long rolled = Math.floorMod(scrambled, span);
+        return (int) (min + rolled);
     }
 
     private LevelSourceMode getLevelSourceMode() {
@@ -333,6 +395,29 @@ public class MobLevelingManager {
             }
         }
         return transform != null ? transform.getPosition() : null;
+    }
+
+    private String resolveWorldId(Store<EntityStore> store) {
+        if (store == null) {
+            return null;
+        }
+        try {
+            Method getWorld = store.getClass().getMethod("getWorld");
+            Object world = getWorld.invoke(store);
+            if (world != null) {
+                try {
+                    Method getName = world.getClass().getMethod("getName");
+                    Object name = getName.invoke(world);
+                    if (name != null) {
+                        return name.toString();
+                    }
+                } catch (Exception ignored) {
+                }
+                return world.toString();
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 
     private double horizontalDistanceSquared(Vector3d a, Vector3d b) {
@@ -526,5 +611,78 @@ public class MobLevelingManager {
         if (raw instanceof String s)
             return Boolean.parseBoolean(s.trim());
         return defaultValue;
+    }
+
+    // --------------------
+    // External override API
+    // --------------------
+
+    /**
+     * Register an area- or radius-based override. If worldId is null, applies to
+     * all
+     * worlds. Radius is in blocks; min/max can be equal for a flat level. Returns
+     * false on bad input.
+     */
+    public boolean registerAreaLevelOverride(String id, String worldId,
+            double centerX, double centerZ, double radius, int minLevel, int maxLevel) {
+        if (id == null || id.isBlank() || radius <= 0.0D || minLevel <= 0 || maxLevel <= 0) {
+            return false;
+        }
+        double r = radius <= 0.0D ? 1.0D : radius;
+        AreaOverride override = new AreaOverride(
+                id.trim(),
+                worldId != null && !worldId.isBlank() ? worldId.trim() : null,
+                centerX,
+                centerZ,
+                r * r,
+                minLevel,
+                maxLevel);
+        areaOverrides.put(override.id, override);
+        return true;
+    }
+
+    /** Register a world-wide override (min/max or flat if equal). */
+    public boolean registerWorldLevelOverride(String id, String worldId, int minLevel, int maxLevel) {
+        if (id == null || id.isBlank() || minLevel <= 0 || maxLevel <= 0) {
+            return false;
+        }
+        double huge = Double.MAX_VALUE / 4.0D;
+        return registerAreaLevelOverride(id, worldId, 0.0D, 0.0D, huge, minLevel, maxLevel);
+    }
+
+    /** Remove a previously registered area/world override by id. */
+    public boolean removeAreaLevelOverride(String id) {
+        if (id == null || id.isBlank()) {
+            return false;
+        }
+        return areaOverrides.remove(id.trim()) != null;
+    }
+
+    /** Clear all area/world overrides. */
+    public void clearAreaLevelOverrides() {
+        areaOverrides.clear();
+    }
+
+    /** Set a fixed level override for a specific entity index. */
+    public void setEntityLevelOverride(int entityIndex, int level) {
+        if (entityIndex < 0 || level <= 0) {
+            return;
+        }
+        entityLevelOverrides.put(entityIndex, level);
+    }
+
+    /** Remove a specific entity override. */
+    public void clearEntityLevelOverride(int entityIndex) {
+        entityLevelOverrides.remove(entityIndex);
+    }
+
+    /** Clear all per-entity overrides. */
+    public void clearAllEntityLevelOverrides() {
+        entityLevelOverrides.clear();
+    }
+
+    private record AreaOverride(String id, String worldId,
+            double centerX, double centerZ, double radiusSq,
+            int minLevel, int maxLevel) {
     }
 }

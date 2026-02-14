@@ -4,8 +4,10 @@ import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.managers.LevelingManager;
+import com.airijko.endlessleveling.managers.MobLevelingManager;
 import com.airijko.endlessleveling.managers.PlayerAttributeManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.airijko.endlessleveling.managers.PartyManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.managers.SkillManager;
 
@@ -27,6 +29,8 @@ public final class EndlessLevelingAPI {
     private final LevelingManager levelingManager;
     private final RaceManager raceManager;
     private final PlayerAttributeManager attributeManager;
+    private final MobLevelingManager mobLevelingManager;
+    private final PartyManager partyManager;
 
     private EndlessLevelingAPI() {
         EndlessLeveling plugin = EndlessLeveling.getInstance();
@@ -35,6 +39,8 @@ public final class EndlessLevelingAPI {
         this.levelingManager = plugin != null ? plugin.getLevelingManager() : null;
         this.raceManager = plugin != null ? plugin.getRaceManager() : null;
         this.attributeManager = plugin != null ? plugin.getPlayerAttributeManager() : null;
+        this.mobLevelingManager = plugin != null ? plugin.getMobLevelingManager() : null;
+        this.partyManager = plugin != null ? plugin.getPartyManager() : null;
     }
 
     /** Global access point. */
@@ -173,6 +179,96 @@ public final class EndlessLevelingAPI {
             return 0.0D;
         }
         return skillManager.getSkillAttributeConfigValue(type);
+    }
+
+    // ------------
+    // XP helpers
+    // ------------
+
+    /** Grant raw XP to a player (passes through EL's XP bonuses and level cap). */
+    public void grantXp(UUID playerUuid, double xpAmount) {
+        if (playerUuid == null || levelingManager == null || xpAmount <= 0) {
+            return;
+        }
+        levelingManager.addXp(playerUuid, xpAmount);
+    }
+
+    /**
+     * Grant XP and share it with the source's party members within maxDistance
+     * (same world). If no party or no one in range, only the source receives XP.
+     */
+    public void grantSharedXpInRange(UUID sourcePlayerUuid, double totalXp, double maxDistance) {
+        if (sourcePlayerUuid == null || totalXp <= 0) {
+            return;
+        }
+        if (partyManager != null) {
+            partyManager.handleXpGainInRange(sourcePlayerUuid, totalXp, maxDistance);
+            return;
+        }
+        if (levelingManager != null) {
+            levelingManager.addXp(sourcePlayerUuid, totalXp);
+        }
+    }
+
+    // ------------
+    // Mob overrides
+    // ------------
+
+    /**
+     * Register a radius/area override (min/max or flat) for mob levels. This is
+     * applied before Level_Source (player/distance/fixed), so overrides are not
+     * modified by the normal resolver.
+     */
+    public boolean registerMobAreaLevelOverride(String id, String worldId,
+            double centerX, double centerZ, double radius, int minLevel, int maxLevel) {
+        return mobLevelingManager != null
+                && mobLevelingManager.registerAreaLevelOverride(id, worldId, centerX, centerZ, radius, minLevel,
+                        maxLevel);
+    }
+
+    /**
+     * Register a world-wide override; min/max equal means flat. Also bypasses the
+     * normal Level_Source resolver.
+     */
+    public boolean registerMobWorldLevelOverride(String id, String worldId, int minLevel, int maxLevel) {
+        return mobLevelingManager != null
+                && mobLevelingManager.registerWorldLevelOverride(id, worldId, minLevel, maxLevel);
+    }
+
+    /** Remove a previously registered area/world override. */
+    public boolean removeMobAreaLevelOverride(String id) {
+        return mobLevelingManager != null && mobLevelingManager.removeAreaLevelOverride(id);
+    }
+
+    /** Clear all area/world overrides. */
+    public void clearMobAreaLevelOverrides() {
+        if (mobLevelingManager != null) {
+            mobLevelingManager.clearAreaLevelOverrides();
+        }
+    }
+
+    /**
+     * Set a fixed level for a specific entity index (e.g., a spawned boss). This
+     * is checked before any Level_Source logic.
+     */
+    public void setMobEntityLevelOverride(int entityIndex, int level) {
+        if (mobLevelingManager != null) {
+            mobLevelingManager.setEntityLevelOverride(entityIndex, level);
+        }
+    }
+
+    /** Remove a specific entity override. */
+    public void clearMobEntityLevelOverride(int entityIndex) {
+        if (mobLevelingManager != null) {
+            mobLevelingManager.clearEntityLevelOverride(entityIndex);
+        }
+    }
+
+    /** Clear all per-entity overrides. */
+    public void clearAllMobEntityLevelOverrides() {
+        if (mobLevelingManager != null) {
+            mobLevelingManager.clearAllEntityLevelOverrides();
+        }
     }
 
     private PlayerData getData(UUID uuid) {

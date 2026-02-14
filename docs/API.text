@@ -1,4 +1,4 @@
-EndlessLeveling Public API (plain text)
+EndlessLeveling Public API
 ======================================
 
 Expanded guide for external mods to read EndlessLeveling state or add their own bonuses.
@@ -93,6 +93,36 @@ double totalHealth = life.total();
     Example: label
         String label = "Race: " + raceId + " | Class: " + primaryClass + (secondaryClass != null ? " / " + secondaryClass : "");
 
+- Mob level overrides
+    // Flat level 20 for everything in world "dungeon_world"
+    api.registerMobWorldLevelOverride("dungeon-world", "dungeon_world", 20, 20);
+
+    // Radius override: level 5-10 inside center (100, 100) radius 50 in overworld
+    api.registerMobAreaLevelOverride("starter-dungeon", "overworld", 100.0, 100.0, 50.0, 5, 10);
+
+    // Boss: set a specific entity index to level 25
+    api.setMobEntityLevelOverride(bossRef.getIndex(), 25);
+
+    // Cleanup hooks
+    api.removeMobAreaLevelOverride("starter-dungeon");
+    api.clearMobAreaLevelOverrides();
+    api.clearMobEntityLevelOverride(bossRef.getIndex());
+
+    // Dungeon example (radius + boss)
+    // - Dungeon trash between 12 and 16 inside radius 80 at (512, 512) in world "dungeon_world"
+    api.registerMobAreaLevelOverride("dungeon-trash", "dungeon_world", 512, 512, 80, 12, 16);
+    // - Dungeon boss fixed at 22 using its entity index
+    api.setMobEntityLevelOverride(bossRef.getIndex(), 22);
+    // These overrides bypass Level_Source in leveling.yml; they apply first and are not re-scaled.
+
+- XP helpers for integrations
+    // Give 250 XP directly (respects EL bonuses and cap)
+    api.grantXp(playerUuid, 250);
+
+    // Mob kill sharing: pass the total mob XP, it is divided evenly among nearby party members (includes killer)
+    // Only members in the same world within 30 blocks get a share
+    api.grantSharedXpInRange(killerUuid, mobXpTotal, 30.0);
+
 4) Integration tips
 -------------------
 - Missing data returns safe defaults (0, null, or your fallback).
@@ -105,81 +135,75 @@ double totalHealth = life.total();
 - Skill bonus (any attribute)
     bonus = level * perPointValue + innateRaceBonus
     perPointValue comes from config.yml via getSkillAttributeConfigValue(type).
-    Stacking: bonus is additive; you add it to raceBase (no multipliers here).
+    Stacking: bonus is additive; add to raceBase (no multipliers here).
 
 - Combined attribute (no gear/buffs)
     total = raceBase + skillBonus
     raceBase = raceManager.getAttribute(playerData, type, fallback)
     skillBonus = calculateSkillAttributeBonus(...)
     With externals: AttributeBreakdown.total() = raceBase + skillBonus + externalBonus.
-    If you also apply percent buffs (your mod): totalPercentBuffed = total * (1 + percentBuff/100).
+    With percent buffs: totalPercentBuffed = total * (1 + percentBuff/100).
 
 - Passives stacking
-        Sources: race + primary class (100%) + secondary class (scaled, default 50%).
-        Grouping: same passive type is combined by stackingStyle.
-            ADDITIVE: total = a + b + c
-            DIMINISHING: total = 1 - (1-a)*(1-b)*(1-c)
-            UNIQUE: total = max(a, b, c)
-        Each passive can also carry a tag/layer; tags with the same stackingStyle combine before damage is applied.
+    Sources: race + primary class (100%) + secondary class (scaled, default 50%).
+    Same passive type combines by stackingStyle:
+        ADDITIVE: total = a + b + c
+        DIMINISHING: total = 1 - (1-a)*(1-b)*(1-c)
+        UNIQUE: total = max(a, b, c)
+    Passives can tag a damage layer; tags in the same layer combine before damage is applied.
 
 - Health / Stamina / Flow (mana)
     Use getCombinedAttribute(...) for race+skill max values before other buffs.
-    externalBonus lets you add gear/other-mod values and get a single total.
-        Order if you add your own effects:
-            base = raceBase + skillBonus
-            basePlusFlat = base + externalFlat
-            final = basePlusFlat * (1 + externalPercent/100)
+    externalBonus lets you add gear/other-mod values.
+    Order if you add your own effects:
+        base = raceBase + skillBonus
+        basePlusFlat = base + externalFlat
+        final = basePlusFlat * (1 + externalPercent/100)
 
 - Strength damage
-    finalDamage = baseDamage * (1.0 + (strengthBonus / 100.0));
-    strengthBonus = getSkillAttributeBonus(uuid, STRENGTH).
-        If you have your own percentDamage buffs, apply multiplicatively after strength:
-            dmg = baseDamage * (1 + strengthBonus/100)
-            dmg = dmg * (1 + externalPercent/100)
+    finalDamage = baseDamage * (1 + strengthBonus/100)
+    If you have your own percentDamage buffs:
+        dmg = baseDamage * (1 + strengthBonus/100)
+        dmg = dmg * (1 + externalPercent/100)
 
 - Sorcery (spell damage)
-    finalSpellDamage = baseSpellDamage * (1.0 + (sorceryBonus / 100.0));
-    sorceryBonus = getSkillAttributeBonus(uuid, SORCERY).
-    Same stacking as strength: apply sorcery first, then your additional percent buffs.
+    finalSpellDamage = baseSpellDamage * (1 + sorceryBonus/100)
+    Same stacking as strength: apply sorcery, then your percent buffs.
 
 - Full damage order (weapon + crit + passives)
-    1) Start with incoming event damage (from weapon hit).
-    2) Attribute scale: if staff -> sorcery; else -> strength.
-        damageAttr = baseDamage * (1 + attrBonus/100).
+    1) Start with incoming event damage (weapon hit).
+    2) Attribute scale: staff -> sorcery; else -> strength.
+             damageAttr = baseDamage * (1 + attrBonus/100)
     3) Critical: if proc, damageCrit = damageAttr * (1 + ferocity/100); else damageCrit = damageAttr.
-    4) Passive damage bonuses (First Strike, Berzerker, Retaliation, Executioner):
-        each computes bonusDamage vs damageCrit; stored as percent or flat in the BONUS layer;
-        tags in the same layer combine via stackingStyle (additive/diminishing/unique);
-        damageBonusLayer = damageCrit * (1 + sumPercents) + sumFlat.
+    4) Passive bonuses (First Strike, Berzerker, Retaliation, Executioner):
+             each computes bonusDamage vs damageCrit; stored as percent or flat in BONUS layer;
+             tags in the same layer combine via stackingStyle;
+             damageBonusLayer = damageCrit * (1 + sumPercents) + sumFlat.
     5) Class weapon multiplier: finalDamage = damageBonusLayer * weaponMultiplier.
-    6) Apply life steal after finalDamage (healing only).
+    6) Life steal heals off finalDamage (does not change damage).
 
 - Haste (move speed)
     Use haste level (skillLevels or getSkillAttributeLevel) as your multiplier input;
-    EndlessLeveling clamps to movement min/max when applied.
-    If you add speed buffs: requested = (1 + hasteBonus) * (1 + yourPercentBuff/100);
-    then clamp to engine min/max.
+    EL clamps to movement min/max.
+    If you add speed buffs: requested = (1 + hasteBonus) * (1 + yourPercentBuff/100); then clamp.
 
 - Defense (damage reduction)
-    per-point value from config: perPointDefense = getSkillAttributeConfigValue(DEFENSE);
-    apply your own curve; EL caps reduction internally around its own curve.
-    Simple approach: reduction = clamp(perPointDefense * level + raceBonus, 0, defenseCap);
-    finalDamage = incomingDamage * (1 - reduction/100).
+    perPointDefense = getSkillAttributeConfigValue(DEFENSE)
+    Simple: reduction = clamp(perPointDefense * level + raceBonus, 0, defenseCap)
+    finalDamage = incomingDamage * (1 - reduction/100)
 
 - Precision / Ferocity
-    precision: perPointChance = config value; use as crit chance contribution.
-    ferocity: perPoint value; use as crit damage contribution.
+    precision contributes crit chance; ferocity contributes crit damage.
     Example: critChance = baseChance + precision * perPointChance;
-             critMultiplier = baseCrit + ferocity * perPointFerocity.
+                     critMultiplier = baseCrit + ferocity * perPointFerocity.
 
 - Discipline XP bonus
-    xpGainMultiplier = api.getSkillAttributeBonus(uuid, DISCIPLINE) / 100 + 1.0;
-    Or call api.getPlayerSnapshot(...).xpGainMultiplier for the ready-made multiplier.
-    If you add your own XP modifiers: finalXp = rawXp * xpGainMultiplier * (1 + externalXpPercent/100).
+    xpGainMultiplier = api.getSkillAttributeBonus(uuid, DISCIPLINE)/100 + 1.0
+    With your own XP mods: finalXp = rawXp * xpGainMultiplier * (1 + externalXpPercent/100)
 
 - XP to next level
     xpNeeded(level) = baseXp * ((ln(level) + 1) * sqrt(level))^multiplier
-    baseXp, multiplier from config.yml; helper: api.getXpForNextLevel(level).
+    baseXp, multiplier from config.yml; helper: api.getXpForNextLevel(level)
 
 - Level cap
     api.getLevelCap() returns the configured maximum; XP beyond cap is ignored.
