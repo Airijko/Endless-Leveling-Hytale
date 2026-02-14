@@ -1,6 +1,7 @@
 race_name: "Ascended"
 description: "Empowered by ancient sun rituals, Ascended are godlike warriors with immense physical might and durability."
 model: "Feran_Windwalker"
+model_scale: 1.0
 enabled: true
 
 attributes:

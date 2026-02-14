@@ -520,6 +520,7 @@ public class RaceManager {
         String displayName = safeString(yamlData.getOrDefault("race_name", raceId));
         String description = safeString(yamlData.get("description"));
         String modelId = safeString(yamlData.get("model"));
+        double modelScale = parseDouble(yamlData.getOrDefault("model_scale", 1.0));
         boolean enabled = parseBoolean(yamlData.getOrDefault("enabled", Boolean.TRUE), true);
 
         EnumMap<SkillAttributeType, Double> attributes = new EnumMap<>(SkillAttributeType.class);
@@ -539,6 +540,7 @@ public class RaceManager {
                 displayName,
                 description,
                 modelId,
+                modelScale,
                 enabled,
                 attributes,
                 passives,
@@ -624,12 +626,23 @@ public class RaceManager {
         }
 
         String modelId = race.getModelId();
+        double modelScale = race.getModelScale();
         if (modelId == null || modelId.isBlank()) {
             resetPlayerModel(playerRef);
             return;
         }
 
-        String baseCommand = "model set " + modelId + " " + playerRef.getUsername();
+        StringBuilder commandBuilder = new StringBuilder("model set ")
+                .append(modelId)
+                .append(' ')
+                .append(playerRef.getUsername());
+
+        if (Double.isFinite(modelScale) && modelScale > 0.0 && Math.abs(modelScale - 1.0) > 1e-6) {
+            String formattedScale = String.format(Locale.ROOT, "%.3f", modelScale);
+            commandBuilder.append(" --scale=").append(formattedScale);
+        }
+
+        String baseCommand = commandBuilder.toString();
         LOGGER.atFine().log("RaceManager: applying model %s to %s using command '%s'", modelId,
                 playerRef.getUsername(), baseCommand);
 

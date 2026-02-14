@@ -16,6 +16,7 @@ public class RaceDefinition {
     private final String displayName;
     private final String description;
     private final String modelId;
+    private final double modelScale;
     private final boolean enabled;
     private final Map<SkillAttributeType, Double> baseAttributes;
     private final List<Map<String, Object>> passives;
@@ -25,6 +26,7 @@ public class RaceDefinition {
             String displayName,
             String description,
             String modelId,
+            double modelScale,
             boolean enabled,
             Map<SkillAttributeType, Double> baseAttributes,
             List<Map<String, Object>> passives,
@@ -33,6 +35,7 @@ public class RaceDefinition {
         this.displayName = displayName == null ? id : displayName;
         this.description = description == null ? "" : description;
         this.modelId = modelId;
+        this.modelScale = modelScale;
         this.enabled = enabled;
         this.baseAttributes = Collections.unmodifiableMap(new EnumMap<>(baseAttributes));
         this.passives = Collections.unmodifiableList(copyPassives(passives));
@@ -71,6 +74,10 @@ public class RaceDefinition {
 
     public String getModelId() {
         return modelId;
+    }
+
+    public double getModelScale() {
+        return modelScale;
     }
 
     public boolean isEnabled() {

@@ -1,6 +1,7 @@
 race_name: "Wraith"
 description: "Cursed spirits tethered to the mortal plane, Wraiths excel at swift, lethal strikes and evasion."
 model: "Wraith"
+model_scale: 1.0
 enabled: true
 
 attributes:

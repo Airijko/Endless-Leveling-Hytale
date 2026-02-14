@@ -78,6 +78,7 @@
 
 race_name: "Example"
 description: "PEEPEE POOPOO"
+model_scale: 1.0
 enabled: false
 
 attributes: # Base Values

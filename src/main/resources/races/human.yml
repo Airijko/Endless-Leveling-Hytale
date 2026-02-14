@@ -1,5 +1,6 @@
 race_name: "Human"
 description: "Versatile and ambitious, humans are known for their adaptability and determination."
+model_scale: 1.0
 enabled: true
 
 attributes:

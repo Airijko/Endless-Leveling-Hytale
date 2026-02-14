@@ -1,6 +1,7 @@
 race_name: "Vastaya"
 description: "Mysterious and agile, Vastaya are a race of animalistic humanoids with a deep connection to nature."
 model: "Feran"
+model_scale: 1.0
 enabled: true
 
 attributes: # Base Values
