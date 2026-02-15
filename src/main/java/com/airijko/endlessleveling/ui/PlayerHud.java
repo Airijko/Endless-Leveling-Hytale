@@ -20,6 +20,7 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 public class PlayerHud {
 
@@ -31,30 +32,55 @@ public class PlayerHud {
         // Utility class
     }
 
-    private static HyUIHud buildSimpleHud(@Nonnull PlayerRef playerRef, @Nonnull Store<EntityStore> store) {
+    private static HyUIHud buildSimpleHud(@Nonnull Player player, @Nonnull PlayerRef playerRef,
+            @Nonnull Store<EntityStore> store) {
         PlayerDataManager playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
         RaceManager raceManager = EndlessLeveling.getInstance().getRaceManager();
         ClassManager classManager = EndlessLeveling.getInstance().getClassManager();
         PlayerData data = playerDataManager != null ? playerDataManager.get(playerRef.getUuid()) : null;
 
-        String raceLabel = "Race: " + resolveRaceName(raceManager, data);
-        String primaryLabel = "Primary: " + resolvePrimaryClassName(classManager, data);
-        String secondaryLabel = "Secondary: " + resolveSecondaryClassName(classManager, data);
+        String raceLabel = resolveRaceName(raceManager, data);
+        String primaryLabel = resolvePrimaryClassName(classManager, data);
+        String secondaryLabel = resolveSecondaryClassName(classManager, data);
+        String primaryIconId = resolveClassIcon(classManager, data, true);
+        String secondaryIconId = resolveClassIcon(classManager, data, false);
+        String playerIcon = resolvePlayerName(playerRef);
+
+        LOGGER.atFine().log("Building HUD for %s with hyvatar username %s", playerRef.getUuid(), playerIcon);
+        LOGGER.atFine().log("HUD icons for %s -> primary: %s, secondary: %s", playerRef.getUuid(), primaryIconId,
+                secondaryIconId);
 
         String html = """
-                <div style='anchor-left: 10; anchor-bottom: 10; anchor-height: 450; layout-mode: top;'>
-                <div class="dynamic-image" id="player-head-image"
-                    data-hyui-image-url="https://r2.hytl.tools/faces/f431b2cea2910b04_256x256_0.png"
-                    style="anchor-width: 96; anchor-height: 96;"></div>
-                    <p id='RaceText' style='margin: 0 0 2 0; font-size: 16;'>%s</p>
-                    <p id='PrimaryText' style='margin: 0 0 2 0; font-size: 16;'>%s</p>
-                    <p id='SecondaryText' style='margin: 0; font-size: 16;'>%s</p>
+                <div style='anchor-left: 0; anchor-bottom: 0; anchor-height: 145; layout-mode: left;'>
+                    <hyvatar username="%s" render="head" size="145" rotate="15"></hyvatar>
+                    <div style='layout-mode: bottom; anchor-bottom: 5; anchor-height: 60;'>
+                        <div id='RaceText' style='margin: 0; layout-mode: left; vertical-align: center;'>
+                            <p style='color: #dbe4e7; font-size: 14; vertical-align: center;'>%s</p>
+                        </div>
+                        <div style='margin: 0; layout-mode: left; vertical-align: center; anchor-height: 24;'>
+                            <span class="item-icon" data-hyui-item-id="%s"></span>
+                            <p id='PrimaryText' style='margin-left: 4; vertical-align: center; font-size: 12; color: #dbe4e7; text-align: center'>%s</p>
+                        </div>
+                        <div style='margin: 0; layout-mode: left; vertical-align: center; anchor-height: 24;'>
+                            <span class="item-icon" data-hyui-item-id="%s "></span>
+                            <p id='SecondaryText' style='margin-left: 4; vertical-align: center; font-size: 12; color: #dbe4e7; text-align: center'>%s</p>
+                        </div>
+                    </div>
                 </div>
-                """.formatted(raceLabel, primaryLabel, secondaryLabel);
+                """
+                .formatted(playerIcon, raceLabel, primaryIconId, primaryLabel, secondaryIconId, secondaryLabel);
 
         return HudBuilder.hudForPlayer(playerRef)
                 .fromHtml(html)
                 .show(store);
+    }
+
+    private static String resolvePlayerName(PlayerRef playerRef) {
+        String refName = playerRef.getUsername();
+        if (refName != null && !refName.isBlank()) {
+            return refName.trim();
+        }
+        return playerRef.getUuid().toString();
     }
 
     private static String resolveRaceName(RaceManager raceManager, PlayerData data) {
@@ -93,6 +119,20 @@ public class PlayerHud {
         return id == null || id.isBlank() ? "None" : id;
     }
 
+    private static String resolveClassIcon(ClassManager classManager, PlayerData data, boolean primary) {
+        if (classManager == null || data == null) {
+            return "";
+        }
+        CharacterClassDefinition def = primary
+                ? classManager.getPlayerPrimaryClass(data)
+                : classManager.getPlayerSecondaryClass(data);
+        if (def == null) {
+            return "";
+        }
+        String icon = def.getIconItemId();
+        return icon == null ? "" : icon;
+    }
+
     public static void open(@Nonnull Player player, @Nonnull PlayerRef playerRef) {
         Ref<EntityStore> ref = playerRef.getReference();
         if (ref == null) {
@@ -114,7 +154,7 @@ public class PlayerHud {
         }
 
         try {
-            HyUIHud hud = buildSimpleHud(playerRef, store);
+            HyUIHud hud = buildSimpleHud(player, playerRef, store);
             ACTIVE_HUDS.put(playerRef.getUuid(), hud);
             hud.triggerRefresh();
             LOGGER.atInfo().log("Opened simple PlayerHud for %s", playerRef.getUuid());

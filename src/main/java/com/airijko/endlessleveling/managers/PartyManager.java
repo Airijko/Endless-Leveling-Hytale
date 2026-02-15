@@ -218,11 +218,14 @@ public class PartyManager {
         String levelText = "Lv. " + data.getLevel();
         String race = safeLabel(data.getRaceId());
 
-        // Line 1: level plus race if present; classes are intentionally omitted.
+        // Line 1: level plus race if present; primary class goes on line 2.
         String text1 = race.isEmpty() ? levelText : levelText + " | " + race;
 
-        // No secondary line when classes are hidden.
-        partyPro.setCustomText(uuid, text1, null);
+        String primary = safeLabel(data.getPrimaryClassId());
+        String text2 = primary.isEmpty() ? null : primary;
+
+        // Send lines individually to align with PartyPro guidance.
+        partyPro.setCustomText(uuid, text1, text2);
     }
 
     /**
@@ -434,6 +437,22 @@ public class PartyManager {
             }
             invoke(apiClass, apiInstance, "setPlayerCustomText1", new Class<?>[] { UUID.class, String.class },
                     playerId, text1);
+            invoke(apiClass, apiInstance, "setPlayerCustomText2", new Class<?>[] { UUID.class, String.class },
+                    playerId, text2);
+        }
+
+        void setCustomText1(UUID playerId, String text1) {
+            if (!isAvailable() || playerId == null) {
+                return;
+            }
+            invoke(apiClass, apiInstance, "setPlayerCustomText1", new Class<?>[] { UUID.class, String.class },
+                    playerId, text1);
+        }
+
+        void setCustomText2(UUID playerId, String text2) {
+            if (!isAvailable() || playerId == null) {
+                return;
+            }
             invoke(apiClass, apiInstance, "setPlayerCustomText2", new Class<?>[] { UUID.class, String.class },
                     playerId, text2);
         }
