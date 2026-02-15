@@ -155,14 +155,23 @@ public class PlayerHud extends CustomUIHud {
         }
 
         Store<EntityStore> store = ref.getStore();
-        TransformComponent transform = store != null ? store.getComponent(ref, TransformComponent.getComponentType())
-                : null;
-        if (transform == null || transform.getPosition() == null) {
+        try {
+            TransformComponent transform = store != null
+                    ? store.getComponent(ref, TransformComponent.getComponentType())
+                    : null;
+            if (transform == null || transform.getPosition() == null) {
+                return "--";
+            }
+
+            int level = mobLevelingManager.resolveMobLevel(store, transform.getPosition());
+            return level > 0 ? "Lv " + level : "--";
+        } catch (IllegalStateException ex) {
+            // Store.assertThread can throw when XP events fire on a different world thread;
+            // fall back to no label instead of crashing the server.
+            LOGGER.atFine().withCause(ex).log("Skipping mob level resolution off-thread for %s",
+                    targetPlayerRef.getUuid());
             return "--";
         }
-
-        int level = mobLevelingManager.resolveMobLevel(store, transform.getPosition());
-        return level > 0 ? "Lv " + level : "--";
     }
 
     private void setClassIcon(UICommandBuilder uiCommandBuilder, String selector, String itemId) {
