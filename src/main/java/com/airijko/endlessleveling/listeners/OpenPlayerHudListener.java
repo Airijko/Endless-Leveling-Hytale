@@ -11,8 +11,6 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
-import java.util.concurrent.CompletableFuture;
-
 public class OpenPlayerHudListener {
 
     public static void openGui(PlayerReadyEvent event) {
@@ -33,6 +31,8 @@ public class OpenPlayerHudListener {
             return;
         }
 
-        CompletableFuture.runAsync(() -> PlayerHud.open(player, playerRef), world);
+        // HyUI requires HUD .show() to run on the world thread to avoid client
+        // disconnects.
+        world.execute(() -> PlayerHud.open(player, playerRef));
     }
 }

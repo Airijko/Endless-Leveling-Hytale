@@ -137,10 +137,16 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
             Player entityPlayer = store.getComponent(ref, Player.getComponentType());
             if (entityPlayer != null) {
-                if (newValue) {
-                    PlayerHud.open(entityPlayer, playerRef);
-                } else {
-                    PlayerHud.close(entityPlayer, playerRef);
+                var world = entityPlayer.getWorld();
+                if (world != null) {
+                    // HyUI requires HUD .show() to run on the world thread.
+                    world.execute(() -> {
+                        if (newValue) {
+                            PlayerHud.open(entityPlayer, playerRef);
+                        } else {
+                            PlayerHud.close(entityPlayer, playerRef);
+                        }
+                    });
                 }
             }
         } else if ("toggle:criticalNotif".equalsIgnoreCase(action)) {

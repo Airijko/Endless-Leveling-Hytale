@@ -13,7 +13,8 @@
   "Dependencies": {},
   "OptionalDependencies": {
     "Buuz135:MultipleHUD": ">=1.0.1",
-    "tsumori:PartyPro": ">=0.8.0"
+    "tsumori:PartyPro": ">=0.8.0",
+    "Ellie:HyUI": ">=0.8.7"
   },
   "DisabledByDefault": false,
   "IncludesAssetPack": true,

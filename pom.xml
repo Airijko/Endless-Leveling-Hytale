@@ -27,6 +27,11 @@
             <name>Hytale-Modding.info Maven</name>
             <url>https://maven.hytale-mods.dev/releases</url>
         </repository>
+        <repository>
+            <id>cursemaven</id>
+            <url>https://cursemaven.com</url>
+        </repository>
+        
     </repositories>
 
 
@@ -43,6 +48,12 @@
             <artifactId>MultipleHUD</artifactId>
             <version>1.0.3</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>curse.maven</groupId>
+            <artifactId>hyui-1431415</artifactId>
+            <!-- HyUI 0.5.4 (file id 7528608) -->
+            <version>7528608</version>
         </dependency>
         <dependency>
             <groupId>org.yaml</groupId>
