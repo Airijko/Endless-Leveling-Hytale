@@ -10,7 +10,6 @@ import com.airijko.endlessleveling.commands.subcommands.ReloadCommand;
 import com.airijko.endlessleveling.commands.subcommands.SetLevelCommand;
 import com.airijko.endlessleveling.commands.subcommands.StatTestCommand;
 import com.airijko.endlessleveling.ui.SkillsUIPage;
-import com.airijko.endlessleveling.ui.PartyUIPage;
 import com.airijko.endlessleveling.ui.LeaderboardsUIPage;
 import com.airijko.endlessleveling.ui.ProfileUIPage;
 import com.airijko.endlessleveling.ui.SettingsUIPage;
@@ -41,8 +40,6 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
                 this.addSubCommand(new ResetCooldownsCommand());
                 this.addSubCommand(new ReloadCommand());
 
-                addGuiShortcut("party", "Open the EndlessLeveling Party page",
-                                playerRef -> new PartyUIPage(playerRef, CustomPageLifetime.CanDismiss));
                 addGuiShortcut("leaderboards", "Open the EndlessLeveling Leaderboards page",
                                 playerRef -> new LeaderboardsUIPage(playerRef, CustomPageLifetime.CanDismiss));
                 addGuiShortcut("settings", "Open the EndlessLeveling Settings page",

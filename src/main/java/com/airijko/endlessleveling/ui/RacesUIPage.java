@@ -766,6 +766,11 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             raceManager.applyRaceModelIfEnabled(playerData);
         }
 
+        var partyManager = EndlessLeveling.getInstance().getPartyManager();
+        if (partyManager != null) {
+            partyManager.updatePartyHudCustomText(playerData);
+        }
+
         var player = Universe.get().getPlayer(playerRef.getUuid());
         if (player != null) {
             String display = desired.getDisplayName() == null ? desired.getId() : desired.getDisplayName();

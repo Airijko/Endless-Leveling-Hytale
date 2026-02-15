@@ -80,6 +80,11 @@ public class PlayerDataListener {
             raceManager.applyRaceModelOnLogin(playerData);
         }
 
+        var partyManager = EndlessLeveling.getInstance().getPartyManager();
+        if (partyManager != null) {
+            partyManager.updatePartyHudCustomText(playerData);
+        }
+
         LOGGER.atInfo().log("Loaded PlayerData for player: %s", playerRef.getUsername());
 
         if (playerData.getSkillPoints() > 0) {

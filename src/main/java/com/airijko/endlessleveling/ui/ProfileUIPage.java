@@ -17,6 +17,7 @@ import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PlayerAttributeManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.airijko.endlessleveling.managers.PartyManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.passives.ArchetypePassiveManager;
@@ -51,6 +52,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private final PlayerAttributeManager attributeManager;
     private final ArchetypePassiveManager archetypePassiveManager;
     private final PlayerRaceStatSystem playerRaceStatSystem;
+    private final PartyManager partyManager;
     private Integer pendingDeleteSlot;
 
     public ProfileUIPage(@Nonnull com.hypixel.hytale.server.core.universe.PlayerRef playerRef,
@@ -64,6 +66,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         this.attributeManager = plugin != null ? plugin.getPlayerAttributeManager() : null;
         this.archetypePassiveManager = plugin != null ? plugin.getArchetypePassiveManager() : null;
         this.playerRaceStatSystem = plugin != null ? plugin.getPlayerRaceStatSystem() : null;
+        this.partyManager = plugin != null ? plugin.getPartyManager() : null;
         this.pendingDeleteSlot = null;
     }
 
@@ -838,6 +841,9 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         playerRef.sendMessage(Message.raw("Created and activated profile slot " + nextSlot + ".")
                 .color("#4fd7f7"));
         PlayerHud.refreshHud(playerData.getUuid());
+        if (partyManager != null && partyManager.isAvailable()) {
+            partyManager.updatePartyHudCustomText(playerData);
+        }
         reapplyProfileModifiers(ref, store, playerData);
         return new ProfileActionOutcome(true, true);
     }
@@ -870,6 +876,9 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     "Switched to profile slot " + slot + " (" + playerData.getProfileName(slot) + ").")
                     .color("#00ff00"));
             PlayerHud.refreshHud(playerData.getUuid());
+            if (partyManager != null && partyManager.isAvailable()) {
+                partyManager.updatePartyHudCustomText(playerData);
+            }
             reapplyProfileModifiers(ref, store, playerData);
             return new ProfileActionOutcome(true, true);
         }

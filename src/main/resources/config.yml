@@ -104,11 +104,6 @@ class_max_switches: -1 # -1 = unlimited; 1 = one-time; any positive number caps 
 force_builtin_classes: true # If true, ignore custom class files and keep bundled classes in sync with updates
 
 # ------------------------------------------------------------
-# PARTY SETTINGS
-# ------------------------------------------------------------
-enable_party: false # Enable or disable the party system (UI, commands, XP sharing)
-
-# ------------------------------------------------------------
 # UI SETTINGS
 # ------------------------------------------------------------
 # ------------------------------------------------------------
@@ -120,4 +115,4 @@ enable_logging: false # Enable detailed logging output
 # INTERNAL CONFIG VERSION
 # DO NOT MODIFY
 # ------------------------------------------------------------
-config_version: 13
+config_version: 14

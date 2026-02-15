@@ -122,6 +122,11 @@ public class RaceChooseCommand extends AbstractPlayerCommand {
             raceManager.applyRaceModelIfEnabled(data);
         }
 
+        var partyManager = EndlessLeveling.getInstance().getPartyManager();
+        if (partyManager != null) {
+            partyManager.updatePartyHudCustomText(data);
+        }
+
         String displayName = desiredRace.getDisplayName() != null ? desiredRace.getDisplayName() : desiredRace.getId();
         senderRef.sendMessage(Message.join(
                 Message.raw("[Races] ").color("#4fd7f7"),

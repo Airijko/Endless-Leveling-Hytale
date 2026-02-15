@@ -621,6 +621,10 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         classManager.markClassChange(data, ClassAssignmentSlot.PRIMARY);
         playerDataManager.save(data);
         reapplyBonuses(data, ref, store);
+        var partyManager = EndlessLeveling.getInstance().getPartyManager();
+        if (partyManager != null) {
+            partyManager.updatePartyHudCustomText(data);
+        }
         this.selectedClassId = applied.getId();
         playerRef.sendMessage(Message.join(
                 Message.raw("[Classes] ").color("#4fd7f7"),
@@ -666,6 +670,10 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         classManager.markClassChange(data, ClassAssignmentSlot.SECONDARY);
         playerDataManager.save(data);
         reapplyBonuses(data, ref, store);
+        var partyManager = EndlessLeveling.getInstance().getPartyManager();
+        if (partyManager != null) {
+            partyManager.updatePartyHudCustomText(data);
+        }
         playerRef.sendMessage(Message.join(
                 Message.raw("[Classes] ").color("#4fd7f7"),
                 Message.raw("Secondary class set to ").color("#ffffff"),
@@ -687,6 +695,10 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         classManager.markClassChange(data, ClassAssignmentSlot.SECONDARY);
         playerDataManager.save(data);
         reapplyBonuses(data, ref, store);
+        var partyManager = EndlessLeveling.getInstance().getPartyManager();
+        if (partyManager != null) {
+            partyManager.updatePartyHudCustomText(data);
+        }
         playerRef.sendMessage(Message.raw("Secondary class cleared.").color("#4fd7f7"));
         refreshClassUi(data, OperatorHelper.isOperator(playerRef));
     }

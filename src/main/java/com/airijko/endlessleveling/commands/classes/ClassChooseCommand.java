@@ -111,6 +111,11 @@ public class ClassChooseCommand extends AbstractPlayerCommand {
         playerDataManager.save(data);
         reapplyBonuses(data, ref, store);
 
+        var partyManager = EndlessLeveling.getInstance().getPartyManager();
+        if (partyManager != null) {
+            partyManager.updatePartyHudCustomText(data);
+        }
+
         senderRef.sendMessage(Message.join(
                 Message.raw("[Classes] ").color("#4fd7f7"),
                 Message.raw("Primary class set to ").color("#ffffff"),
@@ -162,6 +167,11 @@ public class ClassChooseCommand extends AbstractPlayerCommand {
         playerDataManager.save(data);
         reapplyBonuses(data, ref, store);
 
+        var partyManager = EndlessLeveling.getInstance().getPartyManager();
+        if (partyManager != null) {
+            partyManager.updatePartyHudCustomText(data);
+        }
+
         senderRef.sendMessage(Message.join(
                 Message.raw("[Classes] ").color("#4fd7f7"),
                 Message.raw("Secondary class set to ").color("#ffffff"),
@@ -184,6 +194,10 @@ public class ClassChooseCommand extends AbstractPlayerCommand {
         classManager.markClassChange(data, ClassAssignmentSlot.SECONDARY);
         playerDataManager.save(data);
         reapplyBonuses(data, ref, store);
+        var partyManager = EndlessLeveling.getInstance().getPartyManager();
+        if (partyManager != null) {
+            partyManager.updatePartyHudCustomText(data);
+        }
         senderRef.sendMessage(Message.raw("Secondary class cleared.").color("#4fd7f7"));
     }
 

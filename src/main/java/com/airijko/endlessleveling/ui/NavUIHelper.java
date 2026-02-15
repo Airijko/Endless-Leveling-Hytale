@@ -2,12 +2,10 @@ package com.airijko.endlessleveling.ui;
 
 import javax.annotation.Nonnull;
 
-import com.airijko.endlessleveling.EndlessLeveling;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
@@ -33,9 +31,6 @@ public final class NavUIHelper {
          */
         public static void applyNavVersion(@Nonnull UICommandBuilder ui) {
                 ui.set("#NavVersion.Text", NAV_VERSION);
-                if (!isPartyEnabled()) {
-                        ui.set("#NavParty.Visible", false);
-                }
         }
 
         /**
@@ -46,9 +41,6 @@ public final class NavUIHelper {
                 events.addEventBinding(Activating, "#NavRaces", of("Action", "nav:races"), false);
                 events.addEventBinding(Activating, "#NavClasses", of("Action", "nav:classes"), false);
                 events.addEventBinding(Activating, "#NavSkills", of("Action", "nav:skills"), false);
-                if (isPartyEnabled()) {
-                        events.addEventBinding(Activating, "#NavParty", of("Action", "nav:party"), false);
-                }
                 events.addEventBinding(Activating, "#NavLeaderboards", of("Action", "nav:leaderboards"), false);
                 events.addEventBinding(Activating, "#NavSettings", of("Action", "nav:settings"), false);
         }
@@ -93,17 +85,6 @@ public final class NavUIHelper {
                         case "classes" -> player.getPageManager()
                                         .openCustomPage(ref, store,
                                                         new ClassesUIPage(playerRef, CustomPageLifetime.CanDismiss));
-                        case "party" -> {
-                                if (!isPartyEnabled()) {
-                                        playerRef.sendMessage(
-                                                        Message.raw("Party system is disabled.").color("#ff6666"));
-                                        return true;
-                                }
-                                player.getPageManager()
-                                                .openCustomPage(ref, store,
-                                                                new PartyUIPage(playerRef,
-                                                                                CustomPageLifetime.CanDismiss));
-                        }
                         case "leaderboards" -> player.getPageManager()
                                         .openCustomPage(ref, store, new LeaderboardsUIPage(playerRef,
                                                         CustomPageLifetime.CanDismiss));
@@ -155,10 +136,4 @@ public final class NavUIHelper {
                 }
         }
 
-        private static boolean isPartyEnabled() {
-                EndlessLeveling plugin = EndlessLeveling.getInstance();
-                return plugin != null
-                                && plugin.getPartyManager() != null
-                                && plugin.getPartyManager().isAvailable();
-        }
 }

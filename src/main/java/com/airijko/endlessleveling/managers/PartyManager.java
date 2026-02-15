@@ -8,6 +8,7 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.airijko.endlessleveling.data.PlayerData;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -90,47 +91,6 @@ public class PartyManager {
     }
 
     /**
-     * Party creation is now handled by PartyPro. We keep this method for
-     * compatibility but return false.
-     */
-    public boolean createParty(@Nonnull UUID leaderUuid) {
-        logManagedExternally("create");
-        return false;
-    }
-
-    public boolean joinParty(@Nonnull UUID leaderUuid, @Nonnull UUID memberUuid) {
-        logManagedExternally("join");
-        return false;
-    }
-
-    public boolean leaveParty(@Nonnull UUID memberUuid) {
-        logManagedExternally("leave");
-        return false;
-    }
-
-    public boolean disbandParty(@Nonnull UUID leaderUuid) {
-        logManagedExternally("disband");
-        return false;
-    }
-
-    public boolean invitePlayer(@Nonnull UUID leaderUuid, @Nonnull UUID targetUuid) {
-        logManagedExternally("invite");
-        return false;
-    }
-
-    public boolean hasInvite(@Nonnull UUID leaderUuid, @Nonnull UUID targetUuid) {
-        return false;
-    }
-
-    public UUID getPendingInviteLeader(@Nonnull UUID targetUuid) {
-        return null;
-    }
-
-    public void consumeInvite(@Nonnull UUID targetUuid) {
-        // no-op
-    }
-
-    /**
      * Split XP among online party members using PartyPro data. If PartyPro is not
      * present, XP is granted fully to the source player.
      */
@@ -163,6 +123,45 @@ public class PartyManager {
 
         LOGGER.atInfo().log("Distributed %f XP from %s among %d PartyPro members (%.3f each).",
                 totalXp, sourcePlayerUuid, recipients.size(), share);
+    }
+
+    /**
+     * Push custom HUD text to PartyPro: level plus race and primary class.
+     */
+    public void updatePartyHudCustomText(@Nonnull PlayerData data) {
+        if (data == null || !partyPro.isAvailable()) {
+            return;
+        }
+        UUID uuid = data.getUuid();
+        if (uuid == null) {
+            return;
+        }
+
+        // Use both PartyPro text slots: line 1 = level, line 2 = race/class.
+        String levelText = "Lv." + Math.max(1, data.getLevel());
+        String race = safeLabel(data.getRaceId());
+        String primaryClass = safeLabel(data.getPrimaryClassId());
+
+        String text2;
+        if (race.isEmpty() && primaryClass.isEmpty()) {
+            text2 = null;
+        } else if (race.isEmpty()) {
+            text2 = primaryClass;
+        } else if (primaryClass.isEmpty()) {
+            text2 = race;
+        } else {
+            text2 = race + " • " + primaryClass;
+        }
+
+        partyPro.setCustomText(uuid, levelText, text2);
+    }
+
+    private static String safeLabel(String value) {
+        if (value == null) {
+            return "";
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? "" : trimmed;
     }
 
     /**
@@ -252,10 +251,6 @@ public class PartyManager {
         // PartyPro persists its own data.
     }
 
-    private void logManagedExternally(String action) {
-        LOGGER.atWarning().log("Party action '%s' is managed by PartyPro. Use PartyPro commands instead.", action);
-    }
-
     @Nullable
     private Vector3d resolvePosition(Ref<EntityStore> ref, Store<EntityStore> store) {
         if (ref == null || store == null) {
@@ -282,11 +277,7 @@ public class PartyManager {
     /** Reflection bridge to avoid a compile-time dependency on PartyPro. */
     private static final class PartyProBridge {
         private static final String[] API_CANDIDATES = {
-                "com.partypro.api.PartyProAPI",
-                "gg.partypro.api.PartyProAPI",
-                "dev.partypro.api.PartyProAPI",
-                "io.partypro.api.PartyProAPI",
-                "PartyProAPI" };
+                "me.tsumori.partypro.api.PartyProAPI" };
 
         private final Object apiInstance;
         private final Class<?> apiClass;
@@ -299,26 +290,34 @@ public class PartyManager {
         }
 
         static PartyProBridge create() {
+            String connected = null;
             for (String name : API_CANDIDATES) {
+                LOGGER.atFine().log("PartyPro API candidate check: %s", name);
                 try {
                     Class<?> apiClass = Class.forName(name);
                     Method isAvailable = apiClass.getMethod("isAvailable");
                     Object availableObj = isAvailable.invoke(null);
                     if (!(availableObj instanceof Boolean available) || !available) {
+                        LOGGER.atFine().log("PartyPro API candidate present but unavailable: %s", name);
                         continue;
                     }
                     Object instance = apiClass.getMethod("getInstance").invoke(null);
-                    if (instance != null) {
-                        LOGGER.atInfo().log("PartyPro API connected using %s", name);
-                        return new PartyProBridge(instance, apiClass, true);
+                    if (instance == null) {
+                        LOGGER.atFine().log("PartyPro API candidate returned null instance: %s", name);
+                        continue;
                     }
+                    connected = name;
+                    LOGGER.atInfo().log("PartyPro API connected using %s", connected);
+                    return new PartyProBridge(instance, apiClass, true);
                 } catch (ClassNotFoundException notFound) {
-                    // Try next candidate
+                    LOGGER.atFine().log("PartyPro API candidate not found: %s", name);
                 } catch (Exception ex) {
                     LOGGER.atWarning().withCause(ex)
                             .log("Unable to initialize PartyPro API via candidate %s", name);
                 }
             }
+
+            LOGGER.atWarning().log("PartyPro API not found after checking %d candidates", API_CANDIDATES.length);
             return new PartyProBridge(null, null, false);
         }
 
@@ -358,6 +357,23 @@ public class PartyManager {
             return toUuidList(fallback);
         }
 
+        void setCustomText(UUID playerId, String text1, String text2) {
+            if (!isAvailable() || playerId == null) {
+                return;
+            }
+            // Prefer combined setter
+            Object result = invoke(apiClass, apiInstance, "setPlayerCustomText",
+                    new Class<?>[] { UUID.class, String.class, String.class }, playerId, text1, text2);
+            if (result != null) {
+                return;
+            }
+            // Fallback to individual fields
+            invoke(apiClass, apiInstance, "setPlayerCustomText1", new Class<?>[] { UUID.class, String.class },
+                    playerId, text1);
+            invoke(apiClass, apiInstance, "setPlayerCustomText2", new Class<?>[] { UUID.class, String.class },
+                    playerId, text2);
+        }
+
         private PartySnapshot toSnapshot(Object snapshotObj) {
             if (snapshotObj == null) {
                 return null;
@@ -367,9 +383,10 @@ public class PartyManager {
             UUID leader = readUuid(snapshotObj, "leader");
             String name = readString(snapshotObj, "name");
 
-            List<UUID> members = toUuidList(invoke(snapshotObj.getClass(), snapshotObj, "getAllMembers"));
+            List<UUID> members = toUuidList(invoke(snapshotObj.getClass(), snapshotObj, "getAllMembers",
+                    new Class<?>[0]));
             if (members.isEmpty()) {
-                members = toUuidList(invoke(snapshotObj.getClass(), snapshotObj, "members"));
+                members = toUuidList(invoke(snapshotObj.getClass(), snapshotObj, "members", new Class<?>[0]));
             }
             if (leader != null && members.stream().noneMatch(leader::equals)) {
                 List<UUID> withLeader = new ArrayList<>();
@@ -390,6 +407,10 @@ public class PartyManager {
                 LOGGER.atFine().withCause(ex).log("PartyPro reflection call failed for method %s", methodName);
                 return null;
             }
+        }
+
+        private static Object invoke(Class<?> type, Object target, String methodName) {
+            return invoke(type, target, methodName, new Class<?>[0]);
         }
 
         private static List<UUID> toUuidList(Object value) {
@@ -431,15 +452,6 @@ public class PartyManager {
         private static String readString(Object target, String methodName) {
             Object value = invoke(target.getClass(), target, methodName, new Class<?>[0]);
             return value instanceof String str ? str : null;
-        }
-
-        private static Object invoke(Class<?> type, Object target, String methodName) {
-            try {
-                Method method = type.getMethod(methodName);
-                return method.invoke(target);
-            } catch (Exception ex) {
-                return null;
-            }
         }
     }
 }

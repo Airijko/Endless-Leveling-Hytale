@@ -196,6 +196,7 @@ public class LevelingManager {
 
         notifyLevelUp(player);
         refreshHudIfEnabled(player);
+        pushPartyProHudText(player);
         requestAttributeResync(player);
     }
 
@@ -261,6 +262,7 @@ public class LevelingManager {
                 player.getPlayerName(), oldLevel, newLevel);
 
         refreshHudIfEnabled(player);
+        pushPartyProHudText(player);
         requestAttributeResync(player);
     }
 
@@ -270,6 +272,17 @@ public class LevelingManager {
             return;
         }
         PlayerHud.refreshHud(player.getUuid());
+    }
+
+    private void pushPartyProHudText(PlayerData player) {
+        try {
+            PartyManager partyManager = EndlessLeveling.getInstance().getPartyManager();
+            if (partyManager != null) {
+                partyManager.updatePartyHudCustomText(player);
+            }
+        } catch (Throwable ignored) {
+            // PartyPro optional; ignore failures
+        }
     }
 
     public int getLevelCap() {
