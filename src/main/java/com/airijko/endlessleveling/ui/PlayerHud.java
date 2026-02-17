@@ -27,6 +27,8 @@ public class PlayerHud {
     public static final String ID = "EndlessLeveling:PlayerHud";
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final Map<UUID, HyUIHud> ACTIVE_HUDS = new ConcurrentHashMap<>();
+    private static final Map<UUID, PlayerRef> ACTIVE_REFS = new ConcurrentHashMap<>();
+    private static final Map<UUID, HudSnapshot> HUD_SNAPSHOTS = new ConcurrentHashMap<>();
 
     private PlayerHud() {
         // Utility class
@@ -39,40 +41,61 @@ public class PlayerHud {
         ClassManager classManager = EndlessLeveling.getInstance().getClassManager();
         PlayerData data = playerDataManager != null ? playerDataManager.get(playerRef.getUuid()) : null;
 
+        HudSnapshot snapshot = buildSnapshot(raceManager, classManager, data, playerRef);
+
+        LOGGER.atFine().log("Building HUD for %s with hyvatar username %s", playerRef.getUuid(), snapshot.playerIcon());
+        LOGGER.atFine().log("HUD icons for %s -> primary: %s, secondary: %s", playerRef.getUuid(),
+                snapshot.primaryIconId(), snapshot.secondaryIconId());
+
+        String html = buildHudHtml(snapshot);
+
+        HyUIHud hud = HudBuilder.hudForPlayer(playerRef)
+                .enableRuntimeTemplateUpdates(true)
+                .fromHtml(html)
+                .show(store);
+
+        UUID uuid = playerRef.getUuid();
+        ACTIVE_REFS.put(uuid, playerRef);
+        HUD_SNAPSHOTS.put(uuid, snapshot);
+        return hud;
+    }
+
+    private static HudSnapshot buildSnapshot(RaceManager raceManager, ClassManager classManager, PlayerData data,
+            PlayerRef playerRef) {
         String raceLabel = resolveRaceName(raceManager, data);
+        String raceIconId = "Ingredient_Crystal_White";
         String primaryLabel = resolvePrimaryClassName(classManager, data);
         String secondaryLabel = resolveSecondaryClassName(classManager, data);
         String primaryIconId = resolveClassIcon(classManager, data, true);
         String secondaryIconId = resolveClassIcon(classManager, data, false);
         String playerIcon = resolvePlayerName(playerRef);
 
-        LOGGER.atFine().log("Building HUD for %s with hyvatar username %s", playerRef.getUuid(), playerIcon);
-        LOGGER.atFine().log("HUD icons for %s -> primary: %s, secondary: %s", playerRef.getUuid(), primaryIconId,
-                secondaryIconId);
+        return new HudSnapshot(playerIcon, raceIconId, raceLabel, primaryIconId, primaryLabel, secondaryIconId,
+                secondaryLabel);
+    }
 
-        String html = """
-                <div style='anchor-left: 0; anchor-bottom: 0; anchor-height: 145; layout-mode: left;'>
-                    <hyvatar username="%s" render="head" size="145" rotate="15"></hyvatar>
-                    <div style='layout-mode: bottom; anchor-bottom: 5; anchor-height: 60;'>
-                        <div id='RaceText' style='margin: 0; layout-mode: left; vertical-align: center;'>
-                            <p style='color: #dbe4e7; font-size: 14; vertical-align: center;'>%s</p>
-                        </div>
-                        <div style='margin: 0; layout-mode: left; vertical-align: center; anchor-height: 24;'>
+    private static String buildHudHtml(HudSnapshot snapshot) {
+        return """
+                <div style='anchor-left: 0; anchor-bottom: 0; anchor-height: 100; layout-mode: left;'>
+                    <hyvatar username="%s" render="head" size="100" rotate="15"></hyvatar>
+                    <div style='layout-mode: bottom; anchor-bottom: 5; anchor-height: 60; anchor-left: 10;'>
+                        <div id='RaceText' style='margin: 0; layout-mode: left; vertical-align: center; anchor-height: 24;'>
                             <span class="item-icon" data-hyui-item-id="%s"></span>
-                            <p id='PrimaryText' style='margin-left: 4; vertical-align: center; font-size: 12; color: #dbe4e7; text-align: center'>%s</p>
+                            <p style='padding-left: 4; color: #cfcfcf; font-size: 14; vertical-align: center; display: inline-block;'>%s</p>
                         </div>
-                        <div style='margin: 0; layout-mode: left; vertical-align: center; anchor-height: 24;'>
-                            <span class="item-icon" data-hyui-item-id="%s "></span>
-                            <p id='SecondaryText' style='margin-left: 4; vertical-align: center; font-size: 12; color: #dbe4e7; text-align: center'>%s</p>
+                        <div style='margin: 0; layout-mode: left; vertical-align: center; anchor-height: 24; anchor-top: 2;'>
+                            <span class="item-icon" data-hyui-item-id="%s"></span>
+                            <p id='PrimaryText' style='padding-left: 4; vertical-align: center; font-size: 12; color: #bebebe; text-align: center; display: inline-block;'>%s</p>
+                        </div>
+                        <div style='margin: 0; layout-mode: left; vertical-align: center; anchor-height: 24; anchor-top: 2;'>
+                            <span class="item-icon" data-hyui-item-id="%s"></span>
+                            <p id='SecondaryText' style='padding-left: 4; vertical-align: center; font-size: 12; color: #bebebe; text-align: center; display: inline-block;'>%s</p>
                         </div>
                     </div>
                 </div>
                 """
-                .formatted(playerIcon, raceLabel, primaryIconId, primaryLabel, secondaryIconId, secondaryLabel);
-
-        return HudBuilder.hudForPlayer(playerRef)
-                .fromHtml(html)
-                .show(store);
+                .formatted(snapshot.playerIcon(), snapshot.raceIconId(), snapshot.raceLabel(), snapshot.primaryIconId(),
+                        snapshot.primaryLabel(), snapshot.secondaryIconId(), snapshot.secondaryLabel());
     }
 
     private static String resolvePlayerName(PlayerRef playerRef) {
@@ -149,14 +172,13 @@ public class PlayerHud {
         HyUIHud existing = ACTIVE_HUDS.get(playerRef.getUuid());
         if (existing != null) {
             existing.unhide();
-            existing.triggerRefresh();
+            updateClassAndRace(playerRef.getUuid());
             return;
         }
 
         try {
             HyUIHud hud = buildSimpleHud(player, playerRef, store);
             ACTIVE_HUDS.put(playerRef.getUuid(), hud);
-            hud.triggerRefresh();
             LOGGER.atInfo().log("Opened simple PlayerHud for %s", playerRef.getUuid());
         } catch (Exception ex) {
             LOGGER.atSevere().withCause(ex).log("Failed to open PlayerHud for %s", playerRef.getUuid());
@@ -164,10 +186,13 @@ public class PlayerHud {
     }
 
     public static void close(@Nonnull Player player, @Nonnull PlayerRef playerRef) {
-        HyUIHud hud = ACTIVE_HUDS.remove(playerRef.getUuid());
+        UUID uuid = playerRef.getUuid();
+        HyUIHud hud = ACTIVE_HUDS.remove(uuid);
         if (hud != null) {
             hud.remove();
         }
+        ACTIVE_REFS.remove(uuid);
+        HUD_SNAPSHOTS.remove(uuid);
     }
 
     public static boolean isActive(UUID uuid) {
@@ -179,10 +204,7 @@ public class PlayerHud {
             return;
         }
 
-        HyUIHud hud = ACTIVE_HUDS.get(uuid);
-        if (hud != null) {
-            hud.triggerRefresh();
-        }
+        updateClassAndRace(uuid);
     }
 
     public static void refreshAll() {
@@ -200,5 +222,43 @@ public class PlayerHud {
         if (hud != null) {
             hud.remove();
         }
+        ACTIVE_REFS.remove(uuid);
+        HUD_SNAPSHOTS.remove(uuid);
+    }
+
+    private static void updateClassAndRace(UUID uuid) {
+        if (uuid == null) {
+            return;
+        }
+
+        HyUIHud hud = ACTIVE_HUDS.get(uuid);
+        PlayerRef playerRef = ACTIVE_REFS.get(uuid);
+        if (hud == null || playerRef == null) {
+            return;
+        }
+
+        PlayerDataManager playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
+        RaceManager raceManager = EndlessLeveling.getInstance().getRaceManager();
+        ClassManager classManager = EndlessLeveling.getInstance().getClassManager();
+        PlayerData data = playerDataManager != null ? playerDataManager.get(uuid) : null;
+
+        HudSnapshot current = HUD_SNAPSHOTS.get(uuid);
+        HudSnapshot updated = buildSnapshot(raceManager, classManager, data, playerRef);
+
+        if (updated.equals(current)) {
+            return;
+        }
+
+        String html = buildHudHtml(updated);
+        HudBuilder.hudForPlayer(playerRef)
+                .enableRuntimeTemplateUpdates(true)
+                .fromHtml(html)
+                .updateExisting(hud);
+
+        HUD_SNAPSHOTS.put(uuid, updated);
+    }
+
+    private record HudSnapshot(String playerIcon, String raceIconId, String raceLabel, String primaryIconId,
+            String primaryLabel, String secondaryIconId, String secondaryLabel) {
     }
 }
