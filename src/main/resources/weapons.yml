@@ -1,3 +1,65 @@
 # All the weapons that will be adjusted by the plugin, with their new values. Modded weapons will be applied if listed below,
 # but if not listed, they will be ignored and left with their default values. Vanilla weapons that are not listed below will
 # be ignored and left with their default values.
+
+# You can list full item IDs under "ids" or add keywords under "keywords". Keywords match either exact tokens or substrings
+# in the item ID (case-insensitive). Unmatched items fall back to the built-in token resolver.
+
+types:
+  sword:
+    ids:
+      - FireLord_Sword_V3
+    keywords:
+      - sword
+      - blade
+      - saber
+
+  axe:
+    keywords:
+      - axe
+      - hatchet
+      - battleaxe
+
+  bow:
+    keywords:
+      - bow
+
+  staff:
+    keywords:
+      - staff
+      - rod
+
+  dagger:
+    keywords:
+      - dagger
+      - knife
+      - dirk
+
+  mace:
+    keywords:
+      - mace
+      - hammer
+      - club
+      - warhammer
+
+  spear:
+    keywords:
+      - spear
+      - halberd
+      - polearm
+      - trident
+      - glaive
+
+  crossbow:
+    keywords:
+      - crossbow
+
+  wand:
+    keywords:
+      - wand
+      - orb
+      - focus
+
+  unarmed:
+    keywords:
+      - fist

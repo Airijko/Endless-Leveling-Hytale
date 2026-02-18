@@ -1,5 +1,7 @@
 package com.airijko.endlessleveling;
 
+import com.airijko.endlessleveling.classes.ClassWeaponResolver;
+import com.airijko.endlessleveling.classes.WeaponConfig;
 import com.airijko.endlessleveling.commands.EndlessLevelingCommand;
 import com.airijko.endlessleveling.commands.PartyCommand;
 import com.airijko.endlessleveling.commands.RaceCommand;
@@ -118,6 +120,9 @@ public class EndlessLeveling extends JavaPlugin {
         // Initialize all folders and managers
         filesManager = new PluginFilesManager(this);
         configManager = new ConfigManager(filesManager.getConfigFile());
+
+        // Load weapon ID and keyword overrides before systems start.
+        ClassWeaponResolver.configure(WeaponConfig.load(filesManager.getWeaponsFile()));
 
         boolean enableLogging = toBoolean(configManager.get("enable_logging", Boolean.FALSE, false), false);
         LoggingManager.configure(enableLogging);
