@@ -218,6 +218,41 @@ public class MobLevelingManager {
         return getLevelSourceMode() == LevelSourceMode.PLAYER;
     }
 
+    /** True when mob levels come from distance-based scaling. */
+    public boolean isDistanceMode() {
+        return getLevelSourceMode() == LevelSourceMode.DISTANCE;
+    }
+
+    /** True when mob levels are fixed. */
+    public boolean isFixedMode() {
+        return getLevelSourceMode() == LevelSourceMode.FIXED;
+    }
+
+    /**
+     * Returns a single representative mob level for HUD display when the mode is
+     * DISTANCE or FIXED. Returns null for player-based mode.
+     */
+    public Integer getHudLevelForPlayer(PlayerRef playerRef) {
+        if (playerRef == null || !playerRef.isValid() || !isMobLevelingEnabled()) {
+            return null;
+        }
+
+        LevelSourceMode mode = getLevelSourceMode();
+        return switch (mode) {
+            case DISTANCE -> {
+                Ref<EntityStore> ref = playerRef.getReference();
+                Store<EntityStore> store = ref != null ? ref.getStore() : null;
+                Vector3d pos = getWorldPosition(ref, null);
+                if (store == null || pos == null) {
+                    yield null;
+                }
+                yield clampToConfiguredRange(resolveMobLevel(store, pos, null));
+            }
+            case FIXED -> clampToConfiguredRange(getFixedLevel());
+            case PLAYER -> null;
+        };
+    }
+
     /**
      * Expected mob level range for the provided player level in player-based mode.
      */
@@ -591,6 +626,59 @@ public class MobLevelingManager {
 
     private int getFixedLevel() {
         return getConfigInt("Mob_Leveling.Level_Source.Fixed_Level.Level", 10);
+    }
+
+    /**
+     * Expected mob level range near the provided player for HUD display. Uses the
+     * configured Level_Source mode:
+     * <ul>
+     * <li>PLAYER: range derived from the player's level and configured min/max
+     * diff.</li>
+     * <li>DISTANCE: small band around the computed level at the player's current
+     * position.</li>
+     * <li>FIXED: flat level.</li>
+     * </ul>
+     */
+    public LevelRange getHudLevelRangeForPlayer(PlayerRef playerRef) {
+        if (playerRef == null || !playerRef.isValid() || !isMobLevelingEnabled()) {
+            return null;
+        }
+
+        LevelSourceMode mode = getLevelSourceMode();
+        return switch (mode) {
+            case PLAYER -> {
+                int playerLevel = getPlayerLevel(playerRef.getUuid());
+                yield getPlayerBasedLevelRange(playerLevel);
+            }
+            case DISTANCE -> {
+                Ref<EntityStore> ref = playerRef.getReference();
+                Store<EntityStore> store = ref != null ? ref.getStore() : null;
+                Vector3d pos = getWorldPosition(ref, null);
+                if (store == null || pos == null) {
+                    yield null;
+                }
+
+                int current = clampToConfiguredRange(resolveMobLevel(store, pos, null));
+                int minConfig = getConfigInt("Mob_Leveling.Level_Source.Distance_Level.Min_Level", 1);
+                int maxConfig = getConfigInt("Mob_Leveling.Level_Source.Distance_Level.Max_Level", 200);
+                if (minConfig > maxConfig) {
+                    int tmp = minConfig;
+                    minConfig = maxConfig;
+                    maxConfig = tmp;
+                }
+
+                // Show a narrow band around the local computed level so the HUD reflects the
+                // nearby region instead of the whole world range.
+                int window = 2; // +/- 2 levels around the computed value
+                int low = Math.max(minConfig, current - window);
+                int high = Math.min(maxConfig, current + window);
+                yield new LevelRange(low, Math.max(low, high));
+            }
+            case FIXED -> {
+                int fixed = clampToConfiguredRange(getFixedLevel());
+                yield new LevelRange(fixed, fixed);
+            }
+        };
     }
 
     private int clampToConfiguredRange(int level) {

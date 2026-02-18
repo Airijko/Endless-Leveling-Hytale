@@ -8,6 +8,7 @@ import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.managers.ClassManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
+import com.airijko.endlessleveling.managers.MobLevelingManager;
 import com.airijko.endlessleveling.races.RaceDefinition;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -39,9 +40,10 @@ public class PlayerHud {
         PlayerDataManager playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
         RaceManager raceManager = EndlessLeveling.getInstance().getRaceManager();
         ClassManager classManager = EndlessLeveling.getInstance().getClassManager();
+        MobLevelingManager mobLevelingManager = EndlessLeveling.getInstance().getMobLevelingManager();
         PlayerData data = playerDataManager != null ? playerDataManager.get(playerRef.getUuid()) : null;
 
-        HudSnapshot snapshot = buildSnapshot(raceManager, classManager, data, playerRef);
+        HudSnapshot snapshot = buildSnapshot(raceManager, classManager, mobLevelingManager, data, playerRef);
 
         LOGGER.atFine().log("Building HUD for %s with hyvatar username %s", playerRef.getUuid(), snapshot.playerIcon());
         LOGGER.atFine().log("HUD icons for %s -> primary: %s, secondary: %s", playerRef.getUuid(),
@@ -60,25 +62,31 @@ public class PlayerHud {
         return hud;
     }
 
-    private static HudSnapshot buildSnapshot(RaceManager raceManager, ClassManager classManager, PlayerData data,
-            PlayerRef playerRef) {
+    private static HudSnapshot buildSnapshot(RaceManager raceManager, ClassManager classManager,
+            MobLevelingManager mobLevelingManager, PlayerData data, PlayerRef playerRef) {
+        return buildSnapshot(raceManager, classManager, mobLevelingManager, data, playerRef, null);
+    }
+
+    private static HudSnapshot buildSnapshot(RaceManager raceManager, ClassManager classManager,
+            MobLevelingManager mobLevelingManager, PlayerData data, PlayerRef playerRef, String playerIconOverride) {
         String raceLabel = resolveRaceName(raceManager, data);
         String raceIconId = "Ingredient_Crystal_White";
         String primaryLabel = resolvePrimaryClassName(classManager, data);
         String secondaryLabel = resolveSecondaryClassName(classManager, data);
         String primaryIconId = resolveClassIcon(classManager, data, true);
         String secondaryIconId = resolveClassIcon(classManager, data, false);
-        String playerIcon = resolvePlayerName(playerRef);
+        String playerIcon = playerIconOverride != null ? playerIconOverride : resolvePlayerName(playerRef);
+        String mobLevel = resolveMobLevelText(mobLevelingManager, playerRef);
 
         return new HudSnapshot(playerIcon, raceIconId, raceLabel, primaryIconId, primaryLabel, secondaryIconId,
-                secondaryLabel);
+                secondaryLabel, mobLevel);
     }
 
     private static String buildHudHtml(HudSnapshot snapshot) {
         return """
-                <div style='anchor-left: 0; anchor-bottom: 0; anchor-height: 100; layout-mode: left;'>
+                <div style='anchor-left: 0; anchor-bottom: 0; anchor-height: 150; anchor-width: 320; layout-mode: left; padding: 0; border: none; background-image: url("images/EL_AvatarBackground.png"); background-size: contain; background-repeat: no-repeat; background-position: left bottom;'>
                     <hyvatar username="%s" render="head" size="100" rotate="15"></hyvatar>
-                    <div style='layout-mode: bottom; anchor-bottom: 5; anchor-height: 60; anchor-left: 10;'>
+                    <div style='layout-mode: bottom; anchor-bottom: 20; anchor-height: 60; anchor-left: 12;'>
                         <div id='RaceText' style='margin: 0; layout-mode: left; vertical-align: center; anchor-height: 24;'>
                             <span class="item-icon" data-hyui-item-id="%s"></span>
                             <p style='padding-left: 4; color: #cfcfcf; font-size: 14; vertical-align: center; display: inline-block;'>%s</p>
@@ -91,11 +99,36 @@ public class PlayerHud {
                             <span class="item-icon" data-hyui-item-id="%s"></span>
                             <p id='SecondaryText' style='padding-left: 4; vertical-align: center; font-size: 12; color: #bebebe; text-align: center; display: inline-block;'>%s</p>
                         </div>
+                        <div style='margin: 0; layout-mode: left; vertical-align: center; anchor-height: 20; anchor-top: 4;'>
+                            <p id='MobLevelText' style='padding-left: 2; vertical-align: center; font-size: 12; color: #9ad1ff; text-align: center; display: inline-block;'>%s</p>
+                        </div>
                     </div>
                 </div>
                 """
                 .formatted(snapshot.playerIcon(), snapshot.raceIconId(), snapshot.raceLabel(), snapshot.primaryIconId(),
-                        snapshot.primaryLabel(), snapshot.secondaryIconId(), snapshot.secondaryLabel());
+                        snapshot.primaryLabel(), snapshot.secondaryIconId(), snapshot.secondaryLabel(),
+                        snapshot.mobLevel());
+    }
+
+    private static String resolveMobLevelText(MobLevelingManager mobLevelingManager, PlayerRef playerRef) {
+        if (mobLevelingManager == null || playerRef == null) {
+            return "Mob Lv. --";
+        }
+
+        Integer single = mobLevelingManager.getHudLevelForPlayer(playerRef);
+        if (single != null) {
+            return "Mob Lv. %d".formatted(single);
+        }
+
+        MobLevelingManager.LevelRange range = mobLevelingManager.getHudLevelRangeForPlayer(playerRef);
+        if (range == null) {
+            return "Mob Lv. --";
+        }
+
+        if (range.min() == range.max()) {
+            return "Mob Lv. %d".formatted(range.min());
+        }
+        return "Mob Lv. %d-%d".formatted(range.min(), range.max());
     }
 
     private static String resolvePlayerName(PlayerRef playerRef) {
@@ -240,25 +273,42 @@ public class PlayerHud {
         PlayerDataManager playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
         RaceManager raceManager = EndlessLeveling.getInstance().getRaceManager();
         ClassManager classManager = EndlessLeveling.getInstance().getClassManager();
+        MobLevelingManager mobLevelingManager = EndlessLeveling.getInstance().getMobLevelingManager();
         PlayerData data = playerDataManager != null ? playerDataManager.get(uuid) : null;
 
         HudSnapshot current = HUD_SNAPSHOTS.get(uuid);
-        HudSnapshot updated = buildSnapshot(raceManager, classManager, data, playerRef);
+        String frozenPlayerIcon = current != null ? current.playerIcon() : null;
+        HudSnapshot updated = buildSnapshot(raceManager, classManager, mobLevelingManager, data, playerRef,
+                frozenPlayerIcon);
 
         if (updated.equals(current)) {
             return;
         }
 
         String html = buildHudHtml(updated);
-        HudBuilder.hudForPlayer(playerRef)
+
+        // Recreate the HUD on each update to keep the hyvatar intact across template
+        // refreshes.
+        Ref<EntityStore> ref = playerRef.getReference();
+        Store<EntityStore> store = ref != null ? ref.getStore() : null;
+        if (store == null) {
+            return;
+        }
+
+        HyUIHud newHud = HudBuilder.hudForPlayer(playerRef)
                 .enableRuntimeTemplateUpdates(true)
                 .fromHtml(html)
-                .updateExisting(hud);
+                .show(store);
 
+        if (hud != null) {
+            hud.remove();
+        }
+
+        ACTIVE_HUDS.put(uuid, newHud);
         HUD_SNAPSHOTS.put(uuid, updated);
     }
 
     private record HudSnapshot(String playerIcon, String raceIconId, String raceLabel, String primaryIconId,
-            String primaryLabel, String secondaryIconId, String secondaryLabel) {
+            String primaryLabel, String secondaryIconId, String secondaryLabel, String mobLevel) {
     }
 }
