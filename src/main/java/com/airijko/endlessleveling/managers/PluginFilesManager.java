@@ -21,6 +21,7 @@ public class PluginFilesManager {
     private static final String PARTYDATA_FOLDER_NAME = "partydata";
     private static final String RACES_FOLDER_NAME = "races";
     private static final String CLASSES_FOLDER_NAME = "classes";
+    private static final String WEAPONS_FILE_NAME = "weapons.yml";
     private static final String PARTYDATA_FILE_NAME = "parties.json";
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
@@ -30,6 +31,8 @@ public class PluginFilesManager {
     private final File partyDataFolder;
     private final File racesFolder;
     private final File classesFolder;
+
+    private final File weaponsFile;
 
     private final File configFile;
     private final File levelingFile;
@@ -51,6 +54,7 @@ public class PluginFilesManager {
 
         this.configFile = initYamlFile("config.yml");
         this.levelingFile = initYamlFile("leveling.yml");
+        this.weaponsFile = initYamlFile(WEAPONS_FILE_NAME);
         this.partyDataFile = initPartyDataFile();
 
         exportResourceDirectory("races", racesFolder, false);
@@ -90,6 +94,10 @@ public class PluginFilesManager {
 
     public File getClassesFolder() {
         return classesFolder;
+    }
+
+    public File getWeaponsFile() {
+        return weaponsFile;
     }
 
     public File getConfigFile() {
