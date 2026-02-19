@@ -310,6 +310,28 @@ $C.@PageOverlay {
                                 Group { Anchor: (Height: 16); }
 
                                 Label {
+                                    Text: "Augments";
+                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                                    Anchor: (Height: 20);
+                                }
+
+                                Group #AugmentList {
+                                    LayoutMode: Top;
+
+                                    Label #AugmentSummary {
+                                        Text: "No augments active";
+                                        Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
+                                        Anchor: (Height: 18);
+                                    }
+
+                                    Group #AugmentEntries {
+                                        LayoutMode: Top;
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 16); }
+
+                                Label {
                                     Text: "Innate Bonuses";
                                     Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
                                     Anchor: (Height: 20);

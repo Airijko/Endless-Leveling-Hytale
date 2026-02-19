@@ -85,7 +85,7 @@ public class ArchetypePassiveManager {
                 return;
             }
             for (RacePassiveDefinition passive : race.getPassiveDefinitions()) {
-                addPassive(passive, 1.0D, totals, grouped);
+                addPassive(passive, 1.0D, null, totals, grouped);
             }
         }
     }
@@ -107,14 +107,14 @@ public class ArchetypePassiveManager {
             CharacterClassDefinition primary = classManager.getPlayerPrimaryClass(playerData);
             if (primary != null) {
                 for (RacePassiveDefinition passive : primary.getPassiveDefinitions()) {
-                    addPassive(passive, 1.0D, totals, grouped);
+                    addPassive(passive, 1.0D, primary.getId(), totals, grouped);
                 }
             }
             CharacterClassDefinition secondary = classManager.getPlayerSecondaryClass(playerData);
             if (secondary != null && secondary != primary) {
                 double scale = classManager.getSecondaryPassiveScale();
                 for (RacePassiveDefinition passive : secondary.getPassiveDefinitions()) {
-                    addPassive(passive, scale, totals, grouped);
+                    addPassive(passive, scale, secondary.getId(), totals, grouped);
                 }
             }
         }
@@ -122,17 +122,19 @@ public class ArchetypePassiveManager {
 
     private static void addPassive(RacePassiveDefinition passive,
             double scale,
+            String classId,
             EnumMap<ArchetypePassiveType, StackAccumulator> totals,
             EnumMap<ArchetypePassiveType, List<RacePassiveDefinition>> grouped) {
         if (passive == null || passive.type() == null) {
             return;
         }
-        double scaledValue = passive.value() * scale;
+        double baseValue = passive.resolveValueForClass(classId);
+        double scaledValue = baseValue * scale;
         if (scaledValue == 0.0D) {
             return;
         }
         StackAccumulator accumulator = totals.computeIfAbsent(passive.type(),
-                key -> new StackAccumulator(passive.stackingStyle()));
+                key -> new StackAccumulator(passive.effectiveStackingStyle()));
         accumulator.addValue(scaledValue);
         RacePassiveDefinition effectiveDefinition = scale == 1.0D ? passive
                 : new RacePassiveDefinition(passive.type(),
@@ -141,7 +143,10 @@ public class ArchetypePassiveManager {
                         passive.attributeType(),
                         passive.damageLayer(),
                         passive.tag(),
-                        passive.stackingStyle());
+                        passive.category(),
+                        passive.stackingStyle(),
+                        passive.tier(),
+                        passive.classValues());
         grouped.computeIfAbsent(passive.type(), key -> new ArrayList<>()).add(effectiveDefinition);
     }
 

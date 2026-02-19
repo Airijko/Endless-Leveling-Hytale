@@ -24,7 +24,6 @@ public class LevelingManager {
 
     private final PlayerDataManager playerDataManager;
     private final SkillManager skillManager;
-    private final PassiveManager passiveManager;
     private final ConfigManager configManager;
     private final ArchetypePassiveManager archetypePassiveManager;
 
@@ -44,12 +43,10 @@ public class LevelingManager {
     private int playerBasedOffset;
 
     public LevelingManager(PlayerDataManager playerDataManager, PluginFilesManager filesManager,
-            SkillManager skillManager, PassiveManager passiveManager,
-            ArchetypePassiveManager archetypePassiveManager) {
+            SkillManager skillManager, ArchetypePassiveManager archetypePassiveManager) {
         this.playerDataManager = playerDataManager;
         this.configManager = new ConfigManager(filesManager.getLevelingFile(), false);
         this.skillManager = skillManager;
-        this.passiveManager = passiveManager;
         this.archetypePassiveManager = archetypePassiveManager;
 
         loadConfigValues();
@@ -186,11 +183,6 @@ public class LevelingManager {
         // Delegate skill point addition to SkillManager
         skillManager.addSkillPoints(player);
 
-        if (passiveManager != null) {
-            var passiveResult = passiveManager.syncPassives(player);
-            passiveManager.notifyPassiveChanges(player, passiveResult);
-        }
-
         LOGGER.atInfo().log("Player %s leveled up to %d! Total skill points: %d",
                 player.getPlayerName(), player.getLevel(), skillManager.calculateTotalSkillPoints(player.getLevel()));
 
@@ -252,10 +244,6 @@ public class LevelingManager {
 
         // Reset skill attributes and recalc skill points
         skillManager.resetSkillAttributes(player);
-
-        if (passiveManager != null) {
-            passiveManager.syncPassives(player);
-        }
 
         playerDataManager.save(player);
         LOGGER.atInfo().log("Player %s level changed from %d to %d",

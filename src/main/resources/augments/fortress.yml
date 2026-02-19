@@ -1,0 +1,19 @@
+id: fortress
+name: "Fortress"
+tier: ELITE
+description: "When reaching 1% health, gain 100% damage reduction for 5 seconds (cannot move, may attack). Then gain 15% damage reduction and 50% Strength and Sorcery for 15 seconds."
+category: ON_LOW_HP
+
+passives:
+  shield_phase:
+    value: 1.0 # 100% damage reduction
+    duration: 5 # lasts 5 seconds
+    immobile: true # cannot move
+    can_attack: true # can attack while active
+    cooldown: 30 # example cooldown in seconds
+
+  buff_phase:
+    damage_reduction: 0.15 # 15% damage reduction
+    strength_bonus: 0.50 # +50% Strength
+    sorcery_bonus: 0.50 # +50% Sorcery
+    duration: 15 # lasts 15 seconds

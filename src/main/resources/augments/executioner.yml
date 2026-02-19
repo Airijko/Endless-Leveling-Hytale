@@ -1,0 +1,17 @@
+id: executioner_elite
+name: "Executioner"
+tier: ELITE
+description: "Finish wounded targets with lethal precision."
+category: ON_HIT_TARGET_CONDITION
+
+passives:
+  executioner:
+    value: 5.00 # +500% damage to targets below the threshold
+    threshold: 0.2 # Only applies to targets already below 20% HP
+    cooldown: 45 # Seconds between executioner procs
+    category: ON_HIT_TARGET_CONDITION
+    class_values:
+      assassin:
+        value: 4.5
+      marksman:
+        value: 5.5

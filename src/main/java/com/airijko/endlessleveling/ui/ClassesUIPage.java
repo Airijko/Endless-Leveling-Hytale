@@ -769,6 +769,8 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         Double cooldown = getDoubleProp(props, "cooldown");
         Double window = getDoubleProp(props, "window");
         Double stacks = getDoubleProp(props, "max_stacks");
+        Double slowPercent = getDoubleProp(props, "slow_percent");
+        String scalingStat = getStringProp(props, "scaling_stat");
 
         if (type == null) {
             return value == 0.0D ? "Passive" : formatSigned(value);
@@ -778,8 +780,13 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case XP_BONUS -> formatPercentValue(value) + " XP gain";
             case HEALTH_REGEN -> formatPercentValue(value) + " HP/5s";
             case MANA_REGEN -> formatPercentValue(value) + " mana/5s";
+            case MANA_REGEN_FLAT -> formatSigned(value) + " mana/s";
+            case REGENERATION -> formatSigned(value) + " HP/s";
             case HEALING_BONUS -> formatPercentValue(value) + " healing";
+            case LIFE_STEAL -> formatPercentValue(value) + " life steal";
             case SPECIAL_CHARGE_BONUS -> formatPercentValue(value) + " charge rate";
+            case STAMINA_GAIN_BONUS -> formatPercentValue(value) + " stamina gain";
+            case LUCK -> formatPercentValue(value) + " luck";
             case SECOND_WIND -> appendDetails(
                     formatPercentValue(value) + " heal",
                     formatThresholdDetail(threshold, "HP"),
@@ -809,7 +816,38 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     formatPercentValue(value) + " speed",
                     formatDurationDetail(duration),
                     formatStacksDetail(stacks));
+            case WITHER -> appendDetails(
+                    formatPercentValue(value) + " max HP/sec",
+                    formatDurationDetail(duration),
+                    formatSlowDetail(slowPercent));
+            case CRIT_DEFENSE -> appendDetails(
+                    formatPercentValue(value) + " dmg reduction",
+                    formatScalingDetail(scalingStat));
+            default -> formatSigned(value);
         };
+    }
+
+    private String formatSlowDetail(Double slowPercent) {
+        if (slowPercent == null) {
+            return null;
+        }
+        return formatPercentValue(slowPercent) + " slow";
+    }
+
+    private String formatScalingDetail(String scalingStat) {
+        if (scalingStat == null || scalingStat.isBlank()) {
+            return null;
+        }
+        return "scales with " + toDisplay(scalingStat);
+    }
+
+    private String getStringProp(Map<String, Object> props, String key) {
+        Object raw = props.get(key);
+        if (raw instanceof String str) {
+            String trimmed = str.trim();
+            return trimmed.isEmpty() ? null : trimmed;
+        }
+        return null;
     }
 
     private String formatInnatePreview(RacePassiveDefinition passive) {

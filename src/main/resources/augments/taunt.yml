@@ -1,0 +1,12 @@
+id: taunt
+name: "Taunt"
+tier: ELITE
+description: "Taunt all nearby enemies within 20 blocks. Gain increased resistances against taunted enemies (PvE only)."
+category: PASSIVE_STAT
+
+passives:
+  taunt_radius:
+    value: 20 # 20 block radius
+  resistance_bonus:
+    value: 0.25 # +25% damage reduction against taunted enemies
+  pve_only: true # only applies in PvE

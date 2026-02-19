@@ -1,0 +1,9 @@
+id: vampirism
+name: "Vampirism"
+tier: ELITE
+description: "Leech vitality from every strike."
+
+passives:
+  life_steal:
+    value: 20.0 # +20% life steal on dealt damage
+    category: ON_HIT

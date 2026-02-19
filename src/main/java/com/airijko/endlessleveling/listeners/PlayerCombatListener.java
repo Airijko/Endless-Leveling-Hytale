@@ -178,7 +178,7 @@ public class PlayerCombatListener extends DamageEventSystem {
                     }
 
                     damage.setAmount(finalDamage);
-                    applyLifeSteal(attackerRef, commandBuffer, playerData, finalDamage);
+                    applyLifeSteal(attackerRef, commandBuffer, archetypeSnapshot, finalDamage);
                     passiveManager.markCombat(playerData.getUuid());
                 }
             }
@@ -235,18 +235,18 @@ public class PlayerCombatListener extends DamageEventSystem {
 
     private void applyLifeSteal(@Nonnull Ref<EntityStore> attackerRef,
             @Nonnull CommandBuffer<EntityStore> commandBuffer,
-            @Nonnull PlayerData playerData,
+            @Nonnull ArchetypePassiveSnapshot archetypeSnapshot,
             float damageDealt) {
         if (passiveManager == null || damageDealt <= 0) {
             return;
         }
 
-        PassiveManager.PassiveSnapshot snapshot = passiveManager.getSnapshot(playerData, PassiveType.LIFE_STEAL);
-        if (snapshot == null || !snapshot.isUnlocked() || snapshot.value() <= 0) {
+        double lifeStealPercent = Math.max(0.0D, archetypeSnapshot.getValue(ArchetypePassiveType.LIFE_STEAL));
+        if (lifeStealPercent <= 0.0D) {
             return;
         }
 
-        double healPercent = snapshot.value() / 100.0D;
+        double healPercent = lifeStealPercent / 100.0D;
         double healAmount = damageDealt * healPercent;
         if (healAmount <= 0) {
             return;

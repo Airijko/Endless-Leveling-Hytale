@@ -5,6 +5,9 @@ import com.airijko.endlessleveling.managers.PartyManager;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.MobLevelingManager;
+import com.airijko.endlessleveling.passives.ArchetypePassiveManager;
+import com.airijko.endlessleveling.passives.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -31,17 +34,20 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
     private final PartyManager partyManager;
     private final PassiveManager passiveManager;
     private final MobLevelingManager mobLevelingManager;
+    private final ArchetypePassiveManager archetypePassiveManager;
 
     public XpEventListener(PlayerDataManager playerDataManager,
             LevelingManager levelingManager,
             PartyManager partyManager,
             PassiveManager passiveManager,
-            MobLevelingManager mobLevelingManager) {
+            MobLevelingManager mobLevelingManager,
+            ArchetypePassiveManager archetypePassiveManager) {
         this.playerDataManager = playerDataManager;
         this.levelingManager = levelingManager;
         this.partyManager = partyManager;
         this.passiveManager = passiveManager;
         this.mobLevelingManager = mobLevelingManager;
+        this.archetypePassiveManager = archetypePassiveManager;
     }
 
     @Override
@@ -106,7 +112,10 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
             levelingManager.addXp(playerUuid, xpGained);
         }
 
-        if (passiveManager != null && passiveManager.getLuckValue(playerData) > 0.0D) {
+        ArchetypePassiveSnapshot snapshot = archetypePassiveManager != null
+                ? archetypePassiveManager.getSnapshot(playerData)
+                : ArchetypePassiveSnapshot.empty();
+        if (passiveManager != null && snapshot.getValue(ArchetypePassiveType.LUCK) > 0.0D) {
             passiveManager.openMobDropWindow(playerUuid);
         }
     }

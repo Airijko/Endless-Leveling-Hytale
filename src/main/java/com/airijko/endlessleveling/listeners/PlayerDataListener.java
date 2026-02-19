@@ -53,10 +53,6 @@ public class PlayerDataListener {
 
         if (passiveManager != null) {
             passiveManager.resetRuntimeState(uuid);
-            var result = passiveManager.syncPassives(playerData);
-            if (!result.leveledUp().isEmpty()) {
-                passiveManager.notifyPassiveChanges(playerData, result);
-            }
             playerDataManager.save(playerData);
         }
 

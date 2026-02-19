@@ -1,0 +1,11 @@
+id: blood_frenzy
+name: "Blood Frenzy"
+tier: ELITE
+description: "Gain 10% Life Steal and 15% Haste."
+category: PASSIVE_STAT
+
+passives:
+  life_steal:
+    value: 0.10 # 10% of damage dealt restores HP
+  haste:
+    value: 0.15 # 15% increased attack/cast speed

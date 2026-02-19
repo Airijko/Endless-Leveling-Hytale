@@ -1,0 +1,18 @@
+id: predator
+name: "Predator"
+tier: ELITE
+description: "Killing an enemy grants 12% Haste and 6% Damage for 10 seconds (Stacks up to 4 times). You lose 10% Defense until maximum stacks are reached."
+category: ON_KILL
+
+passives:
+  haste_bonus:
+    value: 0.12 # +12% Haste per stack
+    max_stacks: 4
+    duration: 10 # seconds
+  damage_bonus:
+    value: 0.06 # +6% Damage per stack
+    max_stacks: 4
+    duration: 10 # seconds
+  defense_penalty:
+    value: -0.10 # -10% Defense
+    active_until_max_stacks: true # penalty removed when max stacks reached

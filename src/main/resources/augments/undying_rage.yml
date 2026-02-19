@@ -1,0 +1,12 @@
+id: undying_rage
+name: "Undying Rage"
+tier: MYTHIC
+description: "Cannot drop below 1% health for 10 seconds. Deals bonus damage proportional to missing health."
+category: ON_LOW_HP
+
+passives:
+  rage_damage:
+    duration: 10 # lasts 10 seconds
+    min_health_percent: 0.01 # can't drop below 1% HP
+    max_bonus_damage: 1.0 # 100% bonus damage at 0% HP
+    scaling_stat: missing_health_percent # scales bonus damage based on missing HP

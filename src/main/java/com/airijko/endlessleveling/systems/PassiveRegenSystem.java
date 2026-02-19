@@ -2,7 +2,6 @@ package com.airijko.endlessleveling.systems;
 
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
-import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PassiveManager.PassiveRuntimeState;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
@@ -87,13 +86,14 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
                                 ? archetypePassiveManager.getSnapshot(playerData)
                                 : ArchetypePassiveSnapshot.empty();
 
-                        applyHealthRegeneration(playerRef, playerData, statMap, deltaSeconds, runtimeState);
+                        applyHealthRegeneration(playerRef, playerData, statMap, deltaSeconds, runtimeState,
+                                archetypeSnapshot);
                         applyArchetypeHealthRegeneration(playerData, statMap, deltaSeconds, archetypeSnapshot);
-                        applyManaRegeneration(playerData, statMap, deltaSeconds, archetypeSnapshot);
+                        applyManaRegeneration(statMap, deltaSeconds, archetypeSnapshot);
                         applyAdrenalineStamina(playerRef, statMap, deltaSeconds, archetypeSnapshot, runtimeState);
-                        applyStaminaGainBonus(playerData, statMap, runtimeState);
+                        applyStaminaGainBonus(statMap, archetypeSnapshot, runtimeState);
                         expireSwiftnessIfNeeded(playerRef, ref, commandBuffer, playerData, runtimeState);
-                        applySignatureGainBonus(playerData, statMap, archetypeSnapshot, runtimeState);
+                        applySignatureGainBonus(statMap, archetypeSnapshot, runtimeState);
                         applyHealingBonus(statMap, archetypeSnapshot, runtimeState);
                         applySecondWindHealing(statMap, runtimeState, deltaSeconds);
                         notifyPassiveCooldowns(playerRef, runtimeState);
@@ -145,10 +145,11 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             @Nonnull PlayerData playerData,
             @Nonnull EntityStatMap statMap,
             float deltaSeconds,
-            @Nonnull PassiveRuntimeState runtimeState) {
+            @Nonnull PassiveRuntimeState runtimeState,
+            @Nonnull ArchetypePassiveSnapshot archetypeSnapshot) {
 
-        PassiveManager.PassiveSnapshot snapshot = passiveManager.getSnapshot(playerData, PassiveType.REGENERATION);
-        if (!snapshot.isUnlocked() || snapshot.value() <= 0) {
+        double regenPerSecond = archetypeSnapshot.getValue(ArchetypePassiveType.REGENERATION);
+        if (regenPerSecond <= 0.0D) {
             runtimeState.setRegenerationActive(false);
             return;
         }
@@ -164,7 +165,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             runtimeState.setRegenerationActive(true);
         }
 
-        addResource(statMap, DefaultEntityStatTypes.getHealth(), snapshot.value(), deltaSeconds);
+        addResource(statMap, DefaultEntityStatTypes.getHealth(), regenPerSecond, deltaSeconds);
     }
 
     private void applyArchetypeHealthRegeneration(@Nonnull PlayerData playerData,
@@ -199,16 +200,10 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         addResource(statMap, DefaultEntityStatTypes.getHealth(), perSecond, deltaSeconds);
     }
 
-    private void applyManaRegeneration(@Nonnull PlayerData playerData,
-            @Nonnull EntityStatMap statMap,
+    private void applyManaRegeneration(@Nonnull EntityStatMap statMap,
             float deltaSeconds,
             @Nonnull ArchetypePassiveSnapshot archetypeSnapshot) {
-        double perSecond = 0.0D;
-        PassiveManager.PassiveSnapshot snapshot = passiveManager.getSnapshot(playerData, PassiveType.MANA_REGENERATION);
-        if (snapshot.isUnlocked() && snapshot.value() > 0) {
-            perSecond += snapshot.value();
-        }
-
+        double perSecond = archetypeSnapshot.getValue(ArchetypePassiveType.MANA_REGEN_FLAT);
         double percentOverFiveSeconds = archetypeSnapshot.getValue(ArchetypePassiveType.MANA_REGEN);
         if (percentOverFiveSeconds > 0) {
             EntityStatValue manaStat = statMap.get(DefaultEntityStatTypes.getMana());
@@ -229,8 +224,8 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         addResource(statMap, DefaultEntityStatTypes.getMana(), perSecond, deltaSeconds);
     }
 
-    private void applyStaminaGainBonus(@Nonnull PlayerData playerData,
-            @Nonnull EntityStatMap statMap,
+    private void applyStaminaGainBonus(@Nonnull EntityStatMap statMap,
+            @Nonnull ArchetypePassiveSnapshot archetypeSnapshot,
             @Nonnull PassiveRuntimeState runtimeState) {
         if (runtimeState == null) {
             return;
@@ -249,9 +244,8 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             return;
         }
 
-        PassiveManager.PassiveSnapshot snapshot = passiveManager.getSnapshot(playerData,
-                PassiveType.STAMINA_GAIN_BONUS);
-        if (!snapshot.isUnlocked() || snapshot.value() <= 0) {
+        double staminaBonus = archetypeSnapshot.getValue(ArchetypePassiveType.STAMINA_GAIN_BONUS);
+        if (staminaBonus <= 0.0D) {
             runtimeState.setLastStaminaSample(current);
             return;
         }
@@ -268,7 +262,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             return;
         }
 
-        double bonusFactor = Math.max(0.0D, snapshot.value()) / 100.0D;
+        double bonusFactor = Math.max(0.0D, staminaBonus) / 100.0D;
         if (bonusFactor <= 0.0D) {
             runtimeState.setLastStaminaSample(current);
             return;
@@ -381,11 +375,9 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
                 settings.durationSeconds());
     }
 
-    private void applySignatureGainBonus(@Nonnull PlayerData playerData,
-            @Nonnull EntityStatMap statMap,
+    private void applySignatureGainBonus(@Nonnull EntityStatMap statMap,
             @Nonnull ArchetypePassiveSnapshot archetypeSnapshot,
             @Nonnull PassiveRuntimeState runtimeState) {
-        PassiveManager.PassiveSnapshot snapshot = passiveManager.getSnapshot(playerData, PassiveType.SIGNATURE_GAIN);
         EntityStatValue signatureStat = statMap.get(DefaultEntityStatTypes.getSignatureEnergy());
         if (signatureStat == null) {
             return;
@@ -404,9 +396,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             return;
         }
 
-        double skillBonusFactor = snapshot.isUnlocked() && snapshot.value() > 0
-                ? Math.max(0.0D, snapshot.value() / 100.0D)
-                : 0.0D;
+        double skillBonusFactor = 0.0D;
         double archetypeBonus = Math.max(0.0D,
                 archetypeSnapshot.getValue(ArchetypePassiveType.SPECIAL_CHARGE_BONUS));
         double totalBonusFactor = skillBonusFactor > 0.0D

@@ -1,8 +1,11 @@
 package com.airijko.endlessleveling.listeners;
 
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.airijko.endlessleveling.managers.PassiveManager;
+import com.airijko.endlessleveling.passives.ArchetypePassiveManager;
+import com.airijko.endlessleveling.passives.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.entity.LivingEntity;
 import com.hypixel.hytale.server.core.entity.entities.Player;
@@ -34,13 +37,16 @@ public class LuckDoubleDropSystem {
 
     private final PlayerDataManager playerDataManager;
     private final PassiveManager passiveManager;
+    private final ArchetypePassiveManager archetypePassiveManager;
     private final Set<UUID> suppressedPlayers = ConcurrentHashMap.newKeySet();
     private final ConcurrentMap<UUID, Long> recentOreBreaks = new ConcurrentHashMap<>();
 
     public LuckDoubleDropSystem(@Nonnull PlayerDataManager playerDataManager,
-            @Nonnull PassiveManager passiveManager) {
+            @Nonnull PassiveManager passiveManager,
+            @Nonnull ArchetypePassiveManager archetypePassiveManager) {
         this.playerDataManager = playerDataManager;
         this.passiveManager = passiveManager;
+        this.archetypePassiveManager = archetypePassiveManager;
     }
 
     /**
@@ -97,7 +103,11 @@ public class LuckDoubleDropSystem {
             return;
         }
 
-        double luckValue = passiveManager.getLuckValue(playerData);
+        ArchetypePassiveSnapshot snapshot = archetypePassiveManager != null
+                ? archetypePassiveManager.getSnapshot(playerData)
+                : ArchetypePassiveSnapshot.empty();
+
+        double luckValue = snapshot.getValue(ArchetypePassiveType.LUCK);
         if (luckValue <= 0.0D) {
             return;
         }

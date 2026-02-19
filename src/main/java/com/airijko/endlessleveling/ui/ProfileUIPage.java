@@ -224,6 +224,8 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 "#InnatePassiveEntries",
                 passiveSections.innateSummary(),
                 passiveSections.innateEntries());
+
+        renderAugmentSection(ui, buildAugmentEntries(data));
     }
 
     private PlayerProfile resolveActiveProfile(@Nonnull PlayerData data) {
@@ -400,6 +402,13 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 innateSummary);
     }
 
+    private List<AugmentEntry> buildAugmentEntries(@Nonnull PlayerData playerData) {
+        // TODO: Integrate real augment data source (AugmentManager/PlayerData once
+        // available).
+        // For now, return an empty list to keep the UI wired without breaking anything.
+        return List.of();
+    }
+
     private List<PassiveEntry> buildInnateEntries(@Nonnull List<RacePassiveDefinition> definitions,
             @Nonnull PlayerProfile profile) {
         if (definitions.isEmpty()) {
@@ -433,14 +442,16 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
     private AggregatedPassiveProps aggregatePassiveProperties(@Nonnull List<RacePassiveDefinition> definitions) {
         if (definitions.isEmpty()) {
-            return new AggregatedPassiveProps(null, null, null, null, null);
+            return new AggregatedPassiveProps(null, null, null, null, null, null, null);
         }
         Double threshold = averageProperty(definitions, "threshold");
         Double duration = averageProperty(definitions, "duration");
         Double cooldown = averageProperty(definitions, "cooldown");
         Double window = averageProperty(definitions, "window");
         Double stacks = averageProperty(definitions, "max_stacks");
-        return new AggregatedPassiveProps(threshold, duration, cooldown, window, stacks);
+        Double slowPercent = averageProperty(definitions, "slow_percent");
+        String scalingStat = firstStringProperty(definitions, "scaling_stat");
+        return new AggregatedPassiveProps(threshold, duration, cooldown, window, stacks, slowPercent, scalingStat);
     }
 
     private Double averageProperty(@Nonnull List<RacePassiveDefinition> definitions, @Nonnull String key) {
@@ -463,6 +474,19 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return sum / count;
     }
 
+    private String firstStringProperty(@Nonnull List<RacePassiveDefinition> definitions, @Nonnull String key) {
+        for (RacePassiveDefinition definition : definitions) {
+            if (definition == null || definition.properties() == null) {
+                continue;
+            }
+            Object value = definition.properties().get(key);
+            if (value instanceof String str && !str.isBlank()) {
+                return str.trim();
+            }
+        }
+        return null;
+    }
+
     private void renderPassiveSection(@Nonnull UICommandBuilder ui,
             @Nonnull String summarySelector,
             @Nonnull String entriesSelector,
@@ -476,6 +500,29 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         }
         ui.set(summarySelector + ".Visible", false);
         populatePassiveEntries(ui, entriesSelector, PASSIVE_ENTRY_TEMPLATE, entries);
+    }
+
+    private void renderAugmentSection(@Nonnull UICommandBuilder ui,
+            @Nonnull List<AugmentEntry> augments) {
+        String summarySelector = "#AugmentSummary";
+        String entriesSelector = "#AugmentEntries";
+        if (augments.isEmpty()) {
+            ui.set(summarySelector + ".Visible", true);
+            ui.set(summarySelector + ".Text", "No augments active");
+            ui.clear(entriesSelector);
+            return;
+        }
+        ui.set(summarySelector + ".Visible", false);
+        ui.clear(entriesSelector);
+        for (int i = 0; i < augments.size(); i++) {
+            AugmentEntry entry = augments.get(i);
+            ui.append(entriesSelector, PASSIVE_ENTRY_TEMPLATE);
+            String base = entriesSelector + "[" + i + "]";
+            String label = entry.id() + " (" + entry.tier() + ")";
+            String value = entry.value() + (entry.source().isBlank() ? "" : " • " + entry.source());
+            ui.set(base + " #PassiveName.Text", label);
+            ui.set(base + " #PassiveValue.Text", value);
+        }
     }
 
     private void populatePassiveEntries(@Nonnull UICommandBuilder ui,
@@ -606,6 +653,9 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private record PassiveEntry(String label, String value) {
     }
 
+    private record AugmentEntry(String id, String tier, String value, String source) {
+    }
+
     private record SkillPassiveEntry(String label, String value, String level) {
     }
 
@@ -619,7 +669,9 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             Double duration,
             Double cooldown,
             Double window,
-            Double stacks) {
+            Double stacks,
+            Double slowPercent,
+            String scalingStat) {
     }
 
     private record AttributeDisplay(String value, String level) {
@@ -632,8 +684,13 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case XP_BONUS -> formatPercentValue(value) + " XP gain";
             case HEALTH_REGEN -> formatPercentValue(value) + " HP/5s";
             case MANA_REGEN -> formatPercentValue(value) + " max mana/5s";
+            case MANA_REGEN_FLAT -> formatSigned(value) + " mana/s";
+            case REGENERATION -> formatSigned(value) + " HP/s";
             case HEALING_BONUS -> formatPercentValue(value) + " healing";
+            case LIFE_STEAL -> formatPercentValue(value) + " life steal";
             case SPECIAL_CHARGE_BONUS -> formatPercentValue(value) + " charge rate";
+            case STAMINA_GAIN_BONUS -> formatPercentValue(value) + " stamina gain";
+            case LUCK -> formatPercentValue(value) + " luck";
             case SECOND_WIND -> appendDetails(
                     formatPercentValue(value) + " heal",
                     formatThresholdDetail(props.threshold(), "HP"),
@@ -662,8 +719,30 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     formatPercentValue(value) + " speed",
                     formatDurationDetail(props.duration()),
                     formatStacksDetail(props.stacks()));
+            case WITHER -> appendDetails(
+                    formatPercentValue(value) + " max HP/sec",
+                    formatDurationDetail(props.duration()),
+                    formatSlowDetail(props.slowPercent()));
+            case CRIT_DEFENSE -> appendDetails(
+                    formatPercentValue(value) + " dmg reduction",
+                    formatScalingDetail(props.scalingStat()));
             case INNATE_ATTRIBUTE_GAIN -> formatSigned(value);
+            default -> formatSigned(value);
         };
+    }
+
+    private String formatSlowDetail(Double slowPercent) {
+        if (slowPercent == null) {
+            return null;
+        }
+        return formatPercentValue(slowPercent) + " slow";
+    }
+
+    private String formatScalingDetail(String scalingStat) {
+        if (scalingStat == null || scalingStat.isBlank()) {
+            return null;
+        }
+        return "scales with " + toDisplay(scalingStat);
     }
 
     private String formatInnateAttributeValue(SkillAttributeType attributeType,

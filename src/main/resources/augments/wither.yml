@@ -1,0 +1,12 @@
+id: wither_elite
+name: "Wither"
+tier: ELITE
+description: "Erode foes with a crippling blight."
+category: ON_HIT
+
+passives:
+  wither:
+    value: 0.025 # 2.5% max health per second as damage
+    slow_percent: 0.20 # 20% max movement speed slow
+    duration: 5 # seconds
+    category: ON_HIT

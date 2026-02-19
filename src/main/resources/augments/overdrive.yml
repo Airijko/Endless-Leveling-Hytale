@@ -1,0 +1,16 @@
+id: overdrive
+name: "Overdrive"
+tier: ELITE
+description: "Gain 4% Haste and 5% Critical Damage per consecutive hit (up to 8 stacks). Taking damage or missing an attack removes a stack."
+category: ON_HIT
+
+passives:
+  haste_bonus:
+    value: 0.04 # +4% Haste per stack
+    max_stacks: 8
+  crit_damage_bonus:
+    value: 0.05 # +5% Critical Damage per stack
+    max_stacks: 8
+  stack_loss_conditions:
+    on_miss: true # lose a stack when an attack misses
+    on_damage_taken: true # lose a stack when taking damage

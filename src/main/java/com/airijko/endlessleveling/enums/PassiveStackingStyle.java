@@ -50,12 +50,15 @@ public enum PassiveStackingStyle {
             case XP_BONUS, HEALING_BONUS, RETALIATION -> ADDITIVE;
             case HEALTH_REGEN,
                     MANA_REGEN,
+                    MANA_REGEN_FLAT,
+                    REGENERATION,
                     SPECIAL_CHARGE_BONUS,
                     SECOND_WIND,
                     BERZERKER,
                     SWIFTNESS ->
                 DIMINISHING;
             case FIRST_STRIKE, EXECUTIONER -> UNIQUE;
+            case WITHER, CRIT_DEFENSE -> ADDITIVE;
             default -> ADDITIVE;
         };
     }

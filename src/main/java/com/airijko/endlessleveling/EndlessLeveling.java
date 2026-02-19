@@ -134,8 +134,7 @@ public class EndlessLeveling extends JavaPlugin {
         passiveManager = new PassiveManager(configManager);
         skillManager = new SkillManager(filesManager, playerAttributeManager, archetypePassiveManager, passiveManager);
         playerDataManager = new PlayerDataManager(filesManager, skillManager, raceManager, classManager);
-        levelingManager = new LevelingManager(playerDataManager, filesManager, skillManager, passiveManager,
-                archetypePassiveManager);
+        levelingManager = new LevelingManager(playerDataManager, filesManager, skillManager, archetypePassiveManager);
         mobLevelingManager = new MobLevelingManager(filesManager, playerDataManager);
         partyManager = new PartyManager(playerDataManager, levelingManager);
         if (!partyManager.isAvailable()) {
@@ -154,13 +153,14 @@ public class EndlessLeveling extends JavaPlugin {
         }
 
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, OpenPlayerHudListener::openGui);
-        LuckDoubleDropSystem luckDoubleDropSystem = new LuckDoubleDropSystem(playerDataManager, passiveManager);
+        LuckDoubleDropSystem luckDoubleDropSystem = new LuckDoubleDropSystem(playerDataManager, passiveManager,
+                archetypePassiveManager);
         this.getEventRegistry().registerGlobal(LivingEntityInventoryChangeEvent.class,
                 luckDoubleDropSystem::onInventoryChange);
         this.getEntityStoreRegistry().registerSystem(new BreakBlockEntitySystem(luckDoubleDropSystem));
         this.getEntityStoreRegistry()
                 .registerSystem(new XpEventListener(playerDataManager, levelingManager, partyManager, passiveManager,
-                        mobLevelingManager));
+                        mobLevelingManager, archetypePassiveManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerCombatListener(playerDataManager, skillManager, passiveManager,
                         archetypePassiveManager, classManager));

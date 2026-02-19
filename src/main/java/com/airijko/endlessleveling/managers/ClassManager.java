@@ -6,7 +6,9 @@ import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.ClassAssignmentSlot;
 import com.airijko.endlessleveling.enums.ClassWeaponType;
 import com.airijko.endlessleveling.enums.DamageLayer;
+import com.airijko.endlessleveling.enums.PassiveCategory;
 import com.airijko.endlessleveling.enums.PassiveStackingStyle;
+import com.airijko.endlessleveling.enums.PassiveTier;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.passives.PassiveDefinitionParser;
@@ -590,15 +592,74 @@ public class ClassManager {
             DamageLayer damageLayer = PassiveDefinitionParser.resolveDamageLayer(type, passive);
             String tag = PassiveDefinitionParser.resolveTag(type, passive);
             PassiveStackingStyle stacking = PassiveDefinitionParser.resolveStacking(type, passive);
+            PassiveTier tier = PassiveTier.fromConfig(passive.get("tier"), PassiveTier.COMMON);
+            PassiveCategory category = PassiveCategory.fromConfig(passive.get("category"), null);
+            Map<String, Double> classValues = parseClassValues(passive.get("class_values"));
             definitions.add(new RacePassiveDefinition(type,
                     value,
                     passive,
                     attributeType,
                     damageLayer,
                     tag,
-                    stacking));
+                    category,
+                    stacking,
+                    tier,
+                    classValues));
         }
         return definitions;
+    }
+
+    private Map<String, Double> parseClassValues(Object node) {
+        Map<String, Double> result = new LinkedHashMap<>();
+        if (!(node instanceof Map<?, ?> map)) {
+            return result;
+        }
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            Object rawKey = entry.getKey();
+            Object rawVal = entry.getValue();
+            if (!(rawKey instanceof String key)) {
+                continue;
+            }
+            String normalizedKey = key.trim().toLowerCase(Locale.ROOT);
+            if (normalizedKey.isEmpty()) {
+                continue;
+            }
+            Double value = extractValue(rawVal);
+            if (value != null) {
+                result.put(normalizedKey, value);
+            }
+        }
+        return result;
+    }
+
+    private Double extractValue(Object rawVal) {
+        if (rawVal instanceof Number number) {
+            return number.doubleValue();
+        }
+        if (rawVal instanceof Map<?, ?> map) {
+            Object inner = map.get("value");
+            if (inner instanceof Number number) {
+                return number.doubleValue();
+            }
+            if (inner instanceof String str) {
+                return parseNumericString(str);
+            }
+        }
+        if (rawVal instanceof String str) {
+            return parseNumericString(str);
+        }
+        return null;
+    }
+
+    private Double parseNumericString(String str) {
+        if (str == null) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(str.trim());
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 
     private double parseDouble(Object value, double defaultValue) {
