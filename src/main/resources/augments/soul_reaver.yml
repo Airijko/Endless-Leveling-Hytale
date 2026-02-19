@@ -1,0 +1,10 @@
+id: soul_reaver
+name: "Soul Reaver"
+tier: ELITE
+description: "Any enemy killed heals you for 20% of their max HP. 5 second cooldown."
+category: ON_KILL
+
+passives:
+  heal_on_kill:
+    value: 0.20 # heals 20% of the enemy's max HP
+    cooldown: 5 # 5 seconds cooldown between triggers

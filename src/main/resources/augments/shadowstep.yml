@@ -1,0 +1,14 @@
+id: shadowstep
+name: "Shadowstep"
+tier: ELITE
+description: "After killing a target, become invisible and gain 50% movement speed for 2 seconds. Invisibility breaks if you attack, but the movement speed buff continues. 10 second cooldown."
+category: ON_KILL
+
+passives:
+  invisibility_on_kill:
+    duration: 2 # invis + movement buff lasts 2 seconds
+    movement_speed_bonus: 0.50 # +50% movement
+    trigger_cooldown: 10 # 10 second cooldown
+    effect: INVISIBLE # becomes invisible
+    break_conditions:
+      attack: true # invisibility breaks if player attacks

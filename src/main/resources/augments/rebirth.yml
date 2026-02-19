@@ -1,0 +1,12 @@
+id: rebirth
+name: "Rebirth"
+tier: ELITE
+description: "When falling to 1% health, instantly heal 80% of max health. Prevents death if not on cooldown."
+category: ON_LOW_HP
+
+passives:
+  heal_on_trigger:
+    value: 0.80 # heals 80% of max HP
+    min_health_percent: 0.01 # triggers at 1% HP
+    cooldown: 360 # 360 seconds cooldown
+    prevent_death: true # player cannot die if triggered

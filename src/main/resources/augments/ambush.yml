@@ -1,0 +1,20 @@
+id: ambush
+name: "Ambush"
+tier: ELITE
+description: "After 5 seconds of not moving, become invisible and gain 25% Strength and Sorcery. The invisibility lasts until you move, take damage, or attack. Once invisibility breaks, the Strength and Sorcery bonuses remain for 10 seconds."
+category: PASSIVE_STAT
+
+passives:
+  invisibility_on_idle:
+    trigger_after_seconds: 5 # triggers after 5 seconds of no movement
+    duration: 10 # buff lasts 10 seconds
+    buffs:
+      strength:
+        value_percent: 0.25 # +25% Strength
+      sorcery:
+        value_percent: 0.25 # +25% Sorcery
+    effect: INVISIBLE # makes the player invisible
+    break_conditions: # invisibility is broken if any occur
+      movement: true
+      damage_taken: true
+      attack: true

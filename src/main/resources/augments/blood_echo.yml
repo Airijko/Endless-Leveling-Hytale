@@ -1,0 +1,12 @@
+id: blood_echo
+name: "Blood Echo"
+tier: MYTHIC
+description: "When you deal damage, 20% of the damage is returned as healing over 3 seconds. Stacks up to 5 times. Cleared on killing a target."
+category: ON_HIT
+
+passives:
+  heal_over_time:
+    value_percent: 0.20 # 20% of damage dealt as healing
+    duration: 3 # heals over 3 seconds
+    max_stacks: 5 # can stack up to 5 times
+    reset_on_kill: true # all stacks removed on kill

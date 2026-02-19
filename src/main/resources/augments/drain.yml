@@ -1,0 +1,10 @@
+id: drain
+name: "Drain"
+tier: ELITE
+description: "On hit, deal bonus damage equal to 10% of the target's current HP."
+category: ON_HIT
+
+passives:
+  bonus_damage_on_hit:
+    value_percent: 0.10 # 10% of target's current HP as bonus damage
+    target_stat: CURRENT_HP # calculates based on target's curren

@@ -1,0 +1,12 @@
+id: snipers_reach
+name: "Sniper's Reach"
+tier: MYTHIC
+description: "Gain 0–200% bonus damage based on distance to the target (ranged attacks). Maximum bonus applies at 25 blocks."
+category: ON_HIT
+
+passives:
+  bonus_damage_by_distance:
+    max_value: 2.0 # 200% bonus damage at max distance
+    max_distance: 25 # maximum effective range in blocks
+    scaling_type: linear # scales linearly from 0 to max
+    attack_type: RANGED # only applies to ranged attacks

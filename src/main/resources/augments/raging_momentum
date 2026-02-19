@@ -1,0 +1,20 @@
+id: raging_momentum
+name: "Raging Momentum"
+tier: MYTHIC
+description: "Gain 2.5% Strength and 2.5% Sorcery per stack (up to 20 stacks). At max stacks, the bonus is doubled. Each stack lasts 5 seconds. Lose 2 stacks per second."
+category: ON_HIT
+
+passives:
+  strength_bonus:
+    value_per_stack: 0.025 # +2.5% Strength per stack
+    max_stacks: 20
+    max_bonus_multiplier: 2.0 # double bonus at max stacks
+    duration_per_stack: 5 # 5 seconds per stack
+    decay_per_second: 2 # lose 2 stacks per second
+
+  sorcery_bonus:
+    value_per_stack: 0.025 # +2.5% Sorcery per stack
+    max_stacks: 20
+    max_bonus_multiplier: 2.0
+    duration_per_stack: 5
+    decay_per_second: 2

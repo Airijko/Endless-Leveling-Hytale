@@ -1,0 +1,10 @@
+id: arcane_mastery
+name: "Arcane Mastery"
+tier: ELITE
+description: "Gain Mana equal to 10% of your total Sorcery."
+category: PASSIVE_STAT
+
+passives:
+  mana_from_sorcery:
+    value_percent: 0.10 # 10% of total Sorcery is added as Mana
+    scaling_stat: SORCERY # scales based on current Sorcery
