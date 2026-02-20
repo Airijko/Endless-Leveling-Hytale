@@ -104,17 +104,21 @@ public class PlayerCombatListener extends DamageEventSystem {
                     ExecutionerSettings executionerSettings = ExecutionerSettings.fromSnapshot(archetypeSnapshot);
                     RetaliationSettings retaliationSettings = RetaliationSettings.fromSnapshot(archetypeSnapshot);
 
-                    float weaponMultiplier = resolveClassDamageMultiplier(commandBuffer, attackerRef, playerData);
-                    float baseAmount;
                     Player player = commandBuffer.getComponent(attackerRef, Player.getComponentType());
                     ItemStack weapon = player != null && player.getInventory() != null
                             ? player.getInventory().getItemInHand()
                             : null;
-                    if (weapon != null && weapon.getItemId() != null && weapon.getItemId().contains("Staff")) {
-                        baseAmount = skillManager.applySorceryModifier(damage.getAmount(), playerData);
-                    } else {
-                        baseAmount = skillManager.applyStrengthModifier(damage.getAmount(), playerData);
-                    }
+
+                    ClassWeaponType weaponType = ClassWeaponResolver.resolve(weapon);
+                    boolean usesSorcery = weaponType == ClassWeaponType.STAFF || weaponType == ClassWeaponType.WAND;
+
+                    float weaponMultiplier = classManager != null
+                            ? (float) classManager.getWeaponDamageMultiplier(playerData, weaponType)
+                            : 1.0f;
+
+                    float baseAmount = usesSorcery
+                            ? skillManager.applySorceryModifier(damage.getAmount(), playerData)
+                            : skillManager.applyStrengthModifier(damage.getAmount(), playerData);
                     SkillManager.CritResult critResult = skillManager.applyCriticalHit(playerData, baseAmount);
                     float bonusLayerBase = critResult.damage;
                     DamageLayerBuffer layerBuffer = new DamageLayerBuffer();
@@ -183,23 +187,6 @@ public class PlayerCombatListener extends DamageEventSystem {
                 }
             }
         }
-    }
-
-    private float resolveClassDamageMultiplier(@Nonnull CommandBuffer<EntityStore> commandBuffer,
-            @Nonnull Ref<EntityStore> attackerRef,
-            PlayerData playerData) {
-        if (classManager == null || playerData == null) {
-            return 1.0f;
-        }
-        Player player = commandBuffer.getComponent(attackerRef, Player.getComponentType());
-        if (player == null) {
-            return 1.0f;
-        }
-        ItemStack weapon = player.getInventory() != null ? player.getInventory().getItemInHand() : null;
-        ClassWeaponType weaponType = ClassWeaponResolver.resolve(weapon);
-        // For staffs, reuse weapon damage multiplier (spell/class multiplier not
-        // defined)
-        return (float) classManager.getWeaponDamageMultiplier(playerData, weaponType);
     }
 
     private float applyFirstStrike(@Nonnull PassiveRuntimeState runtimeState,
