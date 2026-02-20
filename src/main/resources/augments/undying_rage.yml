@@ -1,7 +1,7 @@
 id: undying_rage
 name: "Undying Rage"
 tier: MYTHIC
-description: "Cannot drop below 1% health for 10 seconds. Deals bonus damage proportional to missing health."
+description: "For a short window you cannot drop below a sliver of health and hit harder as you get lower."
 category: ON_LOW_HP
 
 passives:

@@ -1,7 +1,7 @@
 id: rebirth
 name: "Rebirth"
 tier: ELITE
-description: "When falling to 1% health, instantly heal 80% of max health. Prevents death if not on cooldown."
+description: "Cheat death at low health with a large heal on a long cooldown."
 category: ON_LOW_HP
 
 passives:

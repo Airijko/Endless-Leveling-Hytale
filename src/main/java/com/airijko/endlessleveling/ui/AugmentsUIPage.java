@@ -114,7 +114,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (buffsText == null || buffsText.isBlank()) {
             ui.set(buffsSelector + ".Visible", false);
         } else {
-            ui.set(buffsSelector + ".Text", "Buffs: " + buffsText);
+            ui.set(buffsSelector + ".Text", buffsText);
             ui.set(buffsSelector + ".Visible", true);
         }
 
@@ -122,7 +122,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (debuffsText == null || debuffsText.isBlank()) {
             ui.set(debuffsSelector + ".Visible", false);
         } else {
-            ui.set(debuffsSelector + ".Text", "Debuffs: " + debuffsText);
+            ui.set(debuffsSelector + ".Text", debuffsText);
             ui.set(debuffsSelector + ".Visible", true);
         }
     }
@@ -139,10 +139,15 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         map.put("crit_chance", "Critical Chance");
         map.put("critical_chance", "Critical Chance");
         map.put("life_steal", "Life Steal");
+        map.put("life_steal_scaling", "Life Steal");
         map.put("movement_speed_bonus", "Move Speed");
+        map.put("movement_speed", "Move Speed");
         map.put("resistance_bonus", "Resistance");
         map.put("wither", "Wither");
         map.put("slow_percent", "Slow");
+        map.put("mana", "Mana");
+        map.put("mana_from_sorcery", "Mana");
+        map.put("sorcery_from_mana", "Sorcery");
         return map;
     }
 
@@ -195,8 +200,21 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             return null;
         }
 
-        // Priority: explicit buffs/debuffs map on any passive
-        for (Object passiveObj : passives.values()) {
+        // Directly handle top-level buffs/debuffs maps if present.
+        String directKey = positives ? "buffs" : "debuffs";
+        Map<String, Object> direct = asMap(passives.get(directKey));
+        if (direct != null && !direct.isEmpty()) {
+            String rendered = renderBuffMap(direct, positives);
+            if (!rendered.isBlank()) {
+                return rendered;
+            }
+        }
+
+        // Priority: explicit buffs/debuffs map on any passive (use passive name as
+        // fallback label).
+        for (Map.Entry<String, Object> passiveEntry : passives.entrySet()) {
+            String passiveName = passiveEntry.getKey();
+            Object passiveObj = passiveEntry.getValue();
             Map<String, Object> passive = asMap(passiveObj);
             if (passive == null) {
                 continue;
@@ -207,16 +225,19 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 effects = asMap(passive.get("buffs")); // fallback if only buffs map exists
             }
             if (effects != null && !effects.isEmpty()) {
-                String rendered = renderBuffMap(effects, positives);
+                String rendered = renderBuffMap(effects, positives, passiveName);
                 if (!rendered.isBlank()) {
                     return rendered;
                 }
             }
         }
 
-        // Fallback: collect numeric fields that look like effects.
+        // Fallback: collect numeric fields that look like effects, using passive name
+        // as label when needed.
         List<String> parts = new ArrayList<>();
-        for (Object passiveObj : passives.values()) {
+        for (Map.Entry<String, Object> passiveEntry : passives.entrySet()) {
+            String passiveName = passiveEntry.getKey();
+            Object passiveObj = passiveEntry.getValue();
             Map<String, Object> passive = asMap(passiveObj);
             if (passive == null) {
                 continue;
@@ -230,117 +251,189 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     continue; // skip timing fields
                 }
                 Object val = entry.getValue();
-                Double number = toDouble(val);
-                if (number != null) {
-                    if ((positives && number > 0) || (!positives && number < 0)) {
-                        parts.add(formatBuffEntry(key, number, null));
-                    }
-                    continue;
-                }
-                Map<String, Object> nested = asMap(val);
-                if (nested != null) {
-                    Double nestedValue = toDouble(nested.get("value_percent"));
-                    if (nestedValue != null) {
-                        if ((positives && nestedValue > 0) || (!positives && nestedValue < 0)) {
-                            parts.add(formatBuffEntry(key, nestedValue, "%"));
-                        }
-                        continue;
-                    }
-                    nestedValue = toDouble(nested.get("value"));
-                    if (nestedValue != null) {
-                        if ((positives && nestedValue > 0) || (!positives && nestedValue < 0)) {
-                            parts.add(formatBuffEntry(key, nestedValue, null));
-                        }
-                    }
-                }
+                collectEffect(parts, key, val, positives, passiveName);
             }
         }
 
         if (parts.isEmpty()) {
             return null;
         }
-        return String.join(", ", parts);
+        return String.join("\n", parts);
     }
 
     private String renderBuffMap(Map<String, Object> buffs, boolean positives) {
+        return renderBuffMap(buffs, positives, null);
+    }
+
+    private String renderBuffMap(Map<String, Object> buffs, boolean positives, String fallbackLabel) {
         List<String> parts = new ArrayList<>();
+        Integer maxStacks = null;
         for (Map.Entry<String, Object> entry : buffs.entrySet()) {
             String key = entry.getKey();
             if (key == null) {
                 continue;
             }
             Object val = entry.getValue();
-            Double percent = toDouble(val);
-            if (percent == null) {
-                Map<String, Object> nested = asMap(val);
-                if (nested != null) {
-                    percent = toDouble(nested.get("value_percent"));
-                    if (percent == null) {
-                        percent = toDouble(nested.get("value"));
-                    }
+
+            // Capture standalone max_stacks entries.
+            if (key.equalsIgnoreCase("max_stacks")) {
+                Integer stacks = toInteger(val);
+                if (stacks != null) {
+                    maxStacks = maxStacks == null ? stacks : Math.max(maxStacks, stacks);
+                }
+                continue; // do not render as a buff line
+            }
+
+            Map<String, Object> nested = asMap(val);
+            if (nested != null && nested.containsKey("max_stacks")) {
+                Integer stacks = toInteger(nested.get("max_stacks"));
+                if (stacks != null) {
+                    maxStacks = maxStacks == null ? stacks : Math.max(maxStacks, stacks);
                 }
             }
-            if (percent != null) {
-                if ((positives && percent > 0) || (!positives && percent < 0)) {
-                    parts.add(formatBuffEntry(key, percent, null));
-                }
-            }
+            collectEffect(parts, key, val, positives, fallbackLabel == null ? key : fallbackLabel);
         }
-        return String.join(", ", parts);
+
+        if (maxStacks != null) {
+            parts.add("Max stacks: " + maxStacks);
+        }
+        return String.join("\n", parts);
     }
 
-    private String formatBuffEntry(String key, double value, String forcedSuffix) {
-        String label = BUFF_NAME_OVERRIDES.getOrDefault(key.toLowerCase(Locale.ROOT), key.replace('_', ' '));
+    private void collectEffect(List<String> parts, String key, Object val, boolean positives, String fallbackLabel) {
+        Double scalar = toDouble(val);
+        if (scalar != null) {
+            if ((positives && scalar > 0) || (!positives && scalar < 0)) {
+                parts.add(formatBuffEntry(key, scalar, null, fallbackLabel));
+            }
+            return;
+        }
+
+        Map<String, Object> nested = asMap(val);
+        if (nested == null) {
+            return;
+        }
+
+        Double chosen = firstNumber(nested, "value_percent", "value", "max_value", "max_value_percent",
+                "value_per_stack");
+        String forcedSuffix = null;
+        if (chosen == null) {
+            chosen = firstNumber(nested, key != null && key.toLowerCase(Locale.ROOT).contains("percent") ? key : null);
+        }
+        if (chosen == null) {
+            return;
+        }
+
+        if (nested.containsKey("value_percent") || (key != null && key.toLowerCase(Locale.ROOT).contains("percent"))) {
+            forcedSuffix = "%";
+        }
+
+        if ((positives && chosen > 0) || (!positives && chosen < 0)) {
+            parts.add(formatBuffEntry(key, chosen, forcedSuffix, fallbackLabel));
+        }
+    }
+
+    private Double firstNumber(Map<String, Object> map, String... keys) {
+        if (map == null || keys == null) {
+            return null;
+        }
+        for (String key : keys) {
+            if (key == null) {
+                continue;
+            }
+            Object v = map.get(key);
+            Double d = toDouble(v);
+            if (d != null) {
+                return d;
+            }
+        }
+        return null;
+    }
+
+    private String formatBuffEntry(String key, double value, String forcedSuffix, String fallbackLabel) {
+        String normalizedKey = key == null ? "" : key.toLowerCase(Locale.ROOT);
+        String label = BUFF_NAME_OVERRIDES.getOrDefault(normalizedKey, key == null ? "" : key.replace('_', ' '));
+
+        // If the key is generic, prefer the parent/fallback label.
+        if ((normalizedKey.isBlank() || normalizedKey.equals("value") || normalizedKey.equals("value_percent")
+                || normalizedKey.equals("max_value") || normalizedKey.equals("max_value_percent")
+                || normalizedKey.equals("value_per_stack")) && fallbackLabel != null && !fallbackLabel.isBlank()) {
+            label = fallbackLabel.replace('_', ' ');
+        }
+
         String suffix = forcedSuffix;
+        double displayValue = value;
+
         if (suffix == null) {
-            if (key.toLowerCase(Locale.ROOT).contains("percent") || Math.abs(value) <= 1.0) {
+            if (normalizedKey.contains("percent") || Math.abs(value) <= 1.0) {
                 suffix = "%";
-                value = value * 100.0;
+                displayValue = value * 100.0;
             } else {
                 suffix = "";
             }
+        } else if ("%".equals(suffix)) {
+            displayValue = value * 100.0; // ensure forced percent shows human-friendly scale
         }
-        return capitalize(label) + ": " + formatNumber(value) + suffix;
+
+        String sign = displayValue > 0 ? "+" : "";
+        return capitalize(label) + ": " + sign + formatNumber(displayValue) + suffix;
+    }
+
+    private Double toDouble(Object val) {
+        if (val == null) {
+            return null;
+        }
+        if (val instanceof Number) {
+            return ((Number) val).doubleValue();
+        }
+        try {
+            return Double.parseDouble(val.toString());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private Integer toInteger(Object val) {
+        if (val instanceof Number) {
+            return ((Number) val).intValue();
+        }
+        try {
+            return Integer.parseInt(val.toString());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> asMap(Object value) {
+        if (value instanceof Map<?, ?> raw) {
+            Map<String, Object> map = new HashMap<>();
+            for (Map.Entry<?, ?> entry : raw.entrySet()) {
+                Object k = entry.getKey();
+                if (k != null) {
+                    map.put(k.toString(), entry.getValue());
+                }
+            }
+            return map;
+        }
+        return null;
     }
 
     private String formatSeconds(double seconds) {
-        if (seconds <= 0) {
-            return "-";
-        }
-        // trim trailing zeros for cleaner output
-        String base = formatNumber(seconds);
-        return base + "s";
+        return formatNumber(seconds) + "s";
     }
 
     private String formatNumber(double value) {
-        String formatted = String.format(Locale.ROOT, "%.2f", value);
-        if (formatted.contains(".")) {
-            formatted = formatted.replaceAll("0+$", "").replaceAll("\\.$", "");
+        if (Math.abs(value - Math.rint(value)) < 0.0001) {
+            return String.format(Locale.ROOT, "%.0f", value);
         }
-        return formatted;
+        return String.format(Locale.ROOT, "%.2f", value);
     }
 
-    private Map<String, Object> asMap(Object value) {
-        if (value instanceof Map<?, ?> map) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> cast = (Map<String, Object>) map;
-            return cast;
-        }
-        return null;
-    }
-
-    private Double toDouble(Object value) {
-        if (value instanceof Number number) {
-            return number.doubleValue();
-        }
-        return null;
-    }
-
-    private String capitalize(String text) {
-        if (text == null || text.isBlank()) {
+    private String capitalize(String input) {
+        if (input == null || input.isBlank()) {
             return "";
         }
-        String lower = text.toLowerCase(Locale.ROOT).trim();
-        return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
+        return input.substring(0, 1).toUpperCase(Locale.ROOT) + input.substring(1);
     }
 }

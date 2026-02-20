@@ -1,7 +1,7 @@
 id: supersonic
 name: "Supersonic"
 tier: ELITE
-description: "Gain 50% Haste but lose 10% Strength."
+description: "Trade Strength for blazing Haste."
 category: PASSIVE_STAT
 
 passives:

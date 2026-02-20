@@ -1,7 +1,7 @@
 id: critical_guard
 name: "Critical Guard"
 tier: ELITE
-description: "Reduces incoming damage based on your critical hit chance."
+description: "Your crit chance grants damage reduction, but only your defense can crit."
 category: ON_DAMAGE_TAKEN
 
 passives:

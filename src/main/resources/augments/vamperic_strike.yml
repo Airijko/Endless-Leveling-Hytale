@@ -1,10 +1,10 @@
 id: vampiric_strike
 name: "Vampiric Strike"
 tier: MYTHIC
-description: "Each critical hit heals you for 50% of damage dealt. Only triggers once per second to prevent over-healing."
+description: "Critical hits heal you, limited by an internal cooldown."
 category: ON_CRIT
 
 passives:
   heal_on_crit:
-    value_percent: 0.50 # 50% of damage dealt as healing
+    value: 0.50 # 50% of damage dealt as healing
     trigger_cooldown: 1 # triggers only once per second

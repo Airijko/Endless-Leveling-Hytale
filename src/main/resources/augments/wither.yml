@@ -1,7 +1,7 @@
 id: wither
 name: "Wither"
 tier: ELITE
-description: "Erode foes with a crippling blight."
+description: "Inflict a lingering wither that slows and chips away the max health of foes."
 category: ON_HIT
 
 passives:
@@ -11,4 +11,4 @@ passives:
     category: ON_HIT
     debuffs:
       movement_speed:
-        value_percent: -0.20 # 20% max movement speed slow
+        value: -0.20 # 20% max movement speed slow

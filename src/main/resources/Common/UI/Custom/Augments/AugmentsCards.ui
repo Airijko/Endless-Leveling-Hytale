@@ -51,18 +51,6 @@ $C.@PageOverlay {
 
                         Group { Anchor: (Height: 8); }
 
-                        Label #AugmentCard1Cooldown {
-                            Text: "Cooldown: -";
-                            Style: (FontSize: 14, TextColor: #b7c6d9, Wrap: true, HorizontalAlignment: Center);
-                            Visible: false;
-                        }
-
-                        Label #AugmentCard1Duration {
-                            Text: "Duration: -";
-                            Style: (FontSize: 14, TextColor: #b7c6d9, Wrap: true, HorizontalAlignment: Center);
-                            Visible: false;
-                        }
-
                         Label #AugmentCard1Buffs {
                             Text: "Buffs: -";
                             Style: (FontSize: 14, TextColor: #cdd9ec, Wrap: true, HorizontalAlignment: Center);
@@ -72,6 +60,18 @@ $C.@PageOverlay {
                         Label #AugmentCard1Debuffs {
                             Text: "Debuffs: -";
                             Style: (FontSize: 14, TextColor: #ffb3b3, Wrap: true, HorizontalAlignment: Center);
+                            Visible: false;
+                        }
+
+                        Label #AugmentCard1Duration {
+                            Text: "Duration: -";
+                            Style: (FontSize: 14, TextColor: #b7c6d9, Wrap: true, HorizontalAlignment: Center);
+                            Visible: false;
+                        }
+
+                        Label #AugmentCard1Cooldown {
+                            Text: "Cooldown: -";
+                            Style: (FontSize: 14, TextColor: #b7c6d9, Wrap: true, HorizontalAlignment: Center);
                             Visible: false;
                         }
                     }
@@ -118,18 +118,6 @@ $C.@PageOverlay {
 
                         Group { Anchor: (Height: 8); }
 
-                        Label #AugmentCard2Cooldown {
-                            Text: "Cooldown: -";
-                            Style: (FontSize: 14, TextColor: #b7c6d9, Wrap: true, HorizontalAlignment: Center);
-                            Visible: false;
-                        }
-
-                        Label #AugmentCard2Duration {
-                            Text: "Duration: -";
-                            Style: (FontSize: 14, TextColor: #b7c6d9, Wrap: true, HorizontalAlignment: Center);
-                            Visible: false;
-                        }
-
                         Label #AugmentCard2Buffs {
                             Text: "Buffs: -";
                             Style: (FontSize: 14, TextColor: #cdd9ec, Wrap: true, HorizontalAlignment: Center);
@@ -139,6 +127,18 @@ $C.@PageOverlay {
                         Label #AugmentCard2Debuffs {
                             Text: "Debuffs: -";
                             Style: (FontSize: 14, TextColor: #ffb3b3, Wrap: true, HorizontalAlignment: Center);
+                            Visible: false;
+                        }
+
+                        Label #AugmentCard2Duration {
+                            Text: "Duration: -";
+                            Style: (FontSize: 14, TextColor: #b7c6d9, Wrap: true, HorizontalAlignment: Center);
+                            Visible: false;
+                        }
+
+                        Label #AugmentCard2Cooldown {
+                            Text: "Cooldown: -";
+                            Style: (FontSize: 14, TextColor: #b7c6d9, Wrap: true, HorizontalAlignment: Center);
                             Visible: false;
                         }
                     }
@@ -185,18 +185,6 @@ $C.@PageOverlay {
 
                         Group { Anchor: (Height: 8); }
 
-                        Label #AugmentCard3Cooldown {
-                            Text: "Cooldown: -";
-                            Style: (FontSize: 14, TextColor: #b7c6d9, Wrap: true, HorizontalAlignment: Center);
-                            Visible: false;
-                        }
-
-                        Label #AugmentCard3Duration {
-                            Text: "Duration: -";
-                            Style: (FontSize: 14, TextColor: #b7c6d9, Wrap: true, HorizontalAlignment: Center);
-                            Visible: false;
-                        }
-
                         Label #AugmentCard3Buffs {
                             Text: "Buffs: -";
                             Style: (FontSize: 14, TextColor: #cdd9ec, Wrap: true, HorizontalAlignment: Center);
@@ -206,6 +194,18 @@ $C.@PageOverlay {
                         Label #AugmentCard3Debuffs {
                             Text: "Debuffs: -";
                             Style: (FontSize: 14, TextColor: #ffb3b3, Wrap: true, HorizontalAlignment: Center);
+                            Visible: false;
+                        }
+
+                        Label #AugmentCard3Duration {
+                            Text: "Duration: -";
+                            Style: (FontSize: 14, TextColor: #b7c6d9, Wrap: true, HorizontalAlignment: Center);
+                            Visible: false;
+                        }
+
+                        Label #AugmentCard3Cooldown {
+                            Text: "Cooldown: -";
+                            Style: (FontSize: 14, TextColor: #b7c6d9, Wrap: true, HorizontalAlignment: Center);
                             Visible: false;
                         }
                     }

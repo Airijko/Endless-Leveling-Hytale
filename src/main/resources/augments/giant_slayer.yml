@@ -1,12 +1,12 @@
 id: giant_slayer
 name: "Giant Slayer"
 tier: MYTHIC
-description: "Deal 0–200% bonus damage to targets with more health than you. The more health the target has compared to you, the higher the bonus. Max bonus at targets with 3× your HP."
+description: "Deal more damage to enemies with higher health than you, scaling with the health gap."
 category: ON_HIT
 
 passives:
   bonus_damage_vs_hp_ratio:
-    max_value_percent: 2.0 # 200% max bonus damage
+    max_value: 2.0 # 200% max bonus damage
     scaling_stat: TARGET_CURRENT_HP
     reference_stat: PLAYER_CURRENT_HP
     max_ratio: 3.0 # max bonus when target has 3× your HP

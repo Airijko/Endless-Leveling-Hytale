@@ -1,7 +1,7 @@
 id: reckoning
 name: "Reckoning"
 tier: MYTHIC
-description: "Gain bonus damage based on missing health, but risk losing HP on missed attacks."
+description: "Missing health fuels your damage, but missed attacks drain your own HP."
 category: ON_HIT
 
 passives:

@@ -1,7 +1,7 @@
 id: blood_frenzy
 name: "Blood Frenzy"
 tier: ELITE
-description: "Gain 10% Life Steal and 15% Haste."
+description: "Provides Life Steal and Haste."
 category: PASSIVE_STAT
 
 passives:

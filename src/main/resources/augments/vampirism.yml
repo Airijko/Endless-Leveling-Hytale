@@ -1,7 +1,7 @@
 id: vampirism
 name: "Vampirism"
 tier: ELITE
-description: "Leech vitality from every strike."
+description: "Steal life from every hit."
 
 passives:
   buffs:

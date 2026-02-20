@@ -1,7 +1,7 @@
 id: first_strike
 name: "First Strike"
 tier: ELITE
-description: "Strike first to deal overwhelming opening damage."
+description: "Your opening hit after a cooldown delivers a powerful burst."
 
 passives:
   bonus_damage_on_hit:

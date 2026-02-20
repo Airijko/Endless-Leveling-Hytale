@@ -1,7 +1,7 @@
 id: blood_surge
 name: "Blood Surge"
 tier: MYTHIC
-description: "Gain 0–50% Life Steal based on missing health (up to 25% HP missing). 10% of the damage you heal is applied on your attacks as bonus flat damage."
+description: "Missing health increases your Life Steal, and part of the healing is fed into your attacks."
 category: ON_HIT
 
 passives:

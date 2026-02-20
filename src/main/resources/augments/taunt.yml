@@ -1,7 +1,7 @@
 id: taunt
 name: "Taunt"
 tier: ELITE
-description: "Taunt all nearby enemies within 20 blocks. Gain increased resistances against taunted enemies (PvE only)."
+description: "Taunt nearby enemies and gain extra resistance against them in PvE."
 category: PASSIVE_STAT
 
 passives:

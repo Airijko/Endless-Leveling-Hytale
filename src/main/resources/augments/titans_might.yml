@@ -1,11 +1,11 @@
 id: titans_might
 name: "Titan's Might"
 tier: ELITE
-description: "Gain 5% Strength based on your total maximum Health."
+description: "Convert maximum Health into bonus Strength."
 category: PASSIVE_STAT
 
 passives:
   buffs:
     strength_from_max_health:
-      value_percent: 0.05 # 5% of total max Health added as Strength
+      value: 0.05 # 5% of total max Health added as Strength
       scaling_stat: MAX_HEALTH # scales based on total max HP

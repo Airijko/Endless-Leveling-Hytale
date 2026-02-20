@@ -1,7 +1,7 @@
 id: fortress
 name: "Fortress"
 tier: ELITE
-description: "When reaching 1% health, gain 100% damage reduction for 5 seconds (cannot move, may attack). Then gain 15% damage reduction and 50% Strength and Sorcery for 15 seconds."
+description: "At the brink of death you gain a brief shielded immobile phase, then a follow-up window of protection and empowered stats."
 category: ON_LOW_HP
 
 passives:
@@ -10,14 +10,14 @@ passives:
     duration: 5 # lasts 5 seconds
     immobile: true # cannot move
     can_attack: true # can attack while active
-    cooldown: 30 # example cooldown in seconds
+    cooldown: 360 # second cooldown
 
   buff_phase:
     duration: 15 # lasts 15 seconds
     buffs:
       defense:
-        value_percent: 0.15 # 15% damage reduction
+        value: 0.15 # 15% damage reduction
       strength:
-        value_percent: 0.50 # +50% Strength
+        value: 0.50 # +50% Strength
       sorcery:
-        value_percent: 0.50 # +50% Sorcery
+        value: 0.50 # +50% Sorcery

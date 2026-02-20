@@ -1,12 +1,12 @@
 id: mana_infusion
 name: "Mana Infusion"
 tier: ELITE
-description: "Gain Sorcery equal to 25% of your current Mana."
+description: "Turn current Mana into bonus Sorcery."
 category: PASSIVE_STAT
 
 passives:
   buffs:
     sorcery_from_mana:
-      value_percent: 0.25 # 25% of current Mana is added as Sorcery
+      value: 0.25 # 25% of current Mana is added as Sorcery
       scaling_stat: MANA # scales based on current Mana
 

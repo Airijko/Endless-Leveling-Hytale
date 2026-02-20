@@ -1,11 +1,11 @@
 id: arcane_mastery
 name: "Arcane Mastery"
 tier: ELITE
-description: "Gain Mana equal to 10% of your total Sorcery."
+description: "Convert your Sorcery into extra Mana."
 category: PASSIVE_STAT
 
 passives:
   buffs:
     mana_from_sorcery:
-      value_percent: 0.10 # 10% of total Sorcery is added as Mana
+      value: 0.10 # 10% of total Sorcery is added as Mana
       scaling_stat: SORCERY # scales based on current Sorcery

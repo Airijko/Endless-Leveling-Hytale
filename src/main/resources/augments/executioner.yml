@@ -1,7 +1,7 @@
 id: executioner
 name: "Executioner"
 tier: ELITE
-description: "Finish wounded targets with lethal precision."
+description: "Executes low-health targets with a heavy strike on a cooldown."
 category: ON_HIT_TARGET_CONDITION
 
 passives:
