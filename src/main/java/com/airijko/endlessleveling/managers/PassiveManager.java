@@ -51,8 +51,22 @@ public class PassiveManager {
 
     public void openMobDropWindow(@Nonnull UUID uuid) {
         PassiveRuntimeState state = runtimeStates.computeIfAbsent(uuid, PassiveRuntimeState::new);
-        state.setLuckMobDropWindowExpiresAt(System.currentTimeMillis() + LUCK_MOB_DROP_WINDOW_MS);
+        long now = System.currentTimeMillis();
+        state.setLastMobKillMillis(now);
+        state.setLuckMobDropWindowExpiresAt(now + LUCK_MOB_DROP_WINDOW_MS);
         state.setLuckMobDropStacks(Math.max(state.getLuckMobDropStacks(), LUCK_MOB_DROP_STACK_BUDGET));
+    }
+
+    public boolean hasRecentMobKill(@Nonnull UUID uuid) {
+        PassiveRuntimeState state = runtimeStates.get(uuid);
+        if (state == null) {
+            return false;
+        }
+        long lastKill = state.getLastMobKillMillis();
+        if (lastKill <= 0L) {
+            return false;
+        }
+        return System.currentTimeMillis() - lastKill <= LUCK_MOB_DROP_WINDOW_MS;
     }
 
     public boolean hasMobDropStack(@Nonnull UUID uuid) {
@@ -342,6 +356,7 @@ public class PassiveManager {
         private long executionerCooldownExpiresAt;
         private long swiftnessActiveUntil;
         private int swiftnessStacks;
+        private long lastMobKillMillis;
 
         PassiveRuntimeState(UUID ignored) {
         }
@@ -505,6 +520,7 @@ public class PassiveManager {
             this.swiftnessStacks = 0;
             this.lastHealingSample = Float.NaN;
             this.lastStaminaSample = Float.NaN;
+            this.lastMobKillMillis = 0L;
         }
 
         public long getAdrenalineCooldownExpiresAt() {
@@ -596,6 +612,14 @@ public class PassiveManager {
         public void clearSwiftness() {
             this.swiftnessActiveUntil = 0L;
             this.swiftnessStacks = 0;
+        }
+
+        public long getLastMobKillMillis() {
+            return lastMobKillMillis;
+        }
+
+        public void setLastMobKillMillis(long lastMobKillMillis) {
+            this.lastMobKillMillis = lastMobKillMillis;
         }
 
     }

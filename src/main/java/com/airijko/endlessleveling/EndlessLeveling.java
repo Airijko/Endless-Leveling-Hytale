@@ -168,8 +168,7 @@ public class EndlessLeveling extends JavaPlugin {
         }
 
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, OpenPlayerHudListener::openGui);
-        LuckDoubleDropSystem luckDoubleDropSystem = new LuckDoubleDropSystem(playerDataManager, passiveManager,
-                archetypePassiveManager);
+        LuckDoubleDropSystem luckDoubleDropSystem = new LuckDoubleDropSystem(playerDataManager, passiveManager);
         this.getEventRegistry().registerGlobal(LivingEntityInventoryChangeEvent.class,
                 luckDoubleDropSystem::onInventoryChange);
         this.getEntityStoreRegistry().registerSystem(new BreakBlockEntitySystem(luckDoubleDropSystem));

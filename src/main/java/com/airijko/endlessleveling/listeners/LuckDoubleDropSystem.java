@@ -3,17 +3,12 @@ package com.airijko.endlessleveling.listeners;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.PassiveManager;
-import com.airijko.endlessleveling.enums.PassiveType;
-import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
-import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
-import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.entity.LivingEntity;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.entity.LivingEntityInventoryChangeEvent;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.inventory.container.CombinedItemContainer;
-import com.hypixel.hytale.server.core.inventory.transaction.ActionType;
 import com.hypixel.hytale.server.core.inventory.transaction.ItemStackSlotTransaction;
 import com.hypixel.hytale.server.core.inventory.transaction.ItemStackTransaction;
 import com.hypixel.hytale.server.core.inventory.transaction.Transaction;
@@ -22,6 +17,7 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,16 +34,13 @@ public class LuckDoubleDropSystem {
 
     private final PlayerDataManager playerDataManager;
     private final PassiveManager passiveManager;
-    private final ArchetypePassiveManager archetypePassiveManager;
     private final Set<UUID> suppressedPlayers = ConcurrentHashMap.newKeySet();
     private final ConcurrentMap<UUID, Long> recentOreBreaks = new ConcurrentHashMap<>();
 
     public LuckDoubleDropSystem(@Nonnull PlayerDataManager playerDataManager,
-            @Nonnull PassiveManager passiveManager,
-            @Nonnull ArchetypePassiveManager archetypePassiveManager) {
+            @Nonnull PassiveManager passiveManager) {
         this.playerDataManager = playerDataManager;
         this.passiveManager = passiveManager;
-        this.archetypePassiveManager = archetypePassiveManager;
     }
 
     /**
@@ -84,11 +77,6 @@ public class LuckDoubleDropSystem {
             return;
         }
 
-        ActionType action = stackTransaction.getAction();
-        if (action != ActionType.ADD) {
-            return;
-        }
-
         ItemStack sourceStack = resolveSourceStack(stackTransaction);
         if (sourceStack == null || ItemStack.isEmpty(sourceStack)) {
             return;
@@ -99,39 +87,30 @@ public class LuckDoubleDropSystem {
             return;
         }
 
+        // Some inventory mutations (e.g. ground loot pickup) report non-ADD actions;
+        // rely on
+        // the computed positive delta instead so we still trigger for mob drops.
+
         PlayerData playerData = playerDataManager.get(uuid);
         if (playerData == null) {
             return;
         }
 
-        ArchetypePassiveSnapshot snapshot = archetypePassiveManager != null
-                ? archetypePassiveManager.getSnapshot(playerData)
-                : ArchetypePassiveSnapshot.empty();
-
-        double luckValue = getLuckValue(playerData, snapshot);
+        double luckValue = passiveManager.getLuckValue(playerData);
         if (luckValue <= 0.0D) {
             return;
         }
 
-        boolean oreDrop = isOreStack(sourceStack);
-        boolean mobDrop = !oreDrop && passiveManager.hasMobDropStack(uuid);
-        if (oreDrop) {
-            Long t = recentOreBreaks.get(uuid);
-            if (t == null || System.currentTimeMillis() - t > 3000L) {
-                oreDrop = false;
-            } else {
-                recentOreBreaks.remove(uuid);
-            }
-        }
-        if (!oreDrop && !mobDrop) {
+        Optional<DropType> dropType = resolveDropType(uuid, sourceStack);
+        if (dropType.isEmpty()) {
             return;
         }
 
-        if (!shouldTrigger(playerRef, luckValue, oreDrop, mobDrop)) {
+        if (!shouldTrigger(playerRef, luckValue, dropType.get())) {
             return;
         }
 
-        if (mobDrop) {
+        if (dropType.get() == DropType.MOB) {
             passiveManager.consumeMobDropStack(uuid);
         }
 
@@ -219,21 +198,45 @@ public class LuckDoubleDropSystem {
 
     private boolean shouldTrigger(@Nonnull PlayerRef playerRef,
             double value,
-            boolean oreDrop,
-            boolean mobDrop) {
+            @Nonnull DropType dropType) {
         double clamped = Math.min(100.0D, Math.max(0.0D, value));
         double roll = ThreadLocalRandom.current().nextDouble(100.0D);
         boolean success = roll < clamped;
         if (success) {
             LOGGER.atFiner().log(
-                    "Luck double-drop triggered for %s (chance=%.2f%% roll=%.2f | ore=%s mob=%s)",
-                    playerRef.getUsername(), clamped, roll, oreDrop, mobDrop);
+                    "Luck double-drop triggered for %s (chance=%.2f%% roll=%.2f | type=%s)",
+                    playerRef.getUsername(), clamped, roll, dropType);
         } else {
             LOGGER.atFiner().log(
-                    "Luck double-drop failed for %s (chance=%.2f%% roll=%.2f | ore=%s mob=%s)",
-                    playerRef.getUsername(), clamped, roll, oreDrop, mobDrop);
+                    "Luck double-drop failed for %s (chance=%.2f%% roll=%.2f | type=%s)",
+                    playerRef.getUsername(), clamped, roll, dropType);
         }
         return success;
+    }
+
+    private Optional<DropType> resolveDropType(@Nonnull UUID uuid, @Nonnull ItemStack stack) {
+        if (isRecentOreDrop(uuid, stack)) {
+            return Optional.of(DropType.ORE);
+        }
+
+        boolean hasMobBudget = passiveManager.hasMobDropStack(uuid);
+        if (!hasMobBudget && passiveManager.hasRecentMobKill(uuid)) {
+            passiveManager.openMobDropWindow(uuid);
+            hasMobBudget = passiveManager.hasMobDropStack(uuid);
+        }
+        return hasMobBudget ? Optional.of(DropType.MOB) : Optional.empty();
+    }
+
+    private boolean isRecentOreDrop(@Nonnull UUID uuid, @Nonnull ItemStack stack) {
+        if (!isOreStack(stack)) {
+            return false;
+        }
+        Long t = recentOreBreaks.get(uuid);
+        if (t == null || System.currentTimeMillis() - t > 3000L) {
+            return false;
+        }
+        recentOreBreaks.remove(uuid);
+        return true;
     }
 
     private boolean isOreStack(@Nonnull ItemStack stack) {
@@ -255,13 +258,8 @@ public class LuckDoubleDropSystem {
         return itemId == null || itemId.isBlank() ? "loot" : itemId;
     }
 
-    private double getLuckValue(PlayerData playerData, ArchetypePassiveSnapshot snapshot) {
-        double archetypeLuck = snapshot == null ? 0.0D : snapshot.getValue(ArchetypePassiveType.LUCK);
-        if (passiveManager == null || playerData == null) {
-            return archetypeLuck;
-        }
-        PassiveManager.PassiveSnapshot passiveSnapshot = passiveManager.getSnapshot(playerData, PassiveType.LUCK);
-        double innateLuck = passiveSnapshot != null && passiveSnapshot.isUnlocked() ? passiveSnapshot.value() : 0.0D;
-        return archetypeLuck + innateLuck;
+    private enum DropType {
+        ORE,
+        MOB
     }
 }
