@@ -440,6 +440,22 @@ public class PlayerDataManager {
             }
         }
 
+        Map<String, Object> augmentOffersNode = castToStringObjectMap(source.get("augmentOffers"));
+        if (augmentOffersNode != null) {
+            for (Map.Entry<String, Object> entry : augmentOffersNode.entrySet()) {
+                List<String> offers = parseStringList(entry.getValue());
+                profile.setAugmentOffers(entry.getKey(), offers);
+            }
+        }
+
+        Map<String, Object> selectedAugmentsNode = castToStringObjectMap(source.get("selectedAugments"));
+        if (selectedAugmentsNode != null) {
+            for (Map.Entry<String, Object> entry : selectedAugmentsNode.entrySet()) {
+                String augmentId = parseString(entry.getValue());
+                profile.setSelectedAugment(entry.getKey(), augmentId);
+            }
+        }
+
         Object raceNode = source.get("race");
         profile.setRaceId(parseRaceId(raceNode));
         profile.setLastRaceChangeEpochSeconds(parseRaceLastChanged(raceNode));
@@ -516,6 +532,23 @@ public class PlayerDataManager {
             return stringValue;
         }
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> parseStringList(Object value) {
+        if (value instanceof List<?> list) {
+            List<String> result = new ArrayList<>();
+            for (Object element : list) {
+                if (element instanceof String str && !str.isBlank()) {
+                    result.add(str.trim());
+                }
+            }
+            return result;
+        }
+        if (value instanceof String single && !single.isBlank()) {
+            return List.of(single.trim());
+        }
+        return Collections.emptyList();
     }
 
     private int parseInt(Object value, int defaultValue) {
@@ -797,6 +830,26 @@ public class PlayerDataManager {
                     Map<String, Integer> profileAugments = new LinkedHashMap<>();
                     profile.getAugments().forEach((id, level) -> profileAugments.put(id, Math.max(0, level)));
                     profileMap.put("augments", profileAugments);
+
+                    Map<String, Object> profileAugmentOffers = new LinkedHashMap<>();
+                    profile.getAugmentOffers().forEach((tier, offers) -> {
+                        if (offers != null && !offers.isEmpty()) {
+                            profileAugmentOffers.put(tier, new ArrayList<>(offers));
+                        }
+                    });
+                    if (!profileAugmentOffers.isEmpty()) {
+                        profileMap.put("augmentOffers", profileAugmentOffers);
+                    }
+
+                    Map<String, Object> profileSelectedAugments = new LinkedHashMap<>();
+                    profile.getSelectedAugments().forEach((tier, augmentId) -> {
+                        if (augmentId != null && !augmentId.isBlank()) {
+                            profileSelectedAugments.put(tier, augmentId);
+                        }
+                    });
+                    if (!profileSelectedAugments.isEmpty()) {
+                        profileMap.put("selectedAugments", profileSelectedAugments);
+                    }
 
                     Map<String, Integer> profilePassives = new LinkedHashMap<>();
                     profile.getPassiveLevels().forEach((type, level) -> {

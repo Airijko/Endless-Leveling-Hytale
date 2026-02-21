@@ -124,7 +124,20 @@ force_builtin_classes: true # If true, ignore custom class files and keep bundle
 enable_logging: false # Enable detailed logging output
 
 # ------------------------------------------------------------
+# AUGMENT UNLOCKS
+# Controls when players receive random augments on level milestones.
+# - tier: which augment tier to roll from
+# - levels: player levels that trigger a roll
+# ------------------------------------------------------------
+augments:
+  unlocks:
+    - tier: ELITE
+      levels: [25]
+    - tier: MYTHIC
+      levels: [50]
+
+# ------------------------------------------------------------
 # INTERNAL CONFIG VERSION
 # DO NOT MODIFY
 # ------------------------------------------------------------
-config_version: 17
+config_version: 18

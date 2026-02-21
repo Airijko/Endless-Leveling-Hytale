@@ -3,6 +3,7 @@ package com.airijko.endlessleveling.managers;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
+import com.airijko.endlessleveling.augments.AugmentUnlockManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.ui.PlayerHud;
@@ -27,6 +28,7 @@ public class LevelingManager {
     private final ConfigManager configManager;
     private final ArchetypePassiveManager archetypePassiveManager;
     private final PassiveManager passiveManager;
+    private final AugmentUnlockManager augmentUnlockManager;
 
     private double baseXp;
     private double multiplier;
@@ -45,12 +47,13 @@ public class LevelingManager {
 
     public LevelingManager(PlayerDataManager playerDataManager, PluginFilesManager filesManager,
             SkillManager skillManager, ArchetypePassiveManager archetypePassiveManager,
-            PassiveManager passiveManager) {
+            PassiveManager passiveManager, AugmentUnlockManager augmentUnlockManager) {
         this.playerDataManager = playerDataManager;
         this.configManager = new ConfigManager(filesManager.getLevelingFile(), false);
         this.skillManager = skillManager;
         this.archetypePassiveManager = archetypePassiveManager;
         this.passiveManager = passiveManager;
+        this.augmentUnlockManager = augmentUnlockManager;
 
         loadConfigValues();
     }
@@ -192,6 +195,10 @@ public class LevelingManager {
         if (passiveManager != null) {
             PassiveManager.PassiveSyncResult passiveResult = passiveManager.syncPassives(player);
             passiveManager.notifyPassiveChanges(player, passiveResult);
+        }
+
+        if (augmentUnlockManager != null) {
+            augmentUnlockManager.ensureUnlocks(player);
         }
 
         notifyLevelUp(player);

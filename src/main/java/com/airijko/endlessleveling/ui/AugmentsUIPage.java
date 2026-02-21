@@ -3,6 +3,10 @@ package com.airijko.endlessleveling.ui;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentManager;
+import com.airijko.endlessleveling.augments.AugmentUnlockManager;
+import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.enums.PassiveTier;
+import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
@@ -30,11 +34,17 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private static final Map<String, String> BUFF_NAME_OVERRIDES = createBuffNameOverrides();
 
     private final AugmentManager augmentManager;
+    private final AugmentUnlockManager augmentUnlockManager;
+    private final PlayerDataManager playerDataManager;
+    private final PlayerRef playerRef;
 
     public AugmentsUIPage(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime) {
         super(playerRef, lifetime, SkillsUIPage.Data.CODEC);
         EndlessLeveling plugin = EndlessLeveling.getInstance();
         this.augmentManager = plugin != null ? plugin.getAugmentManager() : null;
+        this.augmentUnlockManager = plugin != null ? plugin.getAugmentUnlockManager() : null;
+        this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
+        this.playerRef = playerRef;
     }
 
     @Override
@@ -44,21 +54,47 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull Store<EntityStore> store) {
         ui.append("Augments/AugmentsCards.ui");
 
-        List<AugmentDefinition> augments = pickRandomAugments();
+        List<AugmentDefinition> augments = pickPlayerAugments();
         for (int i = 0; i < CARD_COUNT; i++) {
             AugmentDefinition augment = i < augments.size() ? augments.get(i) : null;
             applyCard(ui, i + 1, augment);
         }
     }
 
-    private List<AugmentDefinition> pickRandomAugments() {
-        if (augmentManager == null || augmentManager.getAugments().isEmpty()) {
+    private List<AugmentDefinition> pickPlayerAugments() {
+        if (augmentManager == null) {
             return List.of();
         }
-        List<AugmentDefinition> available = new ArrayList<>(augmentManager.getAugments().values());
-        Collections.shuffle(available);
-        int limit = Math.min(CARD_COUNT, available.size());
-        return available.subList(0, limit);
+
+        PlayerData playerData = playerDataManager != null ? playerDataManager.get(playerRef.getUuid()) : null;
+        if (playerData != null && augmentUnlockManager != null) {
+            augmentUnlockManager.ensureUnlocks(playerData);
+        }
+
+        List<String> offerIds = new ArrayList<>();
+        if (playerData != null) {
+            Map<String, List<String>> offers = playerData.getAugmentOffersSnapshot();
+            // Prioritize higher tiers first (MYTHIC -> ELITE -> COMMON)
+            PassiveTier[] priority = { PassiveTier.MYTHIC, PassiveTier.ELITE, PassiveTier.COMMON };
+            for (PassiveTier tier : priority) {
+                List<String> tierOffers = offers.getOrDefault(tier.name(), List.of());
+                offerIds.addAll(tierOffers);
+            }
+
+        }
+
+        List<AugmentDefinition> resolved = new ArrayList<>();
+        for (String id : offerIds) {
+            AugmentDefinition def = augmentManager.getAugment(id);
+            if (def != null) {
+                resolved.add(def);
+            }
+            if (resolved.size() >= CARD_COUNT) {
+                break;
+            }
+        }
+
+        return resolved;
     }
 
     private void applyCard(@Nonnull UICommandBuilder ui, int slotIndex, AugmentDefinition augment) {

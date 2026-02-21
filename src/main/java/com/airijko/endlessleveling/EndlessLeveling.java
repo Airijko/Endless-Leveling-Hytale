@@ -9,6 +9,7 @@ import com.airijko.endlessleveling.commands.classes.ClassCommand;
 import com.airijko.endlessleveling.commands.profile.ProfileCommand;
 import com.airijko.endlessleveling.augments.AugmentManager;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager;
+import com.airijko.endlessleveling.augments.AugmentUnlockManager;
 import com.airijko.endlessleveling.listeners.LuckDoubleDropSystem;
 import com.airijko.endlessleveling.listeners.OpenPlayerHudListener;
 import com.airijko.endlessleveling.listeners.PartyListener;
@@ -58,6 +59,7 @@ public class EndlessLeveling extends JavaPlugin {
     private PlayerRaceStatSystem playerRaceStatSystem;
     private AugmentManager augmentManager;
     private AugmentRuntimeManager augmentRuntimeManager;
+    private AugmentUnlockManager augmentUnlockManager;
 
     // Getter for SkillManager
     public SkillManager getSkillManager() {
@@ -113,6 +115,10 @@ public class EndlessLeveling extends JavaPlugin {
         return augmentManager;
     }
 
+    public AugmentUnlockManager getAugmentUnlockManager() {
+        return augmentUnlockManager;
+    }
+
     public ArchetypePassiveManager getArchetypePassiveManager() {
         return archetypePassiveManager;
     }
@@ -148,8 +154,9 @@ public class EndlessLeveling extends JavaPlugin {
         augmentRuntimeManager = new AugmentRuntimeManager();
         skillManager = new SkillManager(filesManager, playerAttributeManager, archetypePassiveManager, passiveManager);
         playerDataManager = new PlayerDataManager(filesManager, skillManager, raceManager, classManager);
+        augmentUnlockManager = new AugmentUnlockManager(configManager, augmentManager, playerDataManager);
         levelingManager = new LevelingManager(playerDataManager, filesManager, skillManager, archetypePassiveManager,
-                passiveManager);
+                passiveManager, augmentUnlockManager);
         mobLevelingManager = new MobLevelingManager(filesManager, playerDataManager);
         partyManager = new PartyManager(playerDataManager, levelingManager);
         if (!partyManager.isAvailable()) {
@@ -158,7 +165,7 @@ public class EndlessLeveling extends JavaPlugin {
 
         // Register event listeners
         PlayerDataListener playerDataListener = new PlayerDataListener(playerDataManager, passiveManager, skillManager,
-                raceManager);
+                raceManager, augmentUnlockManager);
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, playerDataListener::onPlayerReady);
         this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, playerDataListener::onPlayerDisconnect);
 

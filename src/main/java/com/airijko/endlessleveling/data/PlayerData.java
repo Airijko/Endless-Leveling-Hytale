@@ -4,9 +4,12 @@ import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.hypixel.hytale.logger.HytaleLogger;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
-import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -366,6 +369,38 @@ public class PlayerData {
         return Collections.unmodifiableMap(new LinkedHashMap<>(getActiveProfile().getAugments()));
     }
 
+    public Map<String, List<String>> getAugmentOffersSnapshot() {
+        return Collections.unmodifiableMap(new LinkedHashMap<>(getActiveProfile().getAugmentOffers()));
+    }
+
+    public List<String> getAugmentOffersForTier(String tierKey) {
+        return getActiveProfile().getAugmentOffers(tierKey);
+    }
+
+    public void setAugmentOffersForTier(String tierKey, List<String> offers) {
+        getActiveProfile().setAugmentOffers(tierKey, offers);
+    }
+
+    public void clearAugmentOffers() {
+        getActiveProfile().clearAugmentOffers();
+    }
+
+    public String getSelectedAugmentForTier(String tierKey) {
+        return getActiveProfile().getSelectedAugment(tierKey);
+    }
+
+    public void setSelectedAugmentForTier(String tierKey, String augmentId) {
+        getActiveProfile().setSelectedAugment(tierKey, augmentId);
+    }
+
+    public Map<String, String> getSelectedAugmentsSnapshot() {
+        return Collections.unmodifiableMap(new LinkedHashMap<>(getActiveProfile().getSelectedAugments()));
+    }
+
+    public void clearSelectedAugments() {
+        getActiveProfile().clearSelectedAugments();
+    }
+
     public int getPassiveLevel(PassiveType type) {
         return getActiveProfile().getPassiveLevel(type);
     }
@@ -486,6 +521,8 @@ public class PlayerData {
         private final Map<SkillAttributeType, Integer> attributes;
         private final Map<PassiveType, Integer> passiveLevels;
         private final Map<String, Integer> augments;
+        private final Map<String, List<String>> augmentOffers;
+        private final Map<String, String> selectedAugments;
         private String raceId;
         private long lastRaceChangeEpochSeconds;
         private int raceSwitchCount;
@@ -510,6 +547,8 @@ public class PlayerData {
                 this.passiveLevels.put(passiveType, 0);
             }
             this.augments = new LinkedHashMap<>();
+            this.augmentOffers = new LinkedHashMap<>();
+            this.selectedAugments = new LinkedHashMap<>();
             this.raceId = DEFAULT_RACE_ID;
             this.lastRaceChangeEpochSeconds = 0L;
             this.raceSwitchCount = 0;
@@ -596,6 +635,72 @@ public class PlayerData {
 
         public Map<String, Integer> getAugments() {
             return augments;
+        }
+
+        public Map<String, List<String>> getAugmentOffers() {
+            return augmentOffers;
+        }
+
+        public Map<String, String> getSelectedAugments() {
+            return selectedAugments;
+        }
+
+        public List<String> getAugmentOffers(String tierKey) {
+            if (tierKey == null || tierKey.isBlank()) {
+                return List.of();
+            }
+            List<String> offers = augmentOffers.get(normalizeTierKey(tierKey));
+            return offers == null ? List.of() : List.copyOf(offers);
+        }
+
+        public void setAugmentOffers(String tierKey, List<String> offers) {
+            String key = normalizeTierKey(tierKey);
+            if (key == null) {
+                return;
+            }
+            if (offers == null || offers.isEmpty()) {
+                augmentOffers.remove(key);
+                return;
+            }
+            augmentOffers.put(key, new ArrayList<>(offers));
+        }
+
+        public void clearAugmentOffers() {
+            augmentOffers.clear();
+        }
+
+        public String getSelectedAugment(String tierKey) {
+            if (tierKey == null || tierKey.isBlank()) {
+                return null;
+            }
+            return selectedAugments.get(normalizeTierKey(tierKey));
+        }
+
+        public void setSelectedAugment(String tierKey, String augmentId) {
+            String key = normalizeTierKey(tierKey);
+            if (key == null) {
+                return;
+            }
+            if (augmentId == null || augmentId.isBlank()) {
+                selectedAugments.remove(key);
+                return;
+            }
+            selectedAugments.put(key, augmentId.trim());
+        }
+
+        public void clearSelectedAugments() {
+            selectedAugments.clear();
+        }
+
+        private String normalizeTierKey(String tierKey) {
+            if (tierKey == null) {
+                return null;
+            }
+            String trimmed = tierKey.trim();
+            if (trimmed.isEmpty()) {
+                return null;
+            }
+            return trimmed.toUpperCase(Locale.ROOT);
         }
 
         private String normalizeAugmentId(String augmentId) {

@@ -1,6 +1,7 @@
 package com.airijko.endlessleveling.listeners;
 
 import com.airijko.endlessleveling.EndlessLeveling;
+import com.airijko.endlessleveling.augments.AugmentUnlockManager;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
@@ -27,13 +28,15 @@ public class PlayerDataListener {
     private final PassiveManager passiveManager;
     private final SkillManager skillManager;
     private final RaceManager raceManager;
+    private final AugmentUnlockManager augmentUnlockManager;
 
     public PlayerDataListener(PlayerDataManager playerDataManager, PassiveManager passiveManager,
-            SkillManager skillManager, RaceManager raceManager) {
+            SkillManager skillManager, RaceManager raceManager, AugmentUnlockManager augmentUnlockManager) {
         this.playerDataManager = playerDataManager;
         this.passiveManager = passiveManager;
         this.skillManager = skillManager;
         this.raceManager = raceManager;
+        this.augmentUnlockManager = augmentUnlockManager;
     }
 
     /** Called when a player joins */
@@ -75,6 +78,10 @@ public class PlayerDataListener {
 
         if (raceManager != null) {
             raceManager.applyRaceModelOnLogin(playerData);
+        }
+
+        if (augmentUnlockManager != null) {
+            augmentUnlockManager.ensureUnlocks(playerData);
         }
 
         var partyManager = EndlessLeveling.getInstance().getPartyManager();
