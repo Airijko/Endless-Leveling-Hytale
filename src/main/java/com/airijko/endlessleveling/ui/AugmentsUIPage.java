@@ -13,8 +13,11 @@ import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
+import static com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType.Activating;
+import static com.hypixel.hytale.server.core.ui.builder.EventData.of;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.core.Message;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -59,6 +62,10 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             AugmentDefinition augment = i < augments.size() ? augments.get(i) : null;
             applyCard(ui, i + 1, augment);
         }
+
+        events.addEventBinding(Activating, "#AugmentCard1Choose", of("Action", "augment:choose:0"), false);
+        events.addEventBinding(Activating, "#AugmentCard2Choose", of("Action", "augment:choose:1"), false);
+        events.addEventBinding(Activating, "#AugmentCard3Choose", of("Action", "augment:choose:2"), false);
     }
 
     private List<AugmentDefinition> pickPlayerAugments() {
@@ -95,6 +102,71 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         }
 
         return resolved;
+    }
+
+    @Override
+    public void handleDataEvent(@Nonnull Ref<EntityStore> ref,
+            @Nonnull Store<EntityStore> store,
+            @Nonnull SkillsUIPage.Data data) {
+        super.handleDataEvent(ref, store, data);
+
+        if (data.action == null || data.action.isBlank() || !data.action.startsWith("augment:choose:")) {
+            return;
+        }
+
+        int index;
+        try {
+            index = Integer.parseInt(data.action.substring("augment:choose:".length()));
+        } catch (NumberFormatException ex) {
+            return;
+        }
+
+        PlayerData playerData = playerDataManager != null ? playerDataManager.get(playerRef.getUuid()) : null;
+        if (playerData == null || augmentManager == null || augmentUnlockManager == null) {
+            playerRef.sendMessage(Message.raw("Augment data unavailable.").color("#ff6666"));
+            return;
+        }
+
+        // Make sure offers exist
+        augmentUnlockManager.ensureUnlocks(playerData);
+
+        List<AugmentChoice> choices = collectChoices(playerData);
+        if (index < 0 || index >= choices.size()) {
+            playerRef.sendMessage(Message.raw("No augment in that slot.").color("#ff9900"));
+            return;
+        }
+
+        AugmentChoice choice = choices.get(index);
+        AugmentDefinition def = augmentManager.getAugment(choice.id);
+        PassiveTier tier = def != null ? def.getTier() : choice.tier;
+        if (tier == null) {
+            playerRef.sendMessage(Message.raw("Unable to resolve augment tier.").color("#ff6666"));
+            return;
+        }
+
+        String tierKey = tier.name();
+        playerData.setSelectedAugmentForTier(tierKey, choice.id);
+        playerData.setAugmentOffersForTier(tierKey, List.of());
+        playerData.setAugmentLevel(choice.id, Math.max(1, playerData.getAugmentLevel(choice.id)));
+        playerDataManager.save(playerData);
+
+        playerRef.sendMessage(Message.raw("Selected augment: " + choice.id + " (" + tierKey + ")").color("#4fd7f7"));
+    }
+
+    private List<AugmentChoice> collectChoices(PlayerData playerData) {
+        List<AugmentChoice> choices = new ArrayList<>();
+        Map<String, List<String>> offers = playerData.getAugmentOffersSnapshot();
+        PassiveTier[] priority = { PassiveTier.MYTHIC, PassiveTier.ELITE, PassiveTier.COMMON };
+        for (PassiveTier tier : priority) {
+            List<String> tierOffers = offers.getOrDefault(tier.name(), List.of());
+            for (String id : tierOffers) {
+                choices.add(new AugmentChoice(id, tier));
+            }
+        }
+        return choices;
+    }
+
+    private record AugmentChoice(String id, PassiveTier tier) {
     }
 
     private void applyCard(@Nonnull UICommandBuilder ui, int slotIndex, AugmentDefinition augment) {
