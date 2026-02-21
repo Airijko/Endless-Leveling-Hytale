@@ -18,13 +18,13 @@ $C.@PageOverlay {
 
         Group {
             LayoutMode: Top;
-            Anchor: (Width: 924);
+            Anchor: (Width: 980);
             Padding: (Full: 12);
 
             // Cards row (centered)
             Group {
                 LayoutMode: Middle;
-                Anchor: (Width: 924);
+                Anchor: (Width: 980);
 
                 Group {
                     LayoutMode: Left;
@@ -244,11 +244,11 @@ $C.@PageOverlay {
             // Buttons row (centered)
             Group {
                 LayoutMode: Middle;
-                Anchor: (Width: 924);
+                Anchor: (Width: 980);
 
                 Group {
                     LayoutMode: Left;
-                    Anchor: (Width: 924);
+                    Anchor: (Width: 980);
 
                     Group {
                         Anchor: (Width: 300);

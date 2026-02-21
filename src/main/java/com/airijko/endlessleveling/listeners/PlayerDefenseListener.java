@@ -1,5 +1,6 @@
 package com.airijko.endlessleveling.listeners;
 
+import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.managers.PassiveManager;
@@ -46,14 +47,17 @@ public class PlayerDefenseListener extends DamageEventSystem {
 	private final SkillManager skillManager;
 	private final PassiveManager passiveManager;
 	private final ArchetypePassiveManager archetypePassiveManager;
+	private final AugmentExecutor augmentExecutor;
 
 	public PlayerDefenseListener(PlayerDataManager playerDataManager, SkillManager skillManager,
 			PassiveManager passiveManager,
-			ArchetypePassiveManager archetypePassiveManager) {
+			ArchetypePassiveManager archetypePassiveManager,
+			AugmentExecutor augmentExecutor) {
 		this.playerDataManager = playerDataManager;
 		this.skillManager = skillManager;
 		this.passiveManager = passiveManager;
 		this.archetypePassiveManager = archetypePassiveManager;
+		this.augmentExecutor = augmentExecutor;
 	}
 
 	@Override
@@ -87,6 +91,10 @@ public class PlayerDefenseListener extends DamageEventSystem {
 		}
 
 		float originalAmount = damage.getAmount();
+		Ref<EntityStore> attackerRef = null;
+		if (damage.getSource() instanceof Damage.EntitySource entitySource) {
+			attackerRef = entitySource.getRef();
+		}
 		float resistance = skillManager.calculatePlayerDefense(playerData);
 		float reducedAmount = originalAmount * (1.0f - resistance);
 
@@ -104,6 +112,15 @@ public class PlayerDefenseListener extends DamageEventSystem {
 		if (runtimeState != null && statMap != null && !archetypeSnapshot.isEmpty()) {
 			adjustedAmount = applySecondWind(playerData, defenderPlayer, runtimeState, archetypeSnapshot, statMap,
 					reducedAmount);
+		}
+
+		if (augmentExecutor != null && statMap != null) {
+			adjustedAmount = augmentExecutor.applyOnDamageTaken(playerData,
+					targetRef,
+					attackerRef,
+					commandBuffer,
+					statMap,
+					adjustedAmount);
 		}
 
 		if (runtimeState != null) {

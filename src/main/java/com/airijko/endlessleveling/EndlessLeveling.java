@@ -7,6 +7,7 @@ import com.airijko.endlessleveling.commands.PartyCommand;
 import com.airijko.endlessleveling.commands.RaceCommand;
 import com.airijko.endlessleveling.commands.classes.ClassCommand;
 import com.airijko.endlessleveling.commands.profile.ProfileCommand;
+import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.augments.AugmentManager;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager;
 import com.airijko.endlessleveling.augments.AugmentUnlockManager;
@@ -60,6 +61,7 @@ public class EndlessLeveling extends JavaPlugin {
     private AugmentManager augmentManager;
     private AugmentRuntimeManager augmentRuntimeManager;
     private AugmentUnlockManager augmentUnlockManager;
+    private AugmentExecutor augmentExecutor;
 
     // Getter for SkillManager
     public SkillManager getSkillManager() {
@@ -111,6 +113,10 @@ public class EndlessLeveling extends JavaPlugin {
         return augmentRuntimeManager;
     }
 
+    public AugmentExecutor getAugmentExecutor() {
+        return augmentExecutor;
+    }
+
     public AugmentManager getAugmentManager() {
         return augmentManager;
     }
@@ -153,6 +159,7 @@ public class EndlessLeveling extends JavaPlugin {
         augmentManager = new AugmentManager(filesManager.getAugmentsFolder().toPath());
         augmentRuntimeManager = new AugmentRuntimeManager();
         skillManager = new SkillManager(filesManager, playerAttributeManager, archetypePassiveManager, passiveManager);
+        augmentExecutor = new AugmentExecutor(augmentManager, augmentRuntimeManager, skillManager);
         playerDataManager = new PlayerDataManager(filesManager, skillManager, raceManager, classManager);
         augmentUnlockManager = new AugmentUnlockManager(configManager, augmentManager, playerDataManager);
         levelingManager = new LevelingManager(playerDataManager, filesManager, skillManager, archetypePassiveManager,
@@ -184,16 +191,16 @@ public class EndlessLeveling extends JavaPlugin {
                         mobLevelingManager, archetypePassiveManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerCombatListener(playerDataManager, skillManager, passiveManager,
-                        archetypePassiveManager, classManager));
+                        archetypePassiveManager, classManager, augmentExecutor));
         this.getEntityStoreRegistry()
                 .registerSystem(new SwiftnessKillSystem(playerDataManager, passiveManager, archetypePassiveManager,
-                        skillManager));
+                        skillManager, augmentExecutor));
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerDefenseListener(playerDataManager, skillManager, passiveManager,
-                        archetypePassiveManager));
+                        archetypePassiveManager, augmentExecutor));
         this.getEntityStoreRegistry()
                 .registerSystem(new PassiveRegenSystem(playerDataManager, passiveManager, archetypePassiveManager,
-                        skillManager, augmentRuntimeManager));
+                        skillManager, augmentRuntimeManager, augmentExecutor));
         // Register periodic skill modifier reapplication system
         this.getEntityStoreRegistry().registerSystem(new PeriodicSkillModifierSystem(playerDataManager, skillManager));
         playerRaceStatSystem = new PlayerRaceStatSystem(playerDataManager, skillManager);

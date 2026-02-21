@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Locale;
 
 import com.airijko.endlessleveling.EndlessLeveling;
+import com.airijko.endlessleveling.augments.AugmentDefinition;
+import com.airijko.endlessleveling.augments.AugmentManager;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.data.PlayerData.PlayerProfile;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
@@ -44,6 +46,9 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final String PASSIVE_ENTRY_TEMPLATE = "Pages/Profile/ProfileRacePassiveEntry.ui";
+    private static final String TIER_COLOR_MYTHIC = "#7851a9";
+    private static final String TIER_COLOR_ELITE = "#89cff0";
+    private static final String TIER_COLOR_DEFAULT = "#ffc300";
 
     private final PlayerDataManager playerDataManager;
     private final RaceManager raceManager;
@@ -53,6 +58,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private final PassiveManager passiveManager;
     private final PlayerRaceStatSystem playerRaceStatSystem;
     private final PartyManager partyManager;
+    private final AugmentManager augmentManager;
     private Integer pendingDeleteSlot;
 
     public ProfileUIPage(@Nonnull com.hypixel.hytale.server.core.universe.PlayerRef playerRef,
@@ -67,6 +73,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         this.passiveManager = plugin != null ? plugin.getPassiveManager() : null;
         this.playerRaceStatSystem = plugin != null ? plugin.getPlayerRaceStatSystem() : null;
         this.partyManager = plugin != null ? plugin.getPartyManager() : null;
+        this.augmentManager = plugin != null ? plugin.getAugmentManager() : null;
         this.pendingDeleteSlot = null;
     }
 
@@ -374,10 +381,29 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private List<AugmentEntry> buildAugmentEntries(@Nonnull PlayerData playerData) {
-        // TODO: Integrate real augment data source (AugmentManager/PlayerData once
-        // available).
-        // For now, return an empty list to keep the UI wired without breaking anything.
-        return List.of();
+        if (augmentManager == null) {
+            return List.of();
+        }
+
+        Map<String, String> selected = playerData.getSelectedAugmentsSnapshot();
+        if (selected.isEmpty()) {
+            return List.of();
+        }
+
+        List<AugmentEntry> entries = new ArrayList<>();
+        selected.forEach((tierKey, augmentId) -> {
+            if (augmentId == null || augmentId.isBlank()) {
+                return;
+            }
+            AugmentDefinition def = augmentManager.getAugment(augmentId);
+            String name = def != null ? def.getName() : augmentId;
+            String tierLabel = def != null && def.getTier() != null ? def.getTier().name()
+                    : (tierKey == null ? "?" : tierKey);
+            entries.add(new AugmentEntry(name, tierLabel, "", ""));
+        });
+
+        entries.sort(Comparator.comparing(AugmentEntry::tier).thenComparing(AugmentEntry::id));
+        return entries;
     }
 
     private List<PassiveEntry> buildInnatePlayerPassiveEntries(@Nonnull PlayerData playerData) {
@@ -513,11 +539,22 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             AugmentEntry entry = augments.get(i);
             ui.append(entriesSelector, PASSIVE_ENTRY_TEMPLATE);
             String base = entriesSelector + "[" + i + "]";
-            String label = entry.id() + " (" + entry.tier() + ")";
-            String value = entry.value() + (entry.source().isBlank() ? "" : " • " + entry.source());
-            ui.set(base + " #PassiveName.Text", label);
-            ui.set(base + " #PassiveValue.Text", value);
+            ui.set(base + " #PassiveName.Text", entry.id());
+            String tierLabel = entry.tier();
+            ui.set(base + " #PassiveValue.Text", tierLabel == null ? "" : tierLabel);
+            ui.set(base + " #PassiveValue.Style.TextColor", resolveTierColor(tierLabel));
         }
+    }
+
+    private String resolveTierColor(String tierLabel) {
+        if (tierLabel == null || tierLabel.isBlank()) {
+            return TIER_COLOR_DEFAULT;
+        }
+        return switch (tierLabel.trim().toUpperCase(Locale.ROOT)) {
+            case "MYTHIC" -> TIER_COLOR_MYTHIC;
+            case "ELITE" -> TIER_COLOR_ELITE;
+            default -> TIER_COLOR_DEFAULT;
+        };
     }
 
     private void populatePassiveEntries(@Nonnull UICommandBuilder ui,

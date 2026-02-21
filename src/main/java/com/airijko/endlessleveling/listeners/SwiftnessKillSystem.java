@@ -1,5 +1,6 @@
 package com.airijko.endlessleveling.listeners;
 
+import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PassiveManager.PassiveRuntimeState;
@@ -32,15 +33,18 @@ public class SwiftnessKillSystem extends DeathSystems.OnDeathSystem {
     private final PassiveManager passiveManager;
     private final ArchetypePassiveManager archetypePassiveManager;
     private final SkillManager skillManager;
+    private final AugmentExecutor augmentExecutor;
 
     public SwiftnessKillSystem(@Nonnull PlayerDataManager playerDataManager,
             @Nonnull PassiveManager passiveManager,
             ArchetypePassiveManager archetypePassiveManager,
-            @Nonnull SkillManager skillManager) {
+            @Nonnull SkillManager skillManager,
+            AugmentExecutor augmentExecutor) {
         this.playerDataManager = playerDataManager;
         this.passiveManager = passiveManager;
         this.archetypePassiveManager = archetypePassiveManager;
         this.skillManager = skillManager;
+        this.augmentExecutor = augmentExecutor;
     }
 
     @Override
@@ -79,6 +83,11 @@ public class SwiftnessKillSystem extends DeathSystems.OnDeathSystem {
             return;
         }
 
+        EntityStatMap statMap = store.getComponent(ref, EntityStatMap.getComponentType());
+        if (augmentExecutor != null) {
+            augmentExecutor.handleKill(playerData, ref, commandBuffer, statMap);
+        }
+
         ArchetypePassiveSnapshot snapshot = archetypePassiveManager != null
                 ? archetypePassiveManager.getSnapshot(playerData)
                 : ArchetypePassiveSnapshot.empty();
@@ -92,7 +101,6 @@ public class SwiftnessKillSystem extends DeathSystems.OnDeathSystem {
             return;
         }
 
-        EntityStatMap statMap = store.getComponent(ref, EntityStatMap.getComponentType());
         if (statMap == null) {
             return;
         }

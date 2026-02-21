@@ -422,22 +422,10 @@ public class PlayerDataManager {
             }
         }
 
-        Map<String, Object> augments = castToStringObjectMap(source.get("augments"));
-
         Map<String, Object> passivesNode = castToStringObjectMap(source.get("passives"));
         boolean loadedPassives = false;
         if (passivesNode != null) {
             loadedPassives = loadPassiveLevels(profile, passivesNode);
-        }
-
-        if (augments == null && passivesNode != null && !loadedPassives) {
-            // Legacy fallback: previously stored augments under "passives".
-            augments = passivesNode;
-        }
-        if (augments != null) {
-            for (Map.Entry<String, Object> entry : augments.entrySet()) {
-                profile.setAugmentLevel(entry.getKey(), parseInt(entry.getValue(), 0));
-            }
         }
 
         Map<String, Object> augmentOffersNode = castToStringObjectMap(source.get("augmentOffers"));
@@ -826,10 +814,6 @@ public class PlayerDataManager {
                     classesSection.put("secondaryLastChangedEpochSeconds", secondaryChanged);
                     classesSection.put("lastChangedEpochSeconds", Math.max(primaryChanged, secondaryChanged));
                     profileMap.put("classes", classesSection);
-
-                    Map<String, Integer> profileAugments = new LinkedHashMap<>();
-                    profile.getAugments().forEach((id, level) -> profileAugments.put(id, Math.max(0, level)));
-                    profileMap.put("augments", profileAugments);
 
                     Map<String, Object> profileAugmentOffers = new LinkedHashMap<>();
                     profile.getAugmentOffers().forEach((tier, offers) -> {

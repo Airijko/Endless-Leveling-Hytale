@@ -147,7 +147,6 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         String tierKey = tier.name();
         playerData.setSelectedAugmentForTier(tierKey, choice.id);
         playerData.setAugmentOffersForTier(tierKey, List.of());
-        playerData.setAugmentLevel(choice.id, Math.max(1, playerData.getAugmentLevel(choice.id)));
         playerDataManager.save(playerData);
 
         playerRef.sendMessage(Message.raw("Selected augment: " + choice.id + " (" + tierKey + ")").color("#4fd7f7"));

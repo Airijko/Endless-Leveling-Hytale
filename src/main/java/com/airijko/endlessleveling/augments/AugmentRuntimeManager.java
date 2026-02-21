@@ -41,6 +41,7 @@ public final class AugmentRuntimeManager {
     public static final class AugmentRuntimeState {
         private final UUID playerId;
         private final Map<String, CooldownState> cooldowns = new ConcurrentHashMap<>();
+        private final Map<String, AugmentState> states = new ConcurrentHashMap<>();
 
         private AugmentRuntimeState(UUID playerId) {
             this.playerId = playerId;
@@ -71,6 +72,13 @@ public final class AugmentRuntimeManager {
             return cooldowns.get(normalizeId(augmentId));
         }
 
+        public AugmentState getState(String augmentId) {
+            if (augmentId == null) {
+                return null;
+            }
+            return states.computeIfAbsent(normalizeId(augmentId), AugmentState::new);
+        }
+
         public void clearCooldown(String augmentId) {
             if (augmentId == null) {
                 return;
@@ -78,8 +86,16 @@ public final class AugmentRuntimeManager {
             cooldowns.remove(normalizeId(augmentId));
         }
 
+        public void clearState(String augmentId) {
+            if (augmentId == null) {
+                return;
+            }
+            states.remove(normalizeId(augmentId));
+        }
+
         public void clearAll() {
             cooldowns.clear();
+            states.clear();
         }
 
         private String normalizeId(String augmentId) {
@@ -126,6 +142,65 @@ public final class AugmentRuntimeManager {
 
         public void setReadyNotified(boolean readyNotified) {
             this.readyNotified = readyNotified;
+        }
+    }
+
+    public static final class AugmentState {
+        private final String augmentId;
+        private int stacks;
+        private double storedValue;
+        private long expiresAt;
+        private long lastProc;
+
+        private AugmentState(String augmentId) {
+            this.augmentId = augmentId;
+        }
+
+        public String getAugmentId() {
+            return augmentId;
+        }
+
+        public int getStacks() {
+            return stacks;
+        }
+
+        public void setStacks(int stacks) {
+            this.stacks = Math.max(0, stacks);
+        }
+
+        public double getStoredValue() {
+            return storedValue;
+        }
+
+        public void setStoredValue(double storedValue) {
+            this.storedValue = storedValue;
+        }
+
+        public long getExpiresAt() {
+            return expiresAt;
+        }
+
+        public void setExpiresAt(long expiresAt) {
+            this.expiresAt = expiresAt;
+        }
+
+        public long getLastProc() {
+            return lastProc;
+        }
+
+        public void setLastProc(long lastProc) {
+            this.lastProc = lastProc;
+        }
+
+        public boolean isExpired(long now) {
+            return expiresAt > 0L && now > expiresAt;
+        }
+
+        public void clear() {
+            this.stacks = 0;
+            this.storedValue = 0.0D;
+            this.expiresAt = 0L;
+            this.lastProc = 0L;
         }
     }
 }

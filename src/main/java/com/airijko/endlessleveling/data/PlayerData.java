@@ -355,20 +355,6 @@ public class PlayerData {
         return getActiveProfile().getAttributes();
     }
 
-    // Augment tracking lives on the profile; passives now come from class/race
-    // sources.
-    public int getAugmentLevel(String augmentId) {
-        return getActiveProfile().getAugmentLevel(augmentId);
-    }
-
-    public void setAugmentLevel(String augmentId, int level) {
-        getActiveProfile().setAugmentLevel(augmentId, level);
-    }
-
-    public Map<String, Integer> getAugmentLevelsSnapshot() {
-        return Collections.unmodifiableMap(new LinkedHashMap<>(getActiveProfile().getAugments()));
-    }
-
     public Map<String, List<String>> getAugmentOffersSnapshot() {
         return Collections.unmodifiableMap(new LinkedHashMap<>(getActiveProfile().getAugmentOffers()));
     }
@@ -520,7 +506,6 @@ public class PlayerData {
         private int skillPoints;
         private final Map<SkillAttributeType, Integer> attributes;
         private final Map<PassiveType, Integer> passiveLevels;
-        private final Map<String, Integer> augments;
         private final Map<String, List<String>> augmentOffers;
         private final Map<String, String> selectedAugments;
         private String raceId;
@@ -546,7 +531,6 @@ public class PlayerData {
             for (PassiveType passiveType : PassiveType.values()) {
                 this.passiveLevels.put(passiveType, 0);
             }
-            this.augments = new LinkedHashMap<>();
             this.augmentOffers = new LinkedHashMap<>();
             this.selectedAugments = new LinkedHashMap<>();
             this.raceId = DEFAULT_RACE_ID;
@@ -610,31 +594,6 @@ public class PlayerData {
 
         public Map<PassiveType, Integer> getPassiveLevels() {
             return passiveLevels;
-        }
-
-        public int getAugmentLevel(String augmentId) {
-            String key = normalizeAugmentId(augmentId);
-            if (key == null) {
-                return 0;
-            }
-            return augments.getOrDefault(key, 0);
-        }
-
-        public void setAugmentLevel(String augmentId, int level) {
-            String key = normalizeAugmentId(augmentId);
-            if (key == null) {
-                return;
-            }
-            int clamped = Math.max(0, level);
-            if (clamped <= 0) {
-                augments.remove(key);
-                return;
-            }
-            augments.put(key, clamped);
-        }
-
-        public Map<String, Integer> getAugments() {
-            return augments;
         }
 
         public Map<String, List<String>> getAugmentOffers() {
@@ -701,17 +660,6 @@ public class PlayerData {
                 return null;
             }
             return trimmed.toUpperCase(Locale.ROOT);
-        }
-
-        private String normalizeAugmentId(String augmentId) {
-            if (augmentId == null) {
-                return null;
-            }
-            String trimmed = augmentId.trim();
-            if (trimmed.isEmpty()) {
-                return null;
-            }
-            return trimmed.toLowerCase();
         }
 
         public String getRaceId() {

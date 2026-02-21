@@ -1,5 +1,6 @@
 package com.airijko.endlessleveling.systems;
 
+import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentRuntimeState;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager.CooldownState;
@@ -47,17 +48,20 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
     private final ArchetypePassiveManager archetypePassiveManager;
     private final SkillManager skillManager;
     private final AugmentRuntimeManager augmentRuntimeManager;
+    private final AugmentExecutor augmentExecutor;
 
     public PassiveRegenSystem(@Nonnull PlayerDataManager playerDataManager,
             @Nonnull PassiveManager passiveManager,
             ArchetypePassiveManager archetypePassiveManager,
             SkillManager skillManager,
-            AugmentRuntimeManager augmentRuntimeManager) {
+            AugmentRuntimeManager augmentRuntimeManager,
+            AugmentExecutor augmentExecutor) {
         this.playerDataManager = playerDataManager;
         this.passiveManager = passiveManager;
         this.archetypePassiveManager = archetypePassiveManager;
         this.skillManager = skillManager;
         this.augmentRuntimeManager = augmentRuntimeManager;
+        this.augmentExecutor = augmentExecutor;
     }
 
     @Override
@@ -93,6 +97,14 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
                         ArchetypePassiveSnapshot archetypeSnapshot = archetypePassiveManager != null
                                 ? archetypePassiveManager.getSnapshot(playerData)
                                 : ArchetypePassiveSnapshot.empty();
+
+                        if (augmentExecutor != null) {
+                            augmentExecutor.applyPassive(playerData,
+                                    ref,
+                                    commandBuffer,
+                                    statMap,
+                                    deltaSeconds);
+                        }
 
                         applyHealthRegeneration(playerRef,
                                 playerData,

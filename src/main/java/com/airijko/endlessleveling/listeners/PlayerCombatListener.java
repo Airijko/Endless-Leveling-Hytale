@@ -1,5 +1,6 @@
 package com.airijko.endlessleveling.listeners;
 
+import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.classes.ClassWeaponResolver;
 import com.airijko.endlessleveling.combat.DamageLayerBuffer;
 import com.airijko.endlessleveling.data.PlayerData;
@@ -52,17 +53,20 @@ public class PlayerCombatListener extends DamageEventSystem {
     private final PassiveManager passiveManager;
     private final ArchetypePassiveManager archetypePassiveManager;
     private final ClassManager classManager;
+    private final AugmentExecutor augmentExecutor;
 
     public PlayerCombatListener(@Nonnull PlayerDataManager playerDataManager,
             @Nonnull SkillManager skillManager,
             @Nonnull PassiveManager passiveManager,
             ArchetypePassiveManager archetypePassiveManager,
-            ClassManager classManager) {
+            ClassManager classManager,
+            AugmentExecutor augmentExecutor) {
         this.playerDataManager = playerDataManager;
         this.skillManager = skillManager;
         this.passiveManager = passiveManager;
         this.archetypePassiveManager = archetypePassiveManager;
         this.classManager = classManager;
+        this.augmentExecutor = augmentExecutor;
     }
 
     @Override
@@ -179,6 +183,24 @@ public class PlayerCombatListener extends DamageEventSystem {
                     float finalDamage = damageBeforeWeapon;
                     if (weaponMultiplier > 0f && Math.abs(weaponMultiplier - 1.0f) > 0.0001f) {
                         finalDamage *= weaponMultiplier;
+                    }
+
+                    EntityStatMap attackerStats = commandBuffer.getComponent(attackerRef,
+                            EntityStatMap.getComponentType());
+                    EntityStatMap targetStats = commandBuffer.getComponent(targetRef,
+                            EntityStatMap.getComponentType());
+                    boolean rangedAttack = weaponType == ClassWeaponType.BOW || weaponType == ClassWeaponType.CROSSBOW;
+                    if (augmentExecutor != null) {
+                        finalDamage = augmentExecutor.applyOnHit(playerData,
+                                attackerRef,
+                                targetRef,
+                                commandBuffer,
+                                attackerStats,
+                                targetStats,
+                                finalDamage,
+                                critResult.isCrit,
+                                rangedAttack,
+                                weaponType);
                     }
 
                     damage.setAmount(finalDamage);

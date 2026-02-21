@@ -71,6 +71,6 @@ public class AugmentManager {
         if (definition == null) {
             return null;
         }
-        return new YamlAugment(definition);
+        return AugmentRegistry.create(definition);
     }
 }
