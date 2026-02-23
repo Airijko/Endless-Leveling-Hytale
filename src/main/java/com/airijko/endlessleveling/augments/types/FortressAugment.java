@@ -44,6 +44,9 @@ public final class FortressAugment extends YamlAugment implements AugmentHooks.O
             return context.getIncomingDamage();
         }
         AugmentRuntimeState runtime = context.getRuntimeState();
+        if (runtime == null) {
+            return context.getIncomingDamage();
+        }
         var state = runtime.getState(ID);
         long now = System.currentTimeMillis();
         // Stage handling: stacks==1 -> shield active, storedValue= buffEndMillis
@@ -58,14 +61,13 @@ public final class FortressAugment extends YamlAugment implements AugmentHooks.O
             float dmg = context.getIncomingDamage();
             return (float) (dmg * (1.0D - Math.max(0.0D, defenseBuff)));
         }
-        if (!AugmentUtils.isCooldownReady(runtime, ID, cooldownMillis)) {
+        if (!AugmentUtils.consumeCooldown(runtime, ID, cooldownMillis)) {
             return context.getIncomingDamage();
         }
         // Trigger shield
         state.setStacks(1);
         state.setExpiresAt(now + shieldDuration);
         state.setStoredValue(now + shieldDuration + buffDuration);
-        AugmentUtils.markProc(runtime, ID, cooldownMillis);
         return 0f;
     }
 }

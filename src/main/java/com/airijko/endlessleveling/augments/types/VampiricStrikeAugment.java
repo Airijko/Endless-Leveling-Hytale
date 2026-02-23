@@ -25,11 +25,10 @@ public final class VampiricStrikeAugment extends YamlAugment implements AugmentH
 
     @Override
     public void onCrit(AugmentHooks.HitContext context) {
-        if (!AugmentUtils.isCooldownReady(context.getRuntimeState(), ID, cooldownMillis)) {
+        if (!AugmentUtils.consumeCooldown(context.getRuntimeState(), ID, cooldownMillis)) {
             return;
         }
         double healAmount = context.getDamage() * healPercent;
         AugmentUtils.heal(context.getAttackerStats(), healAmount);
-        AugmentUtils.markProc(context.getRuntimeState(), ID, cooldownMillis);
     }
 }

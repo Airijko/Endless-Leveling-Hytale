@@ -24,6 +24,10 @@ public final class ShadowstepAugment extends YamlAugment implements AugmentHooks
     @Override
     public void onKill(AugmentHooks.KillContext context) {
         // Actual invisibility/speed effects need engine support; track cooldown only.
-        AugmentUtils.markProc(context.getRuntimeState(), ID, cooldownMillis);
+        var runtime = context.getRuntimeState();
+        if (runtime == null) {
+            return;
+        }
+        AugmentUtils.consumeCooldown(runtime, ID, cooldownMillis);
     }
 }

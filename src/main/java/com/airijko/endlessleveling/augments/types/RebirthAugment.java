@@ -37,14 +37,13 @@ public final class RebirthAugment extends YamlAugment implements AugmentHooks.On
         if (hp.get() - context.getIncomingDamage() > minHp) {
             return context.getIncomingDamage();
         }
-        if (!AugmentUtils.isCooldownReady(context.getRuntimeState(), ID, cooldownMillis)) {
+        if (!AugmentUtils.consumeCooldown(context.getRuntimeState(), ID, cooldownMillis)) {
             return context.getIncomingDamage();
         }
         double healAmount = hp.getMax() * healPercent;
         context.getStatMap().setStatValue(
                 com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes.getHealth(),
                 (float) Math.min(hp.getMax(), hp.get() + healAmount));
-        AugmentUtils.markProc(context.getRuntimeState(), ID, cooldownMillis);
         return 0f;
     }
 }

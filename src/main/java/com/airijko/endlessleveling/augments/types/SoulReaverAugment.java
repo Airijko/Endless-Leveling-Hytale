@@ -27,7 +27,7 @@ public final class SoulReaverAugment extends YamlAugment
     @Override
     public void onKill(AugmentHooks.KillContext context) {
         var runtime = context.getRuntimeState();
-        if (runtime == null || !AugmentUtils.isCooldownReady(runtime, ID, cooldownMillis)) {
+        if (runtime == null || !AugmentUtils.consumeCooldown(runtime, ID, cooldownMillis)) {
             return;
         }
         var victimStats = context.getVictimStats();
@@ -41,7 +41,6 @@ public final class SoulReaverAugment extends YamlAugment
         var state = runtime.getState(ID);
         state.setStoredValue(state.getStoredValue() + healAmount);
         state.setExpiresAt(System.currentTimeMillis() + 3000L);
-        AugmentUtils.markProc(runtime, ID, cooldownMillis);
     }
 
     @Override

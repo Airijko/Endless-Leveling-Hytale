@@ -4,6 +4,8 @@ import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 
+import java.util.Map;
+
 /**
  * Small helpers shared across augment implementations.
  */
@@ -91,6 +93,19 @@ public final class AugmentUtils {
         return state.getLastProc() <= 0L || now - state.getLastProc() >= cooldownMillis;
     }
 
+    /**
+     * Returns true if the cooldown is ready and marks the proc; otherwise false.
+     */
+    public static boolean consumeCooldown(AugmentRuntimeManager.AugmentRuntimeState runtimeState,
+            String augmentId,
+            long cooldownMillis) {
+        if (!isCooldownReady(runtimeState, augmentId, cooldownMillis)) {
+            return false;
+        }
+        markProc(runtimeState, augmentId, cooldownMillis);
+        return true;
+    }
+
     public static void markProc(AugmentRuntimeManager.AugmentRuntimeState runtimeState,
             String augmentId,
             long cooldownMillis) {
@@ -111,5 +126,26 @@ public final class AugmentUtils {
         }
         double healAmount = damageDealt * (lifeStealPercent / 100.0D);
         heal(attackerStats, healAmount);
+    }
+
+    public static float applyMultiplier(float baseDamage, double bonusMultiplier) {
+        if (baseDamage <= 0f || bonusMultiplier == 0.0D) {
+            return baseDamage;
+        }
+        return (float) (baseDamage * (1.0D + bonusMultiplier));
+    }
+
+    public static double resolveClassValue(Map<String, Object> classValues, String classId) {
+        if (classValues == null || classValues.isEmpty() || classId == null) {
+            return 0.0D;
+        }
+        Object val = classValues.get(classId.trim().toLowerCase());
+        if (val instanceof Map<?, ?> inner) {
+            Object value = inner.get("value");
+            if (value instanceof Number num) {
+                return num.doubleValue();
+            }
+        }
+        return 0.0D;
     }
 }
