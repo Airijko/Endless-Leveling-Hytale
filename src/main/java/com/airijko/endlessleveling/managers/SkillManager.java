@@ -155,7 +155,10 @@ public class SkillManager {
         if (runtime == null) {
             return 0.0D;
         }
-        return runtime.getAttributeBonus(attributeType, System.currentTimeMillis());
+        double bonus = runtime.getAttributeBonus(attributeType, System.currentTimeMillis());
+        LOGGER.atFine().log("Augment bonus query: type=%s bonus=%.2f player=%s", attributeType, bonus,
+                playerData.getPlayerName());
+        return bonus;
     }
 
     private record AttributeConfig(boolean enabled, double perLevel) {
@@ -214,8 +217,8 @@ public class SkillManager {
         float totalBonusSorcery = (float) ((sorceryLevel * perPointValue) + innateBonus + augmentBonus);
 
         LOGGER.atFine().log(
-                "calculatePlayerSorcery: SORCERY level=%d, perPointValue=%.2f, innate=%.2f, totalBonusSorcery=%.2f for player %s",
-                sorceryLevel, perPointValue, innateBonus, totalBonusSorcery, playerData.getPlayerName());
+                "calculatePlayerSorcery: SORCERY level=%d, perPointValue=%.2f, innate=%.2f, augment=%.2f, totalBonusSorcery=%.2f for player %s",
+                sorceryLevel, perPointValue, innateBonus, augmentBonus, totalBonusSorcery, playerData.getPlayerName());
 
         return totalBonusSorcery;
     }
@@ -246,7 +249,8 @@ public class SkillManager {
         double perPointValue = getSkillAttributeConfigValue(SkillAttributeType.LIFE_FORCE);
 
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.LIFE_FORCE);
-        float totalBonusHealth = (float) ((lifeForceLevel * perPointValue) + innateBonus);
+        double augmentBonus = getAugmentAttributeBonus(playerData, SkillAttributeType.LIFE_FORCE);
+        float totalBonusHealth = (float) ((lifeForceLevel * perPointValue) + innateBonus + augmentBonus);
 
         return totalBonusHealth;
     }
@@ -267,7 +271,8 @@ public class SkillManager {
         double perPointValue = getSkillAttributeConfigValue(SkillAttributeType.STAMINA);
 
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.STAMINA);
-        float totalBonusStamina = (float) ((staminaLevel * perPointValue) + innateBonus);
+        double augmentBonus = getAugmentAttributeBonus(playerData, SkillAttributeType.STAMINA);
+        float totalBonusStamina = (float) ((staminaLevel * perPointValue) + innateBonus + augmentBonus);
 
         return totalBonusStamina;
     }
@@ -343,7 +348,8 @@ public class SkillManager {
         double perPointValue = getSkillAttributeConfigValue(SkillAttributeType.FLOW);
 
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.FLOW);
-        float totalBonusFlow = (float) ((flowLevel * perPointValue) + innateBonus);
+        double augmentBonus = getAugmentAttributeBonus(playerData, SkillAttributeType.FLOW);
+        float totalBonusFlow = (float) ((flowLevel * perPointValue) + innateBonus + augmentBonus);
 
         return totalBonusFlow;
     }
@@ -474,7 +480,8 @@ public class SkillManager {
         double perPointChance = getSkillAttributeConfigValue(SkillAttributeType.PRECISION);
         float racePercent = (float) attributeManager.getRaceAttribute(playerData, SkillAttributeType.PRECISION, 0.0D);
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.PRECISION);
-        float skillPercent = (float) ((precisionLevel * perPointChance) + innateBonus);
+        double augmentBonus = getAugmentAttributeBonus(playerData, SkillAttributeType.PRECISION);
+        float skillPercent = (float) ((precisionLevel * perPointChance) + innateBonus + augmentBonus);
         float rawTotalPercent = racePercent + skillPercent;
         float totalPercent = Math.min(100.0f, rawTotalPercent);
         float critChance = totalPercent / 100.0f;
@@ -503,7 +510,8 @@ public class SkillManager {
         double perPointFerocity = getSkillAttributeConfigValue(SkillAttributeType.FEROCITY);
         float raceValue = (float) attributeManager.getRaceAttribute(playerData, SkillAttributeType.FEROCITY, 0.0D);
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.FEROCITY);
-        float skillValue = (float) ((ferocityLevel * perPointFerocity) + innateBonus);
+        double augmentBonus = getAugmentAttributeBonus(playerData, SkillAttributeType.FEROCITY);
+        float skillValue = (float) ((ferocityLevel * perPointFerocity) + innateBonus + augmentBonus);
         return new FerocityBreakdown(raceValue, skillValue, raceValue + skillValue);
     }
 
@@ -529,7 +537,9 @@ public class SkillManager {
         }
         double innatePercent = getInnateAttributeBonus(playerData, SkillAttributeType.HASTE);
         double innateRatio = innatePercent / 100.0D;
-        float skillBonus = (float) ((hasteLevel * perPointValue) + innateRatio);
+        double augmentPercent = getAugmentAttributeBonus(playerData, SkillAttributeType.HASTE);
+        double augmentRatio = augmentPercent / 100.0D;
+        float skillBonus = (float) ((hasteLevel * perPointValue) + innateRatio + augmentRatio);
         float total = (float) (raceMultiplier * (1.0D + skillBonus));
         return new HasteBreakdown((float) raceMultiplier, skillBonus, total);
     }

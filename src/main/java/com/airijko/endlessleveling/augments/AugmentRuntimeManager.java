@@ -108,6 +108,10 @@ public final class AugmentRuntimeManager {
             attributeBonuses
                     .computeIfAbsent(type, t -> new ConcurrentHashMap<>())
                     .put(normalizeId(sourceId), new AttributeBonus(value, expiresAtMillis));
+            com.hypixel.hytale.logger.HytaleLogger.forEnclosingClassFull()
+                    .atFine()
+                    .log("setAttributeBonus type=%s source=%s value=%.2f expiresAt=%d", type, sourceId, value,
+                            expiresAtMillis);
         }
 
         public double getAttributeBonus(SkillAttributeType type, long now) {

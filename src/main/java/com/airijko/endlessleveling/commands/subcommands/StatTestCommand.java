@@ -32,6 +32,7 @@ public class StatTestCommand extends AbstractPlayerCommand {
     private final PlayerDataManager playerDataManager;
     private final SkillManager skillManager;
     private final PlayerAttributeManager attributeManager;
+    private final com.airijko.endlessleveling.augments.AugmentRuntimeManager augmentRuntimeManager;
 
     public StatTestCommand() {
         super("stattest", "Test player stats");
@@ -39,6 +40,7 @@ public class StatTestCommand extends AbstractPlayerCommand {
         this.playerDataManager = plugin.getPlayerDataManager();
         this.skillManager = plugin.getSkillManager();
         this.attributeManager = plugin.getPlayerAttributeManager();
+        this.augmentRuntimeManager = plugin.getAugmentRuntimeManager();
     }
 
     @Override
@@ -69,7 +71,7 @@ public class StatTestCommand extends AbstractPlayerCommand {
                 lines.add(infoLine("No stats found for the player."));
             }
 
-            lines.add(sectionHeader("Attributes (Race + Skill)"));
+            lines.add(sectionHeader("Attributes (Race + Skill + Augments)"));
             Map<String, AttributeBreakdown> attributeBreakdowns = collectAttributeBreakdowns(playerData);
             if (attributeBreakdowns.isEmpty()) {
                 lines.add(infoLine("No attribute data available."));
@@ -93,6 +95,8 @@ public class StatTestCommand extends AbstractPlayerCommand {
             } else {
                 lines.add(infoLine("No movement settings found."));
             }
+
+            addAugmentRuntimeDebug(lines, playerData);
 
             lines.forEach(playerRef::sendMessage);
         }, world);
@@ -125,8 +129,11 @@ public class StatTestCommand extends AbstractPlayerCommand {
         String raceSegment = breakdown.raceIsMultiplier()
                 ? "race x" + formatDouble(breakdown.race())
                 : "race=" + formatDouble(breakdown.race());
-        String text = String.format("%s | %s, skill=%s", label,
-                raceSegment, formatDouble(breakdown.skill()));
+        String augmentSegment = breakdown.augment() != 0.0D
+                ? ", aug=" + formatDouble(breakdown.augment())
+                : "";
+        String text = String.format("%s | %s, skill=%s%s", label,
+                raceSegment, formatDouble(breakdown.skill()), augmentSegment);
         lines.add(Message.raw(text).color("#2ECC71"));
     }
 
@@ -163,48 +170,98 @@ public class StatTestCommand extends AbstractPlayerCommand {
         double lifeRace = attributeManager.getRaceAttribute(playerData,
                 PlayerAttributeManager.AttributeSlot.LIFE_FORCE.attributeType(), 0.0D);
         double lifeSkill = skillManager.calculatePlayerHealth(playerData);
-        breakdowns.put("Life Force", new AttributeBreakdown(lifeRace, lifeSkill, lifeRace + lifeSkill, false, false));
+        double lifeAug = getAugmentBonus(playerData, SkillAttributeType.LIFE_FORCE);
+        breakdowns.put("Life Force",
+                new AttributeBreakdown(lifeRace, lifeSkill, lifeAug, lifeRace + lifeSkill + lifeAug, false, false));
 
         double staminaRace = attributeManager.getRaceAttribute(playerData,
                 PlayerAttributeManager.AttributeSlot.STAMINA.attributeType(), 0.0D);
         double staminaSkill = skillManager.calculatePlayerStamina(playerData);
-        breakdowns.put("Stamina", new AttributeBreakdown(staminaRace, staminaSkill, staminaRace + staminaSkill, false,
-                false));
+        double staminaAug = getAugmentBonus(playerData, SkillAttributeType.STAMINA);
+        breakdowns.put("Stamina",
+                new AttributeBreakdown(staminaRace, staminaSkill, staminaAug, staminaRace + staminaSkill + staminaAug,
+                        false,
+                        false));
 
         double flowRace = attributeManager.getRaceAttribute(playerData,
                 PlayerAttributeManager.AttributeSlot.FLOW.attributeType(), 0.0D);
         double flowSkill = skillManager.calculatePlayerFlow(playerData);
-        breakdowns.put("Flow", new AttributeBreakdown(flowRace, flowSkill, flowRace + flowSkill, false, false));
+        double flowAug = getAugmentBonus(playerData, SkillAttributeType.FLOW);
+        breakdowns.put("Flow", new AttributeBreakdown(flowRace, flowSkill, flowAug, flowRace + flowSkill + flowAug,
+                false, false));
 
         SkillManager.StrengthBreakdown strength = skillManager.getStrengthBreakdown(playerData);
+        double strengthAug = getAugmentBonus(playerData, SkillAttributeType.STRENGTH);
         breakdowns.put("Strength",
-                new AttributeBreakdown(strength.raceMultiplier(), strength.skillValue(), strength.totalValue(), true,
+                new AttributeBreakdown(strength.raceMultiplier(), strength.skillValue(), strengthAug,
+                        strength.totalValue(), true,
                         false));
 
         SkillManager.DefenseBreakdown defense = skillManager.getDefenseBreakdown(playerData);
         double defenseSkillTotal = defense.skillValue() + defense.innateValue();
+        double defenseAug = getAugmentBonus(playerData, SkillAttributeType.DEFENSE);
         breakdowns.put("Defense",
-                new AttributeBreakdown(defense.raceMultiplier(), defenseSkillTotal, defense.totalValue(), true,
+                new AttributeBreakdown(defense.raceMultiplier(), defenseSkillTotal, defenseAug, defense.totalValue(),
+                        true,
                         false));
 
         SkillManager.HasteBreakdown haste = skillManager.getHasteBreakdown(playerData);
-        breakdowns.put("Haste", new AttributeBreakdown(haste.raceMultiplier(), haste.skillBonus(),
+        double hasteAug = getAugmentBonus(playerData, SkillAttributeType.HASTE);
+        breakdowns.put("Haste", new AttributeBreakdown(haste.raceMultiplier(), haste.skillBonus(), hasteAug,
                 haste.totalMultiplier(), true, true));
 
         SkillManager.PrecisionBreakdown precision = skillManager.getPrecisionBreakdown(playerData);
+        double precisionAug = getAugmentBonus(playerData, SkillAttributeType.PRECISION);
         breakdowns.put("Precision",
-                new AttributeBreakdown(precision.racePercent(), precision.skillPercent(), precision.totalPercent(),
+                new AttributeBreakdown(precision.racePercent(), precision.skillPercent(), precisionAug,
+                        precision.totalPercent(),
                         false, false));
 
         SkillManager.FerocityBreakdown ferocity = skillManager.getFerocityBreakdown(playerData);
+        double ferocityAug = getAugmentBonus(playerData, SkillAttributeType.FEROCITY);
         breakdowns.put("Ferocity",
-                new AttributeBreakdown(ferocity.raceValue(), ferocity.skillValue(), ferocity.totalValue(), false,
+                new AttributeBreakdown(ferocity.raceValue(), ferocity.skillValue(), ferocityAug, ferocity.totalValue(),
+                        false,
                         false));
 
         return breakdowns;
     }
 
-    private record AttributeBreakdown(double race, double skill, double total, boolean raceIsMultiplier,
+    private void addAugmentRuntimeDebug(List<Message> lines, PlayerData playerData) {
+        if (augmentRuntimeManager == null || playerData == null) {
+            return;
+        }
+        var runtime = augmentRuntimeManager.getRuntimeState(playerData.getUuid());
+        if (runtime == null) {
+            return;
+        }
+        lines.add(sectionHeader("Augment Runtime"));
+
+        double strAug = runtime.getAttributeBonus(SkillAttributeType.STRENGTH, System.currentTimeMillis());
+        double sorcAug = runtime.getAttributeBonus(SkillAttributeType.SORCERY, System.currentTimeMillis());
+        double hasteAug = runtime.getAttributeBonus(SkillAttributeType.HASTE, System.currentTimeMillis());
+        lines.add(infoLine(String.format("Aug STR=%s, SORC=%s, HASTE=%s", formatDouble(strAug),
+                formatDouble(sorcAug), formatDouble(hasteAug))));
+
+        var ragingState = runtime.getState(com.airijko.endlessleveling.augments.types.RagingMomentumAugment.ID);
+        if (ragingState != null && ragingState.getStacks() > 0) {
+            lines.add(infoLine(String.format("Raging Momentum stacks=%d expiresInMs=%d", ragingState.getStacks(),
+                    Math.max(0L, ragingState.getExpiresAt() - System.currentTimeMillis()))));
+        }
+    }
+
+    private double getAugmentBonus(PlayerData playerData, SkillAttributeType attributeType) {
+        if (augmentRuntimeManager == null || playerData == null || attributeType == null) {
+            return 0.0D;
+        }
+        var runtime = augmentRuntimeManager.getRuntimeState(playerData.getUuid());
+        if (runtime == null) {
+            return 0.0D;
+        }
+        return runtime.getAttributeBonus(attributeType, System.currentTimeMillis());
+    }
+
+    private record AttributeBreakdown(double race, double skill, double augment, double total, boolean raceIsMultiplier,
             boolean totalIsMultiplier) {
     }
 }

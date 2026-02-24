@@ -68,6 +68,12 @@ public final class BloodEchoAugment extends YamlAugment
         }
         long now = System.currentTimeMillis();
         if (state.isExpired(now)) {
+            AugmentUtils.setStacksWithNotify(runtime,
+                    ID,
+                    0,
+                    maxStacks,
+                    AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getPlayerRef()),
+                    getName());
             state.clear();
             return;
         }

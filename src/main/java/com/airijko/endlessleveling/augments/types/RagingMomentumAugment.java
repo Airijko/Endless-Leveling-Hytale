@@ -8,6 +8,8 @@ import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.logger.HytaleLogger;
 
 public final class RagingMomentumAugment extends YamlAugment implements AugmentHooks.OnHitAugment {
     public static final String ID = "raging_momentum";
@@ -17,13 +19,14 @@ public final class RagingMomentumAugment extends YamlAugment implements AugmentH
     private final int maxStacks;
     private final double durationPerStackSeconds;
     private final double decayPerSecond; // stacks lost per second after duration
+    private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
     public RagingMomentumAugment(AugmentDefinition definition) {
         super(definition);
         var passives = definition.getPassives();
         var buffs = AugmentValueReader.getMap(passives, "buffs");
-        this.perStackStrength = AugmentValueReader.getDouble(buffs, "strength", 0.0D);
-        this.perStackSorcery = AugmentValueReader.getDouble(buffs, "sorcery", 0.0D);
+        this.perStackStrength = AugmentValueReader.getNestedDouble(buffs, 0.0D, "strength", "value");
+        this.perStackSorcery = AugmentValueReader.getNestedDouble(buffs, 0.0D, "sorcery", "value");
         this.maxStacks = AugmentValueReader.getInt(buffs, "max_stacks", 20);
         this.durationPerStackSeconds = AugmentValueReader.getDouble(buffs, "duration_per_stack", 8.0D);
         this.decayPerSecond = AugmentValueReader.getDouble(buffs, "decay_per_second", 0.0D);
@@ -38,7 +41,10 @@ public final class RagingMomentumAugment extends YamlAugment implements AugmentH
 
         long now = System.currentTimeMillis();
         var state = runtime.getState(ID);
-        decayIfNeeded(state, now);
+        decayIfNeeded(state,
+                runtime,
+                AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getAttackerRef()),
+                now);
 
         int stacks = Math.max(0, state.getStacks());
         if (stacks < maxStacks) {
@@ -76,11 +82,25 @@ public final class RagingMomentumAugment extends YamlAugment implements AugmentH
                 sorceryBonus * 100.0D,
                 durationMillis);
 
+        double dbgStr = runtime.getAttributeBonus(SkillAttributeType.STRENGTH, now);
+        double dbgSorc = runtime.getAttributeBonus(SkillAttributeType.SORCERY, now);
+        LOGGER.atFine().log(
+                "RagingMomentum set bonus: stacks=%d str=%.2f sorc=%.2f durMs=%d player=%s totalsNow str=%.2f sorc=%.2f expiresAt=%d now=%d",
+                stacks,
+                strengthBonus * 100.0D,
+                sorceryBonus * 100.0D,
+                durationMillis,
+                context.getPlayerData().getPlayerName(),
+                dbgStr,
+                dbgSorc,
+                state.getExpiresAt(),
+                now);
+
         return context.getDamage();
     }
 
-    private void decayIfNeeded(AugmentState state, long now) {
-        if (state == null) {
+    private void decayIfNeeded(AugmentState state, AugmentRuntimeState runtime, PlayerRef playerRef, long now) {
+        if (state == null || runtime == null) {
             return;
         }
         long expiresAt = state.getExpiresAt();
@@ -97,13 +117,18 @@ public final class RagingMomentumAugment extends YamlAugment implements AugmentH
         }
         int newStacks = Math.max(0, state.getStacks() - decay);
         if (newStacks != state.getStacks()) {
-            state.setStacks(newStacks);
-            if (newStacks == 0) {
-                state.setExpiresAt(0L);
-            } else {
-                // keep sliding window moving to allow further decay
-                state.setExpiresAt(now);
-            }
+            newStacks = AugmentUtils.setStacksWithNotify(runtime,
+                    ID,
+                    newStacks,
+                    maxStacks,
+                    playerRef,
+                    getName());
+        }
+        if (newStacks == 0) {
+            state.setExpiresAt(0L);
+        } else {
+            // keep sliding window moving to allow further decay
+            state.setExpiresAt(now);
         }
     }
 }
