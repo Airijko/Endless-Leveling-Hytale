@@ -5,6 +5,7 @@ import com.airijko.endlessleveling.augments.AugmentHooks;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
+import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 
 import java.util.Map;
 
@@ -23,8 +24,7 @@ public final class ReckoningAugment extends YamlAugment implements AugmentHooks.
     @Override
     public float onHit(AugmentHooks.HitContext context) {
         EntityStatValue hp = context.getAttackerStats() == null ? null
-                : context.getAttackerStats().get(
-                        com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes.getHealth());
+                : context.getAttackerStats().get(DefaultEntityStatTypes.getHealth());
         if (hp == null || hp.getMax() <= 0f) {
             return context.getDamage();
         }

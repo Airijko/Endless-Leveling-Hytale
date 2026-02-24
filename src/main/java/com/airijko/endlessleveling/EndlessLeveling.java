@@ -24,6 +24,8 @@ import com.airijko.endlessleveling.managers.*;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.systems.PassiveRegenSystem;
 import com.airijko.endlessleveling.systems.MobNameplateSystem;
+import com.airijko.endlessleveling.systems.MobDamageScalingSystem;
+import com.airijko.endlessleveling.systems.MobHealthModifierSystem;
 import com.airijko.endlessleveling.systems.PlayerNameplateSystem;
 import com.airijko.endlessleveling.systems.PlayerRaceStatSystem;
 import com.airijko.endlessleveling.systems.PeriodicSkillModifierSystem;
@@ -158,7 +160,8 @@ public class EndlessLeveling extends JavaPlugin {
         passiveManager = new PassiveManager(configManager);
         augmentManager = new AugmentManager(filesManager.getAugmentsFolder().toPath());
         augmentRuntimeManager = new AugmentRuntimeManager();
-        skillManager = new SkillManager(filesManager, playerAttributeManager, archetypePassiveManager, passiveManager);
+        skillManager = new SkillManager(filesManager, playerAttributeManager, archetypePassiveManager, passiveManager,
+                augmentRuntimeManager);
         augmentExecutor = new AugmentExecutor(augmentManager, augmentRuntimeManager, skillManager);
         playerDataManager = new PlayerDataManager(filesManager, skillManager, raceManager, classManager);
         augmentUnlockManager = new AugmentUnlockManager(configManager, augmentManager, playerDataManager);
@@ -208,9 +211,8 @@ public class EndlessLeveling extends JavaPlugin {
         this.getEntityStoreRegistry().registerSystem(new PlayerNameplateSystem(playerDataManager));
         this.getEntityStoreRegistry().registerSystem(new MobNameplateSystem());
         this.getEntityStoreRegistry().registerSystem(new HudRefreshSystem());
-        this.getEntityStoreRegistry().registerSystem(new com.airijko.endlessleveling.systems.MobHealthModifierSystem());
-        this.getEntityStoreRegistry()
-                .registerSystem(new com.airijko.endlessleveling.systems.MobDamageScalingSystem(mobLevelingManager));
+        this.getEntityStoreRegistry().registerSystem(new MobHealthModifierSystem());
+        this.getEntityStoreRegistry().registerSystem(new MobDamageScalingSystem(mobLevelingManager));
 
         // Register commands
         this.getCommandRegistry().registerCommand(new EndlessLevelingCommand("skills", "Skills menu"));

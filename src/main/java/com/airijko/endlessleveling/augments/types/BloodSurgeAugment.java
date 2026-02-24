@@ -7,6 +7,7 @@ import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
+import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 
 import java.util.Map;
 
@@ -41,8 +42,7 @@ public final class BloodSurgeAugment extends YamlAugment implements AugmentHooks
 
         var attackerStats = context.getAttackerStats();
         EntityStatValue hp = attackerStats == null ? null
-                : attackerStats.get(
-                        com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes.getHealth());
+                : attackerStats.get(DefaultEntityStatTypes.getHealth());
         double missingRatio = 0.0D;
         if (hp != null && hp.getMax() > 0f) {
             missingRatio = Math.min(maxMissingPercent, Math.max(0.0D, (hp.getMax() - hp.get()) / hp.getMax()));

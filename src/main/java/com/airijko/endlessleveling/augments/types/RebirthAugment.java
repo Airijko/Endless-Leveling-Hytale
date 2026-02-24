@@ -6,6 +6,7 @@ import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
+import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 
 import java.util.Map;
 
@@ -28,8 +29,7 @@ public final class RebirthAugment extends YamlAugment implements AugmentHooks.On
     @Override
     public float onLowHp(AugmentHooks.DamageTakenContext context) {
         var hp = context.getStatMap() == null ? null
-                : context.getStatMap().get(
-                        com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes.getHealth());
+                : context.getStatMap().get(DefaultEntityStatTypes.getHealth());
         if (hp == null || hp.getMax() <= 0f) {
             return context.getIncomingDamage();
         }
@@ -42,7 +42,7 @@ public final class RebirthAugment extends YamlAugment implements AugmentHooks.On
         }
         double healAmount = hp.getMax() * healPercent;
         context.getStatMap().setStatValue(
-                com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes.getHealth(),
+                DefaultEntityStatTypes.getHealth(),
                 (float) Math.min(hp.getMax(), hp.get() + healAmount));
         return 0f;
     }

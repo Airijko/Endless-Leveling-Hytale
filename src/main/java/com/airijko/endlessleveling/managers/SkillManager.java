@@ -1,5 +1,6 @@
 package com.airijko.endlessleveling.managers;
 
+import com.airijko.endlessleveling.augments.AugmentRuntimeManager;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
@@ -15,14 +16,13 @@ import com.hypixel.hytale.server.core.entity.entities.player.movement.MovementMa
 import com.hypixel.hytale.protocol.MovementSettings;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.NotificationUtil;
 
 import javax.annotation.Nonnull;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Handles all skill points and modifiers.
@@ -43,6 +43,7 @@ public class SkillManager {
     private final PlayerAttributeManager attributeManager;
     private final ArchetypePassiveManager archetypePassiveManager;
     private final PassiveManager passiveManager;
+    private final AugmentRuntimeManager augmentRuntimeManager;
 
     private int baseSkillPoints;
     private int skillPointsPerLevel;
@@ -50,12 +51,14 @@ public class SkillManager {
     public SkillManager(PluginFilesManager filesManager,
             PlayerAttributeManager attributeManager,
             ArchetypePassiveManager archetypePassiveManager,
-            PassiveManager passiveManager) {
+            PassiveManager passiveManager,
+            AugmentRuntimeManager augmentRuntimeManager) {
         this.levelingConfig = new LevelingConfigManager(filesManager.getLevelingFile());
         this.config = new ConfigManager(filesManager.getConfigFile());
         this.attributeManager = attributeManager;
         this.archetypePassiveManager = archetypePassiveManager;
         this.passiveManager = passiveManager;
+        this.augmentRuntimeManager = augmentRuntimeManager;
         ensureFlowConfigLine();
         loadConfigValues();
     }
@@ -144,6 +147,17 @@ public class SkillManager {
         return new AttributeConfig(false, 0.0);
     }
 
+    private double getAugmentAttributeBonus(PlayerData playerData, SkillAttributeType attributeType) {
+        if (augmentRuntimeManager == null || playerData == null || attributeType == null) {
+            return 0.0D;
+        }
+        var runtime = augmentRuntimeManager.getRuntimeState(playerData.getUuid());
+        if (runtime == null) {
+            return 0.0D;
+        }
+        return runtime.getAttributeBonus(attributeType, System.currentTimeMillis());
+    }
+
     private record AttributeConfig(boolean enabled, double perLevel) {
     }
 
@@ -196,7 +210,8 @@ public class SkillManager {
         double perPointValue = getSkillAttributeConfigValue(SkillAttributeType.SORCERY);
 
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.SORCERY);
-        float totalBonusSorcery = (float) ((sorceryLevel * perPointValue) + innateBonus);
+        double augmentBonus = getAugmentAttributeBonus(playerData, SkillAttributeType.SORCERY);
+        float totalBonusSorcery = (float) ((sorceryLevel * perPointValue) + innateBonus + augmentBonus);
 
         LOGGER.atFine().log(
                 "calculatePlayerSorcery: SORCERY level=%d, perPointValue=%.2f, innate=%.2f, totalBonusSorcery=%.2f for player %s",
@@ -426,7 +441,8 @@ public class SkillManager {
         }
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.STRENGTH);
         float skillValue = (float) ((strengthLevel * perPointValue) + innateBonus);
-        float totalValue = skillValue * raceMultiplier;
+        double augmentBonus = getAugmentAttributeBonus(playerData, SkillAttributeType.STRENGTH);
+        float totalValue = (float) (skillValue * raceMultiplier + augmentBonus);
         return new StrengthBreakdown(raceMultiplier, skillValue, totalValue);
     }
 
@@ -538,7 +554,7 @@ public class SkillManager {
             // Notify player of critical hit using Hytale's notification system
             if (playerData.isCriticalNotifEnabled()) {
                 try {
-                    PlayerRef playerRef = com.hypixel.hytale.server.core.universe.Universe.get()
+                    PlayerRef playerRef = Universe.get()
                             .getPlayer(playerData.getUuid());
                     if (playerRef != null) {
                         var packetHandler = playerRef.getPacketHandler();
@@ -622,7 +638,8 @@ public class SkillManager {
 
         float skillValue = (float) (defenseLevel * perPointValue);
         float innateValue = (float) getInnateAttributeBonus(playerData, SkillAttributeType.DEFENSE);
-        float defenseAttributeValue = skillValue + innateValue;
+        double augmentBonus = getAugmentAttributeBonus(playerData, SkillAttributeType.DEFENSE);
+        float defenseAttributeValue = (float) (skillValue + innateValue + augmentBonus);
         float scaledValue = defenseAttributeValue * raceMultiplier;
         float resistance = (float) (applyDefenseCurve(scaledValue) / 100.0D);
         return new DefenseBreakdown(raceMultiplier, skillValue, innateValue, scaledValue, resistance);

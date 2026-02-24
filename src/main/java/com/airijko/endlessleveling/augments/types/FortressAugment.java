@@ -7,6 +7,7 @@ import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
+import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 
 import java.util.Map;
 
@@ -34,8 +35,7 @@ public final class FortressAugment extends YamlAugment implements AugmentHooks.O
     @Override
     public float onLowHp(AugmentHooks.DamageTakenContext context) {
         EntityStatValue hp = context.getStatMap() == null ? null
-                : context.getStatMap().get(
-                        com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes.getHealth());
+                : context.getStatMap().get(DefaultEntityStatTypes.getHealth());
         if (hp == null || hp.getMax() <= 0f) {
             return context.getIncomingDamage();
         }

@@ -1,6 +1,7 @@
 package com.airijko.endlessleveling.augments;
 
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentRuntimeState;
+import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.Message;
@@ -183,6 +184,18 @@ public final class AugmentUtils {
             }
         }
         return newStacks;
+    }
+
+    public static void setAttributeBonus(AugmentRuntimeState runtimeState,
+            String sourceId,
+            SkillAttributeType attributeType,
+            double bonusValue,
+            long durationMillis) {
+        if (runtimeState == null || attributeType == null || sourceId == null) {
+            return;
+        }
+        long expiresAt = durationMillis > 0L ? System.currentTimeMillis() + durationMillis : 0L;
+        runtimeState.setAttributeBonus(attributeType, sourceId, bonusValue, expiresAt);
     }
 
     public static float applyMultiplier(float baseDamage, double bonusMultiplier) {

@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import com.airijko.endlessleveling.enums.SkillAttributeType;
 
 /**
  * Tracks per-player augment cooldowns and ready-notification state.
@@ -42,6 +43,7 @@ public final class AugmentRuntimeManager {
         private final UUID playerId;
         private final Map<String, CooldownState> cooldowns = new ConcurrentHashMap<>();
         private final Map<String, AugmentState> states = new ConcurrentHashMap<>();
+        private final Map<SkillAttributeType, Map<String, AttributeBonus>> attributeBonuses = new ConcurrentHashMap<>();
 
         private AugmentRuntimeState(UUID playerId) {
             this.playerId = playerId;
@@ -96,10 +98,47 @@ public final class AugmentRuntimeManager {
         public void clearAll() {
             cooldowns.clear();
             states.clear();
+            attributeBonuses.clear();
+        }
+
+        public void setAttributeBonus(SkillAttributeType type, String sourceId, double value, long expiresAtMillis) {
+            if (type == null || sourceId == null) {
+                return;
+            }
+            attributeBonuses
+                    .computeIfAbsent(type, t -> new ConcurrentHashMap<>())
+                    .put(normalizeId(sourceId), new AttributeBonus(value, expiresAtMillis));
+        }
+
+        public double getAttributeBonus(SkillAttributeType type, long now) {
+            if (type == null) {
+                return 0.0D;
+            }
+            Map<String, AttributeBonus> bonuses = attributeBonuses.get(type);
+            if (bonuses == null || bonuses.isEmpty()) {
+                return 0.0D;
+            }
+            double total = 0.0D;
+            bonuses.entrySet().removeIf(entry -> entry.getValue() != null && entry.getValue().isExpired(now));
+            for (AttributeBonus bonus : bonuses.values()) {
+                if (bonus == null) {
+                    continue;
+                }
+                if (bonus.expiresAt <= 0L || now <= bonus.expiresAt) {
+                    total += bonus.value;
+                }
+            }
+            return total;
         }
 
         private String normalizeId(String augmentId) {
             return augmentId == null ? null : augmentId.trim().toLowerCase();
+        }
+    }
+
+    public record AttributeBonus(double value, long expiresAt) {
+        boolean isExpired(long now) {
+            return expiresAt > 0L && now > expiresAt;
         }
     }
 
