@@ -150,8 +150,7 @@ public class EndlessLeveling extends JavaPlugin {
         // Load weapon ID and keyword overrides before systems start.
         ClassWeaponResolver.configure(WeaponConfig.load(filesManager.getWeaponsFile()));
 
-        boolean enableLogging = toBoolean(configManager.get("enable_logging", Boolean.FALSE, false), false);
-        LoggingManager.configure(enableLogging);
+        LoggingManager.configureFromConfig(configManager);
 
         raceManager = new RaceManager(configManager, filesManager);
         classManager = new ClassManager(configManager, filesManager);
@@ -242,16 +241,4 @@ public class EndlessLeveling extends JavaPlugin {
         }
     }
 
-    private boolean toBoolean(Object value, boolean defaultValue) {
-        if (value instanceof Boolean bool) {
-            return bool;
-        }
-        if (value instanceof Number number) {
-            return number.intValue() != 0;
-        }
-        if (value instanceof String str) {
-            return Boolean.parseBoolean(str.trim());
-        }
-        return defaultValue;
-    }
 }

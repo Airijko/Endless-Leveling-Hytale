@@ -57,8 +57,7 @@ public class ReloadCommand extends AbstractPlayerCommand {
 
         if (configManager != null) {
             configManager.load();
-            boolean enableLogging = toBoolean(configManager.get("enable_logging", Boolean.FALSE, false), false);
-            LoggingManager.configure(enableLogging);
+            LoggingManager.configureFromConfig(configManager);
         }
 
         if (levelingManager != null) {
@@ -92,16 +91,4 @@ public class ReloadCommand extends AbstractPlayerCommand {
         PlayerHud.refreshAll();
     }
 
-    private boolean toBoolean(Object value, boolean defaultValue) {
-        if (value instanceof Boolean bool) {
-            return bool;
-        }
-        if (value instanceof Number number) {
-            return number.intValue() != 0;
-        }
-        if (value instanceof String str) {
-            return Boolean.parseBoolean(str.trim());
-        }
-        return defaultValue;
-    }
 }

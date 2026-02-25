@@ -10,6 +10,7 @@ import com.airijko.endlessleveling.augments.AugmentHooks.OnHitAugment;
 import com.airijko.endlessleveling.augments.AugmentHooks.OnKillAugment;
 import com.airijko.endlessleveling.augments.AugmentHooks.OnLowHpAugment;
 import com.airijko.endlessleveling.augments.AugmentHooks.OnTargetConditionAugment;
+import com.airijko.endlessleveling.augments.AugmentHooks.OnMissAugment;
 import com.airijko.endlessleveling.augments.AugmentHooks.PassiveStatAugment;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ClassWeaponType;
@@ -18,6 +19,8 @@ import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
+import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
+import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
@@ -63,6 +66,16 @@ public final class AugmentExecutor {
         notifyCooldowns(playerData, runtime, commandBuffer, attackerRef, augments);
         HitContext context = new HitContext(playerData, runtime, skillManager, attackerRef, targetRef, commandBuffer,
                 attackerStats, targetStats, startingDamage, critical, ranged, weaponType);
+
+        if (isMiss(context)) {
+            for (Augment augment : augments) {
+                if (augment instanceof OnMissAugment missHandler) {
+                    missHandler.onMiss(context);
+                }
+            }
+            return context.getDamage();
+        }
+
         for (Augment augment : augments) {
             if (augment instanceof OnHitAugment handler) {
                 float updated = handler.onHit(context);
@@ -77,6 +90,30 @@ public final class AugmentExecutor {
             }
         }
         return context.getDamage();
+    }
+
+    private boolean isMiss(@Nonnull HitContext context) {
+        if (context.getDamage() <= 0.0f) {
+            return true;
+        }
+        if (context.getTargetRef() == null || !context.getTargetRef().isValid()) {
+            return true;
+        }
+        EntityStatMap targetStats = context.getTargetStats();
+        if (targetStats == null) {
+            return true;
+        }
+        EntityStatValue targetHp = targetStats.get(DefaultEntityStatTypes.getHealth());
+        if (targetHp == null) {
+            return true;
+        }
+        if (targetHp.getMax() <= 0f || targetHp.get() <= 0f) {
+            return true;
+        }
+        if (context.getAttackerRef() != null && context.getAttackerRef().equals(context.getTargetRef())) {
+            return true;
+        }
+        return false;
     }
 
     public float applyOnDamageTaken(@Nonnull PlayerData defender,

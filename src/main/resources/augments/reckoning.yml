@@ -1,14 +1,18 @@
 id: reckoning
 name: "Reckoning"
 tier: MYTHIC
-description: "Missing health fuels your damage, but missed attacks drain your own HP."
+description: "Your attack damage is enhanced at the cost of your health."
 category: ON_HIT
 
 passives:
   bonus_damage:
     scaling_stat: missing_health_percent # scales with missing HP
-    max_bonus_damage: 1.0 # up to 100% bonus damage at full missing HP
+    max_bonus_damage: 1.5 # up to 150% bonus damage at full missing HP
 
   self_damage:
-    scaling_stat: attack_miss # triggers only on missed attacks
-    percent_of_current_hp: 0.10 # loses 10% of current HP per miss
+    percent_of_current_hp: 0.05 # loses 5% of current HP per hit
+
+  execution_heal:
+    trigger_threshold: 0.30 # target must be below 30% max HP
+    heal_percent_missing_hp: 0.2 # heal 20% of YOUR missing HP
+    cooldown_per_target: 5

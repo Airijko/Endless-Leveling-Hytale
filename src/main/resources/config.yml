@@ -121,7 +121,15 @@ force_builtin_classes: true # If true, ignore custom class files and keep bundle
 # ------------------------------------------------------------
 # DEBUG / LOGGING
 # ------------------------------------------------------------
-enable_logging: false # Enable detailed logging output
+enable_logging: false # Master toggle: true enables ALL mod logs (debug + info + warnings)
+logging:
+  base_level: WARNING # When enable_logging is false, base level is clamped to WARNING/SEVERE (INFO suppressed unless enable_logging is true or a debug section is enabled).
+  debug_sections: [] # Inline list of package prefixes to fully enable debug logging for. Examples (uncomment to use):
+    # [augments]
+    # [augments, managers.AugmentRuntimeManager]
+    # [listeners, systems]
+    # [commands, commands.subcommands]
+    # [managers.PlayerDataManager, managers.AugmentManager]
 
 # ------------------------------------------------------------
 # AUGMENT UNLOCKS
@@ -140,4 +148,4 @@ augments:
 # INTERNAL CONFIG VERSION
 # DO NOT MODIFY
 # ------------------------------------------------------------
-config_version: 18
+config_version: 21

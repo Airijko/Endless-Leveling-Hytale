@@ -28,6 +28,10 @@ public interface AugmentHooks {
         void onCrit(@Nonnull HitContext context);
     }
 
+    interface OnMissAugment {
+        void onMiss(@Nonnull HitContext context);
+    }
+
     interface OnDamageTakenAugment {
         float onDamageTaken(@Nonnull DamageTakenContext context);
     }
