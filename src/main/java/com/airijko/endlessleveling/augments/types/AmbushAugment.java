@@ -9,7 +9,6 @@ import com.airijko.endlessleveling.augments.YamlAugment;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
-import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent;
 import com.hypixel.hytale.server.core.asset.type.entityeffect.config.EntityEffect;
 import com.hypixel.hytale.server.core.asset.type.entityeffect.config.OverlapBehavior;
@@ -23,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class AmbushAugment extends YamlAugment
         implements AugmentHooks.PassiveStatAugment, AugmentHooks.OnHitAugment, AugmentHooks.OnDamageTakenAugment {
     public static final String ID = "ambush";
-    private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final double MOVEMENT_EPSILON_SQ = 0.0025D;
 
     private static final class StealthState {
@@ -85,21 +83,10 @@ public final class AmbushAugment extends YamlAugment
         if (pos == null) {
             moved = true;
             state.hasLastPos = false;
-            LOGGER.atFine().log("Ambush movement-check: pos unavailable, treating as moved (player=%s)", playerId);
         } else if (state.hasLastPos) {
             double dx = pos.getX() - state.lastX;
             double dz = pos.getZ() - state.lastZ;
             moved = (dx * dx + dz * dz) > MOVEMENT_EPSILON_SQ;
-            LOGGER.atFine().log(
-                    "Ambush movement-check: player=%s moved=%s idle=%.3fs dx=%.5f dz=%.5f thresholdSq=%.5f",
-                    playerId,
-                    moved,
-                    state.idleSeconds,
-                    dx,
-                    dz,
-                    MOVEMENT_EPSILON_SQ);
-        } else {
-            LOGGER.atFine().log("Ambush movement-check: priming baseline position (player=%s)", playerId);
         }
         if (pos != null) {
             state.lastX = pos.getX();
@@ -109,16 +96,11 @@ public final class AmbushAugment extends YamlAugment
 
         if (moved) {
             state.idleSeconds = 0.0D;
-            LOGGER.atFine().log("Ambush state: player=%s is moving, idle timer reset.", playerId);
             if (state.invisApplied) {
                 handleInvisBreak(state, ref, commandBuffer, now);
             }
         } else {
             state.idleSeconds += context.getDeltaSeconds();
-            LOGGER.atFine().log("Ambush state: player=%s still, idle timer now %.3fs / %.3fs",
-                    playerId,
-                    state.idleSeconds,
-                    triggerAfterSeconds);
         }
 
         if (!state.buffsApplied && triggerAfterSeconds > 0.0D && state.idleSeconds >= triggerAfterSeconds) {
@@ -127,15 +109,7 @@ public final class AmbushAugment extends YamlAugment
                 state.invisApplied = true;
                 state.buffsApplied = true;
                 state.buffExpiresAt = 0L;
-                LOGGER.atFine().log("Ambush trigger: player=%s entered invis + buffs.", playerId);
                 notifyPlayer(ref, commandBuffer, "Ambush active: You are now invisible and empowered.");
-            } else {
-                LOGGER.atFine().log(
-                        "Ambush trigger failed: player=%s effectId='%s' buffsApplied=%s idle=%.3f",
-                        playerId,
-                        effectId,
-                        state.buffsApplied,
-                        state.idleSeconds);
             }
         }
 
@@ -160,15 +134,6 @@ public final class AmbushAugment extends YamlAugment
                 bonusDurationMillis = Math.max(50L, state.buffExpiresAt - now);
             }
             applyAttributeBonuses(runtime, scale, bonusDurationMillis);
-
-            double strNow = runtime.getAttributeBonus(SkillAttributeType.STRENGTH, now);
-            double sorcNow = runtime.getAttributeBonus(SkillAttributeType.SORCERY, now);
-            LOGGER.atFine().log("Ambush buff-apply: player=%s scale=%.3f strNow=%.2f sorcNow=%.2f durMs=%d",
-                    playerId,
-                    scale,
-                    strNow,
-                    sorcNow,
-                    bonusDurationMillis);
         } else if (!state.invisApplied && state.buffExpiresAt <= 0L) {
             state.buffsApplied = false;
             applyAttributeBonuses(runtime, 0.0D, 0L);
@@ -249,15 +214,12 @@ public final class AmbushAugment extends YamlAugment
         EffectControllerComponent controller = commandBuffer.getComponent(ref,
                 EffectControllerComponent.getComponentType());
         if (controller == null) {
-            LOGGER.atFine().log("Ambush invis apply failed: missing EffectControllerComponent");
             return false;
         }
         EntityEffect effect = resolveEntityEffect(effectId);
         if (effect == null) {
-            LOGGER.atFine().log("Ambush invis apply failed: unknown effectId '%s'", effectId);
             return false;
         }
-        LOGGER.atFine().log("Ambush invis apply: applying effect '%s' for %.2fs", effect.getId(), durationSeconds);
         return controller.addEffect(ref, effect, durationSeconds, OverlapBehavior.OVERWRITE, commandBuffer);
     }
 

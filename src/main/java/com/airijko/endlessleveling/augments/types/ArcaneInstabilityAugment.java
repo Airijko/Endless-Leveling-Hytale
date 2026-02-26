@@ -15,6 +15,14 @@ public final class ArcaneInstabilityAugment extends YamlAugment implements Augme
     private final double lowManaPenalty;
     private final double lowManaThreshold;
 
+    private static double normalizePercentThreshold(double threshold) {
+        if (!Double.isFinite(threshold)) {
+            return 0.0D;
+        }
+        double normalized = threshold > 1.0D ? threshold / 100.0D : threshold;
+        return AugmentUtils.clampPercent(normalized);
+    }
+
     public ArcaneInstabilityAugment(AugmentDefinition definition) {
         super(definition);
         var passives = definition.getPassives();
@@ -23,12 +31,14 @@ public final class ArcaneInstabilityAugment extends YamlAugment implements Augme
         var high = AugmentValueReader.getMap(buffs, "sorcery_bonus_high");
         var highCond = AugmentValueReader.getMap(high, "condition");
         this.highManaBonus = AugmentValueReader.getDouble(high, "value", 0.0D);
-        this.highManaThreshold = AugmentValueReader.getNestedDouble(highCond, 1.0D, "min_percent");
+        this.highManaThreshold = normalizePercentThreshold(
+                AugmentValueReader.getNestedDouble(highCond, 1.0D, "min_percent"));
 
         var low = AugmentValueReader.getMap(debuffs, "sorcery_penalty_low");
         var lowCond = AugmentValueReader.getMap(low, "condition");
         this.lowManaPenalty = AugmentValueReader.getDouble(low, "value", 0.0D);
-        this.lowManaThreshold = AugmentValueReader.getNestedDouble(lowCond, 0.0D, "max_percent");
+        this.lowManaThreshold = normalizePercentThreshold(
+                AugmentValueReader.getNestedDouble(lowCond, 0.0D, "max_percent"));
     }
 
     @Override
@@ -46,7 +56,7 @@ public final class ArcaneInstabilityAugment extends YamlAugment implements Augme
         }
 
         double currentMana = AugmentUtils.getCurrentMana(statMap);
-        double manaPercent = currentMana / maxMana;
+        double manaPercent = AugmentUtils.clampPercent(currentMana / maxMana);
         double sorceryDelta = 0.0D;
 
         if (manaPercent >= highManaThreshold) {

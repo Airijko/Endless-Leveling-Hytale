@@ -1,12 +1,12 @@
 id: blood_echo
 name: "Blood Echo"
 tier: MYTHIC
-description: "Damage dealt returns as healing over time, stacking and clearing when you score a kill."
+description: "Damage dealt is stored as Bleed on you; you heal over time from a percentage of stored Bleed, and kill cleanses the Bleed pool."
 category: ON_HIT
 
 passives:
   heal_over_time:
-    value: 0.20 # 20% of damage dealt as healing
-    duration: 3 # heals over 3 seconds
-    max_stacks: 5 # can stack up to 5 times
-    reset_on_kill: true # all stacks removed on kill
+    value: 0.20 # each second, heal for 20% of currently stored Bleed
+    duration: 3 # Bleed pool expires if no new hits occur for this long
+    max_stacks: 5 # stack counter for UI/feedback
+    reset_on_kill: true # cleanse stored Bleed on kill

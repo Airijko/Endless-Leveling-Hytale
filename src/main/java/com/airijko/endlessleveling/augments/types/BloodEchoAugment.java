@@ -14,35 +14,35 @@ public final class BloodEchoAugment extends YamlAugment
         implements AugmentHooks.OnHitAugment, AugmentHooks.OnKillAugment, AugmentHooks.PassiveStatAugment {
     public static final String ID = "blood_echo";
 
-    private final double percent;
+    private final double bleedHealPercent;
     private final double durationSeconds;
     private final int maxStacks;
+    private final boolean resetOnKill;
 
     public BloodEchoAugment(AugmentDefinition definition) {
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> heal = AugmentValueReader.getMap(passives, "heal_over_time");
-        this.percent = AugmentValueReader.getDouble(heal, "value", 0.0D);
+        this.bleedHealPercent = AugmentValueReader.getDouble(heal, "value", 0.0D);
         this.durationSeconds = AugmentValueReader.getDouble(heal, "duration", 3.0D);
         this.maxStacks = AugmentValueReader.getInt(heal, "max_stacks", 5);
+        this.resetOnKill = AugmentValueReader.getBoolean(heal, "reset_on_kill", true);
     }
 
     @Override
     public float onHit(AugmentHooks.HitContext context) {
         AugmentRuntimeState runtime = context.getRuntimeState();
-        EntityStatMap attackerStats = context.getAttackerStats();
-        if (runtime == null || attackerStats == null || percent <= 0.0D) {
+        if (runtime == null || bleedHealPercent <= 0.0D || context.getDamage() <= 0f) {
             return context.getDamage();
         }
-        double healAmount = context.getDamage() * percent;
         var state = runtime.getState(ID);
-        int stacks = AugmentUtils.setStacksWithNotify(runtime,
+        AugmentUtils.setStacksWithNotify(runtime,
                 ID,
                 state.getStacks() + 1,
                 maxStacks,
                 AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getAttackerRef()),
                 getName());
-        state.setStoredValue(state.getStoredValue() + healAmount);
+        state.setStoredValue(state.getStoredValue() + context.getDamage());
         state.setExpiresAt(System.currentTimeMillis() + AugmentUtils.secondsToMillis(durationSeconds));
         return context.getDamage();
     }
@@ -50,9 +50,20 @@ public final class BloodEchoAugment extends YamlAugment
     @Override
     public void onKill(AugmentHooks.KillContext context) {
         AugmentRuntimeState runtime = context.getRuntimeState();
-        if (runtime != null) {
-            runtime.getState(ID).clear();
+        if (!resetOnKill || runtime == null) {
+            return;
         }
+        var state = runtime.getState(ID);
+        if (state.getStoredValue() <= 0.0D && state.getStacks() <= 0) {
+            return;
+        }
+        AugmentUtils.setStacksWithNotify(runtime,
+                ID,
+                0,
+                maxStacks,
+                AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getKillerRef()),
+                getName());
+        state.clear();
     }
 
     @Override
@@ -77,11 +88,23 @@ public final class BloodEchoAugment extends YamlAugment
             state.clear();
             return;
         }
-        double perSecond = state.getStoredValue() / Math.max(0.001D, durationSeconds);
-        double healAmount = perSecond * context.getDeltaSeconds();
-        float applied = AugmentUtils.heal(stats, healAmount);
-        if (applied > 0f) {
-            state.setStoredValue(Math.max(0.0D, state.getStoredValue() - applied));
+        double consumeAmount = state.getStoredValue()
+                * Math.max(0.0D, bleedHealPercent)
+                * Math.max(0.0D, context.getDeltaSeconds());
+        consumeAmount = Math.min(state.getStoredValue(), consumeAmount);
+        if (consumeAmount <= 0.0D) {
+            return;
+        }
+        AugmentUtils.heal(stats, consumeAmount);
+        state.setStoredValue(Math.max(0.0D, state.getStoredValue() - consumeAmount));
+        if (state.getStoredValue() <= 0.0001D) {
+            AugmentUtils.setStacksWithNotify(runtime,
+                    ID,
+                    0,
+                    maxStacks,
+                    AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getPlayerRef()),
+                    getName());
+            state.clear();
         }
     }
 }
