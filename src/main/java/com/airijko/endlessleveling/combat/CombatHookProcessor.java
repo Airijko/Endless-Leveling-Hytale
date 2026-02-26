@@ -21,6 +21,7 @@ import com.airijko.endlessleveling.passives.util.PassiveContributionBlueprint;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
@@ -39,6 +40,8 @@ import java.util.Map;
  * passives and augments.
  */
 public final class CombatHookProcessor {
+
+    private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
     private final SkillManager skillManager;
     private final PassiveManager passiveManager;
@@ -213,26 +216,41 @@ public final class CombatHookProcessor {
 
         float originalAmount = damage.getAmount();
         float resistance = skillManager != null ? skillManager.calculatePlayerDefense(defender) : 0f;
-        float reducedAmount = originalAmount * (1.0f - resistance);
+        resistance = Math.max(0f, Math.min(0.95f, resistance));
+        float defenseReducedAmount = originalAmount * (1.0f - resistance);
 
-        float adjustedAmount = reducedAmount;
+        float postAugmentAmount = defenseReducedAmount;
+        if (augmentExecutor != null && ctx.statMap() != null) {
+            postAugmentAmount = augmentExecutor.applyOnDamageTaken(defender,
+                    ctx.defenderRef(),
+                    ctx.attackerRef(),
+                    ctx.commandBuffer(),
+                    ctx.statMap(),
+                    defenseReducedAmount);
+        }
+
+        float adjustedAmount = postAugmentAmount;
         if (runtimeState != null && ctx.statMap() != null && !archetypeSnapshot.isEmpty()) {
             adjustedAmount = applySecondWind(defender,
                     ctx.defenderPlayer(),
                     runtimeState,
                     archetypeSnapshot,
                     ctx.statMap(),
-                    reducedAmount);
+                    postAugmentAmount);
         }
 
-        if (augmentExecutor != null && ctx.statMap() != null) {
-            adjustedAmount = augmentExecutor.applyOnDamageTaken(defender,
-                    ctx.defenderRef(),
-                    ctx.attackerRef(),
-                    ctx.commandBuffer(),
-                    ctx.statMap(),
-                    adjustedAmount);
-        }
+        double dr2 = defenseReducedAmount > 0f
+                ? Math.max(0.0D, Math.min(1.0D, 1.0D - (postAugmentAmount / defenseReducedAmount)))
+                : 0.0D;
+        LOGGER.atFine().log(
+                "Incoming DR chain: player=%s base=%.2f dr1(defense)=%.2f%% afterDr1=%.2f dr2(augments)=%.2f%% afterDr2=%.2f final=%.2f",
+                defender != null ? defender.getUuid() : "unknown",
+                originalAmount,
+                resistance * 100.0f,
+                defenseReducedAmount,
+                dr2 * 100.0D,
+                postAugmentAmount,
+                adjustedAmount);
 
         if (runtimeState != null) {
             handleRetaliation(runtimeState, retaliationSettings, adjustedAmount);

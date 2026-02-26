@@ -7,6 +7,6 @@ category: PASSIVE_STAT
 passives:
   buffs:
     life_steal:
-      value: 0.10 # 10% of damage dealt restores HP
+      value: 0.05 # 5% of damage dealt restores HP
     haste:
-      value: 0.15 # 15% increased attack/cast speed
+      value: 0.25 # 25% increased movement speed

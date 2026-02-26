@@ -5,8 +5,7 @@ description: "Your crit chance grants damage reduction, but only your defense ca
 category: ON_DAMAGE_TAKEN
 
 passives:
-  buffs:
-    crit_defense:
-      value: 0.25 # max 25% damage reduction
-      scaling_stat: crit_rate # scales from 0% to 100% crit chance
-      category: ON_DAMAGE_TAKEN
+  crit_defense:
+    value: 0.25 # max 25% damage reduction
+    scaling_stat: crit_rate # scales from 0% to 100% crit chance
+    category: ON_DAMAGE_TAKEN

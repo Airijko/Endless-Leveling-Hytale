@@ -18,13 +18,41 @@ public final class BloodSurgeAugment extends YamlAugment implements AugmentHooks
     private final double maxMissingPercent;
     private final double healToDamagePercent;
 
+    private static double normalizePercentValue(double value) {
+        if (!Double.isFinite(value)) {
+            return 0.0D;
+        }
+        if (value <= 1.0D) {
+            return Math.max(0.0D, value * 100.0D);
+        }
+        return Math.max(0.0D, value);
+    }
+
+    private static double normalizeRatioValue(double value) {
+        if (!Double.isFinite(value)) {
+            return 0.0D;
+        }
+        double normalized = value > 1.0D ? value / 100.0D : value;
+        return Math.max(0.0D, Math.min(1.0D, normalized));
+    }
+
     public BloodSurgeAugment(AugmentDefinition definition) {
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> buffs = AugmentValueReader.getMap(passives, "buffs");
         Map<String, Object> lifeStealScaling = AugmentValueReader.getMap(buffs, "life_steal_scaling");
-        this.maxLifeStealPercent = AugmentValueReader.getDouble(lifeStealScaling, "max_value", 0.0D) * 100.0D;
-        this.maxMissingPercent = AugmentValueReader.getDouble(lifeStealScaling, "max_missing_health_percent", 0.0D);
+        this.maxLifeStealPercent = normalizePercentValue(
+                AugmentValueReader.getDouble(lifeStealScaling, "max_value", 0.0D));
+        double fullAtHealthPercent = AugmentValueReader.getDouble(lifeStealScaling,
+                "full_value_at_health_percent",
+                -1.0D);
+        if (fullAtHealthPercent >= 0.0D) {
+            double healthThreshold = normalizeRatioValue(fullAtHealthPercent);
+            this.maxMissingPercent = Math.max(0.0D, Math.min(1.0D, 1.0D - healthThreshold));
+        } else {
+            this.maxMissingPercent = normalizeRatioValue(
+                    AugmentValueReader.getDouble(lifeStealScaling, "max_missing_health_percent", 0.0D));
+        }
         Map<String, Object> healToDamage = AugmentValueReader.getMap(passives, "heal_to_damage");
         this.healToDamagePercent = AugmentValueReader.getDouble(healToDamage, "value", 0.0D);
     }
@@ -49,6 +77,7 @@ public final class BloodSurgeAugment extends YamlAugment implements AugmentHooks
         }
         double lifeStealPercent = maxLifeStealPercent
                 * (maxMissingPercent <= 0.0D ? 0.0D : missingRatio / maxMissingPercent);
+        lifeStealPercent = Math.max(0.0D, Math.min(maxLifeStealPercent, lifeStealPercent));
         if (lifeStealPercent > 0.0D) {
             double potentialHeal = damage * (lifeStealPercent / 100.0D);
             double actualHeal = potentialHeal;

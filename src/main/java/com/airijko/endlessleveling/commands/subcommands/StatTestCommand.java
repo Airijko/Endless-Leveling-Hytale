@@ -1,6 +1,9 @@
 package com.airijko.endlessleveling.commands.subcommands;
 
 import com.airijko.endlessleveling.EndlessLeveling;
+import com.airijko.endlessleveling.augments.AugmentDefinition;
+import com.airijko.endlessleveling.augments.AugmentManager;
+import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.managers.PlayerAttributeManager;
@@ -25,6 +28,7 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.concurrent.CompletableFuture;
 
 public class StatTestCommand extends AbstractPlayerCommand {
@@ -32,6 +36,7 @@ public class StatTestCommand extends AbstractPlayerCommand {
     private final PlayerDataManager playerDataManager;
     private final SkillManager skillManager;
     private final PlayerAttributeManager attributeManager;
+    private final AugmentManager augmentManager;
     private final com.airijko.endlessleveling.augments.AugmentRuntimeManager augmentRuntimeManager;
 
     public StatTestCommand() {
@@ -40,6 +45,7 @@ public class StatTestCommand extends AbstractPlayerCommand {
         this.playerDataManager = plugin.getPlayerDataManager();
         this.skillManager = plugin.getSkillManager();
         this.attributeManager = plugin.getPlayerAttributeManager();
+        this.augmentManager = plugin.getAugmentManager();
         this.augmentRuntimeManager = plugin.getAugmentRuntimeManager();
     }
 
@@ -80,6 +86,16 @@ public class StatTestCommand extends AbstractPlayerCommand {
                 lines.add(sectionHeader("Totals"));
                 attributeBreakdowns.forEach((label, breakdown) -> lines.add(totalLine(label, breakdown)));
             }
+
+            lines.add(sectionHeader("Life Steal"));
+            LifeStealSummary lifeSteal = collectLifeStealSummary(playerData, entityStatMap);
+            lines.add(infoLine(String.format("Flat from augments: %s%%", formatDouble(lifeSteal.flatPercent()))));
+            lines.add(infoLine(String.format("Scaling current: %s%% (max %s%%)",
+                    formatDouble(lifeSteal.scalingCurrentPercent()),
+                    formatDouble(lifeSteal.scalingMaxPercent()))));
+            lines.add(infoLine(String.format("Total current: %s%% (max %s%%)",
+                    formatDouble(lifeSteal.totalCurrentPercent()),
+                    formatDouble(lifeSteal.totalMaxPercent()))));
 
             lines.add(sectionHeader("Movement"));
             MovementManager movementManager = store.getComponent(ref, MovementManager.getComponentType());
@@ -224,6 +240,21 @@ public class StatTestCommand extends AbstractPlayerCommand {
                         false,
                         false));
 
+        double disciplineRace = attributeManager.getRaceAttribute(playerData, SkillAttributeType.DISCIPLINE, 0.0D);
+        double disciplineSkill = skillManager.calculateSkillAttributeBonus(playerData, SkillAttributeType.DISCIPLINE,
+                -1);
+        double disciplineAug = getAugmentBonus(playerData, SkillAttributeType.DISCIPLINE);
+        breakdowns.put("Discipline",
+                new AttributeBreakdown(disciplineRace, disciplineSkill, disciplineAug,
+                        disciplineRace + disciplineSkill + disciplineAug, false, false));
+
+        double sorceryRace = attributeManager.getRaceAttribute(playerData, SkillAttributeType.SORCERY, 0.0D);
+        double sorcerySkill = skillManager.calculateSkillAttributeBonus(playerData, SkillAttributeType.SORCERY, -1);
+        double sorceryAug = getAugmentBonus(playerData, SkillAttributeType.SORCERY);
+        breakdowns.put("Sorcery",
+                new AttributeBreakdown(sorceryRace, sorcerySkill, sorceryAug,
+                        sorceryRace + sorcerySkill + sorceryAug, false, false));
+
         return breakdowns;
     }
 
@@ -237,17 +268,66 @@ public class StatTestCommand extends AbstractPlayerCommand {
         }
         lines.add(sectionHeader("Augment Runtime"));
 
-        double strAug = runtime.getAttributeBonus(SkillAttributeType.STRENGTH, System.currentTimeMillis());
-        double sorcAug = runtime.getAttributeBonus(SkillAttributeType.SORCERY, System.currentTimeMillis());
-        double hasteAug = runtime.getAttributeBonus(SkillAttributeType.HASTE, System.currentTimeMillis());
-        lines.add(infoLine(String.format("Aug STR=%s, SORC=%s, HASTE=%s", formatDouble(strAug),
-                formatDouble(sorcAug), formatDouble(hasteAug))));
+        long now = System.currentTimeMillis();
+        String allAttributeBonuses = java.util.Arrays.stream(SkillAttributeType.values())
+                .map(type -> type.name() + "=" + formatDouble(runtime.getAttributeBonus(type, now)))
+                .collect(Collectors.joining(", "));
+        lines.add(infoLine("Aug Attrs: " + allAttributeBonuses));
 
         var ragingState = runtime.getState(com.airijko.endlessleveling.augments.types.RagingMomentumAugment.ID);
         if (ragingState != null && ragingState.getStacks() > 0) {
             lines.add(infoLine(String.format("Raging Momentum stacks=%d expiresInMs=%d", ragingState.getStacks(),
                     Math.max(0L, ragingState.getExpiresAt() - System.currentTimeMillis()))));
         }
+    }
+
+    private LifeStealSummary collectLifeStealSummary(PlayerData playerData, EntityStatMap entityStatMap) {
+        if (playerData == null || augmentManager == null) {
+            return new LifeStealSummary(0.0D, 0.0D, 0.0D, 0.0D, 0.0D);
+        }
+
+        double missingHealthPercent = 0.0D;
+        if (entityStatMap != null) {
+            var health = entityStatMap.get(DefaultEntityStatTypes.getHealth());
+            if (health != null && health.getMax() > 0f) {
+                missingHealthPercent = Math.max(0.0D,
+                        Math.min(1.0D, (health.getMax() - health.get()) / health.getMax()));
+            }
+        }
+
+        double flatPercent = 0.0D;
+        double scalingCurrentPercent = 0.0D;
+        double scalingMaxPercent = 0.0D;
+
+        for (String augmentId : playerData.getSelectedAugmentsSnapshot().values()) {
+            if (augmentId == null || augmentId.isBlank()) {
+                continue;
+            }
+            AugmentDefinition definition = augmentManager.getAugment(augmentId);
+            if (definition == null) {
+                continue;
+            }
+            Map<String, Object> passives = definition.getPassives();
+            Map<String, Object> buffs = AugmentValueReader.getMap(passives, "buffs");
+
+            double flatLifeSteal = AugmentValueReader.getNestedDouble(buffs, 0.0D, "life_steal", "value");
+            flatPercent += flatLifeSteal * 100.0D;
+
+            Map<String, Object> scaling = AugmentValueReader.getMap(buffs, "life_steal_scaling");
+            double maxValue = Math.max(0.0D, AugmentValueReader.getDouble(scaling, "max_value", 0.0D));
+            double maxMissingHealth = Math.max(0.0D,
+                    AugmentValueReader.getDouble(scaling, "max_missing_health_percent", 1.0D));
+            if (maxValue > 0.0D) {
+                scalingMaxPercent += maxValue * 100.0D;
+                double ratio = maxMissingHealth > 0.0D ? Math.min(1.0D, missingHealthPercent / maxMissingHealth) : 1.0D;
+                scalingCurrentPercent += (maxValue * ratio) * 100.0D;
+            }
+        }
+
+        double totalCurrentPercent = flatPercent + scalingCurrentPercent;
+        double totalMaxPercent = flatPercent + scalingMaxPercent;
+        return new LifeStealSummary(flatPercent, scalingCurrentPercent, scalingMaxPercent, totalCurrentPercent,
+                totalMaxPercent);
     }
 
     private double getAugmentBonus(PlayerData playerData, SkillAttributeType attributeType) {
@@ -263,5 +343,12 @@ public class StatTestCommand extends AbstractPlayerCommand {
 
     private record AttributeBreakdown(double race, double skill, double augment, double total, boolean raceIsMultiplier,
             boolean totalIsMultiplier) {
+    }
+
+    private record LifeStealSummary(double flatPercent,
+            double scalingCurrentPercent,
+            double scalingMaxPercent,
+            double totalCurrentPercent,
+            double totalMaxPercent) {
     }
 }
