@@ -14,7 +14,3 @@ passives:
       sorcery:
         value: 0.25 # +25% Sorcery
     effect: INVISIBLE # makes the player invisible
-    break_conditions: # invisibility is broken if any occur
-      movement: true
-      damage_taken: true
-      attack: true
