@@ -6,10 +6,8 @@ category: ON_LOW_HP
 
 passives:
   shield_phase:
-    value: 1.0 # 100% damage reduction
+    health_threshold: 0.05 # 5% HP floor trigger; if ready, you won't go below this when it procs
     duration: 5 # lasts 5 seconds
-    immobile: true # cannot move
-    can_attack: true # can attack while active
     cooldown: 360 # second cooldown
 
   buff_phase:

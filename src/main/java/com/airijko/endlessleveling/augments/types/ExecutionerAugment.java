@@ -40,9 +40,12 @@ public final class ExecutionerAugment extends YamlAugment implements AugmentHook
         if (ratio > thresholdRatio) {
             return context.getDamage();
         }
-        if (!AugmentUtils.consumeCooldown(context.getRuntimeState(), ID, cooldownMillis)) {
+        if (!AugmentUtils.consumeCooldown(context.getRuntimeState(), ID, getName(), cooldownMillis)) {
             return context.getDamage();
         }
+        var playerRef = AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getAttackerRef());
+        AugmentUtils.sendAugmentMessage(playerRef,
+                String.format("%s triggered! +%.0f%% damage.", getName(), bonusMultiplier * 100.0D));
         return AugmentUtils.applyMultiplier(context.getDamage(), bonusMultiplier);
     }
 }

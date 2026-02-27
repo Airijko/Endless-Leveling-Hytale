@@ -42,7 +42,7 @@ public class AugmentTestCommand extends AbstractPlayerCommand {
 
     public AugmentTestCommand() {
         super("augmenttest", "Force select an augment for testing");
-        this.addAliases("testaugment", "augmentdev");
+        this.addAliases("testaugment", "augmentdev", "augtest", "testaug");
         EndlessLeveling plugin = EndlessLeveling.getInstance();
         this.augmentManager = plugin != null ? plugin.getAugmentManager() : null;
         this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
