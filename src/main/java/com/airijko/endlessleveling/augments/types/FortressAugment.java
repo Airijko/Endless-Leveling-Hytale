@@ -27,7 +27,8 @@ public final class FortressAugment extends YamlAugment
     private final double strengthBuff;
     private final double sorceryBuff;
     private final long cooldownMillis;
-    private static final float ZERO_EPSILON = 0.0001F;
+    private static final float LOCKED_SPEED_MULTIPLIER = 0.0001F;
+    private static final float LOCKED_EPSILON = 0.0001F;
 
     public FortressAugment(AugmentDefinition definition) {
         super(definition);
@@ -188,29 +189,30 @@ public final class FortressAugment extends YamlAugment
         if (settings == null) {
             return;
         }
-        boolean alreadyLocked = Math.abs(settings.forwardWalkSpeedMultiplier) <= ZERO_EPSILON
-                && Math.abs(settings.backwardWalkSpeedMultiplier) <= ZERO_EPSILON
-                && Math.abs(settings.strafeWalkSpeedMultiplier) <= ZERO_EPSILON
-                && Math.abs(settings.forwardRunSpeedMultiplier) <= ZERO_EPSILON
-                && Math.abs(settings.backwardRunSpeedMultiplier) <= ZERO_EPSILON
-                && Math.abs(settings.strafeRunSpeedMultiplier) <= ZERO_EPSILON
-                && Math.abs(settings.forwardCrouchSpeedMultiplier) <= ZERO_EPSILON
-                && Math.abs(settings.backwardCrouchSpeedMultiplier) <= ZERO_EPSILON
-                && Math.abs(settings.strafeCrouchSpeedMultiplier) <= ZERO_EPSILON
-                && Math.abs(settings.forwardSprintSpeedMultiplier) <= ZERO_EPSILON;
+        boolean alreadyLocked = Math
+                .abs(settings.forwardWalkSpeedMultiplier - LOCKED_SPEED_MULTIPLIER) <= LOCKED_EPSILON
+                && Math.abs(settings.backwardWalkSpeedMultiplier - LOCKED_SPEED_MULTIPLIER) <= LOCKED_EPSILON
+                && Math.abs(settings.strafeWalkSpeedMultiplier - LOCKED_SPEED_MULTIPLIER) <= LOCKED_EPSILON
+                && Math.abs(settings.forwardRunSpeedMultiplier - LOCKED_SPEED_MULTIPLIER) <= LOCKED_EPSILON
+                && Math.abs(settings.backwardRunSpeedMultiplier - LOCKED_SPEED_MULTIPLIER) <= LOCKED_EPSILON
+                && Math.abs(settings.strafeRunSpeedMultiplier - LOCKED_SPEED_MULTIPLIER) <= LOCKED_EPSILON
+                && Math.abs(settings.forwardCrouchSpeedMultiplier - LOCKED_SPEED_MULTIPLIER) <= LOCKED_EPSILON
+                && Math.abs(settings.backwardCrouchSpeedMultiplier - LOCKED_SPEED_MULTIPLIER) <= LOCKED_EPSILON
+                && Math.abs(settings.strafeCrouchSpeedMultiplier - LOCKED_SPEED_MULTIPLIER) <= LOCKED_EPSILON
+                && Math.abs(settings.forwardSprintSpeedMultiplier - LOCKED_SPEED_MULTIPLIER) <= LOCKED_EPSILON;
         if (alreadyLocked) {
             return;
         }
-        settings.forwardWalkSpeedMultiplier = 0.0F;
-        settings.backwardWalkSpeedMultiplier = 0.0F;
-        settings.strafeWalkSpeedMultiplier = 0.0F;
-        settings.forwardRunSpeedMultiplier = 0.0F;
-        settings.backwardRunSpeedMultiplier = 0.0F;
-        settings.strafeRunSpeedMultiplier = 0.0F;
-        settings.forwardCrouchSpeedMultiplier = 0.0F;
-        settings.backwardCrouchSpeedMultiplier = 0.0F;
-        settings.strafeCrouchSpeedMultiplier = 0.0F;
-        settings.forwardSprintSpeedMultiplier = 0.0F;
+        settings.forwardWalkSpeedMultiplier = LOCKED_SPEED_MULTIPLIER;
+        settings.backwardWalkSpeedMultiplier = LOCKED_SPEED_MULTIPLIER;
+        settings.strafeWalkSpeedMultiplier = LOCKED_SPEED_MULTIPLIER;
+        settings.forwardRunSpeedMultiplier = LOCKED_SPEED_MULTIPLIER;
+        settings.backwardRunSpeedMultiplier = LOCKED_SPEED_MULTIPLIER;
+        settings.strafeRunSpeedMultiplier = LOCKED_SPEED_MULTIPLIER;
+        settings.forwardCrouchSpeedMultiplier = LOCKED_SPEED_MULTIPLIER;
+        settings.backwardCrouchSpeedMultiplier = LOCKED_SPEED_MULTIPLIER;
+        settings.strafeCrouchSpeedMultiplier = LOCKED_SPEED_MULTIPLIER;
+        settings.forwardSprintSpeedMultiplier = LOCKED_SPEED_MULTIPLIER;
         movementManager.update(playerRef.getPacketHandler());
     }
 }
