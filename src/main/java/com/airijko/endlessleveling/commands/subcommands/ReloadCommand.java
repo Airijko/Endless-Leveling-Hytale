@@ -6,6 +6,7 @@ import com.airijko.endlessleveling.managers.ClassManager;
 import com.airijko.endlessleveling.managers.ConfigManager;
 import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.LoggingManager;
+import com.airijko.endlessleveling.managers.LanguageManager;
 import com.airijko.endlessleveling.managers.MobLevelingManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.managers.SkillManager;
@@ -28,6 +29,7 @@ public class ReloadCommand extends AbstractPlayerCommand {
     private static final String PERMISSION_NODE = HytalePermissions.fromCommand("endlessleveling.reload");
 
     private final ConfigManager configManager;
+    private final LanguageManager languageManager;
     private final LevelingManager levelingManager;
     private final MobLevelingManager mobLevelingManager;
     private final RaceManager raceManager;
@@ -39,6 +41,7 @@ public class ReloadCommand extends AbstractPlayerCommand {
         super("reload", "Reload EndlessLeveling configs, races, and classes");
         EndlessLeveling plugin = EndlessLeveling.getInstance();
         this.configManager = plugin != null ? plugin.getConfigManager() : null;
+        this.languageManager = plugin != null ? plugin.getLanguageManager() : null;
         this.levelingManager = plugin != null ? plugin.getLevelingManager() : null;
         this.mobLevelingManager = plugin != null ? plugin.getMobLevelingManager() : null;
         this.raceManager = plugin != null ? plugin.getRaceManager() : null;
@@ -58,6 +61,10 @@ public class ReloadCommand extends AbstractPlayerCommand {
         if (configManager != null) {
             configManager.load();
             LoggingManager.configureFromConfig(configManager);
+        }
+
+        if (languageManager != null) {
+            languageManager.reload();
         }
 
         if (levelingManager != null) {

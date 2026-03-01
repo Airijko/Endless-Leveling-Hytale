@@ -8,6 +8,7 @@ import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.managers.SkillManager;
+import com.airijko.endlessleveling.util.Lang;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
@@ -126,21 +127,29 @@ public class PlayerDataListener {
         }
 
         var packetHandler = playerRef.getPacketHandler();
-        var primaryMessage = Message.raw("You have " + skillPoints + " unspent skill points!").color("#ffc300");
+        var primaryMessage = Message.raw(
+                Lang.tr(playerRef.getUuid(), "notify.skills.unspent.primary",
+                        "You have {0} unspent skill points!", skillPoints))
+                .color("#ffc300");
         var secondaryMessage = Message.join(
-                Message.raw("Open ").color("#ff9d00"),
-                Message.raw("/skills").color("#4fd7f7"),
-                Message.raw(" to invest them").color("#ff9d00"));
+                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.unspent.secondary.open", "Open "))
+                        .color("#ff9d00"),
+                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.command", "/skills")).color("#4fd7f7"),
+                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.unspent.secondary.close", " to invest them"))
+                        .color("#ff9d00"));
         var icon = new ItemStack("Ingredient_Ice_Essence", 1).toPacket();
         NotificationUtil.sendNotification(packetHandler, primaryMessage, secondaryMessage, icon);
 
         var chatMessage = Message.join(
-                Message.raw("[EndlessLeveling] ").color("#4fd7f7"),
-                Message.raw("You still have ").color("#ffc300"),
+                Message.raw(Lang.tr(playerRef.getUuid(), "notify.prefix", "[EndlessLeveling] ")).color("#4fd7f7"),
+                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.chat.have", "You still have "))
+                        .color("#ffc300"),
                 Message.raw(String.valueOf(skillPoints)).color("#4fd7f7"),
-                Message.raw(" skill points. Use ").color("#ffc300"),
-                Message.raw("/skills").color("#4fd7f7"),
-                Message.raw(" to spend them.").color("#ffc300"));
+                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.chat.use", " skill points. Use "))
+                        .color("#ffc300"),
+                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.command", "/skills")).color("#4fd7f7"),
+                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.chat.end", " to spend them."))
+                        .color("#ffc300"));
         playerRef.sendMessage(chatMessage);
     }
 
@@ -154,11 +163,13 @@ public class PlayerDataListener {
         }
 
         StringBuilder builder = new StringBuilder();
-        builder.append("[EndlessLeveling] You have augments available to choose from:\n");
+        builder.append(Lang.tr(playerRef.getUuid(), "notify.augments.available.header",
+                "[EndlessLeveling] You have augments available to choose from:"))
+                .append("\n");
         for (PassiveTier tier : tiers) {
             builder.append("- ").append(tier.name()).append("\n");
         }
-        builder.append("Use /el augments to choose.");
+        builder.append(Lang.tr(playerRef.getUuid(), "notify.augments.available.footer", "Use /el augments to choose."));
         playerRef.sendMessage(Message.raw(builder.toString()).color("#4fd7f7"));
     }
 }

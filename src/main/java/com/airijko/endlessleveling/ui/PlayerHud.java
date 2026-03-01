@@ -10,6 +10,7 @@ import com.airijko.endlessleveling.managers.ClassManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.classes.CharacterClassDefinition;
 import com.airijko.endlessleveling.races.RaceDefinition;
+import com.airijko.endlessleveling.util.Lang;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -28,7 +29,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlayerHud extends CustomUIHud {
 
     public static final String ID = "EndlessLeveling:PlayerHud";
-    private static final String NO_RACE_LABEL = "No Race";
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final Map<UUID, PlayerHud> ACTIVE_HUDS = new ConcurrentHashMap<>();
     private static final Map<String, String> DEFAULT_CLASS_ICONS = Map.ofEntries(
@@ -105,11 +105,11 @@ public class PlayerHud extends CustomUIHud {
     private String resolveRaceLabel() {
         PlayerData data = getPlayerData();
         if (data == null) {
-            return "--";
+            return Lang.tr(targetPlayerRef.getUuid(), "hud.common.unavailable", "--");
         }
         String raceId = data.getRaceId();
         if (raceId == null || raceId.isBlank() || raceId.equalsIgnoreCase("none")) {
-            return NO_RACE_LABEL;
+            return Lang.tr(targetPlayerRef.getUuid(), "hud.race.none", "No Race");
         }
 
         if (raceManager != null && raceManager.isEnabled()) {
@@ -128,7 +128,7 @@ public class PlayerHud extends CustomUIHud {
     private String resolveClassLabel(boolean primary) {
         PlayerData data = getPlayerData();
         if (data == null) {
-            return "--";
+            return Lang.tr(targetPlayerRef.getUuid(), "hud.common.unavailable", "--");
         }
         if (classManager != null && classManager.isEnabled()) {
             CharacterClassDefinition def = primary
@@ -143,17 +143,17 @@ public class PlayerHud extends CustomUIHud {
             }
         }
         String id = primary ? data.getPrimaryClassId() : data.getSecondaryClassId();
-        return (id == null || id.isBlank()) ? "None" : id;
+        return (id == null || id.isBlank()) ? Lang.tr(targetPlayerRef.getUuid(), "hud.class.none", "None") : id;
     }
 
     private String resolveMobLevelLabel() {
         if (mobLevelingManager == null || !mobLevelingManager.isMobLevelingEnabled()) {
-            return "--";
+            return Lang.tr(targetPlayerRef.getUuid(), "hud.common.unavailable", "--");
         }
 
         Ref<EntityStore> ref = targetPlayerRef.getReference();
         if (ref == null) {
-            return "--";
+            return Lang.tr(targetPlayerRef.getUuid(), "hud.common.unavailable", "--");
         }
 
         // When player-based mob leveling is enabled, show the expected range for this
@@ -161,14 +161,15 @@ public class PlayerHud extends CustomUIHud {
         if (mobLevelingManager.isPlayerBasedMode()) {
             PlayerData data = getPlayerData();
             if (data == null) {
-                return "--";
+                return Lang.tr(targetPlayerRef.getUuid(), "hud.common.unavailable", "--");
             }
             var range = mobLevelingManager.getPlayerBasedLevelRange(data.getLevel());
             if (range != null) {
                 if (range.min() == range.max()) {
-                    return "Lv. " + range.min();
+                    return Lang.tr(targetPlayerRef.getUuid(), "hud.mob.level.single", "Lv. {0}", range.min());
                 }
-                return "Lv. " + range.min() + "-" + range.max();
+                return Lang.tr(targetPlayerRef.getUuid(), "hud.mob.level.range", "Lv. {0}-{1}", range.min(),
+                        range.max());
             }
         }
 
@@ -178,17 +179,19 @@ public class PlayerHud extends CustomUIHud {
                     ? store.getComponent(ref, TransformComponent.getComponentType())
                     : null;
             if (transform == null || transform.getPosition() == null) {
-                return "--";
+                return Lang.tr(targetPlayerRef.getUuid(), "hud.common.unavailable", "--");
             }
 
             int level = mobLevelingManager.resolveMobLevel(store, transform.getPosition());
-            return level > 0 ? "Lv " + level : "--";
+            return level > 0
+                    ? Lang.tr(targetPlayerRef.getUuid(), "hud.mob.level.single_compact", "Lv {0}", level)
+                    : Lang.tr(targetPlayerRef.getUuid(), "hud.common.unavailable", "--");
         } catch (IllegalStateException ex) {
             // Store.assertThread can throw when XP events fire on a different world thread;
             // fall back to no label instead of crashing the server.
             LOGGER.atFine().withCause(ex).log("Skipping mob level resolution off-thread for %s",
                     targetPlayerRef.getUuid());
-            return "--";
+            return Lang.tr(targetPlayerRef.getUuid(), "hud.common.unavailable", "--");
         }
     }
 

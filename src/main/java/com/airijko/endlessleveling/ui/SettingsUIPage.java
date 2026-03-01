@@ -4,6 +4,7 @@ import javax.annotation.Nonnull;
 
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.EndlessLeveling;
+import com.airijko.endlessleveling.util.Lang;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -72,26 +73,48 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         var raceManager = EndlessLeveling.getInstance().getRaceManager();
         boolean raceModelsDisabled = raceManager != null && raceManager.isRaceModelGloballyDisabled();
 
-        ui.set("#PlayerHudLabel.Text", "Player HUD");
-        ui.set("#PlayerHudValue.Text", data.isPlayerHudEnabled() ? "ON" : "OFF");
+        ui.set("#PlayerHudLabel.Text", Lang.tr(playerRef.getUuid(), "ui.settings.player_hud.label", "Player HUD"));
+        ui.set("#PlayerHudValue.Text", data.isPlayerHudEnabled()
+                ? Lang.tr(playerRef.getUuid(), "ui.common.toggle.on", "ON")
+                : Lang.tr(playerRef.getUuid(), "ui.common.toggle.off", "OFF"));
 
-        ui.set("#CriticalNotifLabel.Text", "Critical Hit Notifications");
-        ui.set("#CriticalNotifValue.Text", data.isCriticalNotifEnabled() ? "ON" : "OFF");
+        ui.set("#CriticalNotifLabel.Text",
+                Lang.tr(playerRef.getUuid(), "ui.settings.critical_notif.label", "Critical Hit Notifications"));
+        ui.set("#CriticalNotifValue.Text", data.isCriticalNotifEnabled()
+                ? Lang.tr(playerRef.getUuid(), "ui.common.toggle.on", "ON")
+                : Lang.tr(playerRef.getUuid(), "ui.common.toggle.off", "OFF"));
 
-        ui.set("#XpNotifLabel.Text", "XP Gain Notifications");
-        ui.set("#XpNotifValue.Text", data.isXpNotifEnabled() ? "ON" : "OFF");
+        ui.set("#XpNotifLabel.Text",
+                Lang.tr(playerRef.getUuid(), "ui.settings.xp_notif.label", "XP Gain Notifications"));
+        ui.set("#XpNotifValue.Text", data.isXpNotifEnabled()
+                ? Lang.tr(playerRef.getUuid(), "ui.common.toggle.on", "ON")
+                : Lang.tr(playerRef.getUuid(), "ui.common.toggle.off", "OFF"));
 
-        ui.set("#PassiveLevelUpNotifLabel.Text", "Passive Level-Up Notifications");
-        ui.set("#PassiveLevelUpNotifValue.Text", data.isPassiveLevelUpNotifEnabled() ? "ON" : "OFF");
+        ui.set("#PassiveLevelUpNotifLabel.Text",
+                Lang.tr(playerRef.getUuid(), "ui.settings.passive_levelup_notif.label",
+                        "Passive Level-Up Notifications"));
+        ui.set("#PassiveLevelUpNotifValue.Text", data.isPassiveLevelUpNotifEnabled()
+                ? Lang.tr(playerRef.getUuid(), "ui.common.toggle.on", "ON")
+                : Lang.tr(playerRef.getUuid(), "ui.common.toggle.off", "OFF"));
 
-        ui.set("#LuckDoubleDropsNotifLabel.Text", "Luck Double-Drop Notifications");
-        ui.set("#LuckDoubleDropsNotifValue.Text", data.isLuckDoubleDropsNotifEnabled() ? "ON" : "OFF");
+        ui.set("#LuckDoubleDropsNotifLabel.Text",
+                Lang.tr(playerRef.getUuid(), "ui.settings.luck_double_notif.label", "Luck Double-Drop Notifications"));
+        ui.set("#LuckDoubleDropsNotifValue.Text", data.isLuckDoubleDropsNotifEnabled()
+                ? Lang.tr(playerRef.getUuid(), "ui.common.toggle.on", "ON")
+                : Lang.tr(playerRef.getUuid(), "ui.common.toggle.off", "OFF"));
 
-        ui.set("#HealthRegenNotifLabel.Text", "Health Regen Notifications");
-        ui.set("#HealthRegenNotifValue.Text", data.isHealthRegenNotifEnabled() ? "ON" : "OFF");
+        ui.set("#HealthRegenNotifLabel.Text",
+                Lang.tr(playerRef.getUuid(), "ui.settings.health_regen_notif.label", "Health Regen Notifications"));
+        ui.set("#HealthRegenNotifValue.Text", data.isHealthRegenNotifEnabled()
+                ? Lang.tr(playerRef.getUuid(), "ui.common.toggle.on", "ON")
+                : Lang.tr(playerRef.getUuid(), "ui.common.toggle.off", "OFF"));
 
-        ui.set("#RaceModelLabel.Text", "Race Model Visuals");
-        ui.set("#RaceModelValue.Text", raceModelsDisabled ? "DISABLED" : data.isUseRaceModel() ? "ON" : "OFF");
+        ui.set("#RaceModelLabel.Text",
+                Lang.tr(playerRef.getUuid(), "ui.settings.race_model.label", "Race Model Visuals"));
+        ui.set("#RaceModelValue.Text", raceModelsDisabled
+                ? Lang.tr(playerRef.getUuid(), "ui.common.toggle.disabled", "DISABLED")
+                : data.isUseRaceModel() ? Lang.tr(playerRef.getUuid(), "ui.common.toggle.on", "ON")
+                        : Lang.tr(playerRef.getUuid(), "ui.common.toggle.off", "OFF"));
     }
 
     @Override
@@ -133,7 +156,11 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             boolean newValue = !playerData.isPlayerHudEnabled();
             playerData.setPlayerHudEnabled(newValue);
             changed = true;
-            player.sendMessage(Message.raw("Player HUD " + (newValue ? "enabled" : "disabled")).color("#ffc300"));
+            player.sendMessage(Message.raw(Lang.tr(playerRef.getUuid(), "ui.settings.player_hud.toggled",
+                    "Player HUD {0}",
+                    newValue ? Lang.tr(playerRef.getUuid(), "ui.common.state.enabled", "enabled")
+                            : Lang.tr(playerRef.getUuid(), "ui.common.state.disabled", "disabled")))
+                    .color("#ffc300"));
 
             Player entityPlayer = store.getComponent(ref, Player.getComponentType());
             if (entityPlayer != null) {
@@ -147,39 +174,55 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             boolean newValue = !playerData.isCriticalNotifEnabled();
             playerData.setCriticalNotifEnabled(newValue);
             changed = true;
-            player.sendMessage(Message.raw("Critical hit notifications " + (newValue ? "enabled" : "disabled"))
+            player.sendMessage(Message.raw(Lang.tr(playerRef.getUuid(), "ui.settings.critical_notif.toggled",
+                    "Critical hit notifications {0}",
+                    newValue ? Lang.tr(playerRef.getUuid(), "ui.common.state.enabled", "enabled")
+                            : Lang.tr(playerRef.getUuid(), "ui.common.state.disabled", "disabled")))
                     .color("#ffc300"));
         } else if ("toggle:xpNotif".equalsIgnoreCase(action)) {
             boolean newValue = !playerData.isXpNotifEnabled();
             playerData.setXpNotifEnabled(newValue);
             changed = true;
-            player.sendMessage(Message.raw("XP gain notifications " + (newValue ? "enabled" : "disabled"))
+            player.sendMessage(Message.raw(Lang.tr(playerRef.getUuid(), "ui.settings.xp_notif.toggled",
+                    "XP gain notifications {0}",
+                    newValue ? Lang.tr(playerRef.getUuid(), "ui.common.state.enabled", "enabled")
+                            : Lang.tr(playerRef.getUuid(), "ui.common.state.disabled", "disabled")))
                     .color("#ffc300"));
         } else if ("toggle:passiveLevelUpNotif".equalsIgnoreCase(action)) {
             boolean newValue = !playerData.isPassiveLevelUpNotifEnabled();
             playerData.setPassiveLevelUpNotifEnabled(newValue);
             changed = true;
             player.sendMessage(Message
-                    .raw("Passive level-up notifications " + (newValue ? "enabled" : "disabled"))
+                    .raw(Lang.tr(playerRef.getUuid(), "ui.settings.passive_levelup_notif.toggled",
+                            "Passive level-up notifications {0}",
+                            newValue ? Lang.tr(playerRef.getUuid(), "ui.common.state.enabled", "enabled")
+                                    : Lang.tr(playerRef.getUuid(), "ui.common.state.disabled", "disabled")))
                     .color("#ffc300"));
         } else if ("toggle:luckDoubleDropsNotif".equalsIgnoreCase(action)) {
             boolean newValue = !playerData.isLuckDoubleDropsNotifEnabled();
             playerData.setLuckDoubleDropsNotifEnabled(newValue);
             changed = true;
             player.sendMessage(Message
-                    .raw("Luck double-drop notifications " + (newValue ? "enabled" : "disabled"))
+                    .raw(Lang.tr(playerRef.getUuid(), "ui.settings.luck_double_notif.toggled",
+                            "Luck double-drop notifications {0}",
+                            newValue ? Lang.tr(playerRef.getUuid(), "ui.common.state.enabled", "enabled")
+                                    : Lang.tr(playerRef.getUuid(), "ui.common.state.disabled", "disabled")))
                     .color("#ffc300"));
         } else if ("toggle:healthRegenNotif".equalsIgnoreCase(action)) {
             boolean newValue = !playerData.isHealthRegenNotifEnabled();
             playerData.setHealthRegenNotifEnabled(newValue);
             changed = true;
             player.sendMessage(Message
-                    .raw("Health regen notifications " + (newValue ? "enabled" : "disabled"))
+                    .raw(Lang.tr(playerRef.getUuid(), "ui.settings.health_regen_notif.toggled",
+                            "Health regen notifications {0}",
+                            newValue ? Lang.tr(playerRef.getUuid(), "ui.common.state.enabled", "enabled")
+                                    : Lang.tr(playerRef.getUuid(), "ui.common.state.disabled", "disabled")))
                     .color("#ffc300"));
         } else if ("toggle:raceModel".equalsIgnoreCase(action)) {
             if (raceManager != null && raceManager.isRaceModelGloballyDisabled()) {
                 player.sendMessage(Message
-                        .raw("Race model visuals are disabled by the server configuration.")
+                        .raw(Lang.tr(playerRef.getUuid(), "ui.settings.race_model.globally_disabled",
+                                "Race model visuals are disabled by the server configuration."))
                         .color("#ff6666"));
                 if (raceManager != null) {
                     raceManager.resetRaceModelIfOnline(playerData);
@@ -195,13 +238,17 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     raceManager.applyRaceModelIfEnabled(playerData);
                 }
                 player.sendMessage(Message
-                        .raw("Race model visuals enabled").color("#4fd7f7"));
+                        .raw(Lang.tr(playerRef.getUuid(), "ui.settings.race_model.enabled",
+                                "Race model visuals enabled"))
+                        .color("#4fd7f7"));
             } else {
                 if (raceManager != null) {
                     raceManager.resetRaceModelIfOnline(playerData);
                 }
                 player.sendMessage(Message
-                        .raw("Race model visuals disabled").color("#ff9900"));
+                        .raw(Lang.tr(playerRef.getUuid(), "ui.settings.race_model.disabled",
+                                "Race model visuals disabled"))
+                        .color("#ff9900"));
             }
         }
 

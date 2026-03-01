@@ -347,6 +347,7 @@ public class PlayerDataManager {
             useRaceModelDefault = false;
         }
         data.setUseRaceModel(useRaceModelDefault);
+        data.setLanguage(PlayerData.DEFAULT_LANGUAGE);
     }
 
     private Map<String, Object> castToStringObjectMap(Object value) {
@@ -773,6 +774,7 @@ public class PlayerDataManager {
         options.put("luckDoubleDropsNotif", data.isLuckDoubleDropsNotifEnabled());
         options.put("healthRegenNotif", data.isHealthRegenNotifEnabled());
         options.put("useRaceModel", data.isUseRaceModel());
+        options.put("language", data.getLanguage());
         map.put("options", options);
 
         map.put("profiles", buildProfilesSection(data));
@@ -913,12 +915,14 @@ public class PlayerDataManager {
         Object healthRegenNotif = options != null ? options.get("healthRegenNotif")
                 : map.get("healthRegenNotif");
         Object useRaceModel = options != null ? options.get("useRaceModel") : map.get("useRaceModel");
+        Object language = options != null ? options.get("language") : map.get("language");
         data.setPlayerHudEnabled(parseBoolean(playerHud, true));
         data.setCriticalNotifEnabled(parseBoolean(criticalNotif, true));
         data.setXpNotifEnabled(parseBoolean(xpNotif, true));
         data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
         data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
         data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
+        data.setLanguage(parseString(language));
         boolean useRaceModelValue = parseBoolean(useRaceModel, defaultUseRaceModel());
         if (isRaceModelGloballyDisabled()) {
             useRaceModelValue = false;

@@ -22,6 +22,7 @@ public class PlayerData {
 
     public static final String DEFAULT_RACE_ID = "Human";
     public static final String DEFAULT_PRIMARY_CLASS_ID = "Adventurer";
+    public static final String DEFAULT_LANGUAGE = "en_US";
     public static final int MAX_PROFILES = 5;
     public static final int MAX_PROFILE_NAME_LENGTH = 32;
 
@@ -39,6 +40,7 @@ public class PlayerData {
     private boolean luckDoubleDropsNotifEnabled;
     private boolean healthRegenNotifEnabled;
     private boolean useRaceModel;
+    private String language;
 
     public PlayerData(UUID uuid, String playerName) {
         this(uuid, playerName, 0);
@@ -58,6 +60,7 @@ public class PlayerData {
         this.luckDoubleDropsNotifEnabled = true;
         this.healthRegenNotifEnabled = true;
         this.useRaceModel = false;
+        this.language = DEFAULT_LANGUAGE;
         LOGGER.atInfo().log("PlayerData created for player: %s (UUID: %s) with profile slot 1", playerName, uuid);
     }
 
@@ -338,6 +341,26 @@ public class PlayerData {
 
     public void setUseRaceModel(boolean useRaceModel) {
         this.useRaceModel = useRaceModel;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        if (language == null || language.isBlank()) {
+            this.language = DEFAULT_LANGUAGE;
+            return;
+        }
+
+        String normalized = language.trim().replace('-', '_');
+        String[] parts = normalized.split("_");
+        if (parts.length == 1) {
+            this.language = parts[0].toLowerCase(Locale.ROOT);
+            return;
+        }
+
+        this.language = parts[0].toLowerCase(Locale.ROOT) + "_" + parts[1].toUpperCase(Locale.ROOT);
     }
 
     // --- Skill Level handling ---

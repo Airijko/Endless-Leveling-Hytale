@@ -7,6 +7,7 @@ import com.airijko.endlessleveling.commands.subcommands.ResetLevelCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetCooldownsCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetSkillPointsCommand;
 import com.airijko.endlessleveling.commands.subcommands.ReloadCommand;
+import com.airijko.endlessleveling.commands.subcommands.LanguageCommand;
 import com.airijko.endlessleveling.commands.subcommands.AugmentRefreshCommand;
 import com.airijko.endlessleveling.commands.subcommands.AugmentTestCommand;
 import com.airijko.endlessleveling.commands.subcommands.SetLevelCommand;
@@ -42,6 +43,7 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
                 this.addSubCommand(new ResetSkillPointsCommand());
                 this.addSubCommand(new ResetCooldownsCommand());
                 this.addSubCommand(new ReloadCommand());
+                this.addSubCommand(new LanguageCommand());
                 this.addSubCommand(new AugmentRefreshCommand());
                 this.addSubCommand(new AugmentTestCommand());
 

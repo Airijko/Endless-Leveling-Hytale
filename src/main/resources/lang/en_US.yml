@@ -1,0 +1,73 @@
+meta:
+  locale_name: "English (US)"
+
+notify:
+  prefix: "[EndlessLeveling] "
+  skills:
+    command: "/skills"
+    unspent:
+      primary: "You have {0} unspent skill points!"
+      secondary:
+        open: "Open "
+        close: " to invest them"
+    chat:
+      have: "You still have "
+      use: " skill points. Use "
+      end: " to spend them."
+  augments:
+    available:
+      header: "[EndlessLeveling] You have augments available to choose from:"
+      footer: "Use /el augments to choose."
+
+hud:
+  common:
+    unavailable: "--"
+  race:
+    none: "No Race"
+  class:
+    none: "None"
+  mob:
+    level:
+      single: "Lv. {0}"
+      single_compact: "Lv {0}"
+      range: "Lv. {0}-{1}"
+
+ui:
+  common:
+    toggle:
+      on: "ON"
+      off: "OFF"
+      disabled: "DISABLED"
+    state:
+      enabled: "enabled"
+      disabled: "disabled"
+
+  settings:
+    player_hud:
+      label: "Player HUD"
+      toggled: "Player HUD {0}"
+    critical_notif:
+      label: "Critical Hit Notifications"
+      toggled: "Critical hit notifications {0}"
+    xp_notif:
+      label: "XP Gain Notifications"
+      toggled: "XP gain notifications {0}"
+    passive_levelup_notif:
+      label: "Passive Level-Up Notifications"
+      toggled: "Passive level-up notifications {0}"
+    luck_double_notif:
+      label: "Luck Double-Drop Notifications"
+      toggled: "Luck double-drop notifications {0}"
+    health_regen_notif:
+      label: "Health Regen Notifications"
+      toggled: "Health regen notifications {0}"
+    race_model:
+      label: "Race Model Visuals"
+      globally_disabled: "Race model visuals are disabled by the server configuration."
+      enabled: "Race model visuals enabled"
+      disabled: "Race model visuals disabled"
+
+command:
+  language:
+    invalid: "Unknown locale '{0}'. Available locales: {1}"
+    updated: "Language set to {0}."

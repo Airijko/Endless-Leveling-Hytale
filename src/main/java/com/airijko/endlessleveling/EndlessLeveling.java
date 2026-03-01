@@ -50,6 +50,7 @@ public class EndlessLeveling extends JavaPlugin {
     // ------------------------
     private PluginFilesManager filesManager;
     private ConfigManager configManager;
+    private LanguageManager languageManager;
     private PlayerDataManager playerDataManager;
     private LevelingManager levelingManager;
     private MobLevelingManager mobLevelingManager;
@@ -94,6 +95,10 @@ public class EndlessLeveling extends JavaPlugin {
 
     public ConfigManager getConfigManager() {
         return configManager;
+    }
+
+    public LanguageManager getLanguageManager() {
+        return languageManager;
     }
 
     public RaceManager getRaceManager() {
@@ -147,6 +152,7 @@ public class EndlessLeveling extends JavaPlugin {
         // Initialize all folders and managers
         filesManager = new PluginFilesManager(this);
         configManager = new ConfigManager(filesManager.getConfigFile());
+        languageManager = new LanguageManager(filesManager, configManager);
 
         // Load weapon ID and keyword overrides before systems start.
         ClassWeaponResolver.configure(WeaponConfig.load(filesManager.getWeaponsFile()));
