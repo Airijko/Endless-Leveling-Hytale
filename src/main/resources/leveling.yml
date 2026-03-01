@@ -111,7 +111,7 @@ Mob_Leveling:
     # 0.0 = pure DISTANCE, 1.0 = pure PLAYER
     # DISTANCE weight is derived as (1 - Player_Weight).
     Mixed:
-      Player_Weight: 0.5
+      Player_Weight: 0.75
 
     # Mob level is based on the player's level
   Player_Based:
@@ -143,9 +143,6 @@ Mob_Leveling:
       # no special handling occurs — XP penalties handle it.
       # This exists for optional future logic.
       Max_Internal_Level_Gap: 999
-
-      # If true, mob level is locked at spawn and never recalculated
-      Lock_Level_On_Spawn: true
 
     # Used when Mode is FIXED
     Fixed_Level:
@@ -217,4 +214,4 @@ Mob_Leveling:
     Show_Mob_Level: true
 
 # DON'T EDIT THIS LINE BELOW
-config_version: 5
+config_version: 6

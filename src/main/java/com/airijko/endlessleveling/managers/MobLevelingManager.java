@@ -42,6 +42,8 @@ public class MobLevelingManager {
     private final Map<String, AreaOverride> areaOverrides = new ConcurrentHashMap<>();
     private final Map<Integer, Integer> entityLevelOverrides = new ConcurrentHashMap<>();
     private final Map<Integer, UUID> entityPartyOverrides = new ConcurrentHashMap<>();
+    private final Map<Integer, Float> entityBaseHpMax = new ConcurrentHashMap<>();
+    private final Map<Integer, Integer> entityAppliedLevel = new ConcurrentHashMap<>();
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private final ConfigManager configManager;
     private final PlayerDataManager playerDataManager;
@@ -94,8 +96,6 @@ public class MobLevelingManager {
             return false;
 
         int idx = ref.getIndex();
-        if (applied.contains(idx))
-            return false;
 
         // skip players
         PlayerRef playerRef = resolveComponent(ref, store, commandBuffer, PlayerRef.getComponentType());
@@ -114,6 +114,10 @@ public class MobLevelingManager {
         }
 
         int mobLevel = resolveMobLevel(ref, commandBuffer);
+        int lastAppliedLevel = entityAppliedLevel.getOrDefault(idx, Integer.MIN_VALUE);
+        boolean alreadyApplied = applied.contains(idx);
+        if (alreadyApplied && lastAppliedLevel == mobLevel)
+            return false;
 
         EntityStatMap statMap = resolveComponent(ref, store, commandBuffer, EntityStatMap.getComponentType());
         if (statMap == null)
@@ -126,7 +130,16 @@ public class MobLevelingManager {
         try {
             double mult = getMobHealthMultiplierForLevel(mobLevel);
             float oldMax = hp.getMax();
-            float newMax = (float) Math.max(1.0, oldMax * mult);
+            if (!alreadyApplied) {
+                entityBaseHpMax.put(idx, oldMax);
+            }
+            float baseMax = entityBaseHpMax.getOrDefault(idx, oldMax);
+            if (baseMax <= 0.0f) {
+                baseMax = oldMax;
+                entityBaseHpMax.put(idx, baseMax);
+            }
+
+            float newMax = (float) Math.max(1.0, baseMax * mult);
             if (!setHpMax(hp, newMax))
                 return false;
 
@@ -140,6 +153,7 @@ public class MobLevelingManager {
             newCur = Math.max(0.01f, Math.min(newMax, newCur));
             statMap.setStatValue(DefaultEntityStatTypes.getHealth(), newCur);
             applied.add(idx);
+            entityAppliedLevel.put(idx, mobLevel);
             return true;
         } catch (Throwable t) {
             LOGGER.atWarning().log("MobLeveling: failed to scale entity %d: %s", idx, t.toString());
@@ -160,6 +174,8 @@ public class MobLevelingManager {
         entityLevelOverrides.remove(entityIndex);
         entityPartyOverrides.remove(entityIndex);
         cachedPlayerDiffs.remove(entityIndex);
+        entityBaseHpMax.remove(entityIndex);
+        entityAppliedLevel.remove(entityIndex);
     }
 
     private boolean setHpMax(EntityStatValue hp, float newMax) {
@@ -352,6 +368,9 @@ public class MobLevelingManager {
 
         int resolved = resolvePlayerBasedLevelWithoutFallback(store, mobPos, entityId, true);
         if (resolved > 0) {
+            if (entityId != null && shouldLockPlayerLevelOnSpawn()) {
+                setEntityLevelOverride(entityId, resolved);
+            }
             return resolved;
         }
         return fallbackPlayerSourceLevel(mobPos);
@@ -413,13 +432,21 @@ public class MobLevelingManager {
 
         int playerLowerBound = resolvePlayerLowerBoundForMixed(store, mobPos);
         if (playerLowerBound > 0 && distanceLevel < playerLowerBound) {
-            return playerLevel;
+            int resolved = playerLevel;
+            if (entityId != null && shouldLockPlayerLevelOnSpawn()) {
+                setEntityLevelOverride(entityId, resolved);
+            }
+            return resolved;
         }
 
         double playerWeight = getMixedPlayerWeight();
         double distanceWeight = 1.0D - playerWeight;
         double blended = (playerLevel * playerWeight) + (distanceLevel * distanceWeight);
-        return (int) Math.round(blended);
+        int resolved = (int) Math.round(blended);
+        if (entityId != null && shouldLockPlayerLevelOnSpawn()) {
+            setEntityLevelOverride(entityId, resolved);
+        }
+        return resolved;
     }
 
     private int resolvePlayerLowerBoundForMixed(Store<EntityStore> store, Vector3d mobPos) {
@@ -490,7 +517,7 @@ public class MobLevelingManager {
         }
 
         int resolvedLevel = sampleLevel(minLevel, maxLevel, entityId, mobPos);
-        if (applyLock && isPartyLockLevelOnSpawnEnabled() && entityId != null) {
+        if (applyLock && entityId != null) {
             setEntityLevelOverride(entityId, resolvedLevel);
             if (dominant.partyId() != null) {
                 entityPartyOverrides.put(entityId, dominant.partyId());
@@ -784,10 +811,6 @@ public class MobLevelingManager {
         };
     }
 
-    private boolean isPartyLockLevelOnSpawnEnabled() {
-        return getPlayerBasedBoolean("Party_System.Lock_Level_On_Spawn", true);
-    }
-
     private int getPlayerBasedOffset() {
         return getPlayerBasedInt("Offset", 0);
     }
@@ -835,6 +858,10 @@ public class MobLevelingManager {
             return defaultValue;
         }
         return Boolean.parseBoolean(raw.trim());
+    }
+
+    private boolean shouldLockPlayerLevelOnSpawn() {
+        return true;
     }
 
     private double getMixedPlayerWeight() {

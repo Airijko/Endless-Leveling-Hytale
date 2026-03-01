@@ -22,6 +22,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.npc.entities.NPCEntity;
 
 import javax.annotation.Nonnull;
+import java.lang.reflect.Method;
 
 /**
  * Applies level-based health scaling exactly once when a mob enters the store
@@ -66,7 +67,10 @@ public class MobHealthModifierSystem extends HolderSystem<EntityStore> {
                 return;
 
             Vector3d position = resolvePosition(holder);
-            int mobLevel = mobLevelingManager.resolveMobLevel(store, position, System.identityHashCode(holder));
+            Integer entityIndex = resolveEntityIndex(holder);
+            int mobLevel = entityIndex != null
+                    ? mobLevelingManager.resolveMobLevel(store, position, entityIndex)
+                    : mobLevelingManager.resolveMobLevel(store, position);
             applyHealthScaling(statMap, mobLevel);
         } catch (Throwable t) {
             LOGGER.atWarning().log("MobHealthModifierSystem: failed to scale mob health: %s", t.toString());
@@ -119,6 +123,34 @@ public class MobHealthModifierSystem extends HolderSystem<EntityStore> {
     private Vector3d resolvePosition(Holder<EntityStore> holder) {
         TransformComponent transform = holder.getComponent(TransformComponent.getComponentType());
         return transform != null ? transform.getPosition() : null;
+    }
+
+    private Integer resolveEntityIndex(Holder<EntityStore> holder) {
+        if (holder == null) {
+            return null;
+        }
+        try {
+            Method getIndex = holder.getClass().getMethod("getIndex");
+            Object index = getIndex.invoke(holder);
+            if (index instanceof Number number) {
+                return number.intValue();
+            }
+        } catch (Exception ignored) {
+        }
+
+        try {
+            Method getReference = holder.getClass().getMethod("getReference");
+            Object ref = getReference.invoke(holder);
+            if (ref != null) {
+                Method getIndex = ref.getClass().getMethod("getIndex");
+                Object index = getIndex.invoke(ref);
+                if (index instanceof Number number) {
+                    return number.intValue();
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 
     private void applyHealthScaling(EntityStatMap statMap, int mobLevel) {
