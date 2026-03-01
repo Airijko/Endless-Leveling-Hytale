@@ -88,9 +88,19 @@ public class PlayerHud extends CustomUIHud {
         uiCommandBuilder.set("#InfoRaceValue.Text", resolveRaceLabel());
         uiCommandBuilder.set("#InfoMobLevelValue.Text", resolveMobLevelLabel());
         uiCommandBuilder.set("#PrimaryClass.Text", resolveClassLabel(true));
-        uiCommandBuilder.set("#SecondaryClass.Text", resolveClassLabel(false));
+        boolean secondaryEnabled = classManager != null && classManager.isSecondaryClassEnabled();
+        uiCommandBuilder.set("#SecondaryClassRow.Visible", secondaryEnabled);
+        uiCommandBuilder.set("#SecondaryClass.Visible", secondaryEnabled);
+        if (secondaryEnabled) {
+            uiCommandBuilder.set("#SecondaryClass.Text", resolveClassLabel(false));
+        } else {
+            uiCommandBuilder.set("#SecondaryClass.Text", "");
+            uiCommandBuilder.set("#SecondaryIcon.Visible", false);
+        }
         setClassIcon(uiCommandBuilder, "#PrimaryIcon", resolveClassIconId(true));
-        setClassIcon(uiCommandBuilder, "#SecondaryIcon", resolveClassIconId(false));
+        if (secondaryEnabled) {
+            setClassIcon(uiCommandBuilder, "#SecondaryIcon", resolveClassIconId(false));
+        }
         update(false, uiCommandBuilder);
     }
 

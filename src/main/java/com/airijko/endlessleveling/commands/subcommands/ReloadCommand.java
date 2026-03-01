@@ -8,6 +8,7 @@ import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.LoggingManager;
 import com.airijko.endlessleveling.managers.LanguageManager;
 import com.airijko.endlessleveling.managers.MobLevelingManager;
+import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.ui.PlayerHud;
@@ -34,6 +35,7 @@ public class ReloadCommand extends AbstractPlayerCommand {
     private final MobLevelingManager mobLevelingManager;
     private final RaceManager raceManager;
     private final ClassManager classManager;
+    private final PlayerDataManager playerDataManager;
     private final SkillManager skillManager;
     private final AugmentManager augmentManager;
 
@@ -46,6 +48,7 @@ public class ReloadCommand extends AbstractPlayerCommand {
         this.mobLevelingManager = plugin != null ? plugin.getMobLevelingManager() : null;
         this.raceManager = plugin != null ? plugin.getRaceManager() : null;
         this.classManager = plugin != null ? plugin.getClassManager() : null;
+        this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
         this.skillManager = plugin != null ? plugin.getSkillManager() : null;
         this.augmentManager = plugin != null ? plugin.getAugmentManager() : null;
     }
@@ -85,6 +88,12 @@ public class ReloadCommand extends AbstractPlayerCommand {
 
         if (classManager != null) {
             classManager.reload();
+        }
+
+        if (playerDataManager != null) {
+            for (var data : playerDataManager.getAllCached()) {
+                playerDataManager.save(data);
+            }
         }
 
         if (augmentManager != null) {

@@ -84,7 +84,7 @@ Group #InfoPanel {
     }
   }
 
-  Group {
+  Group #SecondaryClassRow {
     LayoutMode: Left;
 
     ItemIcon #SecondaryIcon {

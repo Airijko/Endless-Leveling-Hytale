@@ -107,6 +107,7 @@ force_builtin_races: true # If true, ignore custom race files and keep bundled r
 # CLASS SETTINGS
 # ------------------------------------------------------------
 enable_classes: true # Enable or disable the class system
+enable_secondary_class: true # Enable or disable secondary class assignments globally
 default_primary_class: "Adventurer" # Use built-in fallback default primary class
 default_secondary_class: "None" # Optional secondary class default (None disables it)
 choose_class_cooldown: 1800 # Cooldown (seconds) before changing class again

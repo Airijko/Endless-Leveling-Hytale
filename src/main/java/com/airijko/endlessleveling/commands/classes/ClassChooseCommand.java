@@ -127,6 +127,11 @@ public class ClassChooseCommand extends AbstractPlayerCommand {
             String classInput,
             Ref<EntityStore> ref,
             Store<EntityStore> store) {
+        if (!classManager.isSecondaryClassEnabled()) {
+            senderRef.sendMessage(Message.raw("Secondary classes are currently disabled.").color("#ff6666"));
+            return;
+        }
+
         if (classInput.equalsIgnoreCase("none") || classInput.equalsIgnoreCase("clear")) {
             clearSecondary(senderRef, data, ref, store);
             return;
@@ -182,6 +187,16 @@ public class ClassChooseCommand extends AbstractPlayerCommand {
             PlayerData data,
             Ref<EntityStore> ref,
             Store<EntityStore> store) {
+        if (!classManager.isSecondaryClassEnabled()) {
+            if (data.getSecondaryClassId() != null) {
+                data.setSecondaryClassId(null);
+                playerDataManager.save(data);
+                reapplyBonuses(data, ref, store);
+            }
+            senderRef.sendMessage(Message.raw("Secondary classes are currently disabled.").color("#ff6666"));
+            return;
+        }
+
         if (data.getSecondaryClassId() == null) {
             senderRef.sendMessage(Message.raw("You do not have a secondary class assigned.").color("#ff9900"));
             return;

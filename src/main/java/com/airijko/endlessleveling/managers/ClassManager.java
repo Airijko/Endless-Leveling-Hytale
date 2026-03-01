@@ -47,6 +47,7 @@ public class ClassManager {
     private final PluginFilesManager filesManager;
     private final ConfigManager configManager;
     private final boolean classesEnabled;
+    private boolean secondaryClassEnabled = true;
     private final boolean forceBuiltinClasses;
     private final Map<String, CharacterClassDefinition> classesByKey = new HashMap<>();
     private final Yaml yaml = new Yaml();
@@ -63,6 +64,9 @@ public class ClassManager {
         if (configManager == null) {
             return;
         }
+
+        this.secondaryClassEnabled = parseBoolean(configManager.get("enable_secondary_class", Boolean.TRUE, false),
+                true);
 
         Object primaryNode = configManager.get("default_primary_class", defaultPrimaryClassId, false);
         if (isNoneLiteral(primaryNode)) {
@@ -90,6 +94,8 @@ public class ClassManager {
         this.filesManager = Objects.requireNonNull(filesManager, "PluginFilesManager is required");
         this.configManager = configManager;
         this.classesEnabled = parseBoolean(configManager.get("enable_classes", Boolean.TRUE, false), true);
+        this.secondaryClassEnabled = parseBoolean(configManager.get("enable_secondary_class", Boolean.TRUE, false),
+                true);
         this.forceBuiltinClasses = parseBoolean(configManager.get("force_builtin_classes", Boolean.FALSE, false),
                 false);
 
@@ -140,6 +146,10 @@ public class ClassManager {
         return classesEnabled && !classesByKey.isEmpty();
     }
 
+    public boolean isSecondaryClassEnabled() {
+        return isEnabled() && secondaryClassEnabled;
+    }
+
     public Collection<CharacterClassDefinition> getLoadedClasses() {
         return Collections.unmodifiableCollection(classesByKey.values());
     }
@@ -165,6 +175,12 @@ public class ClassManager {
 
     public CharacterClassDefinition getPlayerSecondaryClass(PlayerData data) {
         if (data == null) {
+            return null;
+        }
+        if (!isSecondaryClassEnabled()) {
+            if (data.getSecondaryClassId() != null) {
+                data.setSecondaryClassId(null);
+            }
             return null;
         }
         String resolvedId = resolveSecondaryClassIdentifier(data.getSecondaryClassId());
@@ -205,6 +221,10 @@ public class ClassManager {
 
     public CharacterClassDefinition setPlayerSecondaryClass(PlayerData data, String requestedValue) {
         if (data == null) {
+            return null;
+        }
+        if (!isSecondaryClassEnabled()) {
+            data.setSecondaryClassId(null);
             return null;
         }
         String resolvedId = resolveSecondaryClassIdentifier(requestedValue);
@@ -357,7 +377,7 @@ public class ClassManager {
     }
 
     public String resolveSecondaryClassIdentifier(String requestedValue) {
-        if (!isEnabled()) {
+        if (!isSecondaryClassEnabled()) {
             return null;
         }
         if (requestedValue == null || requestedValue.isBlank()) {

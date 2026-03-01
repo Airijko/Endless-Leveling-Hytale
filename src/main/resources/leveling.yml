@@ -111,7 +111,7 @@ Mob_Leveling:
     # 0.0 = pure DISTANCE, 1.0 = pure PLAYER
     # DISTANCE weight is derived as (1 - Player_Weight).
     Mixed:
-      Player_Weight: 0.5
+      Player_Weight: 0.75
 
     # Mob level is based on the player's level
   Player_Based:
@@ -171,7 +171,7 @@ Mob_Leveling:
       # +Max_Difference -> At_Positive_Max_Difference
       # values below/above that range use the corresponding Below/Above values.
       Enabled: true
-      At_Negative_Max_Difference: 0.1 # e.g. mob is -Max_Difference relative to player -> 10% DR
+      At_Negative_Max_Difference: 0.0 # e.g. mob is -Max_Difference relative to player -> 0% DR
       At_Positive_Max_Difference: 0.7 # e.g. mob is +Max_Difference relative to player -> 70% DR
       Below_Negative_Max_Difference: 0.0 # e.g. mob is below -Max_Difference relative to player
       Above_Positive_Max_Difference: 0.9 # e.g. mob is above +Max_Difference relative to player -> 90% DR

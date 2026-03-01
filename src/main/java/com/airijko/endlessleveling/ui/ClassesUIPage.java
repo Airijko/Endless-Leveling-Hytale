@@ -329,6 +329,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             long primaryCooldownRemaining,
             long secondaryCooldownRemaining,
             boolean operatorBypass) {
+        boolean secondaryEnabled = classManager != null && classManager.isSecondaryClassEnabled();
         updateSorceryDisplay(ui, data);
         CharacterClassDefinition selection = resolveSelection(primary);
         if (selection == null) {
@@ -351,9 +352,12 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             String status = "Select a class to preview bonuses.";
             if (operatorBypass) {
                 status += " Operator bypass active; swapping is immediate.";
-            } else if (primaryCooldownRemaining > 0L || secondaryCooldownRemaining > 0L) {
-                status += " Primary " + formatSlotAvailability(primaryCooldownRemaining)
-                        + ", Secondary " + formatSlotAvailability(secondaryCooldownRemaining) + ".";
+            } else if (primaryCooldownRemaining > 0L || (secondaryEnabled && secondaryCooldownRemaining > 0L)) {
+                status += " Primary " + formatSlotAvailability(primaryCooldownRemaining);
+                if (secondaryEnabled) {
+                    status += ", Secondary " + formatSlotAvailability(secondaryCooldownRemaining);
+                }
+                status += ".";
             } else if (cooldownSeconds > 0L) {
                 status += " Changing classes triggers a " + formatDuration(cooldownSeconds) + " cooldown.";
             }
@@ -386,19 +390,25 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         boolean canModifyPrimary = operatorBypass || primaryCooldownRemaining <= 0L;
         boolean canModifySecondary = operatorBypass || secondaryCooldownRemaining <= 0L;
         ui.set("#ConfirmPrimaryButton.Visible", canPrimary && canModifyPrimary);
-        ui.set("#ConfirmSecondaryButton.Visible", canSecondary && canModifySecondary);
+        ui.set("#ConfirmSecondaryButton.Visible", secondaryEnabled && canSecondary && canModifySecondary);
 
-        StringBuilder statusBuilder = new StringBuilder(
-                "Primary classes grant 100% of bonuses. Secondary classes grant 50% of weapon + passive effects.");
+        StringBuilder statusBuilder = new StringBuilder("Primary classes grant 100% of bonuses.");
+        if (secondaryEnabled) {
+            statusBuilder.append(' ').append("Secondary classes grant 50% of weapon + passive effects.");
+        } else {
+            statusBuilder.append(' ').append("Secondary classes are disabled in config.");
+        }
         if (operatorBypass) {
             statusBuilder.append(' ').append("Operator bypass active; swapping is immediate.");
-        } else if (primaryCooldownRemaining > 0L || secondaryCooldownRemaining > 0L) {
+        } else if (primaryCooldownRemaining > 0L || (secondaryEnabled && secondaryCooldownRemaining > 0L)) {
             statusBuilder.append(' ')
                     .append("Primary ")
-                    .append(formatSlotAvailability(primaryCooldownRemaining))
-                    .append(", Secondary ")
-                    .append(formatSlotAvailability(secondaryCooldownRemaining))
-                    .append('.');
+                    .append(formatSlotAvailability(primaryCooldownRemaining));
+            if (secondaryEnabled) {
+                statusBuilder.append(", Secondary ")
+                        .append(formatSlotAvailability(secondaryCooldownRemaining));
+            }
+            statusBuilder.append('.');
         } else if (cooldownSeconds > 0L) {
             statusBuilder.append(' ')
                     .append("Changing classes triggers a ")
@@ -637,6 +647,17 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             PlayerData data,
             Ref<EntityStore> ref,
             Store<EntityStore> store) {
+        if (classManager == null || !classManager.isSecondaryClassEnabled()) {
+            if (data.getSecondaryClassId() != null) {
+                data.setSecondaryClassId(null);
+                playerDataManager.save(data);
+                reapplyBonuses(data, ref, store);
+            }
+            playerRef.sendMessage(Message.raw("Secondary classes are currently disabled.").color("#ff6666"));
+            refreshClassUi(data, OperatorHelper.isOperator(playerRef));
+            return;
+        }
+
         if (targetId == null || targetId.isBlank()) {
             playerRef.sendMessage(Message.raw("Select a class to set as secondary.").color("#ff9900"));
             return;
@@ -684,6 +705,17 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private void clearSecondary(PlayerData data,
             Ref<EntityStore> ref,
             Store<EntityStore> store) {
+        if (classManager == null || !classManager.isSecondaryClassEnabled()) {
+            if (data.getSecondaryClassId() != null) {
+                data.setSecondaryClassId(null);
+                playerDataManager.save(data);
+                reapplyBonuses(data, ref, store);
+            }
+            playerRef.sendMessage(Message.raw("Secondary classes are currently disabled.").color("#ff6666"));
+            refreshClassUi(data, OperatorHelper.isOperator(playerRef));
+            return;
+        }
+
         if (data.getSecondaryClassId() == null) {
             playerRef.sendMessage(Message.raw("You do not have a secondary class assigned.").color("#ff9900"));
             return;
