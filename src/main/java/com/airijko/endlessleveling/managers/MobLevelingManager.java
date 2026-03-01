@@ -331,7 +331,7 @@ public class MobLevelingManager {
             }
         }
 
-        int computed = computePlayerModeLevelFromNearestPlayer(store, mobPos);
+        int computed = computePlayerModeLevelFromNearestPlayer(store, mobPos, entityId);
         if (computed > 0) {
             return clampToConfiguredRange(computed);
         }
@@ -357,7 +357,7 @@ public class MobLevelingManager {
         }
 
         Vector3d mobPos = getWorldPosition(ref, commandBuffer);
-        int resolvedLevel = computePlayerModeLevelFromNearestPlayer(effectiveStore, mobPos);
+        int resolvedLevel = computePlayerModeLevelFromNearestPlayer(effectiveStore, mobPos, entityId);
         if (resolvedLevel <= 0) {
             return false;
         }
@@ -366,7 +366,7 @@ public class MobLevelingManager {
         return true;
     }
 
-    private int computePlayerModeLevelFromNearestPlayer(Store<EntityStore> store, Vector3d mobPos) {
+    private int computePlayerModeLevelFromNearestPlayer(Store<EntityStore> store, Vector3d mobPos, Integer entityId) {
         if (mobPos == null) {
             return -1;
         }
@@ -387,7 +387,8 @@ public class MobLevelingManager {
 
         int minAllowed = nearestPlayerLevel + minDiff;
         int maxAllowed = nearestPlayerLevel + maxDiff;
-        int target = nearestPlayerLevel + offset;
+        int rolledDiff = samplePlayerDiff(entityId, mobPos, minDiff, maxDiff);
+        int target = nearestPlayerLevel + offset + rolledDiff;
         int clamped = Math.max(minAllowed, Math.min(maxAllowed, target));
         return clampToConfiguredRange(clamped);
     }
