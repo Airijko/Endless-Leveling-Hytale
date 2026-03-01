@@ -32,7 +32,6 @@ public final class AugmentRegistry {
             Map.entry(SnipersReachAugment.ID, SnipersReachAugment::new),
             Map.entry(SoulReaverAugment.ID, SoulReaverAugment::new),
             Map.entry(SupersonicAugment.ID, SupersonicAugment::new),
-            Map.entry(TauntAugment.ID, TauntAugment::new),
             Map.entry(TitansMightAugment.ID, TitansMightAugment::new),
             Map.entry(UndyingRageAugment.ID, UndyingRageAugment::new),
             Map.entry(VampiricStrikeAugment.ID, VampiricStrikeAugment::new),

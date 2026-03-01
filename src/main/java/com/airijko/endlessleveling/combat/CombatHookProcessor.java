@@ -2,6 +2,8 @@ package com.airijko.endlessleveling.combat;
 
 import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.augments.AugmentHooks;
+import com.airijko.endlessleveling.augments.types.ExecutionerAugment;
+import com.airijko.endlessleveling.augments.types.FirstStrikeAugment;
 import com.airijko.endlessleveling.classes.ClassWeaponResolver;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
@@ -88,6 +90,9 @@ public final class CombatHookProcessor {
         ExecutionerSettings executionerSettings = ExecutionerSettings.fromSnapshot(archetypeSnapshot);
         RetaliationSettings retaliationSettings = RetaliationSettings.fromSnapshot(archetypeSnapshot);
 
+        boolean firstStrikeAugmentSelected = hasSelectedAugment(playerData, FirstStrikeAugment.ID);
+        boolean executionerAugmentSelected = hasSelectedAugment(playerData, ExecutionerAugment.ID);
+
         ClassWeaponType weaponType = ClassWeaponResolver.resolve(ctx.weapon());
         boolean usesSorcery = weaponType == ClassWeaponType.STAFF || weaponType == ClassWeaponType.WAND;
         boolean rangedAttack = weaponType == ClassWeaponType.BOW || weaponType == ClassWeaponType.CROSSBOW;
@@ -105,7 +110,7 @@ public final class CombatHookProcessor {
         DamageLayerBuffer layerBuffer = new DamageLayerBuffer();
         float prospectiveDamage = critDamage;
 
-        if (runtimeState != null && firstStrikeSettings.enabled()) {
+        if (runtimeState != null && firstStrikeSettings.enabled() && !firstStrikeAugmentSelected) {
             float bonusDamage = applyFirstStrike(runtimeState, firstStrikeSettings, ctx.attackerPlayerRef(),
                     critDamage);
             if (bonusDamage > 0f) {
@@ -139,12 +144,14 @@ public final class CombatHookProcessor {
             }
         }
 
-        float executionerBonus = applyExecutionerBonus(runtimeState,
-                executionerSettings,
-                ctx.attackerPlayerRef(),
-                ctx.targetRef(),
-                ctx.commandBuffer(),
-                prospectiveDamage);
+        float executionerBonus = executionerAugmentSelected
+                ? 0f
+                : applyExecutionerBonus(runtimeState,
+                        executionerSettings,
+                        ctx.attackerPlayerRef(),
+                        ctx.targetRef(),
+                        ctx.commandBuffer(),
+                        prospectiveDamage);
         if (executionerBonus > 0f) {
             registerLayerBonus(layerBuffer,
                     resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.EXECUTIONER),
@@ -213,6 +220,7 @@ public final class CombatHookProcessor {
 
         FirstStrikeSettings firstStrikeSettings = FirstStrikeSettings.fromSnapshot(archetypeSnapshot);
         RetaliationSettings retaliationSettings = RetaliationSettings.fromSnapshot(archetypeSnapshot);
+        boolean firstStrikeAugmentSelected = hasSelectedAugment(defender, FirstStrikeAugment.ID);
 
         float originalAmount = damage.getAmount();
         float resistance = skillManager != null ? skillManager.calculatePlayerDefense(defender) : 0f;
@@ -256,7 +264,7 @@ public final class CombatHookProcessor {
             handleRetaliation(runtimeState, retaliationSettings, adjustedAmount);
         }
 
-        if (runtimeState != null) {
+        if (runtimeState != null && !firstStrikeAugmentSelected) {
             suppressFirstStrikeIfHit(runtimeState, firstStrikeSettings);
         }
 
@@ -699,6 +707,18 @@ public final class CombatHookProcessor {
             return;
         }
         playerRef.sendMessage(Message.raw(text).color("#4fd7f7"));
+    }
+
+    private boolean hasSelectedAugment(PlayerData playerData, String augmentId) {
+        if (playerData == null || augmentId == null || augmentId.isBlank()) {
+            return false;
+        }
+        for (String selectedId : playerData.getSelectedAugmentsSnapshot().values()) {
+            if (selectedId != null && augmentId.equalsIgnoreCase(selectedId.trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public record OutgoingContext(PlayerData playerData,

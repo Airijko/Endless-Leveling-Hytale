@@ -1,9 +1,14 @@
 package com.airijko.endlessleveling.augments;
 
 import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.PassiveTier;
 import com.airijko.endlessleveling.managers.ConfigManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
+import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.augments.types.ExecutionerAugment;
+import com.airijko.endlessleveling.augments.types.FirstStrikeAugment;
 import com.hypixel.hytale.logger.HytaleLogger;
 
 import javax.annotation.Nonnull;
@@ -32,14 +37,17 @@ public class AugmentUnlockManager {
     private final ConfigManager configManager;
     private final AugmentManager augmentManager;
     private final PlayerDataManager playerDataManager;
+    private final ArchetypePassiveManager archetypePassiveManager;
     private final List<UnlockRule> unlockRules;
 
     public AugmentUnlockManager(@Nonnull ConfigManager configManager,
             @Nonnull AugmentManager augmentManager,
-            @Nonnull PlayerDataManager playerDataManager) {
+            @Nonnull PlayerDataManager playerDataManager,
+            ArchetypePassiveManager archetypePassiveManager) {
         this.configManager = Objects.requireNonNull(configManager, "configManager");
         this.augmentManager = Objects.requireNonNull(augmentManager, "augmentManager");
         this.playerDataManager = Objects.requireNonNull(playerDataManager, "playerDataManager");
+        this.archetypePassiveManager = archetypePassiveManager;
         this.unlockRules = parseRules();
         if (this.unlockRules.isEmpty()) {
             LOGGER.atWarning().log("No augment unlock rules parsed. Check config augments.unlocks for tiers/levels.");
@@ -56,6 +64,7 @@ public class AugmentUnlockManager {
         int playerLevel = playerData.getLevel();
         Map<PassiveTier, Integer> eligibleByTier = buildEligibleByTier(playerLevel);
         Set<String> excludedAugmentIds = collectOwnedAugmentIds(playerData);
+        excludedAugmentIds.addAll(collectArchetypeBlockedAugmentIds(playerData));
 
         boolean updated = false;
         for (Map.Entry<PassiveTier, Integer> entry : eligibleByTier.entrySet()) {
@@ -210,6 +219,32 @@ public class AugmentUnlockManager {
         }
 
         return ids;
+    }
+
+    private Set<String> collectArchetypeBlockedAugmentIds(PlayerData playerData) {
+        Set<String> blocked = new HashSet<>();
+        if (playerData == null || archetypePassiveManager == null) {
+            return blocked;
+        }
+
+        ArchetypePassiveSnapshot snapshot = archetypePassiveManager.getSnapshot(playerData);
+        if (snapshot == null || snapshot.isEmpty()) {
+            return blocked;
+        }
+
+        if (!snapshot.getDefinitions(ArchetypePassiveType.FIRST_STRIKE).isEmpty()) {
+            String normalized = normalizeAugmentId(FirstStrikeAugment.ID);
+            if (normalized != null) {
+                blocked.add(normalized);
+            }
+        }
+        if (!snapshot.getDefinitions(ArchetypePassiveType.EXECUTIONER).isEmpty()) {
+            String normalized = normalizeAugmentId(ExecutionerAugment.ID);
+            if (normalized != null) {
+                blocked.add(normalized);
+            }
+        }
+        return blocked;
     }
 
     private String normalizeAugmentId(String augmentId) {

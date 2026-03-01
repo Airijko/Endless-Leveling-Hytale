@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 public class AugmentManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final int BUILTIN_AUGMENTS_VERSION = 2;
+    private static final int BUILTIN_AUGMENTS_VERSION = 3;
     private static final String AUGMENTS_VERSION_FILE = "augments.version";
 
     private final Yaml yaml;

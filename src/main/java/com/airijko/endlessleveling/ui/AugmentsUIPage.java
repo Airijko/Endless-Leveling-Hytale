@@ -894,6 +894,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             String suffixNote) {
         String normalizedKey = key == null ? "" : key.toLowerCase(Locale.ROOT);
         String canonicalKey = normalizedKey.replace(' ', '_');
+        String semanticKeyForUnit = canonicalKey;
         String label = BUFF_NAME_OVERRIDES.getOrDefault(canonicalKey, key == null ? "" : key.replace('_', ' '));
 
         // If the key is generic, prefer the parent/fallback label.
@@ -901,13 +902,14 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 || normalizedKey.equals("max_value")
                 || normalizedKey.equals("value_per_stack")) && fallbackLabel != null && !fallbackLabel.isBlank()) {
             label = fallbackLabel.replace('_', ' ');
+            semanticKeyForUnit = fallbackLabel.toLowerCase(Locale.ROOT).replace(' ', '_');
         }
 
         String suffix = forcedSuffix;
         double displayValue = value;
 
         if (suffix == null) {
-            suffix = inferSuffix(canonicalKey, value);
+            suffix = inferSuffix(semanticKeyForUnit, value);
             if ("%".equals(suffix)) {
                 displayValue = toDisplayPercent(value);
             } else if (normalizedKey.contains("ratio")) {
