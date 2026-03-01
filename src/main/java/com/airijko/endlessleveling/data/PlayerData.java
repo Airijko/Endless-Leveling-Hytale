@@ -402,6 +402,10 @@ public class PlayerData {
         getActiveProfile().setSelectedAugment(tierKey, augmentId);
     }
 
+    public void addSelectedAugmentForTier(String tierKey, String augmentId) {
+        getActiveProfile().addSelectedAugment(tierKey, augmentId);
+    }
+
     public Map<String, String> getSelectedAugmentsSnapshot() {
         return Collections.unmodifiableMap(new LinkedHashMap<>(getActiveProfile().getSelectedAugments()));
     }
@@ -668,6 +672,27 @@ public class PlayerData {
                 return;
             }
             selectedAugments.put(key, augmentId.trim());
+        }
+
+        public void addSelectedAugment(String tierKey, String augmentId) {
+            String key = normalizeTierKey(tierKey);
+            if (key == null || augmentId == null || augmentId.isBlank()) {
+                return;
+            }
+
+            String value = augmentId.trim();
+            if (!selectedAugments.containsKey(key)) {
+                selectedAugments.put(key, value);
+                return;
+            }
+
+            int suffix = 2;
+            String candidate = key + "#" + suffix;
+            while (selectedAugments.containsKey(candidate)) {
+                suffix++;
+                candidate = key + "#" + suffix;
+            }
+            selectedAugments.put(candidate, value);
         }
 
         public void clearSelectedAugments() {

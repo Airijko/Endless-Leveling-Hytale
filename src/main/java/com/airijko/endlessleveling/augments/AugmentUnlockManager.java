@@ -10,6 +10,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -52,31 +53,47 @@ public class AugmentUnlockManager {
         LOGGER.atFiner().log("ensureUnlocks: player=%s level=%d rules=%d", playerData.getPlayerName(),
                 playerData.getLevel(), unlockRules.size());
 
+        int playerLevel = playerData.getLevel();
+        Map<PassiveTier, Integer> eligibleByTier = buildEligibleByTier(playerLevel);
+        Set<String> excludedAugmentIds = collectOwnedAugmentIds(playerData);
+
         boolean updated = false;
-        for (UnlockRule rule : unlockRules) {
-            if (!rule.isEligible(playerData.getLevel())) {
-                LOGGER.atFiner().log("Skip %s: level %d below required %s", rule.tier(), playerData.getLevel(),
-                        rule.levels);
+        for (Map.Entry<PassiveTier, Integer> entry : eligibleByTier.entrySet()) {
+            PassiveTier tier = entry.getKey();
+            int eligibleMilestones = entry.getValue();
+            String tierKey = tier.name();
+
+            int selectedCount = countSelectedForTier(playerData, tierKey);
+            int pendingCount = countPendingUnlockBundles(playerData.getAugmentOffersForTier(tierKey));
+            int grantedCount = selectedCount + pendingCount;
+            int missing = Math.max(0, eligibleMilestones - grantedCount);
+
+            if (missing <= 0) {
+                LOGGER.atFiner().log("Skip %s: eligible=%d granted=%d selected=%d pending=%d", tierKey,
+                        eligibleMilestones, grantedCount, selectedCount, pendingCount);
                 continue;
             }
-            String tierKey = rule.tier().name();
-            boolean hasOffers = !playerData.getAugmentOffersForTier(tierKey).isEmpty();
-            boolean alreadyChosen = playerData.getSelectedAugmentForTier(tierKey) != null;
-            if (hasOffers || alreadyChosen) {
-                LOGGER.atFiner().log("Skip %s: offers=%s chosen=%s for %s", tierKey, hasOffers, alreadyChosen,
-                        playerData.getPlayerName());
-                continue; // already rolled/claimed for this tier
-            }
-            List<String> rolled = rollOffers(rule.tier());
-            if (!rolled.isEmpty()) {
-                playerData.setAugmentOffersForTier(tierKey, rolled);
+
+            List<String> offers = new ArrayList<>(playerData.getAugmentOffersForTier(tierKey));
+            for (int i = 0; i < missing; i++) {
+                List<String> rolled = rollOffers(tier, excludedAugmentIds);
+                if (rolled.isEmpty()) {
+                    LOGGER.atWarning().log("Failed to roll augments for tier %s (pool empty?) for %s (level %d)",
+                            tierKey, playerData.getPlayerName(), playerLevel);
+                    continue;
+                }
+                offers.addAll(rolled);
+                for (String augmentId : rolled) {
+                    String normalizedId = normalizeAugmentId(augmentId);
+                    if (normalizedId != null) {
+                        excludedAugmentIds.add(normalizedId);
+                    }
+                }
                 updated = true;
-                LOGGER.atFine().log("Rolled %d %s augments for %s (level %d)",
-                        rolled.size(), tierKey, playerData.getPlayerName(), playerData.getLevel());
-            } else {
-                LOGGER.atWarning().log("Failed to roll augments for tier %s (pool empty?) for %s (level %d)",
-                        tierKey, playerData.getPlayerName(), playerData.getLevel());
+                LOGGER.atFine().log("Rolled %d %s augments for %s (level %d) [grant %d/%d]",
+                        rolled.size(), tierKey, playerData.getPlayerName(), playerLevel, i + 1, missing);
             }
+            playerData.setAugmentOffersForTier(tierKey, offers);
         }
         if (updated) {
             playerDataManager.save(playerData);
@@ -108,11 +125,50 @@ public class AugmentUnlockManager {
         return tiers;
     }
 
-    private List<String> rollOffers(PassiveTier tier) {
+    public int getNextUnlockLevel(int currentLevel) {
+        int next = Integer.MAX_VALUE;
+        for (UnlockRule rule : unlockRules) {
+            for (int level : rule.levels()) {
+                if (level > currentLevel && level < next) {
+                    next = level;
+                }
+            }
+        }
+        return next == Integer.MAX_VALUE ? -1 : next;
+    }
+
+    public int getEligibleMilestoneCount(int playerLevel) {
+        Map<PassiveTier, Integer> eligibleByTier = buildEligibleByTier(playerLevel);
+        int total = 0;
+        for (int count : eligibleByTier.values()) {
+            total += Math.max(0, count);
+        }
+        return total;
+    }
+
+    public int getGrantedMilestoneCount(@Nonnull PlayerData playerData, int playerLevel) {
+        Map<PassiveTier, Integer> eligibleByTier = buildEligibleByTier(playerLevel);
+        int total = 0;
+        for (Map.Entry<PassiveTier, Integer> entry : eligibleByTier.entrySet()) {
+            String tierKey = entry.getKey().name();
+            int selectedCount = countSelectedForTier(playerData, tierKey);
+            int pendingCount = countPendingUnlockBundles(playerData.getAugmentOffersForTier(tierKey));
+            int granted = selectedCount + pendingCount;
+            total += Math.min(entry.getValue(), Math.max(0, granted));
+        }
+        return total;
+    }
+
+    private List<String> rollOffers(PassiveTier tier, Set<String> excludedAugmentIds) {
         Map<String, AugmentDefinition> all = augmentManager.getAugments();
         LOGGER.atFiner().log("Rolling tier %s: augmentManager size=%d", tier, all != null ? all.size() : -1);
         List<AugmentDefinition> pool = all.values().stream()
                 .filter(def -> def != null && def.getTier() == tier)
+                .filter(def -> {
+                    String normalizedId = normalizeAugmentId(def.getId());
+                    return normalizedId != null
+                            && (excludedAugmentIds == null || !excludedAugmentIds.contains(normalizedId));
+                })
                 .collect(Collectors.toCollection(ArrayList::new));
         if (pool.isEmpty()) {
             LOGGER.atWarning().log("No augments available for tier %s; unlock roll skipped", tier);
@@ -125,6 +181,42 @@ public class AugmentUnlockManager {
             rolled.add(pool.get(i).getId());
         }
         return rolled;
+    }
+
+    private Set<String> collectOwnedAugmentIds(PlayerData playerData) {
+        Set<String> ids = new HashSet<>();
+        if (playerData == null) {
+            return ids;
+        }
+
+        for (String selectedId : playerData.getSelectedAugmentsSnapshot().values()) {
+            String normalizedId = normalizeAugmentId(selectedId);
+            if (normalizedId != null) {
+                ids.add(normalizedId);
+            }
+        }
+
+        Map<String, List<String>> offers = playerData.getAugmentOffersSnapshot();
+        for (List<String> tierOffers : offers.values()) {
+            if (tierOffers == null || tierOffers.isEmpty()) {
+                continue;
+            }
+            for (String offerId : tierOffers) {
+                String normalizedId = normalizeAugmentId(offerId);
+                if (normalizedId != null) {
+                    ids.add(normalizedId);
+                }
+            }
+        }
+
+        return ids;
+    }
+
+    private String normalizeAugmentId(String augmentId) {
+        if (augmentId == null || augmentId.isBlank()) {
+            return null;
+        }
+        return augmentId.trim().toLowerCase(Locale.ROOT);
     }
 
     private List<UnlockRule> parseRules() {
@@ -196,13 +288,51 @@ public class AugmentUnlockManager {
     }
 
     private record UnlockRule(PassiveTier tier, Set<Integer> levels) {
-        boolean isEligible(int playerLevel) {
+        int countEligibleMilestones(int playerLevel) {
+            int count = 0;
             for (int level : levels) {
                 if (playerLevel >= level) {
-                    return true;
+                    count++;
                 }
             }
-            return false;
+            return count;
         }
+    }
+
+    private int countPendingUnlockBundles(List<String> offers) {
+        if (offers == null || offers.isEmpty()) {
+            return 0;
+        }
+        return (offers.size() + DEFAULT_OFFER_COUNT - 1) / DEFAULT_OFFER_COUNT;
+    }
+
+    private int countSelectedForTier(PlayerData playerData, String tierKey) {
+        if (playerData == null || tierKey == null || tierKey.isBlank()) {
+            return 0;
+        }
+        int count = 0;
+        String normalizedTier = tierKey.trim().toUpperCase(Locale.ROOT);
+        for (String key : playerData.getSelectedAugmentsSnapshot().keySet()) {
+            if (key == null || key.isBlank()) {
+                continue;
+            }
+            String normalizedKey = key.trim().toUpperCase(Locale.ROOT);
+            if (normalizedKey.equals(normalizedTier) || normalizedKey.startsWith(normalizedTier + "#")) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private Map<PassiveTier, Integer> buildEligibleByTier(int playerLevel) {
+        Map<PassiveTier, Integer> eligibleByTier = new EnumMap<>(PassiveTier.class);
+        for (UnlockRule rule : unlockRules) {
+            int eligible = rule.countEligibleMilestones(playerLevel);
+            if (eligible <= 0) {
+                continue;
+            }
+            eligibleByTier.merge(rule.tier(), eligible, Integer::sum);
+        }
+        return eligibleByTier;
     }
 }

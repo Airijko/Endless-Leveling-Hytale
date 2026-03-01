@@ -44,6 +44,7 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
                 this.addSubCommand(new ResetCooldownsCommand());
                 this.addSubCommand(new ReloadCommand());
                 this.addSubCommand(new LanguageCommand());
+                this.addSubCommand(new AugmentCommand());
                 this.addSubCommand(new AugmentRefreshCommand());
                 this.addSubCommand(new AugmentTestCommand());
 

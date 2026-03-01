@@ -29,8 +29,14 @@ public class AugmentRefreshCommand extends AbstractPlayerCommand {
     private final OptionalArg<String> targetArg = this.withOptionalArg("player", "Target player name", ArgTypes.STRING);
 
     public AugmentRefreshCommand() {
-        super("augmentrefresh", "Reroll stored augment offers for a player");
-        this.addAliases("augmentsrefresh", "refreshaugments");
+        this("augmentrefresh", "Reroll stored augment offers for a player", "augmentsrefresh", "refreshaugments");
+    }
+
+    public AugmentRefreshCommand(String name, String description, String... aliases) {
+        super(name, description);
+        if (aliases != null && aliases.length > 0) {
+            this.addAliases(aliases);
+        }
         EndlessLeveling plugin = EndlessLeveling.getInstance();
         this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
         this.augmentUnlockManager = plugin != null ? plugin.getAugmentUnlockManager() : null;
