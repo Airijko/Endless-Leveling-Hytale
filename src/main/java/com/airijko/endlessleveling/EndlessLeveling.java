@@ -201,7 +201,7 @@ public class EndlessLeveling extends JavaPlugin {
                         mobLevelingManager, archetypePassiveManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerCombatListener(playerDataManager, skillManager, passiveManager,
-                        archetypePassiveManager, classManager, augmentExecutor));
+                        archetypePassiveManager, classManager, augmentExecutor, mobLevelingManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new SwiftnessKillSystem(playerDataManager, passiveManager, archetypePassiveManager,
                         skillManager, augmentExecutor));

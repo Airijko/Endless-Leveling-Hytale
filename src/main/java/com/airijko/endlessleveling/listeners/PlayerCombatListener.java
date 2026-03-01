@@ -7,6 +7,7 @@ import com.airijko.endlessleveling.managers.ClassManager;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PassiveManager.PassiveRuntimeState;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.airijko.endlessleveling.managers.MobLevelingManager;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
@@ -39,6 +40,7 @@ public class PlayerCombatListener extends DamageEventSystem {
     private final ArchetypePassiveManager archetypePassiveManager;
     private final ClassManager classManager;
     private final AugmentExecutor augmentExecutor;
+    private final MobLevelingManager mobLevelingManager;
     private final CombatHookProcessor combatHookProcessor;
 
     public PlayerCombatListener(@Nonnull PlayerDataManager playerDataManager,
@@ -46,13 +48,15 @@ public class PlayerCombatListener extends DamageEventSystem {
             @Nonnull PassiveManager passiveManager,
             ArchetypePassiveManager archetypePassiveManager,
             ClassManager classManager,
-            AugmentExecutor augmentExecutor) {
+            AugmentExecutor augmentExecutor,
+            MobLevelingManager mobLevelingManager) {
         this.playerDataManager = playerDataManager;
         this.skillManager = skillManager;
         this.passiveManager = passiveManager;
         this.archetypePassiveManager = archetypePassiveManager;
         this.classManager = classManager;
         this.augmentExecutor = augmentExecutor;
+        this.mobLevelingManager = mobLevelingManager;
         this.combatHookProcessor = new CombatHookProcessor(skillManager,
                 passiveManager,
                 archetypePassiveManager,
@@ -119,7 +123,23 @@ public class PlayerCombatListener extends DamageEventSystem {
                                     attackerStats,
                                     targetStats));
 
-                    damage.setAmount(result.finalDamage());
+                    float adjusted = result.finalDamage();
+                    if (mobLevelingManager != null
+                            && mobLevelingManager.isMobLevelingEnabled()
+                            && mobLevelingManager.isMobDefenseScalingEnabled()) {
+                        PlayerRef targetPlayer = commandBuffer.getComponent(targetRef, PlayerRef.getComponentType());
+                        if (targetPlayer == null || !targetPlayer.isValid()) {
+                            int mobLevel = mobLevelingManager.resolveMobLevel(targetRef, commandBuffer);
+                            int playerLevel = Math.max(1, playerData.getLevel());
+                            double reduction = mobLevelingManager.getMobDefenseReductionForLevels(mobLevel,
+                                    playerLevel);
+                            if (reduction > 0.0D) {
+                                adjusted = (float) (adjusted * (1.0D - reduction));
+                            }
+                        }
+                    }
+
+                    damage.setAmount(Math.max(0.0f, adjusted));
                 }
             }
         }

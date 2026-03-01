@@ -770,6 +770,85 @@ public class MobLevelingManager {
         return false;
     }
 
+    /**
+     * Whether mob defense scaling is enabled.
+     */
+    public boolean isMobDefenseScalingEnabled() {
+        Object raw = configManager.get("Mob_Leveling.Scaling.Defense.Enabled", Boolean.FALSE, false);
+        if (raw instanceof Boolean b)
+            return b;
+        if (raw instanceof Number n)
+            return n.intValue() != 0;
+        if (raw instanceof String s)
+            return Boolean.parseBoolean(s.trim());
+        return false;
+    }
+
+    /**
+     * Resolve defense reduction for a mob against a specific player level matchup.
+     *
+     * @param mobLevel    target mob level
+     * @param playerLevel attacking player level
+     * @return reduction ratio in [0,1], where 0.75 means 75% damage reduction.
+     */
+    public double getMobDefenseReductionForLevels(int mobLevel, int playerLevel) {
+        int safeMobLevel = Math.max(1, mobLevel);
+        int safePlayerLevel = Math.max(1, playerLevel);
+        int levelDifference = safeMobLevel - safePlayerLevel;
+        return getMobDefenseReductionForLevelDifference(levelDifference);
+    }
+
+    /**
+     * Resolve defense reduction from relative level difference (mob - player).
+     */
+    public double getMobDefenseReductionForLevelDifference(int levelDifference) {
+        if (!isMobDefenseScalingEnabled()) {
+            return 0.0D;
+        }
+
+        int maxDifference = Math.max(0, getConfigInt("Mob_Leveling.Experience.XP_Level_Range.Max_Difference", 10));
+        double atNegativeMax = clampReduction(
+                getConfigDouble("Mob_Leveling.Scaling.Defense.At_Negative_Max_Difference", 0.0D));
+        double atPositiveMax = clampReduction(
+                getConfigDouble("Mob_Leveling.Scaling.Defense.At_Positive_Max_Difference", 0.75D));
+        double belowNegativeMax = clampReduction(
+                getConfigDouble("Mob_Leveling.Scaling.Defense.Below_Negative_Max_Difference", 0.0D));
+        double abovePositiveMax = clampReduction(
+                getConfigDouble("Mob_Leveling.Scaling.Defense.Above_Positive_Max_Difference", 0.90D));
+
+        if (maxDifference <= 0) {
+            if (levelDifference > 0) {
+                return abovePositiveMax;
+            }
+            if (levelDifference < 0) {
+                return belowNegativeMax;
+            }
+            return atNegativeMax;
+        }
+
+        if (levelDifference < -maxDifference) {
+            return belowNegativeMax;
+        }
+        if (levelDifference > maxDifference) {
+            return abovePositiveMax;
+        }
+
+        double ratio = (levelDifference + maxDifference) / (double) (maxDifference * 2);
+        return lerp(atNegativeMax, atPositiveMax, ratio);
+    }
+
+    private double clampReduction(double value) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            return 0.0D;
+        }
+        return Math.max(0.0D, Math.min(1.0D, value));
+    }
+
+    private double lerp(double start, double end, double ratio) {
+        double clamped = Math.max(0.0D, Math.min(1.0D, ratio));
+        return start + ((end - start) * clamped);
+    }
+
     private int getFixedLevel() {
         return getConfigInt("Mob_Leveling.Level_Source.Fixed_Level.Level", 10);
     }

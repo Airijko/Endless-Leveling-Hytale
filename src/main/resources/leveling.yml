@@ -125,6 +125,17 @@ Mob_Leveling:
       Base_Multiplier: 1.0 # Initial damage multiplier
       Per_Level: 0.075 # +7.5% Damage per mob level
 
+    Defense:
+      # Level difference is (mobLevel - playerLevel), using XP_Level_Range.Max_Difference as the in-range bound.
+      # -Max_Difference -> At_Negative_Max_Difference
+      # +Max_Difference -> At_Positive_Max_Difference
+      # values below/above that range use the corresponding Below/Above values.
+      Enabled: false
+      At_Negative_Max_Difference: 0.0 # e.g. mob is -Max_Difference relative to player -> 0% DR
+      At_Positive_Max_Difference: 0.75 # e.g. mob is +Max_Difference relative to player -> 75% DR
+      Below_Negative_Max_Difference: 0.0 # e.g. mob is below -Max_Difference relative to player
+      Above_Positive_Max_Difference: 0.9 # e.g. mob is above +Max_Difference relative to player -> 90% DR
+
   # -------------------------------------------------
   # EXPERIENCE & ANTI-EXPLOIT RULES
   # -------------------------------------------------
