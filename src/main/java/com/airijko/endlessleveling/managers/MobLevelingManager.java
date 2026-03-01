@@ -12,13 +12,11 @@ import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.component.WorldGenId;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
-import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.npc.entities.NPCEntity;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,37 +34,24 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MobLevelingManager {
 
+    private static final double PLAYER_LEVEL_LOCK_RADIUS_BLOCKS = 40.0D;
+
     private final Set<Integer> applied = new HashSet<>();
     private final Map<Integer, Integer> cachedPlayerDiffs = new ConcurrentHashMap<>();
     private final Map<Long, Integer> cachedPosDiffs = new ConcurrentHashMap<>();
     private final Map<String, AreaOverride> areaOverrides = new ConcurrentHashMap<>();
     private final Map<Integer, Integer> entityLevelOverrides = new ConcurrentHashMap<>();
     private final Map<Integer, UUID> entityPartyOverrides = new ConcurrentHashMap<>();
-    private final Map<Integer, Float> entityBaseHpMax = new ConcurrentHashMap<>();
     private final Map<Integer, Integer> entityAppliedLevel = new ConcurrentHashMap<>();
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private final ConfigManager configManager;
     private final PlayerDataManager playerDataManager;
-    private static final Field HP_MAX_FIELD;
-    private static volatile boolean loggedMaxWriteFailure;
 
     private enum LevelSourceMode {
         PLAYER,
         MIXED,
         DISTANCE,
         FIXED
-    }
-
-    static {
-        Field maxField = null;
-        try {
-            maxField = EntityStatValue.class.getDeclaredField("max");
-            maxField.setAccessible(true);
-        } catch (NoSuchFieldException | SecurityException ex) {
-            LOGGER.atSevere().log("MobLeveling: unable to access EntityStatValue.max via reflection: %s",
-                    ex.toString());
-        }
-        HP_MAX_FIELD = maxField;
     }
 
     public MobLevelingManager(PluginFilesManager filesManager, PlayerDataManager playerDataManager) {
@@ -88,9 +73,14 @@ public class MobLevelingManager {
      */
     public boolean applyLeveling(Ref<EntityStore> ref, Store<EntityStore> store,
             CommandBuffer<EntityStore> commandBuffer) {
+        return applyLeveling(ref, store, commandBuffer, -1);
+    }
+
+    public boolean applyLeveling(Ref<EntityStore> ref, Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer, int tickCount) {
         if (ref == null)
             return false;
-        if (!isMobLevelingEnabled() || !isMobHealthScalingEnabled())
+        if (!isMobLevelingEnabled())
             return false;
         if (store == null && commandBuffer == null)
             return false;
@@ -113,6 +103,15 @@ public class MobLevelingManager {
                 return false;
         }
 
+        if (isPurePlayerSourceMode()) {
+            Integer existingOverride = entityLevelOverrides.get(idx);
+            if (existingOverride == null || existingOverride <= 0) {
+                if (!lockEntityLevelToNearestPlayer(ref, store, commandBuffer, false)) {
+                    return false;
+                }
+            }
+        }
+
         int mobLevel = resolveMobLevel(ref, commandBuffer);
         int lastAppliedLevel = entityAppliedLevel.getOrDefault(idx, Integer.MIN_VALUE);
         boolean alreadyApplied = applied.contains(idx);
@@ -123,42 +122,12 @@ public class MobLevelingManager {
         if (statMap == null)
             return false;
 
-        EntityStatValue hp = statMap.get(DefaultEntityStatTypes.getHealth());
-        if (hp == null)
+        if (statMap.get(DefaultEntityStatTypes.getHealth()) == null)
             return false;
 
-        try {
-            double mult = getMobHealthMultiplierForLevel(mobLevel);
-            float oldMax = hp.getMax();
-            if (!alreadyApplied) {
-                entityBaseHpMax.put(idx, oldMax);
-            }
-            float baseMax = entityBaseHpMax.getOrDefault(idx, oldMax);
-            if (baseMax <= 0.0f) {
-                baseMax = oldMax;
-                entityBaseHpMax.put(idx, baseMax);
-            }
-
-            float newMax = (float) Math.max(1.0, baseMax * mult);
-            if (!setHpMax(hp, newMax))
-                return false;
-
-            float cur = hp.get();
-            float newCur;
-            if (oldMax > 0.0f) {
-                newCur = (cur / oldMax) * newMax;
-            } else {
-                newCur = Math.min(newMax, cur * (float) mult);
-            }
-            newCur = Math.max(0.01f, Math.min(newMax, newCur));
-            statMap.setStatValue(DefaultEntityStatTypes.getHealth(), newCur);
-            applied.add(idx);
-            entityAppliedLevel.put(idx, mobLevel);
-            return true;
-        } catch (Throwable t) {
-            LOGGER.atWarning().log("MobLeveling: failed to scale entity %d: %s", idx, t.toString());
-            return false;
-        }
+        applied.add(idx);
+        entityAppliedLevel.put(idx, mobLevel);
+        return true;
     }
 
     /**
@@ -174,23 +143,7 @@ public class MobLevelingManager {
         entityLevelOverrides.remove(entityIndex);
         entityPartyOverrides.remove(entityIndex);
         cachedPlayerDiffs.remove(entityIndex);
-        entityBaseHpMax.remove(entityIndex);
         entityAppliedLevel.remove(entityIndex);
-    }
-
-    private boolean setHpMax(EntityStatValue hp, float newMax) {
-        if (HP_MAX_FIELD == null)
-            return false;
-        try {
-            HP_MAX_FIELD.setFloat(hp, newMax);
-            return true;
-        } catch (IllegalAccessException ex) {
-            if (!loggedMaxWriteFailure) {
-                loggedMaxWriteFailure = true;
-                LOGGER.atSevere().log("MobLeveling: unable to mutate EntityStatValue.max: %s", ex.toString());
-            }
-            return false;
-        }
     }
 
     private <T extends Component<EntityStore>> T resolveComponent(Ref<EntityStore> ref, Store<EntityStore> store,
@@ -245,6 +198,14 @@ public class MobLevelingManager {
     public boolean isPlayerBasedMode() {
         LevelSourceMode mode = getLevelSourceMode();
         return mode == LevelSourceMode.PLAYER || mode == LevelSourceMode.MIXED;
+    }
+
+    public boolean isLevelSourcePlayerMode() {
+        return isPurePlayerSourceMode();
+    }
+
+    private boolean isPurePlayerSourceMode() {
+        return getLevelSourceMode() == LevelSourceMode.PLAYER;
     }
 
     /**
@@ -363,17 +324,72 @@ public class MobLevelingManager {
     }
 
     private int resolvePlayerBasedLevel(Store<EntityStore> store, Vector3d mobPos, Integer entityId) {
-        if (mobPos == null)
-            return getFixedLevel();
-
-        int resolved = resolvePlayerBasedLevelWithoutFallback(store, mobPos, entityId, true);
-        if (resolved > 0) {
-            if (entityId != null && shouldLockPlayerLevelOnSpawn()) {
-                setEntityLevelOverride(entityId, resolved);
+        if (entityId != null) {
+            Integer locked = entityLevelOverrides.get(entityId);
+            if (locked != null && locked > 0) {
+                return clampToConfiguredRange(locked);
             }
-            return resolved;
         }
-        return fallbackPlayerSourceLevel(mobPos);
+
+        int computed = computePlayerModeLevelFromNearestPlayer(store, mobPos);
+        if (computed > 0) {
+            return clampToConfiguredRange(computed);
+        }
+
+        return getFixedLevel();
+    }
+
+    private boolean lockEntityLevelToNearestPlayer(Ref<EntityStore> ref, Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer, boolean allowStoreFallback) {
+        if (ref == null) {
+            return false;
+        }
+
+        int entityId = ref.getIndex();
+        Integer existing = entityLevelOverrides.get(entityId);
+        if (existing != null && existing > 0) {
+            return true;
+        }
+
+        Store<EntityStore> effectiveStore = store;
+        if (effectiveStore == null && allowStoreFallback) {
+            effectiveStore = ref.getStore();
+        }
+
+        Vector3d mobPos = getWorldPosition(ref, commandBuffer);
+        int resolvedLevel = computePlayerModeLevelFromNearestPlayer(effectiveStore, mobPos);
+        if (resolvedLevel <= 0) {
+            return false;
+        }
+
+        setEntityLevelOverride(entityId, clampToConfiguredRange(resolvedLevel));
+        return true;
+    }
+
+    private int computePlayerModeLevelFromNearestPlayer(Store<EntityStore> store, Vector3d mobPos) {
+        if (mobPos == null) {
+            return -1;
+        }
+
+        int nearestPlayerLevel = findNearestPlayerLevelWithinRadius(store, mobPos, PLAYER_LEVEL_LOCK_RADIUS_BLOCKS);
+        if (nearestPlayerLevel <= 0) {
+            return -1;
+        }
+
+        int offset = getPlayerBasedOffset();
+        int minDiff = getPlayerBasedMinDifference();
+        int maxDiff = getPlayerBasedMaxDifference();
+        if (minDiff > maxDiff) {
+            int tmp = minDiff;
+            minDiff = maxDiff;
+            maxDiff = tmp;
+        }
+
+        int minAllowed = nearestPlayerLevel + minDiff;
+        int maxAllowed = nearestPlayerLevel + maxDiff;
+        int target = nearestPlayerLevel + offset;
+        int clamped = Math.max(minAllowed, Math.min(maxAllowed, target));
+        return clampToConfiguredRange(clamped);
     }
 
     private int resolvePlayerBasedLevelWithoutFallback(Store<EntityStore> store, Vector3d mobPos, Integer entityId,
@@ -553,7 +569,7 @@ public class MobLevelingManager {
             }
 
             Store<EntityStore> playerStore = playerEntityRef.getStore();
-            if (mobStore != null && playerStore != null && mobStore != playerStore) {
+            if (!isSameWorld(mobStore, playerStore)) {
                 continue;
             }
 
@@ -938,9 +954,20 @@ public class MobLevelingManager {
     }
 
     private int findNearestPlayerLevel(Store<EntityStore> mobStore, Vector3d mobPos) {
+        return findNearestPlayerLevelWithinRadius(mobStore, mobPos, -1.0D);
+    }
+
+    private int findNearestPlayerLevelWithinRadius(Store<EntityStore> mobStore, Vector3d mobPos,
+            double radiusBlocks) {
+        if (mobPos == null) {
+            return -1;
+        }
+
         Universe universe = Universe.get();
         if (universe == null)
             return -1;
+
+        double radiusSq = radiusBlocks > 0.0D ? radiusBlocks * radiusBlocks : -1.0D;
         double closestDistSq = Double.MAX_VALUE;
         int bestLevel = -1;
 
@@ -952,7 +979,7 @@ public class MobLevelingManager {
                 continue;
 
             Store<EntityStore> playerStore = playerEntityRef.getStore();
-            if (mobStore != null && playerStore != null && mobStore != playerStore)
+            if (!isSameWorld(mobStore, playerStore))
                 continue;
 
             Vector3d playerPos = getWorldPosition(playerEntityRef, null);
@@ -960,6 +987,9 @@ public class MobLevelingManager {
                 continue;
 
             double distSq = horizontalDistanceSquared(mobPos, playerPos);
+            if (radiusSq >= 0.0D && distSq > radiusSq) {
+                continue;
+            }
             if (distSq < closestDistSq) {
                 int level = getPlayerLevel(playerRef.getUuid());
                 closestDistSq = distSq;
@@ -1008,6 +1038,22 @@ public class MobLevelingManager {
         } catch (Exception ignored) {
         }
         return null;
+    }
+
+    private boolean isSameWorld(Store<EntityStore> mobStore, Store<EntityStore> playerStore) {
+        if (mobStore == null || playerStore == null) {
+            return true;
+        }
+        if (mobStore == playerStore) {
+            return true;
+        }
+
+        String mobWorldId = resolveWorldId(mobStore);
+        String playerWorldId = resolveWorldId(playerStore);
+        if (mobWorldId == null || playerWorldId == null) {
+            return true;
+        }
+        return mobWorldId.equalsIgnoreCase(playerWorldId);
     }
 
     private double horizontalDistanceSquared(Vector3d a, Vector3d b) {
@@ -1533,6 +1579,21 @@ public class MobLevelingManager {
         entityLevelOverrides.clear();
         entityPartyOverrides.clear();
         cachedPlayerDiffs.clear();
+    }
+
+    public Integer getAppliedMobLevel(int entityIndex) {
+        if (entityIndex < 0) {
+            return null;
+        }
+        Integer level = entityAppliedLevel.get(entityIndex);
+        return level != null && level > 0 ? level : null;
+    }
+
+    public Integer getAppliedMobLevel(Ref<EntityStore> ref) {
+        if (ref == null) {
+            return null;
+        }
+        return getAppliedMobLevel(ref.getIndex());
     }
 
     private record AreaOverride(String id, String worldId,

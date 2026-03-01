@@ -23,7 +23,6 @@ import com.airijko.endlessleveling.listeners.BreakBlockEntitySystem;
 import com.airijko.endlessleveling.managers.*;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.systems.PassiveRegenSystem;
-import com.airijko.endlessleveling.systems.MobNameplateSystem;
 import com.airijko.endlessleveling.systems.MobDamageScalingSystem;
 import com.airijko.endlessleveling.systems.MobLevelingSystem;
 import com.airijko.endlessleveling.systems.PlayerNameplateSystem;
@@ -216,10 +215,9 @@ public class EndlessLeveling extends JavaPlugin {
         playerRaceStatSystem = new PlayerRaceStatSystem(playerDataManager, skillManager);
         this.getEntityStoreRegistry().registerSystem(playerRaceStatSystem);
         this.getEntityStoreRegistry().registerSystem(new PlayerNameplateSystem(playerDataManager));
-        this.getEntityStoreRegistry().registerSystem(new MobNameplateSystem());
+        this.getEntityStoreRegistry().registerSystem(new MobLevelingSystem());
         this.getEntityStoreRegistry().registerSystem(new HudRefreshSystem());
         this.getEntityStoreRegistry().registerSystem(new WitherEffectSystem());
-        this.getEntityStoreRegistry().registerSystem(new MobLevelingSystem());
         this.getEntityStoreRegistry().registerSystem(new MobDamageScalingSystem(mobLevelingManager));
 
         // Register commands
