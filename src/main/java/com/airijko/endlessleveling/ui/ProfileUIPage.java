@@ -726,13 +726,58 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             String innateAttributeSummary) {
     }
 
-    private record AggregatedPassiveProps(Double threshold,
-            Double duration,
-            Double cooldown,
-            Double window,
-            Double stacks,
-            Double slowPercent,
-            String scalingStat) {
+    private static final class AggregatedPassiveProps {
+        private final Double threshold;
+        private final Double duration;
+        private final Double cooldown;
+        private final Double window;
+        private final Double stacks;
+        private final Double slowPercent;
+        private final String scalingStat;
+
+        private AggregatedPassiveProps(Double threshold,
+                Double duration,
+                Double cooldown,
+                Double window,
+                Double stacks,
+                Double slowPercent,
+                String scalingStat) {
+            this.threshold = threshold;
+            this.duration = duration;
+            this.cooldown = cooldown;
+            this.window = window;
+            this.stacks = stacks;
+            this.slowPercent = slowPercent;
+            this.scalingStat = scalingStat;
+        }
+
+        private Double threshold() {
+            return threshold;
+        }
+
+        private Double duration() {
+            return duration;
+        }
+
+        private Double cooldown() {
+            return cooldown;
+        }
+
+        private Double window() {
+            return window;
+        }
+
+        private Double stacks() {
+            return stacks;
+        }
+
+        private Double slowPercent() {
+            return slowPercent;
+        }
+
+        private String scalingStat() {
+            return scalingStat;
+        }
     }
 
     private record AttributeDisplay(String value, String level) {
