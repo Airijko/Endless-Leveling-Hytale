@@ -15,6 +15,7 @@ import com.airijko.endlessleveling.listeners.LuckDoubleDropSystem;
 import com.airijko.endlessleveling.listeners.OpenPlayerHudListener;
 import com.airijko.endlessleveling.listeners.PartyListener;
 import com.airijko.endlessleveling.listeners.PlayerCombatListener;
+import com.airijko.endlessleveling.listeners.PlayerCombatPostApplyProbeSystem;
 import com.airijko.endlessleveling.listeners.PlayerDataListener;
 import com.airijko.endlessleveling.listeners.PlayerDefenseListener;
 import com.airijko.endlessleveling.listeners.SwiftnessKillSystem;
@@ -202,6 +203,8 @@ public class EndlessLeveling extends JavaPlugin {
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerCombatListener(playerDataManager, skillManager, passiveManager,
                         archetypePassiveManager, classManager, augmentExecutor, mobLevelingManager));
+        this.getEntityStoreRegistry()
+                .registerSystem(new PlayerCombatPostApplyProbeSystem(mobLevelingManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new SwiftnessKillSystem(playerDataManager, passiveManager, archetypePassiveManager,
                         skillManager, augmentExecutor));

@@ -11,6 +11,7 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.component.WorldGenId;
+import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.npc.entities.NPCEntity;
@@ -21,11 +22,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -36,13 +35,11 @@ public class MobLevelingManager {
 
     private static final double PLAYER_LEVEL_LOCK_RADIUS_BLOCKS = 40.0D;
 
-    private final Set<Integer> applied = new HashSet<>();
     private final Map<Integer, Integer> cachedPlayerDiffs = new ConcurrentHashMap<>();
     private final Map<Long, Integer> cachedPosDiffs = new ConcurrentHashMap<>();
     private final Map<String, AreaOverride> areaOverrides = new ConcurrentHashMap<>();
     private final Map<Integer, Integer> entityLevelOverrides = new ConcurrentHashMap<>();
     private final Map<Integer, UUID> entityPartyOverrides = new ConcurrentHashMap<>();
-    private final Map<Integer, Integer> entityAppliedLevel = new ConcurrentHashMap<>();
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private final ConfigManager configManager;
     private final PlayerDataManager playerDataManager;
@@ -67,83 +64,67 @@ public class MobLevelingManager {
     }
 
     /**
-     * Attempts to apply mob-leveling (health scaling) to the entity referenced by
-     * {@code ref}.
-     * Returns true if the entity was modified and marked as applied.
+     * Resolves a mob level for an entity when it is eligible for mob leveling.
+     * Returns null when the entity should not be leveled.
      */
-    public boolean applyLeveling(Ref<EntityStore> ref, Store<EntityStore> store,
+    public Integer resolveMobLevelForEntity(Ref<EntityStore> ref, Store<EntityStore> store,
             CommandBuffer<EntityStore> commandBuffer) {
-        return applyLeveling(ref, store, commandBuffer, -1);
-    }
-
-    public boolean applyLeveling(Ref<EntityStore> ref, Store<EntityStore> store,
-            CommandBuffer<EntityStore> commandBuffer, int tickCount) {
         if (ref == null)
-            return false;
+            return null;
         if (!isMobLevelingEnabled())
-            return false;
+            return null;
         if (store == null && commandBuffer == null)
-            return false;
+            return null;
 
-        int idx = ref.getIndex();
-
-        // skip players
-        PlayerRef playerRef = resolveComponent(ref, store, commandBuffer, PlayerRef.getComponentType());
-        if (playerRef != null && playerRef.isValid())
-            return false;
-
-        // check blacklist
-        if (isEntityBlacklisted(ref, store, commandBuffer))
-            return false;
-
-        // If passive mob leveling is disabled, skip non-NPCs
-        if (!allowPassiveMobLeveling()) {
-            Object npcComp = resolveComponent(ref, store, commandBuffer, NPCEntity.getComponentType());
-            if (npcComp == null)
-                return false;
-        }
-
-        if (isPurePlayerSourceMode()) {
-            Integer existingOverride = entityLevelOverrides.get(idx);
-            if (existingOverride == null || existingOverride <= 0) {
-                if (!lockEntityLevelToNearestPlayer(ref, store, commandBuffer, false)) {
-                    return false;
-                }
-            }
+        if (!isEligibleForMobLeveling(ref, store, commandBuffer)) {
+            return null;
         }
 
         int mobLevel = resolveMobLevel(ref, commandBuffer);
-        int lastAppliedLevel = entityAppliedLevel.getOrDefault(idx, Integer.MIN_VALUE);
-        boolean alreadyApplied = applied.contains(idx);
-        if (alreadyApplied && lastAppliedLevel == mobLevel)
-            return false;
 
         EntityStatMap statMap = resolveComponent(ref, store, commandBuffer, EntityStatMap.getComponentType());
         if (statMap == null)
-            return false;
+            return null;
 
-        if (statMap.get(DefaultEntityStatTypes.getHealth()) == null)
-            return false;
+        var health = statMap.get(DefaultEntityStatTypes.getHealth());
+        if (health == null)
+            return null;
 
-        applied.add(idx);
-        entityAppliedLevel.put(idx, mobLevel);
+        if (!Float.isFinite(health.get()) || health.get() <= 0.0f)
+            return null;
+
+        return mobLevel;
+    }
+
+    private boolean isEligibleForMobLeveling(Ref<EntityStore> ref,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        PlayerRef playerRef = resolveComponent(ref, store, commandBuffer, PlayerRef.getComponentType());
+        if (playerRef != null && playerRef.isValid()) {
+            return false;
+        }
+
+        if (isEntityBlacklisted(ref, store, commandBuffer)) {
+            return false;
+        }
+
+        DeathComponent deathComponent = resolveComponent(ref, store, commandBuffer, DeathComponent.getComponentType());
+        if (deathComponent != null) {
+            return false;
+        }
+
+        if (!allowPassiveMobLeveling()) {
+            Object npcComp = resolveComponent(ref, store, commandBuffer, NPCEntity.getComponentType());
+            return npcComp != null;
+        }
+
         return true;
     }
 
-    /**
-     * Back-compat shim for older callers that did not pass Store.
-     */
-    public boolean applyLeveling(Ref<EntityStore> ref, CommandBuffer<EntityStore> commandBuffer) {
-        Store<EntityStore> store = ref != null ? ref.getStore() : null;
-        return applyLeveling(ref, store, commandBuffer);
-    }
-
     public void forgetEntity(int entityIndex) {
-        applied.remove(entityIndex);
         entityLevelOverrides.remove(entityIndex);
         entityPartyOverrides.remove(entityIndex);
         cachedPlayerDiffs.remove(entityIndex);
-        entityAppliedLevel.remove(entityIndex);
     }
 
     private <T extends Component<EntityStore>> T resolveComponent(Ref<EntityStore> ref, Store<EntityStore> store,
@@ -378,33 +359,6 @@ public class MobLevelingManager {
         return getFixedLevel();
     }
 
-    private boolean lockEntityLevelToNearestPlayer(Ref<EntityStore> ref, Store<EntityStore> store,
-            CommandBuffer<EntityStore> commandBuffer, boolean allowStoreFallback) {
-        if (ref == null) {
-            return false;
-        }
-
-        int entityId = ref.getIndex();
-        Integer existing = entityLevelOverrides.get(entityId);
-        if (existing != null && existing > 0) {
-            return true;
-        }
-
-        Store<EntityStore> effectiveStore = store;
-        if (effectiveStore == null && allowStoreFallback) {
-            effectiveStore = ref.getStore();
-        }
-
-        Vector3d mobPos = getWorldPosition(ref, commandBuffer);
-        int resolvedLevel = computePlayerModeLevelFromNearestPlayer(effectiveStore, mobPos, entityId);
-        if (resolvedLevel <= 0) {
-            return false;
-        }
-
-        setEntityLevelOverride(entityId, clampToConfiguredRange(resolvedLevel));
-        return true;
-    }
-
     private int computePlayerModeLevelFromNearestPlayer(Store<EntityStore> store, Vector3d mobPos, Integer entityId) {
         if (mobPos == null) {
             return -1;
@@ -432,13 +386,12 @@ public class MobLevelingManager {
         return clampToConfiguredRange(clamped);
     }
 
-    private int resolvePlayerBasedLevelWithoutFallback(Store<EntityStore> store, Vector3d mobPos, Integer entityId,
-            boolean allowPartyLock) {
+    private int resolvePlayerBasedLevelWithoutFallback(Store<EntityStore> store, Vector3d mobPos, Integer entityId) {
         if (mobPos == null)
             return -1;
 
         if (isPartyPlayerSourceEnabled()) {
-            int partyResolved = resolvePlayerBasedLevelWithPartySystem(store, mobPos, entityId, allowPartyLock);
+            int partyResolved = resolvePlayerBasedLevelWithPartySystem(store, mobPos, entityId);
             if (partyResolved > 0) {
                 return partyResolved;
             }
@@ -481,28 +434,20 @@ public class MobLevelingManager {
         }
 
         int distanceLevel = resolveDistanceLevel(store, mobPos);
-        int playerLevel = resolvePlayerBasedLevelWithoutFallback(store, mobPos, entityId, false);
+        int playerLevel = resolvePlayerBasedLevelWithoutFallback(store, mobPos, entityId);
         if (playerLevel <= 0) {
             return distanceLevel;
         }
 
         int playerLowerBound = resolvePlayerLowerBoundForMixed(store, mobPos);
         if (playerLowerBound > 0 && distanceLevel < playerLowerBound) {
-            int resolved = playerLevel;
-            if (entityId != null && shouldLockPlayerLevelOnSpawn()) {
-                setEntityLevelOverride(entityId, resolved);
-            }
-            return resolved;
+            return playerLevel;
         }
 
         double playerWeight = getMixedPlayerWeight();
         double distanceWeight = 1.0D - playerWeight;
         double blended = (playerLevel * playerWeight) + (distanceLevel * distanceWeight);
-        int resolved = (int) Math.round(blended);
-        if (entityId != null && shouldLockPlayerLevelOnSpawn()) {
-            setEntityLevelOverride(entityId, resolved);
-        }
-        return resolved;
+        return (int) Math.round(blended);
     }
 
     private int resolvePlayerLowerBoundForMixed(Store<EntityStore> store, Vector3d mobPos) {
@@ -541,8 +486,7 @@ public class MobLevelingManager {
         return clampToConfiguredRange(floor);
     }
 
-    private int resolvePlayerBasedLevelWithPartySystem(Store<EntityStore> store, Vector3d mobPos, Integer entityId,
-            boolean applyLock) {
+    private int resolvePlayerBasedLevelWithPartySystem(Store<EntityStore> store, Vector3d mobPos, Integer entityId) {
         double radius = Math.max(0.0D, getPlayerPartyInfluenceRadius());
         List<PlayerContext> nearbyPlayers = getPlayersWithinRadius(store, mobPos, radius);
         if (nearbyPlayers.isEmpty()) {
@@ -573,12 +517,6 @@ public class MobLevelingManager {
         }
 
         int resolvedLevel = sampleLevel(minLevel, maxLevel, entityId, mobPos);
-        if (applyLock && entityId != null) {
-            setEntityLevelOverride(entityId, resolvedLevel);
-            if (dominant.partyId() != null) {
-                entityPartyOverrides.put(entityId, dominant.partyId());
-            }
-        }
         return resolvedLevel;
     }
 
@@ -914,10 +852,6 @@ public class MobLevelingManager {
             return defaultValue;
         }
         return Boolean.parseBoolean(raw.trim());
-    }
-
-    private boolean shouldLockPlayerLevelOnSpawn() {
-        return true;
     }
 
     private double getMixedPlayerWeight() {
@@ -1377,6 +1311,44 @@ public class MobLevelingManager {
         return base * (1.0 + per * (effectiveLevel - 1));
     }
 
+    /**
+     * Computes additive max-health offset for a mob level from an unmodified base
+     * max value.
+     */
+    public float computeMobHealthAdditive(int level, float baseMax) {
+        if (!Float.isFinite(baseMax) || baseMax <= 0.0f) {
+            return 0.0f;
+        }
+        double multiplier = getMobHealthMultiplierForLevel(level);
+        float targetMax = (float) (baseMax * multiplier);
+        return targetMax - baseMax;
+    }
+
+    /**
+     * Computes mob health scaling from config-derived multipliers.
+     * This is pure math and does not mutate ECS components.
+     */
+    public MobHealthScalingResult computeMobHealthScaling(int level,
+            float baseMax,
+            float previousMax,
+            float previousValue) {
+        float safeBaseMax = Math.max(1.0f, baseMax);
+        double multiplier = getMobHealthMultiplierForLevel(level);
+        float targetMax = (float) Math.max(1.0D, safeBaseMax * multiplier);
+        float additive = targetMax - safeBaseMax;
+
+        float ratio = previousMax > 0.0f ? previousValue / previousMax : 1.0f;
+        float newValue = Math.max(0.0f, Math.min(targetMax, ratio * targetMax));
+        if (previousValue <= 0.0f) {
+            newValue = 0.0f;
+        }
+
+        return new MobHealthScalingResult(targetMax, additive, newValue);
+    }
+
+    public record MobHealthScalingResult(float targetMax, float additive, float newValue) {
+    }
+
     public double getMobDamageMultiplierForLevel(int level) {
         double base = getConfigDouble("Mob_Leveling.Scaling.Damage.Base_Multiplier", 1.0);
         double per = getConfigDouble("Mob_Leveling.Scaling.Damage.Per_Level", 0.03);
@@ -1619,21 +1591,6 @@ public class MobLevelingManager {
         entityLevelOverrides.clear();
         entityPartyOverrides.clear();
         cachedPlayerDiffs.clear();
-    }
-
-    public Integer getAppliedMobLevel(int entityIndex) {
-        if (entityIndex < 0) {
-            return null;
-        }
-        Integer level = entityAppliedLevel.get(entityIndex);
-        return level != null && level > 0 ? level : null;
-    }
-
-    public Integer getAppliedMobLevel(Ref<EntityStore> ref) {
-        if (ref == null) {
-            return null;
-        }
-        return getAppliedMobLevel(ref.getIndex());
     }
 
     private record AreaOverride(String id, String worldId,
