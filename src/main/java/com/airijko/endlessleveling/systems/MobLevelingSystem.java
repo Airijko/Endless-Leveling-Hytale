@@ -20,6 +20,7 @@ import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntitySta
 import com.hypixel.hytale.server.core.modules.entitystats.modifier.Modifier.ModifierTarget;
 import com.hypixel.hytale.server.core.modules.entitystats.modifier.StaticModifier;
 import com.hypixel.hytale.server.core.modules.entitystats.modifier.StaticModifier.CalculationType;
+import com.hypixel.hytale.server.npc.entities.NPCEntity;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
@@ -74,7 +75,6 @@ public class MobLevelingSystem extends TickingSystem<EntityStore> {
                                 handleDeadEntity(ref, commandBuffer);
                                 healthAppliedLevel.remove(entityId);
                                 forcedDeathLoggedEntityIds.remove(entityId);
-                                mobLevelingManager.forgetEntity(entityId);
                             }
                             continue;
                         }
@@ -245,6 +245,10 @@ public class MobLevelingSystem extends TickingSystem<EntityStore> {
             }
             statMap.setStatValue(healthIndex, restoredValue);
             statMap.update();
+            EntityStatValue restoredHealth = statMap.get(healthIndex);
+            if (restoredHealth != null && Float.isFinite(restoredHealth.getMax()) && restoredHealth.getMax() > 0.0f) {
+                mobLevelingManager.recordEntityMaxHealth(entityId, restoredHealth.getMax());
+            }
             healthAppliedLevel.put(entityId, appliedLevel);
             return;
         }
@@ -278,6 +282,10 @@ public class MobLevelingSystem extends TickingSystem<EntityStore> {
 
         statMap.setStatValue(healthIndex, targetValue);
         statMap.update();
+        EntityStatValue updatedHealth = statMap.get(healthIndex);
+        if (updatedHealth != null && Float.isFinite(updatedHealth.getMax()) && updatedHealth.getMax() > 0.0f) {
+            mobLevelingManager.recordEntityMaxHealth(entityId, updatedHealth.getMax());
+        }
 
         healthAppliedLevel.put(entityId, appliedLevel);
 
@@ -287,6 +295,12 @@ public class MobLevelingSystem extends TickingSystem<EntityStore> {
             CommandBuffer<EntityStore> commandBuffer,
             boolean includeLevelInName) {
         if (ref == null || commandBuffer == null) {
+            return;
+        }
+
+        NPCEntity npcEntity = commandBuffer.getComponent(ref, NPCEntity.getComponentType());
+        if (npcEntity == null) {
+            clearOrRemoveNameplate(ref, commandBuffer);
             return;
         }
 
@@ -330,7 +344,7 @@ public class MobLevelingSystem extends TickingSystem<EntityStore> {
         if (hp != null && Float.isFinite(hp.get()) && Float.isFinite(hp.getMax()) && hp.getMax() > 0.0f) {
             int currentHp = Math.max(0, Math.round(hp.get()));
             int maxHp = Math.max(1, Math.round(hp.getMax()));
-            label = label + " " + currentHp + "/" + maxHp + "]";
+            label = label + " [HP " + currentHp + "/" + maxHp + "]";
         }
 
         nameplate.setText(label);

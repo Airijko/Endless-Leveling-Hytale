@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.bson.BsonString;
+
 public class LevelingManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
@@ -251,7 +253,9 @@ public class LevelingManager {
         int displayedXp = (int) Math.round(xpAmount);
         var primaryMessage = Message.raw("Gained " + displayedXp + " XP!").color("#00FF00");
         var secondaryMessage = Message.raw("Current level: " + player.getLevel()).color("#228B22");
-        var icon = new ItemStack("Ingredient_Life_Essence", 1).toPacket();
+        ItemStack iconStack = new ItemStack("Ingredient_Life_Essence", 1)
+                .withMetadata("el:xp_notification_nonce", new BsonString(UUID.randomUUID().toString()));
+        var icon = iconStack.toPacket();
         NotificationUtil.sendNotification(packetHandler, primaryMessage, secondaryMessage, icon);
     }
 
@@ -446,7 +450,7 @@ public class LevelingManager {
         if (relativeDiff >= 0) {
             return lerp(1.0, xpScalingMinMultiplier, normalizedGap);
         }
-        double maxBonusMultiplier = Math.max(1.0, 1.0 + xpScalingBonusAtMax);
+        double maxBonusMultiplier = Math.max(1.0, xpScalingBonusAtMax);
         return lerp(1.0, maxBonusMultiplier, normalizedGap);
     }
 

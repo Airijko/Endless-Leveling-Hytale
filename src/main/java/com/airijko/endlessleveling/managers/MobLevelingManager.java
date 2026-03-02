@@ -40,6 +40,7 @@ public class MobLevelingManager {
     private final Map<String, AreaOverride> areaOverrides = new ConcurrentHashMap<>();
     private final Map<Integer, Integer> entityLevelOverrides = new ConcurrentHashMap<>();
     private final Map<Integer, UUID> entityPartyOverrides = new ConcurrentHashMap<>();
+    private final Map<Integer, Float> entityMaxHealthSnapshots = new ConcurrentHashMap<>();
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private final ConfigManager configManager;
     private final PlayerDataManager playerDataManager;
@@ -125,6 +126,22 @@ public class MobLevelingManager {
         entityLevelOverrides.remove(entityIndex);
         entityPartyOverrides.remove(entityIndex);
         cachedPlayerDiffs.remove(entityIndex);
+        entityMaxHealthSnapshots.remove(entityIndex);
+    }
+
+    public void recordEntityMaxHealth(int entityIndex, float maxHealth) {
+        if (entityIndex < 0 || !Float.isFinite(maxHealth) || maxHealth <= 0.0f) {
+            return;
+        }
+        entityMaxHealthSnapshots.put(entityIndex, maxHealth);
+    }
+
+    public float getEntityMaxHealthSnapshot(int entityIndex) {
+        Float cached = entityMaxHealthSnapshots.get(entityIndex);
+        if (cached == null || !Float.isFinite(cached) || cached <= 0.0f) {
+            return -1.0f;
+        }
+        return cached;
     }
 
     private <T extends Component<EntityStore>> T resolveComponent(Ref<EntityStore> ref, Store<EntityStore> store,
@@ -1577,6 +1594,7 @@ public class MobLevelingManager {
         entityLevelOverrides.remove(entityIndex);
         entityPartyOverrides.remove(entityIndex);
         cachedPlayerDiffs.remove(entityIndex);
+        entityMaxHealthSnapshots.remove(entityIndex);
     }
 
     /** Clear all per-entity overrides. */
@@ -1584,6 +1602,7 @@ public class MobLevelingManager {
         entityLevelOverrides.clear();
         entityPartyOverrides.clear();
         cachedPlayerDiffs.clear();
+        entityMaxHealthSnapshots.clear();
     }
 
     private record AreaOverride(String id, String worldId,

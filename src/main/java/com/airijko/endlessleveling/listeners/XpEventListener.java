@@ -1,12 +1,15 @@
 package com.airijko.endlessleveling.listeners;
 
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.PartyManager;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.MobLevelingManager;
+import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.PassiveType;
+import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
@@ -98,26 +101,65 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
 
         int mobLevel = mobLevelingManager != null ? mobLevelingManager.resolveMobLevel(ref, commandBuffer) : 1;
 
-        double xpGained = Math.max(1, healthStat.getMax());
-        xpGained = levelingManager.applyMobKillXpRules(playerData, mobLevel, xpGained, mobIsBlacklisted);
-        if (xpGained <= 0.0) {
+        float cachedMaxHealth = mobLevelingManager != null
+                ? mobLevelingManager.getEntityMaxHealthSnapshot(ref.getIndex())
+                : -1.0f;
+        double maxHealthForXp = cachedMaxHealth > 0.0f ? cachedMaxHealth : healthStat.getMax();
+        double baseXp = Math.max(1.0, maxHealthForXp);
+        double xpAfterKillRules = levelingManager.applyMobKillXpRules(playerData, mobLevel, baseXp, mobIsBlacklisted);
+        if (xpAfterKillRules <= 0.0) {
             String mobLevelText = mobIsBlacklisted ? "N/A" : Integer.toString(Math.max(1, mobLevel));
             LOGGER.atFine().log("XP gain blocked for player %s due to level gap (player=%d, mob=%s)",
                     playerUuid, playerData.getLevel(), mobLevelText);
             return;
         }
-        LOGGER.atInfo().log("Granting XP (before party share): %f to player %s", xpGained, playerUuid);
-
-        if (partyManager != null) {
-            partyManager.handleXpGain(playerUuid, xpGained);
-        } else {
-            levelingManager.addXp(playerUuid, xpGained);
-        }
 
         ArchetypePassiveSnapshot snapshot = archetypePassiveManager != null
-                ? archetypePassiveManager.getSnapshot(playerData)
-                : ArchetypePassiveSnapshot.empty();
+            ? archetypePassiveManager.getSnapshot(playerData)
+            : ArchetypePassiveSnapshot.empty();
+        double archetypeXpBonus = snapshot.getValue(ArchetypePassiveType.XP_BONUS);
+
+        double disciplineBonusPercent = 0.0D;
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        SkillManager skillManager = plugin != null ? plugin.getSkillManager() : null;
+        if (skillManager != null) {
+            disciplineBonusPercent = skillManager.getDisciplineXpBonusPercent(
+                playerData.getPlayerSkillAttributeLevel(SkillAttributeType.DISCIPLINE));
+        }
+
+        double additiveBonus = archetypeXpBonus + (disciplineBonusPercent / 100.0D);
+        double projectedPersonalXp = xpAfterKillRules * Math.max(0.0D, 1.0D + additiveBonus);
+        double killRulesMultiplier = baseXp > 0.0D ? xpAfterKillRules / baseXp : 0.0D;
+
         double totalLuck = getLuckValue(playerData, snapshot);
+
+        LOGGER.atInfo().log(
+            "XP-Report target=%d player=%s playerLvl=%d mobLvl=%d blacklisted=%s sourceMaxHP=%.3f (cached=%.3f live=%.3f) baseXP=%.3f killRulesXP=%.3f killRulesMult=%.4f archetypeXpBonus=%.4f disciplineBonusPct=%.3f additiveMult=%.4f projectedPersonalXP=%.3f luck=%.4f luckAffectsXp=%s",
+            ref.getIndex(),
+            playerUuid,
+            playerData.getLevel(),
+            mobLevel,
+            mobIsBlacklisted,
+            maxHealthForXp,
+            cachedMaxHealth,
+            healthStat.getMax(),
+            baseXp,
+            xpAfterKillRules,
+            killRulesMultiplier,
+            archetypeXpBonus,
+            disciplineBonusPercent,
+            Math.max(0.0D, 1.0D + additiveBonus),
+            projectedPersonalXp,
+            totalLuck,
+            false);
+
+        LOGGER.atInfo().log("Granting XP (before party share): %f to player %s", xpAfterKillRules, playerUuid);
+
+        if (partyManager != null) {
+            partyManager.handleXpGain(playerUuid, xpAfterKillRules);
+        } else {
+            levelingManager.addXp(playerUuid, xpAfterKillRules);
+        }
         if (passiveManager != null && totalLuck > 0.0D) {
             passiveManager.openMobDropWindow(playerUuid);
         }
