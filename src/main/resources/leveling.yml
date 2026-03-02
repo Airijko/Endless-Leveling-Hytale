@@ -105,6 +105,7 @@ Mob_Leveling:
       Blocks_Per_Level: 100
       Max_Level: 110
       Min_Level: 1
+      Center_Coordinates: "0,0"
 
     # MIXED blends PLAYER and DISTANCE.
     # Player_Weight is 0.0 to 1.0:
@@ -214,4 +215,4 @@ Mob_Leveling:
     Show_Mob_Level: true
 
 # DON'T EDIT THIS LINE BELOW
-config_version: 6
+config_version: 7

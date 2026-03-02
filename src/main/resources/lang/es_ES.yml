@@ -69,10 +69,10 @@ ui:
     actions:
       choose: Elegir
     selected: 'Aumento seleccionado: {0} ({1})'
-    no_description: No se proporciona descripción.
+    no_description: Sin descripción.
     no_augment:
       title: SIN AUMENTO
-      body: Actualmente no hay aumentos disponibles.
+      body: No hay aumentos disponibles.
     no_augments_yet:
       title: NO HAY AUMENTOS AÚN
       body: Aún no hay aumentos disponibles. Próximo desbloqueo en el nivel {0}.
@@ -96,8 +96,8 @@ ui:
       system_unavailable: El sistema de aumento no está disponible en este momento.
         Por favor contacte a un administrador.
       definitions_missing: No se cargan definiciones de aumento. Consulta /mods/EndlessLeveling/augments.
-      offers_missing: Faltan aumentos desbloqueados en tus ofertas. Pídale a un administrador
-        que ejecute /el augment refresco <jugador>.
+      offers_missing: Faltan aumentos desbloqueados. Pide a un admin ejecutar /el
+        augment refresh <player>.
       slot_empty: No hay aumento en esa ranura.
     effect:
       cooldown: 'Enfriamiento: {0}'
@@ -110,16 +110,16 @@ ui:
         range: ' (rango {0}-{1})'
         full_at_distance: ' (completo a {0} distancia)'
       label:
-        strength: Fortaleza
+        strength: Fuerza
         sorcery: Brujería
         haste: Prisa
         haste_bonus: Prisa
-        crit_damage: Daño crítico
+        crit_damage: Daño Crítico
         crit_damage_bonus: Daño crítico
         critical_damage: Daño crítico
-        crit_chance: Oportunidad crítica
+        crit_chance: Probabilidad Crítica
         critical_chance: Oportunidad crítica
-        life_steal: Robo de vida
+        life_steal: Robo de Vida
         life_steal_scaling: Robo de vida
         heal_on_crit: Robo de vida (crítico)
         heal_on_kill: Curar al matar
@@ -140,14 +140,14 @@ ui:
         self_damage: autodaño
         percent_of_current_hp: autodaño
         movement_speed_bonus: Velocidad de movimiento
-        movement_speed: Velocidad de movimiento
+        movement_speed: Velocidad de Movimiento
         resistance_bonus: Resistencia
         resistance: Resistencia
         precision: Oportunidad crítica
         defense: Defensa
         wither: Marchitar
         slow_percent: Lento
-        mana: maná
+        mana: Maná
         mana_from_sorcery: maná
         sorcery_from_mana: Brujería
         health_threshold: Umbral de salud

@@ -64,14 +64,14 @@ ui:
       disabled: Race model visuals disabled
   augments:
     tier:
-      default: AUGMENTS
+      default: 强化
     actions:
-      choose: Choose
-    selected: 'Selected augment: {0} ({1})'
-    no_description: No description provided.
+      choose: 选择
+    selected: '已选择强化: {0} ({1})'
+    no_description: 无描述。
     no_augment:
-      title: NO AUGMENT
-      body: No augments are currently available.
+      title: 无强化
+      body: 当前无可用强化。
     no_augments_yet:
       title: NO AUGMENTS YET
       body: No augments available yet. Next unlock at level {0}.
@@ -95,13 +95,12 @@ ui:
       system_unavailable: Augment system is unavailable right now. Please contact
         an admin.
       definitions_missing: No augment definitions are loaded. Check /mods/EndlessLeveling/augments.
-      offers_missing: Unlocked augments are missing from your offers. Ask an admin
-        to run /el augment refresh <player>.
+      offers_missing: 缺少已解锁的强化。请联系管理员运行 /el augment refresh <player>。
       slot_empty: No augment in that slot.
     effect:
-      cooldown: 'Cooldown: {0}'
+      cooldown: '冷却时间: {0}'
       duration_per_stack: 'Duration per stack: {0}'
-      duration: 'Duration: {0}'
+      duration: '持续时间: {0}'
       max_stacks: 'Max stacks: {0}'
       note:
         full_at_health: ' (full at <= {0}% health)'
@@ -111,12 +110,12 @@ ui:
       label:
         strength: 力量
         sorcery: 巫术
-        haste: 急速
+        haste: 极速
         haste_bonus: 急速
-        crit_damage: Critical Damage
+        crit_damage: 暴击伤害
         crit_damage_bonus: Critical Damage
         critical_damage: Critical Damage
-        crit_chance: Critical Chance
+        crit_chance: 暴击率
         critical_chance: Critical Chance
         life_steal: 生命偷取
         life_steal_scaling: 生命偷取
@@ -139,14 +138,14 @@ ui:
         self_damage: Self Damage
         percent_of_current_hp: Self Damage
         movement_speed_bonus: Move Speed
-        movement_speed: Move Speed
+        movement_speed: 移动速度
         resistance_bonus: Resistance
-        resistance: Resistance
+        resistance: 抗性
         precision: Critical Chance
         defense: 防御
         wither: 凋零
         slow_percent: Slow
-        mana: Mana
+        mana: 法力值
         mana_from_sorcery: Mana
         sorcery_from_mana: 巫术
         health_threshold: Health Threshold

@@ -69,7 +69,7 @@ ui:
     actions:
       choose: Wählen
     selected: 'Ausgewählte Erweiterung: {0} ({1})'
-    no_description: Keine Beschreibung angegeben.
+    no_description: Keine Beschreibung verfügbar.
     no_augment:
       title: KEINE ERWEITERUNG
       body: Derzeit sind keine Erweiterungen verfügbar.
@@ -97,8 +97,8 @@ ui:
         Sie sich an einen Administrator.
       definitions_missing: Es werden keine Erweiterungsdefinitionen geladen. Überprüfen
         Sie /mods/EndlessLeveling/augments.
-      offers_missing: In Ihren Angeboten fehlen freigeschaltete Erweiterungen. Bitten
-        Sie einen Administrator, /el augment refresh <player> auszuführen.
+      offers_missing: Freigeschaltete Erweiterungen fehlen. Bitte einen Admin /el
+        augment refresh <player> auszuführen.
       slot_empty: Keine Verstärkung in diesem Slot.
     effect:
       cooldown: 'Abklingzeit: {0}'
@@ -118,9 +118,9 @@ ui:
         crit_damage: Kritischer Schaden
         crit_damage_bonus: Kritischer Schaden
         critical_damage: Kritischer Schaden
-        crit_chance: Kritischer Zufall
+        crit_chance: Kritische Trefferchance
         critical_chance: Kritischer Zufall
-        life_steal: Lebensraub
+        life_steal: Lebensdiebstahl
         life_steal_scaling: Lebensraub
         heal_on_crit: Lebensraub (Krit)
         heal_on_kill: Heile bei Tötung

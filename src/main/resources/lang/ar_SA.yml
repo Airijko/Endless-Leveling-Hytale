@@ -64,14 +64,14 @@ ui:
       disabled: تم تعطيل صور نموذج السباق
   augments:
     tier:
-      default: الزيادات
+      default: التحسينات
     actions:
-      choose: يختار
-    selected: 'الزيادة المحددة: {0} ({1})'
-    no_description: لم يتم تقديم أي وصف.
+      choose: اختيار
+    selected: 'التحسين المختار: {0} ({1})'
+    no_description: لا يوجد وصف.
     no_augment:
-      title: لا زيادة
-      body: لا توجد زيادات متاحة حاليا.
+      title: لا يوجد تحسين
+      body: لا توجد تحسينات متاحة حاليا.
     no_augments_yet:
       title: لا توجد زيادات حتى الآن
       body: لا توجد زيادات متاحة حتى الآن. فتح القفل التالي عند المستوى {0}.
@@ -80,7 +80,8 @@ ui:
       body: لم يتم تكوين أي مراحل رئيسية لإلغاء القفل المعزز.
     all_claimed:
       title: تم المطالبة بكل شيء
-      next_unlock: لقد طالبت بجميع التعزيزات غير المؤمنة حاليًا. فتح القفل التالي عند المستوى {0}.
+      next_unlock: لقد طالبت بجميع التعزيزات غير المؤمنة حاليًا. فتح القفل التالي
+        عند المستوى {0}.
       done: لقد طالبت بالفعل بجميع عمليات إلغاء القفل الإضافية التي تم تكوينها.
     remaining:
       header: '[EndlessLeveling] لا يزال لديك المزيد من التعزيزات للاختيار من بينها:'
@@ -89,13 +90,15 @@ ui:
       title: خطأ إضافي
       data_unavailable: بيانات الزيادة غير متاحة.
       tier_unresolved: غير قادر على حل الطبقة الإضافية.
-      playerdata_unavailable: غير قادر على تحميل بيانات المشغل الخاص بك. حاول إعادة فتح هذه الصفحة.
+      playerdata_unavailable: غير قادر على تحميل بيانات المشغل الخاص بك. حاول إعادة
+        فتح هذه الصفحة.
       system_unavailable: نظام التعزيز غير متوفر في الوقت الحالي. يرجى الاتصال بالمسؤول.
       definitions_missing: لم يتم تحميل أي تعريفات إضافية. تحقق من /mods/EndlessLeveling/augments.
-      offers_missing: التعزيزات غير المؤمنة مفقودة من عروضك. اطلب من المسؤول تشغيل /el augment refresh <player>.
+      offers_missing: التحسينات المفتوحة مفقودة. اطلب من المسؤول تشغيل /el augment
+        refresh <player>.
       slot_empty: لا زيادة في تلك الفتحة.
     effect:
-      cooldown: 'فترة التهدئة: {0}'
+      cooldown: 'وقت الانتظار: {0}'
       duration_per_stack: 'المدة لكل مكدس: {0}'
       duration: 'المدة: {0}'
       max_stacks: 'الحد الأقصى للأكوام: {0}'
@@ -105,14 +108,14 @@ ui:
         range: ' (النطاق {0}-{1})'
         full_at_distance: ' (كامل على مسافة {0})'
       label:
-        strength: قوة
-        sorcery: شعوذة
-        haste: تسرع
+        strength: القوة
+        sorcery: السحر
+        haste: السرعة
         haste_bonus: تسرع
-        crit_damage: أضرار جسيمة
+        crit_damage: الضرر الحرج
         crit_damage_bonus: أضرار جسيمة
         critical_damage: أضرار جسيمة
-        crit_chance: فرصة حرجة
+        crit_chance: فرصة الإصابة الحرجة
         critical_chance: فرصة حرجة
         life_steal: سرقة الحياة
         life_steal_scaling: سرقة الحياة
@@ -135,14 +138,14 @@ ui:
         self_damage: الضرر الذاتي
         percent_of_current_hp: الضرر الذاتي
         movement_speed_bonus: سرعة التحرك
-        movement_speed: سرعة التحرك
+        movement_speed: سرعة الحركة
         resistance_bonus: مقاومة
-        resistance: مقاومة
+        resistance: المقاومة
         precision: فرصة حرجة
         defense: الدفاع
         wither: يذبل
         slow_percent: بطيء
-        mana: مانا
+        mana: المانا
         mana_from_sorcery: مانا
         sorcery_from_mana: شعوذة
         health_threshold: عتبة الصحة
@@ -431,7 +434,8 @@ ui:
       precision: يزيد من فرصة الضربة الحاسمة لكل هجوم.
       ferocity: يضيف ضررًا إضافيًا لكل ضربة حاسمة.
       stamina: يوسع القدرة على التحمل للمراوغات والكتل والانفجارات.
-      flow: يزيد من التدفق (المانا) بحيث تبقى التعويذات والقدرات على الإنترنت لفترة أطول.
+      flow: يزيد من التدفق (المانا) بحيث تبقى التعويذات والقدرات على الإنترنت لفترة
+        أطول.
       discipline: يزيد معدل الكسب XP من جميع المصادر.
     value:
       resource: '{0} {1}'
@@ -448,11 +452,14 @@ ui:
       applied: المهارات المطبقة!
       added: تمت إضافة {0} نقطة (نقاط) إلى {1}
       removed: تمت إزالة {0} نقطة (نقاط) من {1}
-      precision_capped: الحد الأقصى لفرصة الدقة الحرجة هو 100%؛ النقاط الزائدة لم يتم تطبيقها.
+      precision_capped: الحد الأقصى لفرصة الدقة الحرجة هو 100%؛ النقاط الزائدة لم
+        يتم تطبيقها.
     error:
-      precision_at_cap: فرصة الدقة الحرجة هي بالفعل 100%؛ قم بإزالة المكافآت الأخرى أولاً.
+      precision_at_cap: فرصة الدقة الحرجة هي بالفعل 100%؛ قم بإزالة المكافآت الأخرى
+        أولاً.
       not_enough_points: لا توجد نقاط مهارة كافية
-      precision_no_refund: فرصة الدقة الحرجة تبلغ بالفعل 100% أو أقل؛ لا توجد نقاط زائدة لاستردادها.
+      precision_no_refund: فرصة الدقة الحرجة تبلغ بالفعل 100% أو أقل؛ لا توجد نقاط
+        زائدة لاستردادها.
       below_original: لا يمكن أن ينخفض ​​عن المستوى الأصلي
       invalid_attribute: 'سمة غير صالحة: {0}'
       action_failed: خطأ في التعامل مع عمل المهارة

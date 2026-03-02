@@ -66,12 +66,12 @@ ui:
     tier:
       default: AUGMENTS
     actions:
-      choose: Choose
-    selected: 'Selected augment: {0} ({1})'
-    no_description: No description provided.
+      choose: Choisir
+    selected: 'Augment sélectionné : {0} ({1})'
+    no_description: Aucune description fournie.
     no_augment:
-      title: NO AUGMENT
-      body: No augments are currently available.
+      title: AUCUN AUGMENT
+      body: Aucun augment disponible.
     no_augments_yet:
       title: NO AUGMENTS YET
       body: No augments available yet. Next unlock at level {0}.
@@ -95,13 +95,13 @@ ui:
       system_unavailable: Augment system is unavailable right now. Please contact
         an admin.
       definitions_missing: No augment definitions are loaded. Check /mods/EndlessLeveling/augments.
-      offers_missing: Unlocked augments are missing from your offers. Ask an admin
-        to run /el augment refresh <player>.
+      offers_missing: Augments débloqués manquants. Demandez à un admin de lancer
+        /el augment refresh <player>.
       slot_empty: No augment in that slot.
     effect:
-      cooldown: 'Cooldown: {0}'
+      cooldown: 'Recharge : {0}'
       duration_per_stack: 'Duration per stack: {0}'
-      duration: 'Duration: {0}'
+      duration: 'Durée : {0}'
       max_stacks: 'Max stacks: {0}'
       note:
         full_at_health: ' (full at <= {0}% health)'
@@ -113,10 +113,10 @@ ui:
         sorcery: Sorcellerie
         haste: Hâte
         haste_bonus: Hâte
-        crit_damage: Critical Damage
+        crit_damage: Dégâts Critiques
         crit_damage_bonus: Critical Damage
         critical_damage: Critical Damage
-        crit_chance: Critical Chance
+        crit_chance: Chance Critique
         critical_chance: Critical Chance
         life_steal: Vol de Vie
         life_steal_scaling: Vol de Vie
@@ -139,9 +139,9 @@ ui:
         self_damage: Self Damage
         percent_of_current_hp: Self Damage
         movement_speed_bonus: Move Speed
-        movement_speed: Move Speed
+        movement_speed: Vitesse de Déplacement
         resistance_bonus: Resistance
-        resistance: Resistance
+        resistance: Résistance
         precision: Critical Chance
         defense: Défense
         wither: Dépérissement

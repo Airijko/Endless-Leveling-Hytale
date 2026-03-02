@@ -64,14 +64,14 @@ ui:
       disabled: Race model visuals disabled
   augments:
     tier:
-      default: AUGMENTS
+      default: オーグメント
     actions:
-      choose: Choose
-    selected: 'Selected augment: {0} ({1})'
-    no_description: No description provided.
+      choose: 選択
+    selected: '選択されたオーグメント: {0} ({1})'
+    no_description: 説明がありません。
     no_augment:
-      title: NO AUGMENT
-      body: No augments are currently available.
+      title: オーグメントなし
+      body: 現在利用可能なオーグメントはありません。
     no_augments_yet:
       title: NO AUGMENTS YET
       body: No augments available yet. Next unlock at level {0}.
@@ -95,13 +95,12 @@ ui:
       system_unavailable: Augment system is unavailable right now. Please contact
         an admin.
       definitions_missing: No augment definitions are loaded. Check /mods/EndlessLeveling/augments.
-      offers_missing: Unlocked augments are missing from your offers. Ask an admin
-        to run /el augment refresh <player>.
+      offers_missing: ロック解除されたオーグメントが見つかりません。管理者に /el augment refresh <player> を実行するよう依頼してください。
       slot_empty: No augment in that slot.
     effect:
-      cooldown: 'Cooldown: {0}'
+      cooldown: 'クールダウン: {0}'
       duration_per_stack: 'Duration per stack: {0}'
-      duration: 'Duration: {0}'
+      duration: '持続時間: {0}'
       max_stacks: 'Max stacks: {0}'
       note:
         full_at_health: ' (full at <= {0}% health)'
@@ -109,16 +108,16 @@ ui:
         range: ' (range {0}-{1})'
         full_at_distance: ' (full at {0} distance)'
       label:
-        strength: Strength
-        sorcery: Sorcery
-        haste: Haste
+        strength: 力
+        sorcery: 魔術
+        haste: ヘイスト
         haste_bonus: Haste
-        crit_damage: Critical Damage
+        crit_damage: クリティカルダメージ
         crit_damage_bonus: Critical Damage
         critical_damage: Critical Damage
-        crit_chance: Critical Chance
+        crit_chance: クリティカル率
         critical_chance: Critical Chance
-        life_steal: Life Steal
+        life_steal: ライフスティール
         life_steal_scaling: Life Steal
         heal_on_crit: Life Steal (Crit)
         heal_on_kill: Heal on Kill
@@ -139,14 +138,14 @@ ui:
         self_damage: Self Damage
         percent_of_current_hp: Self Damage
         movement_speed_bonus: Move Speed
-        movement_speed: Move Speed
+        movement_speed: 移動速度
         resistance_bonus: Resistance
-        resistance: Resistance
+        resistance: 耐性
         precision: Critical Chance
-        defense: Defense
+        defense: 防御
         wither: Wither
         slow_percent: Slow
-        mana: Mana
+        mana: マナ
         mana_from_sorcery: Mana
         sorcery_from_mana: Sorcery
         health_threshold: Health Threshold

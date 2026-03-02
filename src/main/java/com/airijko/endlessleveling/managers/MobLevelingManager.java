@@ -304,9 +304,26 @@ public class MobLevelingManager {
         if (position == null)
             return getFixedLevel();
 
+        double centerX = 0.0;
+        double centerZ = 0.0;
+
+        try {
+            Object centerRaw = configManager.get("Mob_Leveling.Level_Source.Distance_Level.Center_Coordinates", "0,0",
+                    false);
+            String centerStr = centerRaw != null ? centerRaw.toString() : "0,0";
+            String[] parts = centerStr.split(",");
+            if (parts.length >= 2) {
+                centerX = Double.parseDouble(parts[0].trim());
+                centerZ = Double.parseDouble(parts[1].trim());
+            }
+        } catch (Exception ignored) {
+            // fallback to 0,0
+        }
         double x = position.getX();
         double z = position.getZ();
-        double distance = Math.sqrt((x * x) + (z * z));
+        double dx = x - centerX;
+        double dz = z - centerZ;
+        double distance = Math.sqrt((dx * dx) + (dz * dz));
 
         double blocksPerLevel = Math.max(1.0,
                 getConfigDouble("Mob_Leveling.Level_Source.Distance_Level.Blocks_Per_Level", 100.0));
