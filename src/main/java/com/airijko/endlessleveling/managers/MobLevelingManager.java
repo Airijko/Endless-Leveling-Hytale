@@ -71,6 +71,11 @@ public class MobLevelingManager {
      */
     public Integer resolveMobLevelForEntity(Ref<EntityStore> ref, Store<EntityStore> store,
             CommandBuffer<EntityStore> commandBuffer) {
+        return resolveMobLevelForEntity(ref, store, commandBuffer, Integer.MAX_VALUE);
+    }
+
+    public Integer resolveMobLevelForEntity(Ref<EntityStore> ref, Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer, int resolveAttempts) {
         if (ref == null)
             return null;
         if (!isMobLevelingEnabled())
@@ -82,7 +87,10 @@ public class MobLevelingManager {
             return null;
         }
 
-        int mobLevel = resolveMobLevel(ref, commandBuffer);
+        int mobLevel = resolveMobLevelForEntityWithDeferredFallback(ref, commandBuffer, resolveAttempts);
+        if (mobLevel <= 0) {
+            return null;
+        }
 
         EntityStatMap statMap = resolveComponent(ref, store, commandBuffer, EntityStatMap.getComponentType());
         if (statMap == null)
@@ -98,9 +106,118 @@ public class MobLevelingManager {
         return mobLevel;
     }
 
+    public String describePlayerContextForEntity(Ref<EntityStore> ref,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        try {
+            Ref<EntityStore> safeRef = ref;
+            Store<EntityStore> safeStore = store;
+            if (safeRef != null && safeStore == null) {
+                safeStore = safeRef.getStore();
+            }
+
+            Vector3d mobPos = getWorldPosition(safeRef, commandBuffer);
+            Universe universe = Universe.get();
+            if (mobPos == null) {
+                return "mode=" + getLevelSourceMode() + "|mobPos=missing";
+            }
+            if (universe == null) {
+                return "mode=" + getLevelSourceMode() + "|universe=missing";
+            }
+
+            int sameWorldPlayers = 0;
+            int inRadiusPlayers = 0;
+            double nearestDistSq = Double.MAX_VALUE;
+            int nearestLevel = -1;
+            double radiusSq = PLAYER_LEVEL_LOCK_RADIUS_BLOCKS * PLAYER_LEVEL_LOCK_RADIUS_BLOCKS;
+
+            for (PlayerRef playerRef : universe.getPlayers()) {
+                if (playerRef == null || !playerRef.isValid()) {
+                    continue;
+                }
+
+                Ref<EntityStore> playerEntityRef = playerRef.getReference();
+                if (playerEntityRef == null) {
+                    continue;
+                }
+
+                if (!isSameWorld(safeStore, playerEntityRef.getStore())) {
+                    continue;
+                }
+                sameWorldPlayers++;
+
+                Vector3d playerPos = getWorldPosition(playerEntityRef, null);
+                if (playerPos == null) {
+                    continue;
+                }
+
+                double distSq = horizontalDistanceSquared(mobPos, playerPos);
+                if (distSq <= radiusSq) {
+                    inRadiusPlayers++;
+                }
+                if (distSq < nearestDistSq) {
+                    nearestDistSq = distSq;
+                    nearestLevel = getPlayerLevel(playerRef.getUuid());
+                }
+            }
+
+            String nearestDistance = nearestDistSq == Double.MAX_VALUE
+                    ? "none"
+                    : String.format(Locale.ROOT, "%.2f", Math.sqrt(Math.max(0.0D, nearestDistSq)));
+            String nearestLevelText = nearestLevel > 0 ? Integer.toString(nearestLevel) : "none";
+
+            return "mode=" + getLevelSourceMode()
+                    + "|sameWorldPlayers=" + sameWorldPlayers
+                    + "|inRadiusPlayers=" + inRadiusPlayers
+                    + "|radius=" + String.format(Locale.ROOT, "%.1f", PLAYER_LEVEL_LOCK_RADIUS_BLOCKS)
+                    + "|nearestDist=" + nearestDistance
+                    + "|nearestLevel=" + nearestLevelText;
+        } catch (Throwable t) {
+            return "playerContext-error=" + t.getClass().getSimpleName();
+        }
+    }
+
+    private int resolveMobLevelForEntityWithDeferredFallback(Ref<EntityStore> ref,
+            CommandBuffer<EntityStore> commandBuffer,
+            int resolveAttempts) {
+        Store<EntityStore> store = ref != null ? ref.getStore() : null;
+        Vector3d position = getWorldPosition(ref, commandBuffer);
+        Integer entityId = ref != null ? ref.getIndex() : null;
+
+        Integer override = resolveExternalOverride(store, position, entityId);
+        if (override != null && override > 0) {
+            return clampToConfiguredRange(override);
+        }
+
+        LevelSourceMode mode = getLevelSourceMode();
+        int level;
+        try {
+            level = switch (mode) {
+                case PLAYER -> resolvePlayerBasedLevelWithDeferredFallback(store, position, entityId, resolveAttempts);
+                case MIXED -> resolveMixedLevel(store, position, entityId);
+                case DISTANCE -> resolveDistanceLevel(store, position);
+                case FIXED -> getFixedLevel();
+            };
+        } catch (Throwable t) {
+            LOGGER.atWarning().log("MobLeveling: failed to resolve level via mode %s: %s", mode, t.toString());
+            level = getFixedLevel();
+        }
+
+        if (level <= 0) {
+            return -1;
+        }
+
+        return clampToConfiguredRange(level);
+    }
+
     private boolean isEligibleForMobLeveling(Ref<EntityStore> ref,
             Store<EntityStore> store,
             CommandBuffer<EntityStore> commandBuffer) {
+        Object npcComp = resolveComponent(ref, store, commandBuffer, NPCEntity.getComponentType());
+        if (npcComp == null) {
+            return false;
+        }
+
         PlayerRef playerRef = resolveComponent(ref, store, commandBuffer, PlayerRef.getComponentType());
         if (playerRef != null && playerRef.isValid()) {
             return false;
@@ -113,11 +230,6 @@ public class MobLevelingManager {
         DeathComponent deathComponent = resolveComponent(ref, store, commandBuffer, DeathComponent.getComponentType());
         if (deathComponent != null) {
             return false;
-        }
-
-        if (!allowPassiveMobLeveling()) {
-            Object npcComp = resolveComponent(ref, store, commandBuffer, NPCEntity.getComponentType());
-            return npcComp != null;
         }
 
         return true;
@@ -385,7 +497,23 @@ public class MobLevelingManager {
             return clampToConfiguredRange(computed);
         }
 
-        return getFixedLevel();
+        return -1;
+    }
+
+    private int resolvePlayerBasedLevelWithDeferredFallback(Store<EntityStore> store,
+            Vector3d mobPos,
+            Integer entityId,
+            int resolveAttempts) {
+        if (resolveAttempts < 0) {
+            return -1;
+        }
+
+        int computed = computePlayerModeLevelFromNearestPlayer(store, mobPos, entityId);
+        if (computed > 0) {
+            return clampToConfiguredRange(computed);
+        }
+
+        return -1;
     }
 
     private int computePlayerModeLevelFromNearestPlayer(Store<EntityStore> store, Vector3d mobPos, Integer entityId) {
@@ -393,7 +521,7 @@ public class MobLevelingManager {
             return -1;
         }
 
-        int nearestPlayerLevel = findNearestPlayerLevelWithinRadius(store, mobPos, PLAYER_LEVEL_LOCK_RADIUS_BLOCKS);
+        int nearestPlayerLevel = findNearestPlayerLevel(store, mobPos);
         if (nearestPlayerLevel <= 0) {
             return -1;
         }
