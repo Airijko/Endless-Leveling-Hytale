@@ -46,7 +46,6 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     private static final String MOB_HEALTH_SCALE_MODIFIER_KEY = "EL_MOB_HEALTH_SCALE";
     private static final float SYSTEM_INTERVAL_SECONDS = 0.15f;
     private static final long STALE_ENTITY_TTL_MILLIS = 100_000L;
-    private static final long NAMEPLATE_SYNC_DELAY_MILLIS = 300L;
 
     private final MobLevelingManager mobLevelingManager = EndlessLeveling.getInstance().getMobLevelingManager();
     private final Map<Long, Integer> healthAppliedLevel = new ConcurrentHashMap<>();
@@ -240,7 +239,6 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                                     commandBuffer,
                                     entityId,
                                     entityKey,
-                                    currentTimeMillis,
                                     currentEntitySignature,
                                     currentStep);
                         }
@@ -274,8 +272,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                                 && currentSettledHealthLevel.equals(appliedLevel);
                         int resolveAssignments = levelResolveAssignmentCountByEntityKey.getOrDefault(entityKey, 0);
                         boolean initializationSettled = healthSettled
-                                && resolveAssignments > 0
-                                && isNameplateSyncReady(entityKey, currentTimeMillis);
+                                && resolveAssignments > 0;
 
                         if (showMobLevelUi && initializationSettled) {
                             Integer nameplateAppliedLevel = appliedNameplateLevelByEntityKey.get(entityKey);
@@ -738,7 +735,6 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             CommandBuffer<EntityStore> commandBuffer,
             int entityId,
             long entityKey,
-            long currentTimeMillis,
             String signature,
             long currentStep) {
         if (ref == null || commandBuffer == null || mobLevelingManager == null || entityId < 0) {
@@ -779,9 +775,6 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         if (levelSet) {
             resolveAssignments = resolveAssignments + 1;
             levelResolveAssignmentCountByEntityKey.put(entityKey, resolveAssignments);
-            nameplateSyncReadyAtTimeByEntityKey.put(
-                    entityKey,
-                    currentTimeMillis + NAMEPLATE_SYNC_DELAY_MILLIS);
         } else if (resolveAssignments <= 0) {
             resolveAssignments = 1;
             levelResolveAssignmentCountByEntityKey.put(entityKey, resolveAssignments);
@@ -813,11 +806,6 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         }
 
         return resolvedLevel;
-    }
-
-    private boolean isNameplateSyncReady(long entityKey, long currentTimeMillis) {
-        Long readyAt = nameplateSyncReadyAtTimeByEntityKey.get(entityKey);
-        return readyAt == null || currentTimeMillis >= readyAt;
     }
 
     private void logHealthApplySkipIfChanged(long entityKey,

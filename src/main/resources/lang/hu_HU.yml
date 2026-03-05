@@ -1,0 +1,587 @@
+meta:
+  locale_name: "Hungarian (HU)"
+
+notify:
+  prefix: "[EndlessLeveling] "
+  skills:
+    command: "/el"
+    unspent:
+      primary: "Van {0} elköltetlen képességpontod!"
+      secondary:
+        open: "Nyisd meg a "
+        close: "-t a befektetéshez"
+    chat:
+      have: "Még mindig van "
+      use: " képességpontod. Használd a "
+      end: " parancsot az elköltésükhöz."
+  augments:
+    available:
+      header: "[EndlessLeveling] Új augmentációk érhetöek el számodra:"
+      footer: "Használd a /el augments parancsot a választáshoz."
+  xp_suppressed:
+    mob_label: "ez a mob"
+    mob_label_level: "ez a mob ({0}. szint)"
+    player_too_high: "Nincs XP jutalom: a szinted ({0}) túl magas ehhez: {1}."
+    player_too_low: "Nincs XP jutalom: {0} messze a szinted ({1}) felett van."
+
+augments:
+  stacks:
+    max: "{0} maximális jelzön ({1})."
+    update: "{0}: {1}/{2} jelzö."
+    expired: "{0} jelzö lejárt."
+    remaining: "{0}: {1}/{2} jelzö maradt."
+  executioner:
+    triggered: "{0} aktiválva! +{1}% sebzés."
+  fortress:
+    activated: "{0} aktiválva! Pajzs {1} másodpercig, bónuszok {2} másodpercig."
+    buff_ended: "{0} bónusz véget ért."
+    shield_ended: "{0} sztázis pajzs véget ért."
+  undying_rage:
+    active: "{0} aktív {1} másodpercig."
+    ended: "{0} idötartama lejárt."
+  rebirth:
+    activated: "{0} aktiválva! {1}% maximális életerö visszaállítva."
+  first_strike:
+    triggered: "{0} aktiválva! +{1}% sebzés."
+    lost: "{0} elveszett: megütöttek a támadás elött. Töltési idö elindult."
+
+hud:
+  common:
+    unavailable: "--"
+  race:
+    none: "Nincs faj"
+  class:
+    none: "Nincs"
+  mob:
+    level:
+      single: "{0}. Szint"
+      single_compact: "{0}. Szint"
+      range: "{0}-{1}. Szint"
+
+ui:
+  common:
+    toggle:
+      on: "Be"
+      off: "Ki"
+      disabled: "Kikapcsolva"
+    state:
+      enabled: "engedélyezve"
+      disabled: "tiltva"
+
+  settings:
+    player_hud:
+      label: "Játékos HUD"
+      toggled: "Játékos HUD {0}"
+    critical_notif:
+      label: "Kritikus ütés értesítések"
+      toggled: "Kritikus ütés értesítések {0}"
+    xp_notif:
+      label: "XP szerzés értesítések"
+      toggled: "XP szerzés értesítések {0}"
+    passive_levelup_notif:
+      label: "Passzív szintlépés értesítések"
+      toggled: "Passzív szintlépés értesítések {0}"
+    luck_double_notif:
+      label: "Szerencse dupla-drop értesítések"
+      toggled: "Szerencse dupla-drop értesítések {0}"
+    health_regen_notif:
+      label: "Életerö regeneráció értesítések"
+      toggled: "Életerö regeneráció értesítések {0}"
+    race_model:
+      label: "Faji modell megjelenítése"
+      globally_disabled: "A faji modell megjelenítését a szerver konfigurációja letiltotta."
+      enabled: "Faji modell megjelenítése engedélyezve"
+      disabled: "Faji modell megjelenítése letiltva"
+
+  augments:
+    tier:
+      default: "Fejlesztések"
+    actions:
+      choose: "Kiválasztás"
+    selected: "Kiválasztott augmentáció: {0} ({1})"
+    no_description: "Nincs leírás megadva."
+    no_augment:
+      title: "Nincs fejlesztés"
+      body: "Jelenleg nem érhetö el augmentáció."
+    no_augments_yet:
+      title: "Még nincs fejlesztés"
+      body: "Még nem érhetö el augmentáció. Következö feloldás a(z) {0}. szinten."
+    no_augments:
+      title: "Nincs fejlesztés"
+      body: "Nincsenek augmentáció feloldási mérföldkövek konfigurálva."
+    all_claimed:
+      title: "Mind megszerezve"
+      next_unlock: "Minden jelenleg elérhetö augmentációt megszereztél. Következö feloldás a(z) {0}. szinten."
+      done: "Már megszerezted az összes konfigurált augmentáció feloldást."
+    remaining:
+      header: "[EndlessLeveling] További augmentációk közül választhatsz:"
+      footer: "Válassz most újra."
+    error:
+      title: "Fejlesztési hiba"
+      data_unavailable: "Augmentáció adatok nem elérhetöek."
+      tier_unresolved: "Nem sikerült meghatározni az augmentáció szintjét."
+      playerdata_unavailable: "Nem sikerült betölteni a játékosadataidat. Próbáld meg újranyitni az oldalt."
+      system_unavailable: "Az augmentáció rendszer jelenleg nem elérhetö. Vedd fel a kapcsolatot egy adminisztrátorral."
+      definitions_missing: "Nincsenek augmentáció definíciók betöltve. Ellenörizd: /mods/EndlessLeveling/augments."
+      offers_missing: "A feloldott augmentációk hiányoznak az ajánlataid közül. Kérj meg egy admint a /el augment refresh <player> futtatására."
+      slot_empty: "Nincs augmentáció abban a foglalatban."
+    effect:
+      cooldown: "Töltési idö: {0}"
+      duration_per_stack: "Idötartam jelzönként: {0}"
+      duration: "Idötartam: {0}"
+      max_stacks: "Max jelzök: {0}"
+      note:
+        full_at_health: " (maximum <= {0}% életerönél)"
+        full_at_ratio: " (maximum {0}x aránynál)"
+        range: " (távolság {0}-{1})"
+        full_at_distance: " (maximum {0} távolságnál)"
+      label:
+        strength: "Erö"
+        sorcery: "Varázserö"
+        haste: "Gyorsaság"
+        haste_bonus: "Gyorsaság"
+        crit_damage: "Kritikus sebzés"
+        crit_damage_bonus: "Kritikus sebzés"
+        critical_damage: "Kritikus sebzés"
+        crit_chance: "Kritikus esély"
+        critical_chance: "Kritikus esély"
+        life_steal: "Életlopás"
+        life_steal_scaling: "Életlopás"
+        heal_on_crit: "Életlopás (Kritikus)"
+        heal_on_kill: "Gyógyulás öléskor"
+        heal_over_time: "Késleltetett sebzés"
+        heal_to_damage: "Gyógyulásból sebzés"
+        bonus_damage_on_hit: "Bónusz sebzés"
+        bonus_damage: "Bónusz sebzés"
+        max_bonus_damage: "Bónusz sebzés"
+        max_bonus_ferocity: "Ferocitás"
+        strength_from_max_health: "Erö"
+        sorcery_bonus_high: "Varázserö"
+        sorcery_penalty_low: "Varázserö"
+        crit_defense: "Sebzéscsökkentés"
+        taunt_radius: "Aggro hatósugár"
+        bonus_damage_by_distance: "Bónusz sebzés"
+        bonus_damage_vs_hp_ratio: "Bónusz sebzés"
+        execution_heal: "Kivégzési gyógyítás"
+        self_damage: "Önsebzés"
+        percent_of_current_hp: "Önsebzés"
+        movement_speed_bonus: "Mozgási sebesség"
+        movement_speed: "Mozgási sebesség"
+        resistance_bonus: "Ellenállás"
+        resistance: "Ellenállás"
+        precision: "Kritikus esély"
+        defense: "Védelem"
+        wither: "Elsorvadás"
+        slow_percent: "Lassítás"
+        mana: "Mana"
+        mana_from_sorcery: "Mana"
+        sorcery_from_mana: "Varázserö"
+        health_threshold: "Életerö küszöb"
+        trigger_threshold: "Aktiválási küszöb"
+        full_value_at_health_percent: "Teljes érték küszöb"
+        max_distance: "Max távolság (teljes bónusz)"
+
+  races:
+    count: "{0} {1}"
+    count_none: "0 elérhetö"
+    count_word:
+      singular: "faj"
+      plural: "faj"
+    current:
+      none: "Nincs kiválasztva"
+    status:
+      current: "Jelenlegi"
+      viewing: "Megtekintés"
+    page:
+      title: "Fajok Archívuma"
+      available: "Elérhetö fajok"
+      current_title: "Jelenlegi faj"
+      current_badge: "Aktív"
+      current_hint: "Az aktív fajod határozza meg az identitásod és a veled született bónuszaidat."
+      lore_title: "Történet elönézet"
+      stats_title: "Faji statisztikák"
+      passives_title: "Passzív képességek"
+    offline:
+      title: "Fajok Offline"
+      subtitle: "A fajok jelenleg le vannak tiltva a config.yml fájlban."
+      hint: "Engedélyezd a fajokat az identitások kezeléséhez."
+    playerdata:
+      title: "Játékosadatok nem elérhetöek"
+      subtitle: "Jelenleg nem sikerült betölteni a faji információidat."
+      hint: "Próbáld meg újranyitni ezt az oldalt pár pillanat múlva."
+    select:
+      title: "Válassz egy fajt"
+      subtitle: "Válassz egy fajt a bal oldalon az elönézethez."
+    subtitle:
+      current: "Jelenleg aktív"
+      preview: "Csak elönézet"
+    lore:
+      unavailable: "Történet nem elérhetö."
+      missing: "Ehhez a fajhoz nincs leírás megadva."
+    actions:
+      view: "Megtekintés"
+      choose: "Választás"
+      swap: "Csere"
+    passives:
+      none_selected: "Nincs faj kiválasztva."
+      none_defined: "Ez a faj nem rendelkezik passzív bónuszokkal."
+    cooldown:
+      disabled: "Letiltva"
+      card_title: "Fajcsere töltési idö"
+      card_hint: "Az ismételt csere akkor válik elérhetövé, ha az idözítö eléri a nullát."
+      default_warning: "A csere után a hátralévö töltési idöre zárolva leszel."
+      bypassed: "Megkerülve"
+      bypassed_hint: "Operátori felülbírálás aktív."
+      bypassed_detail: "Operátori felülbírálás aktív. A csere azonnali."
+      in_cooldown: "Csere töltödik"
+      ready: "Kész"
+      swap_triggers: "A csere {0} töltési idöt von maga után."
+      unrestricted: "A fajcsere jelenleg korlátozás nélküli."
+      try_again_prefix: "Újra cserélhetsz ennyi idö múlva: "
+      unlocks_in: "Csere elérhetö: {0}."
+    chat:
+      prefix: "[Fajok] "
+      changed_prefix: "Mostantól a következö fajhoz tartozol: "
+    error:
+      playerdata: "Jelenleg nem sikerült betölteni a faji információidat."
+      select_first: "Válassz egy fajt, amire cserélni szeretnél."
+      disabled: "A fajok le vannak tiltva."
+      unknown: "Ismeretlen faj: {0}"
+      already_selected: "Már ehhez a fajhoz tartozol."
+      no_changes_remaining: "Nincs több fajcsere lehetöséged."
+    attribute_tagline:
+      life_force: "Alap életerö"
+      strength: "Sebzés skálázódás"
+      sorcery: "Mágikus sebzés"
+      defense: "Sebzéscsökkentés"
+      haste: "Mozgási sebesség"
+      precision: "Kritikus esély"
+      ferocity: "Kritikus sebzés"
+      stamina: "Alap állóképesség"
+      flow: "Alap Mana"
+      discipline: "XP szerzés"
+    passive:
+      default_name: "Passzív"
+      label:
+        with_attribute: "{0} ({1})"
+      type:
+        xp_bonus: "XP bónusz"
+        health_regen: "Életerö regen."
+        mana_regen: "Mana regen."
+        mana_regen_flat: "Fix mana regen."
+        regeneration: "Regeneráció"
+        healing_bonus: "Gyógyítás bónusz"
+        life_steal: "Életlopás"
+        special_charge_bonus: "Speciális töltés bónusz"
+        stamina_gain_bonus: "Állóképesség szerzés bónusz"
+        luck: "Szerencse"
+        second_wind: "Újult erö"
+        first_strike: "Elsö csapás"
+        innate_attribute_gain: "Veled született tulajdonság bónusz"
+        adrenaline: "Adrenalin"
+        berzerker: "Berzerker"
+        retaliation: "Megtorlás"
+        executioner: "Hóhér"
+        swiftness: "Fürgeség"
+        wither: "Elsorvadás"
+        crit_defense: "Kritikus védelem"
+      scope:
+        hp: "HP"
+        stamina: "állóképesség"
+        target_hp: "célpont HP"
+      desc:
+        xp_bonus: "{0} XP szerzés"
+        health_regen: "{0} HP/5mp"
+        mana_regen: "{0} mana/5mp"
+        mana_regen_flat: "{0} mana/mp"
+        regeneration: "{0} HP/mp"
+        healing_bonus: "{0} gyógyítás"
+        life_steal: "{0} életlopás"
+        charge_bonus: "{0} töltési sebesség"
+        stamina_gain: "{0} állóképesség szerzés"
+        luck: "{0} szerencse"
+        second_wind: "{0} gyógyulás"
+        first_strike: "{0} nyitósebzés"
+        adrenaline: "{0} állóképesség"
+        berzerker: "{0} sebzés"
+        retaliation: "{0} visszasebzés"
+        executioner: "{0} kivégzés"
+        swiftness: "{0} sebesség"
+        wither: "{0} max HP/mp"
+        crit_defense: "{0} sebzéscsökkentés"
+      detail:
+        threshold: "<{0}% {1}"
+        slow: "{0} lassítás"
+        scales_with: "skálázódik ezzel: {0}"
+        per_level: "{0} szintenként"
+        total_at_level: "{0} (Összesen {1} @ {2}. Sz)"
+        duration: "{0}mp idötartam"
+        cooldown: "{0}mp cd"
+        window: "{0}mp idöablak"
+        stacks: "{0} jelzö"
+
+  classes:
+    count: "{0} {1}"
+    count_none: "0 elérhetö"
+    count_word:
+      singular: "kaszt"
+      plural: "kaszt"
+    current:
+      primary_none: "Nincs hozzárendelve"
+    status:
+      primary: "Elsödleges"
+      secondary: "Másodlagos"
+      viewing: "Megtekintés"
+    slot:
+      primary: "elsödleges"
+      secondary: "másodlagos"
+    page:
+      title: "Kaszt Kódex"
+      cooldown_title: "Kasztcsere töltési idö"
+      available: "Elérhetö kasztok"
+      assignments: "Kaszt hozzárendelések"
+      secondary_share_hint: "A másodlagos kasztok a bónuszok 50%-át adják."
+      sorcery_label: "Varázserö bónusz"
+      lore_title: "Történet elönézet"
+      weapons_title: "Fegyver affinitások"
+      innate_title: "Veled született tulajdonság bónuszok"
+      passives_title: "Passzív képességek"
+    none_selected: "Nincs kaszt kiválasztva."
+    offline:
+      title: "Kasztok Offline"
+      subtitle: "Az kasztok jelenleg le vannak tiltva a config.yml fájlban."
+      lore: "Engedélyezd az kasztokat az archetípusok böngészéséhez."
+      hint: "Engedélyezd az kasztokat az archetípusok kezeléséhez."
+      weapons: "Fegyver bónuszok nem elérhetöek."
+      passives: "Passzív bónuszok nem elérhetöek."
+    playerdata:
+      title: "Játékosadatok nem elérhetöek"
+      subtitle: "Jelenleg nem sikerült betölteni az kaszt információidat."
+      lore: "Próbáld meg újranyitni ezt az oldalt pár pillanat múlva."
+      hint: "Próbáld meg újranyitni ezt az oldalt pár pillanat múlva."
+    select:
+      title: "Válassz egy kasztot"
+      subtitle: "Válassz egy kasztot a bal oldalon a szerepkör és passzívok megtekintéséhez."
+    role:
+      unspecified: "Szerepkör: Nincs meghatározva"
+      value: "Szerepkör: {0}"
+      empty: "Szerepkör: --"
+    lore:
+      unavailable: "Történet nem elérhetö."
+      missing: "Ehhez az kaszthoz nincs leírás megadva."
+    subtitle:
+      primary: "Jelenleg az elsödleges kasztod"
+      secondary: "Jelenleg a másodlagos kasztod (50% hatékonyság)"
+      preview: "Csak elönézet"
+    weapons:
+      none_defined: "Ez az kaszt nem határoz meg fegyver bónuszokat."
+    weapon:
+      sword: "Kard"
+      axe: "Fejsze"
+      bow: "Íj"
+      staff: "Bot"
+      dagger: "Tör"
+      gauntlet: "Kesztyü"
+      mace: "Buzogány"
+      spear: "Lándzsa"
+      crossbow: "Számszeríj"
+      wand: "Varázspálca"
+      unarmed: "Fegyvertelen"
+      generic: "Általános"
+    cooldown:
+      bypassed: "Megkerülve"
+      bypassed_hint: "Admin felülbírálás aktív; töltési idök figyelmen kívül hagyva."
+      bypassed_detail: "Admin felülbírálás aktív; a csere azonnali."
+      each_swap: "Minden csere {0} töltési idöt von maga után foglalatonként."
+      unrestricted: "Az kasztcsere jelenleg korlátozás nélküli."
+      ready: "Kész"
+    actions:
+      view: "Megtekintés"
+      set_primary: "Elsödlegesnek"
+      set_secondary: "Másodlagosnak"
+    detail:
+      select_prompt: "Válassz egy kasztot a bónuszok elönézetéhez."
+      primary_slot: "Elsödleges"
+      secondary_slot: "Másodlagos"
+      swap_triggers: "Az kasztváltás {0} töltési idöt von maga után."
+      primary_bonus: "Az elsödleges kasztok a bónuszok 100%-át adják."
+      secondary_bonus: "A másodlagos kasztok a fegyver + passzív hatások 50%-át adják."
+      secondary_disabled: "A másodlagos kasztok le vannak tiltva a konfigurációban."
+    passives:
+      none_defined: "Ez az kaszt nem határoz meg passzív bónuszokat."
+      none_innate: "Ez az kaszt nem ad veled született tulajdonság bónuszokat."
+    secondary_cleared: "Másodlagos kaszt törölve."
+    info:
+      primary_set: "Elsödleges kaszt beállítva: {0}."
+      secondary_set: "Másodlagos kaszt beállítva: {0}."
+    value:
+      weapon_damage: "+{0}% sebzés"
+      weapon_damage_negative: "-{0}% sebzés"
+    passive:
+      detail:
+        threshold: "<{0}% {1}"
+    error:
+      disabled: "Az kasztok jelenleg le vannak tiltva."
+      playerdata: "Jelenleg nem sikerült betölteni az kaszt információidat."
+      select_primary: "Válassz egy kasztot az elsödleges helyre."
+      primary_already: "Ez már az elsödleges kasztod."
+      secondary_disabled: "A másodlagos kasztok jelenleg le vannak tiltva."
+      select_secondary: "Válassz egy kasztot a másodlagos helyre."
+      secondary_matches_primary: "A másodlagos kasztod nem egyezhet meg az elsödlegessel."
+      secondary_already: "Ez már a másodlagos kasztod."
+      secondary_set_failed: "Nem sikerült beállítani másodlagos kasztként."
+      secondary_none: "Nincs másodlagos kasztod hozzárendelve."
+      unknown: "Ismeretlen kaszt: {0}"
+      cooldown_remaining: "A(z) {0} kasztodat újra cserélheted ennyi idö múlva: {1}."
+      no_changes_remaining: "Nincs több kasztcsere lehetöséged."
+
+  skills:
+    unknown: "Ismeretlen"
+    points: "Képességpontok: {0}"
+    page:
+      title: "Képesség Tulajdonságok"
+      subtitle: "Ossz el pontokat a harci stílusod kialakításához."
+      footer_hint: "Visszavonás a függöben lévö módosításokhoz, Alkalmazás a véglegesítéshez."
+      undo: "Vissza"
+      apply: "Alkalmaz"
+    level_prefix: "Szint"
+    label:
+      life_force: "Életerö"
+      strength: "Erö"
+      sorcery: "Varázserö"
+      defense: "Védelem"
+      haste: "Gyorsaság"
+      precision: "Precízió"
+      ferocity: "Ferocitás"
+      stamina: "Állóképesség"
+      flow: "Mana"
+      discipline: "Fegyelem"
+    description:
+      life_force: "Növeli az összes életerödet, hogy több ütést bírj ki."
+      strength: "Növeli a fizikai sebzést közelharci és távolsági fegyvereknél."
+      sorcery: "Növeli a mágikus sebzést bot fegyvereknél."
+      defense: "Csökkenti a bejövö sebzést ellenállásokon keresztül."
+      haste: "Növeli a mozgási sebességet."
+      precision: "Növeli a kritikus ütési esélyt minden támadásnál."
+      ferocity: "Bónusz sebzést ad minden kritikus találathoz."
+      stamina: "Növeli az állóképességet kitérésekhez, blokkoláshoz és rohamokhoz."
+      flow: "Növeli a manát, így a varázslatok és képességek tovább használhatóak."
+      discipline: "Növeli az XP szerzési arányt minden forrásból."
+    value:
+      resource: "{0} {1}"
+      strength: "+{0}% sebzés"
+      sorcery: "+{0}% mágikus sebzés"
+      defense: "{0}% csökkentés"
+      haste: "+{0}% sebesség"
+      precision: "{0}% kritikus esély"
+      ferocity: "+{0}% kritikus sebzés"
+      discipline: "+{0}% XP szerzés"
+    message:
+      granted: "Képességpontokat kaptál!"
+      reset: "Függöben lévö változtatások visszaállítva."
+      applied: "Képességek alkalmazva!"
+      added: "Hozzáadva {0} pont a következöhöz: {1}"
+      removed: "Levonva {0} pont a következötöl: {1}"
+      precision_capped: "A Precízió kritikus esélye elérte a 100%-ot; a felesleges pontok nem lettek alkalmazva."
+    error:
+      precision_at_cap: "A Precízió kritikus esélye már 100%; elöbb távolíts el más bónuszokat."
+      not_enough_points: "Nincs elég képességpontod"
+      precision_no_refund: "A Precízió kritikus esélye már 100% vagy alacsonyabb; nincs felesleges pont a visszatérítéshez."
+      below_original: "Nem mehetsz az eredeti szint alá"
+      invalid_attribute: "Érvénytelen tulajdonság: {0}"
+      action_failed: "Hiba a képesség müvelet során"
+    resource:
+      health: "Életerö"
+      stamina: "Állóképesség"
+      flow: "Mana"
+
+  time:
+    hours: "{0}ó"
+    minutes: "{0}p"
+    seconds: "{0}mp"
+
+  nav:
+    profile: "Profil"
+    skills: "Képességek"
+    races: "Fajok"
+    classes: "Kasztok"
+    leaderboards: "Ranglista"
+    settings: "Beállítások"
+
+  profile:
+    playerdata:
+      unavailable: "Játékosadatok nem elérhetöek."
+    detail:
+      title: "Kiválasztott Profil"
+      subtitle:
+        default: "Válassz egy profilt a statisztikák megtekintéséhez"
+    level:
+      short: "Szint {0}"
+    list:
+      title: "Profilok {0}/{1}"
+      slot: "Slot {0}"
+      level: "Szint {0}"
+      xp: "{0} XP"
+      select: "Kiválasztás"
+      status:
+        active: "Aktív"
+      delete:
+        confirm: "Törlöd ezt: {0}?"
+    passives:
+      none: "Nincsenek aktív passzív bónuszok"
+      innate_none: "Nincsenek aktív veled született passzívok"
+      innate_attr_none: "Nincsenek veled született tulajdonság bónuszok"
+      select_prompt: "Válassz egy profilt a passzív bónuszok megtekintéséhez"
+      select_innate_prompt: "Válassz egy profilt a veled született bónuszok megtekintéséhez"
+      level_label: "{0} ({1} Szint)"
+    augments:
+      none: "Nincsenek aktív augmentációk"
+    error:
+      load: "Jelenleg nem sikerült betölteni a profiljaidat."
+      generic: "Hiba történt a kérés feldolgozása közben."
+      max_slots: "Minden profil foglalat foglalt. Törölj egyet elöbb."
+      no_open_slot: "Jelenleg nem található üres foglalat."
+      create_failed: "Nem sikerült létrehozni a profil foglalatot."
+      slot_range: "A profil foglalatnak 1 és {0} között kell lennie."
+      slot_missing: "A(z) {0}. profil foglalat még nem lett létrehozva."
+      switch_failed: "Jelenleg nem sikerült átváltani arra a foglalatra."
+      confirm_first: "Kérlek, elöbb erösítsd meg a(z) {0}. foglalat törlését."
+      delete_failed: "Jelenleg nem sikerült törölni a profil foglalatot."
+      slot_empty: "A(z) {0}. profil foglalat már üres."
+      delete_active: "Válts egy másik profilra a(z) {0}. foglalat törlése elött."
+      keep_one: "Legalább egy profil foglalatot meg kell tartanod."
+    info:
+      created: "A(z) {0}. profil foglalat létrehozva és aktiválva."
+      already_active: "A(z) {0}. profil foglalat már aktív."
+      switched: "Átváltva a(z) {0}. profil foglalatra ({1})."
+      delete_prompt: "Nyomd meg a MEGERöSÍTÉS gombot a(z) {0}. profil foglalat törléséhez."
+      deleted: "A(z) {0}. profil foglalat törölve."
+      delete_canceled: "Profil törlése megszakítva."
+
+command:
+  language:
+    usage: "Használat: /el lang list | /el lang set <nyelv>"
+    current: "Jelenlegi nyelv: {0}"
+    available: "Elérhetö nyelvek: {0}"
+    invalid: "Ismeretlen nyelv: '{0}'. Elérhetö nyelvek: {1}"
+    updated: "Nyelv beállítva: {0}."
+
+command:
+  language:
+    unavailable: "A nyelvkezelö nem elérhetö."
+    data_not_loaded: "A játékosadataid még nem töltödtek be."
+    current: "Jelenlegi nyelv: {0}"
+    available: "Elérhetö nyelvek: {0}"
+    usage: "Használat: /el language list | /el language set <locale>"
+    invalid: "Ismeretlen nyelv: '{0}'. Elérhetö nyelvek: {1}"
+    updated: "Nyelv beállítva: {0}."
+  reset_cooldowns:
+    unavailable: "A passzív és augmentáció kezelök nem elérhetöek."
+    success: "Passzív töltési idök alaphelyzetbe állítva {0} játékosnál, és minden augmentáció töltési idö törölve."
+  reset_skillpoints:
+    system_unavailable: "A képességrendszer nincs inicializálva. Vedd fel a kapcsolatot egy adminisztrátorral."
+    player_not_found: "Játékos nem található: {0}"
+    no_data: "Nem található mentett adat. Próbálj meg újracsatlakozni."
+    success_target: "Képességpontok alaphelyzetbe állítva nála: {0}."
+    notify_target: "Egy adminisztrátor alaphelyzetbe állította a képességpontjaidat az alapértelmezett elosztásra."
+    success_self: "A képességpontjaid alaphelyzetbe lettek állítva az alapértelmezett elosztásra."
