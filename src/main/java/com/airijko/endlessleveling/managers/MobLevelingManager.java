@@ -2072,6 +2072,41 @@ public class MobLevelingManager {
         entityLevelOverridesScoped.put(toEntityKey(store, entityIndex), level);
     }
 
+    public Integer getEntityLevelOverride(Store<EntityStore> store, int entityIndex) {
+        if (entityIndex < 0) {
+            return null;
+        }
+
+        if (store != null) {
+            Integer scoped = entityLevelOverridesScoped.get(toEntityKey(store, entityIndex));
+            if (scoped != null && scoped > 0) {
+                return scoped;
+            }
+        }
+
+        Integer direct = entityLevelOverrides.get(entityIndex);
+        if (direct != null && direct > 0) {
+            return direct;
+        }
+
+        return null;
+    }
+
+    public boolean setEntityLevelOverrideIfChanged(Store<EntityStore> store, int entityIndex, int level) {
+        if (store == null || entityIndex < 0 || level <= 0) {
+            return false;
+        }
+
+        long entityKey = toEntityKey(store, entityIndex);
+        Integer previous = entityLevelOverridesScoped.get(entityKey);
+        if (previous != null && previous == level) {
+            return false;
+        }
+
+        entityLevelOverridesScoped.put(entityKey, level);
+        return true;
+    }
+
     /** Remove a specific entity override. */
     public void clearEntityLevelOverride(int entityIndex) {
         entityLevelOverrides.remove(entityIndex);

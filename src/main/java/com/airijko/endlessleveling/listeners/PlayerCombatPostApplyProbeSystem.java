@@ -10,6 +10,7 @@ import com.hypixel.hytale.component.dependency.Order;
 import com.hypixel.hytale.component.dependency.SystemDependency;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
@@ -23,6 +24,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -31,8 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlayerCombatPostApplyProbeSystem extends DamageEventSystem {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private final Map<Integer, Integer> lethalWithoutDeathStreak = new ConcurrentHashMap<>();
-    private final Map<Integer, Float> lastObservedHpByTarget = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> lethalWithoutDeathStreak = new ConcurrentHashMap<>();
+    private final Map<Long, Float> lastObservedHpByTarget = new ConcurrentHashMap<>();
     private final MobLevelingManager mobLevelingManager;
 
     public PlayerCombatPostApplyProbeSystem(MobLevelingManager mobLevelingManager) {
@@ -92,21 +94,25 @@ public class PlayerCombatPostApplyProbeSystem extends DamageEventSystem {
 
         boolean dead = commandBuffer.getComponent(targetRef, DeathComponent.getComponentType()) != null;
         int targetId = targetRef.getIndex();
+        long targetKey = resolveTrackingKey(targetRef, commandBuffer);
         int mobLevel = -1;
-        if (mobLevelingManager != null && mobLevelingManager.isMobLevelingEnabled()) {
-            mobLevel = mobLevelingManager.resolveMobLevel(targetRef, commandBuffer);
+        if (mobLevelingManager != null) {
+            Integer assignedLevel = mobLevelingManager.getEntityLevelOverride(targetRef.getStore(), targetId);
+            if (assignedLevel != null && assignedLevel > 0) {
+                mobLevel = assignedLevel;
+            }
         }
 
         if (dead) {
-            lethalWithoutDeathStreak.remove(targetId);
-            lastObservedHpByTarget.remove(targetId);
+            lethalWithoutDeathStreak.remove(targetKey);
+            lastObservedHpByTarget.remove(targetKey);
         }
 
-        lethalWithoutDeathStreak.remove(targetId);
+        lethalWithoutDeathStreak.remove(targetKey);
 
-        Float previousObservedHp = lastObservedHpByTarget.get(targetId);
+        Float previousObservedHp = lastObservedHpByTarget.get(targetKey);
         if (Float.isFinite(hp)) {
-            lastObservedHpByTarget.put(targetId, hp);
+            lastObservedHpByTarget.put(targetKey, hp);
         }
 
         if (!dead && previousObservedHp != null && Float.isFinite(previousObservedHp) && Float.isFinite(hp)) {
@@ -138,5 +144,40 @@ public class PlayerCombatPostApplyProbeSystem extends DamageEventSystem {
                 hp,
                 max,
                 mobLevel);
+    }
+
+    private long toEntityKey(Store<EntityStore> store, int entityId) {
+        long storePart = store == null ? 0L : Integer.toUnsignedLong(System.identityHashCode(store));
+        long entityPart = Integer.toUnsignedLong(entityId);
+        return (storePart << 32) | entityPart;
+    }
+
+    private long resolveTrackingKey(Ref<EntityStore> ref, CommandBuffer<EntityStore> commandBuffer) {
+        if (ref == null) {
+            return -1L;
+        }
+
+        Store<EntityStore> store = ref.getStore();
+        UUIDComponent uuidComponent = commandBuffer != null
+                ? commandBuffer.getComponent(ref, UUIDComponent.getComponentType())
+                : null;
+
+        if (uuidComponent == null && store != null) {
+            uuidComponent = store.getComponent(ref, UUIDComponent.getComponentType());
+        }
+
+        if (uuidComponent != null) {
+            try {
+                UUID uuid = uuidComponent.getUuid();
+                if (uuid != null) {
+                    long storePart = store == null ? 0L : Integer.toUnsignedLong(System.identityHashCode(store));
+                    long uuidPart = uuid.getMostSignificantBits() ^ Long.rotateLeft(uuid.getLeastSignificantBits(), 1);
+                    return uuidPart ^ (storePart << 32);
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+
+        return toEntityKey(store, ref.getIndex());
     }
 }
