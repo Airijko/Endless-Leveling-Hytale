@@ -199,9 +199,9 @@ Mob_Leveling:
       # values below/above that range use the corresponding Below/Above values.
       Enabled: true
       At_Negative_Max_Difference: 0.0 # e.g. mob is -Max_Difference relative to player -> 0% DR
-      At_Positive_Max_Difference: 0.7 # e.g. mob is +Max_Difference relative to player -> 70% DR
+      At_Positive_Max_Difference: 0.6 # e.g. mob is +Max_Difference relative to player -> 60% DR
       Below_Negative_Max_Difference: 0.0 # e.g. mob is below -Max_Difference relative to player
-      Above_Positive_Max_Difference: 0.9 # e.g. mob is above +Max_Difference relative to player -> 90% DR
+      Above_Positive_Max_Difference: 0.85 # e.g. mob is above +Max_Difference relative to player -> 85% DR
 
   # -------------------------------------------------
   # EXPERIENCE & ANTI-EXPLOIT RULES
