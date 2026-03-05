@@ -45,8 +45,6 @@ import java.lang.reflect.Method;
 public class RaceManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final int BUILTIN_RACES_VERSION = 7;
-    private static final String RACES_VERSION_FILE = "races.version";
     private final ConcurrentHashMap<UUID, Long> modelApplyTimestamps = new ConcurrentHashMap<>();
 
     private final PluginFilesManager filesManager;
@@ -496,19 +494,20 @@ public class RaceManager {
         }
 
         int storedVersion = readRacesVersion(racesFolder);
-        if (storedVersion == BUILTIN_RACES_VERSION) {
+        if (storedVersion == VersionRegistry.BUILTIN_RACES_VERSION) {
             return; // up to date
         }
 
         filesManager.archivePathIfExists(racesFolder.toPath(), "races", "races.version:" + storedVersion);
         clearDirectory(racesFolder.toPath());
         filesManager.exportResourceDirectory("races", racesFolder, true);
-        writeRacesVersion(racesFolder, BUILTIN_RACES_VERSION);
-        LOGGER.atInfo().log("Synced built-in races to version %d (force_builtin_races=true)", BUILTIN_RACES_VERSION);
+        writeRacesVersion(racesFolder, VersionRegistry.BUILTIN_RACES_VERSION);
+        LOGGER.atInfo().log("Synced built-in races to version %d (force_builtin_races=true)",
+                VersionRegistry.BUILTIN_RACES_VERSION);
     }
 
     private int readRacesVersion(File racesFolder) {
-        Path versionPath = racesFolder.toPath().resolve(RACES_VERSION_FILE);
+        Path versionPath = racesFolder.toPath().resolve(VersionRegistry.RACES_VERSION_FILE);
         if (!Files.exists(versionPath)) {
             return -1;
         }
@@ -522,7 +521,7 @@ public class RaceManager {
     }
 
     private void writeRacesVersion(File racesFolder, int version) {
-        Path versionPath = racesFolder.toPath().resolve(RACES_VERSION_FILE);
+        Path versionPath = racesFolder.toPath().resolve(VersionRegistry.RACES_VERSION_FILE);
         try {
             Files.writeString(versionPath, Integer.toString(version));
         } catch (IOException e) {

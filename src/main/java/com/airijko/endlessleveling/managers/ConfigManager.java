@@ -31,7 +31,6 @@ public class ConfigManager {
     private final boolean createBackupOnRefresh;
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private final String resourceName;
-    private static final String CONFIG_VERSION_KEY = "config_version";
 
     public ConfigManager(File configFile) {
         this(null, configFile, true);
@@ -272,7 +271,7 @@ public class ConfigManager {
     private void mergeBundledDefaultsPreservingUserValues() throws IOException {
         Map<String, Object> bundledMap = loadBundledConfigMap();
         Map<String, Object> merged = mergeMapsPreservingUserValues(bundledMap, configMap);
-        merged.put(CONFIG_VERSION_KEY, bundledConfigVersion);
+        merged.put(VersionRegistry.CONFIG_VERSION_KEY, bundledConfigVersion);
         writeMergedWithBundledTemplate(merged, bundledMap);
         configMap = merged;
         LOGGER.atInfo().log("Rebuilt %s from bundled resource template and migrated existing values (version=%d)",
@@ -883,6 +882,11 @@ public class ConfigManager {
     }
 
     private int resolveBundledConfigVersion() {
+        Integer centralizedVersion = VersionRegistry.getResourceConfigVersion(resourceName);
+        if (centralizedVersion != null) {
+            return centralizedVersion;
+        }
+
         try (InputStream in = ConfigManager.class.getClassLoader().getResourceAsStream(resourceName)) {
             if (in == null) {
                 throw new IllegalStateException("Bundled config resource missing: " + resourceName);
@@ -903,7 +907,7 @@ public class ConfigManager {
         if (source == null || source.isEmpty()) {
             return null;
         }
-        Object versionValue = source.get(CONFIG_VERSION_KEY);
+        Object versionValue = source.get(VersionRegistry.CONFIG_VERSION_KEY);
         if (versionValue instanceof Number number) {
             double raw = number.doubleValue();
             if (Double.isNaN(raw) || raw % 1 != 0) {

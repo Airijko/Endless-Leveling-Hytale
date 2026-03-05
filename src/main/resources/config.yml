@@ -62,10 +62,10 @@ passives:
   luck:
     enabled: true
     unlock_level: 20
-    base_value: 10.0
-    value_per_level: 10.0
-    max_level: 10
-    tier_interval: 7
+    base_value: 2.5
+    value_per_level: 2.5
+    max_level: 40
+    tier_interval: 5
 
   signature_gain:
     enabled: true
@@ -145,8 +145,7 @@ force_builtin_languages: true # If true, keep bundled language files in sync wit
 enable_logging: false # Master toggle: true enables ALL mod logs (debug + info + warnings)
 logging:
   base_level: WARNING # When enable_logging is false, base level is clamped to WARNING/SEVERE (INFO suppressed unless enable_logging is true or a debug section is enabled).
-  debug_sections:
-    [systems.MobLevelingSystem] # Inline list of package prefixes to fully enable debug logging for. Examples (uncomment to use):
+  debug_sections: [] # Inline list of package prefixes to fully enable debug logging for. Examples (uncomment to use):
     # [augments]
     # [augments, managers.AugmentRuntimeManager]
     # [listeners, systems]

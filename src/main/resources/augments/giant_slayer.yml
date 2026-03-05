@@ -9,5 +9,5 @@ passives:
     max_value: 2.0 # 200% max bonus damage
     scaling_stat: TARGET_CURRENT_HP
     reference_stat: PLAYER_CURRENT_HP
-    max_ratio: 3.0 # max bonus when target has 3× your HP
+    max_ratio: 10.0 # max bonus when target has 10x your HP
     calculation: "linear" # scales linearly between equal HP and max_ratio

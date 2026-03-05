@@ -41,8 +41,6 @@ import java.util.stream.Stream;
 public class ClassManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final int BUILTIN_CLASSES_VERSION = 8;
-    private static final String CLASSES_VERSION_FILE = "classes.version";
 
     private final PluginFilesManager filesManager;
     private final ConfigManager configManager;
@@ -446,20 +444,20 @@ public class ClassManager {
         }
 
         int storedVersion = readClassesVersion(classesFolder);
-        if (storedVersion == BUILTIN_CLASSES_VERSION) {
+        if (storedVersion == VersionRegistry.BUILTIN_CLASSES_VERSION) {
             return; // up to date
         }
 
         filesManager.archivePathIfExists(classesFolder.toPath(), "classes", "classes.version:" + storedVersion);
         clearDirectory(classesFolder.toPath());
         filesManager.exportResourceDirectory("classes", classesFolder, true);
-        writeClassesVersion(classesFolder, BUILTIN_CLASSES_VERSION);
+        writeClassesVersion(classesFolder, VersionRegistry.BUILTIN_CLASSES_VERSION);
         LOGGER.atInfo().log("Synced built-in classes to version %d (force_builtin_classes=true)",
-                BUILTIN_CLASSES_VERSION);
+                VersionRegistry.BUILTIN_CLASSES_VERSION);
     }
 
     private int readClassesVersion(File classesFolder) {
-        Path versionPath = classesFolder.toPath().resolve(CLASSES_VERSION_FILE);
+        Path versionPath = classesFolder.toPath().resolve(VersionRegistry.CLASSES_VERSION_FILE);
         if (!Files.exists(versionPath)) {
             return -1;
         }
@@ -473,7 +471,7 @@ public class ClassManager {
     }
 
     private void writeClassesVersion(File classesFolder, int version) {
-        Path versionPath = classesFolder.toPath().resolve(CLASSES_VERSION_FILE);
+        Path versionPath = classesFolder.toPath().resolve(VersionRegistry.CLASSES_VERSION_FILE);
         try {
             Files.writeString(versionPath, Integer.toString(version));
         } catch (IOException e) {

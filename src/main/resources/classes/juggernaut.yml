@@ -21,8 +21,7 @@ passives:
     value: 0.04 # Heal 4% of max HP every 5 seconds
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: life_force
-    value: 1.5
+    value: 2.0
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: strength
     value: 1.0
-

@@ -141,7 +141,7 @@ Mob_Leveling:
     # Player_Weight is 0.0 to 1.0:
     # 0.0 = always DISTANCE, 1.0 = always PLAYER
     Mixed:
-      Player_Weight: 0.75
+      Player_Weight: 0.5
 
     # Mob level is based on the player's level
   Player_Based:
@@ -199,9 +199,9 @@ Mob_Leveling:
       # values below/above that range use the corresponding Below/Above values.
       Enabled: true
       At_Negative_Max_Difference: 0.0 # e.g. mob is -Max_Difference relative to player -> 0% DR
-      At_Positive_Max_Difference: 0.6 # e.g. mob is +Max_Difference relative to player -> 60% DR
+      At_Positive_Max_Difference: 0.8 # e.g. mob is +Max_Difference relative to player -> 80% DR
       Below_Negative_Max_Difference: 0.0 # e.g. mob is below -Max_Difference relative to player
-      Above_Positive_Max_Difference: 0.85 # e.g. mob is above +Max_Difference relative to player -> 85% DR
+      Above_Positive_Max_Difference: 0.9 # e.g. mob is above +Max_Difference relative to player -> 85% DR
 
   # -------------------------------------------------
   # EXPERIENCE & ANTI-EXPLOIT RULES
@@ -225,7 +225,7 @@ Mob_Leveling:
 
       # No XP if the player is this many levels
       # above OR below the mob
-      Max_Difference: 10
+      Max_Difference: 15
 
       # Hard cutoffs
       Below_Range:

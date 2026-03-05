@@ -21,7 +21,7 @@ passives:
     threshold: 0.3
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: life_force
-    value: 2.0
+    value: 1.75
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: strength
     value: 1.2

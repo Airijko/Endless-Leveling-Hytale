@@ -6,9 +6,9 @@ icon: "Weapon_Shortbow_Combat"
 
 weapons:
   - type: BOW
-    damage: 1.25
+    damage: 1.35
   - type: CROSSBOW
-    damage: 1.25
+    damage: 1.35
   - type: DAGGER
     damage: 1.05
 
@@ -28,4 +28,3 @@ passives:
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: ferocity
     value: 1.2
-

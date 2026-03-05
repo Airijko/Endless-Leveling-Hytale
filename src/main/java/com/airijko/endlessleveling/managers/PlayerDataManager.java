@@ -49,10 +49,6 @@ public class PlayerDataManager {
     private static final long AUTO_BACKUP_MIN_INTERVAL_MS = 10 * 60 * 1000L; // 10 minutes between backups per player
     private static final DateTimeFormatter AUTO_BACKUP_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
-    // Current schema version for player data files. Increment when adding new
-    // fields that require migration. Use this to detect/outdate/migrate files.
-    private static final int CURRENT_PLAYERDATA_VERSION = 8;
-
     public PlayerDataManager(PluginFilesManager filesManager,
             SkillManager skillManager,
             RaceManager raceManager,
@@ -72,7 +68,7 @@ public class PlayerDataManager {
     }
 
     public int getCurrentPlayerDataVersion() {
-        return CURRENT_PLAYERDATA_VERSION;
+        return VersionRegistry.PLAYERDATA_SCHEMA_VERSION;
     }
 
     // --- Load or create a player ---
@@ -220,7 +216,7 @@ public class PlayerDataManager {
         try {
             // Migrate file if it's an older schema version. This will create
             // a backup of the original file and write a migrated file in-place.
-            map = PlayerDataMigration.migrateIfNeeded(file, map, yaml, CURRENT_PLAYERDATA_VERSION);
+            map = PlayerDataMigration.migrateIfNeeded(file, map, yaml, VersionRegistry.PLAYERDATA_SCHEMA_VERSION);
         } catch (Exception e) {
             LOGGER.atSevere().log("Failed to migrate PlayerData for UUID %s from %s: %s", uuid,
                     file.getName(), e.getMessage());
@@ -752,7 +748,7 @@ public class PlayerDataManager {
 
     private Map<String, Object> buildYamlMap(PlayerData data) {
         Map<String, Object> map = new LinkedHashMap<>();
-        map.put("version", CURRENT_PLAYERDATA_VERSION);
+        map.put(VersionRegistry.PLAYERDATA_VERSION_KEY, VersionRegistry.PLAYERDATA_SCHEMA_VERSION);
         map.put("playerName", data.getPlayerName());
         map.put("activeProfile", data.getActiveProfileIndex());
 

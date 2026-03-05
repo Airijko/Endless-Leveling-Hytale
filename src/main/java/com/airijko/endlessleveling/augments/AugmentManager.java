@@ -2,6 +2,7 @@ package com.airijko.endlessleveling.augments;
 
 import com.airijko.endlessleveling.managers.ConfigManager;
 import com.airijko.endlessleveling.managers.PluginFilesManager;
+import com.airijko.endlessleveling.managers.VersionRegistry;
 import com.hypixel.hytale.logger.HytaleLogger;
 import org.yaml.snakeyaml.Yaml;
 
@@ -21,8 +22,6 @@ import java.util.stream.Stream;
 public class AugmentManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final int BUILTIN_AUGMENTS_VERSION = 3;
-    private static final String AUGMENTS_VERSION_FILE = "augments.version";
 
     private final Yaml yaml;
     private final Path root;
@@ -100,20 +99,20 @@ public class AugmentManager {
         }
 
         int storedVersion = readAugmentsVersion(augmentsFolder);
-        if (storedVersion == BUILTIN_AUGMENTS_VERSION) {
+        if (storedVersion == VersionRegistry.BUILTIN_AUGMENTS_VERSION) {
             return;
         }
 
         filesManager.archivePathIfExists(augmentsFolder.toPath(), "augments", "augments.version:" + storedVersion);
         clearDirectory(augmentsFolder.toPath());
         filesManager.exportResourceDirectory("augments", augmentsFolder, true);
-        writeAugmentsVersion(augmentsFolder, BUILTIN_AUGMENTS_VERSION);
+        writeAugmentsVersion(augmentsFolder, VersionRegistry.BUILTIN_AUGMENTS_VERSION);
         LOGGER.atInfo().log("Synced built-in augments to version %d (force_builtin_augments=true)",
-                BUILTIN_AUGMENTS_VERSION);
+                VersionRegistry.BUILTIN_AUGMENTS_VERSION);
     }
 
     private int readAugmentsVersion(File augmentsFolder) {
-        Path versionPath = augmentsFolder.toPath().resolve(AUGMENTS_VERSION_FILE);
+        Path versionPath = augmentsFolder.toPath().resolve(VersionRegistry.AUGMENTS_VERSION_FILE);
         if (!Files.exists(versionPath)) {
             return -1;
         }
@@ -127,7 +126,7 @@ public class AugmentManager {
     }
 
     private void writeAugmentsVersion(File augmentsFolder, int version) {
-        Path versionPath = augmentsFolder.toPath().resolve(AUGMENTS_VERSION_FILE);
+        Path versionPath = augmentsFolder.toPath().resolve(VersionRegistry.AUGMENTS_VERSION_FILE);
         try {
             Files.writeString(versionPath, Integer.toString(version));
         } catch (IOException e) {

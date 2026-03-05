@@ -26,8 +26,6 @@ public class LanguageManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final String DEFAULT_LOCALE = "en_US";
-    private static final int BUILTIN_LANG_VERSION = 1;
-    private static final String LANG_VERSION_FILE = "lang.version";
 
     private final PluginFilesManager filesManager;
     private final ConfigManager configManager;
@@ -301,20 +299,20 @@ public class LanguageManager {
         }
 
         int storedVersion = readLangVersion(langFolder);
-        if (storedVersion == BUILTIN_LANG_VERSION) {
+        if (storedVersion == VersionRegistry.BUILTIN_LANG_VERSION) {
             return;
         }
 
         filesManager.archivePathIfExists(langFolder.toPath(), "lang", "lang.version:" + storedVersion);
         clearDirectory(langFolder.toPath());
         filesManager.exportResourceDirectory("lang", langFolder, true);
-        writeLangVersion(langFolder, BUILTIN_LANG_VERSION);
+        writeLangVersion(langFolder, VersionRegistry.BUILTIN_LANG_VERSION);
         LOGGER.atInfo().log("Synced built-in language files to version %d (force_builtin_languages=true)",
-                BUILTIN_LANG_VERSION);
+                VersionRegistry.BUILTIN_LANG_VERSION);
     }
 
     private int readLangVersion(File langFolder) {
-        Path versionPath = langFolder.toPath().resolve(LANG_VERSION_FILE);
+        Path versionPath = langFolder.toPath().resolve(VersionRegistry.LANG_VERSION_FILE);
         if (!Files.exists(versionPath)) {
             return -1;
         }
@@ -328,7 +326,7 @@ public class LanguageManager {
     }
 
     private void writeLangVersion(File langFolder, int version) {
-        Path versionPath = langFolder.toPath().resolve(LANG_VERSION_FILE);
+        Path versionPath = langFolder.toPath().resolve(VersionRegistry.LANG_VERSION_FILE);
         try {
             Files.writeString(versionPath, Integer.toString(version));
         } catch (IOException e) {
