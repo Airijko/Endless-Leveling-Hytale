@@ -144,9 +144,24 @@ public final class EndlessLevelingAPI {
         return data != null ? data.getXp() : 0.0D;
     }
 
+    /** Current prestige level (0 if missing). */
+    public int getPlayerPrestigeLevel(UUID uuid) {
+        PlayerData data = getData(uuid);
+        return data != null ? data.getPrestigeLevel() : 0;
+    }
+
     /** Maximum configured level cap. */
     public int getLevelCap() {
         return levelingManager != null ? levelingManager.getLevelCap() : 0;
+    }
+
+    /** Player-specific level cap (includes prestige scaling). */
+    public int getLevelCap(UUID uuid) {
+        if (levelingManager == null) {
+            return 0;
+        }
+        PlayerData data = getData(uuid);
+        return data != null ? levelingManager.getLevelCap(data) : levelingManager.getLevelCap();
     }
 
     /**
@@ -154,6 +169,18 @@ public final class EndlessLevelingAPI {
      */
     public double getXpForNextLevel(int level) {
         return levelingManager != null ? levelingManager.getXpForNextLevel(level) : Double.POSITIVE_INFINITY;
+    }
+
+    /**
+     * Player-specific next-level XP; includes prestige base XP scaling.
+     * Returns POSITIVE_INFINITY if unavailable or at/above cap.
+     */
+    public double getXpForNextLevel(UUID uuid, int level) {
+        if (levelingManager == null) {
+            return Double.POSITIVE_INFINITY;
+        }
+        PlayerData data = getData(uuid);
+        return levelingManager.getXpForNextLevel(data, level);
     }
 
     public String getRaceId(UUID uuid) {

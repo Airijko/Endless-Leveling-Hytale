@@ -151,6 +151,28 @@ $C.@PageOverlay {
                             }
                         }
 
+                        Group {
+                            LayoutMode: Left;
+                            Anchor: (Height: 34);
+
+                            Group {
+                                LayoutMode: Top;
+                                Anchor: (Width: 110);
+
+                                Label {
+                                    Text: "PRESTIGE";
+                                    Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
+                                    Anchor: (Height: 10);
+                                }
+
+                                Label #DetailPrestigeValue {
+                                    Text: "--";
+                                    Style: (FontSize: 16, TextColor: #ffffff);
+                                    Anchor: (Height: 18);
+                                }
+                            }
+                        }
+
                         Group { Anchor: (Height: 14); }
 
                         Group #DetailScrollArea {

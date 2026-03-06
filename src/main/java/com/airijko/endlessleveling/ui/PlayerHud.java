@@ -263,11 +263,13 @@ public class PlayerHud extends CustomUIHud {
             return "LVL " + data.getLevel() + "   XP: " + formatXpValue(currentXp);
         }
 
-        if (data.getLevel() >= levelingManager.getLevelCap()) {
-            return "LVL " + levelingManager.getLevelCap() + "   MAX LEVEL";
+        int effectiveCap = levelingManager.getLevelCap(data);
+
+        if (data.getLevel() >= effectiveCap) {
+            return "LVL " + effectiveCap + "   MAX LEVEL";
         }
 
-        double xpNeeded = levelingManager.getXpForNextLevel(data.getLevel());
+        double xpNeeded = levelingManager.getXpForNextLevel(data, data.getLevel());
         if (!Double.isFinite(xpNeeded) || xpNeeded <= 0.0) {
             return "LVL " + data.getLevel() + "   MAX LEVEL";
         }
@@ -282,11 +284,12 @@ public class PlayerHud extends CustomUIHud {
             return 0.0;
         }
 
-        if (data.getLevel() >= levelingManager.getLevelCap()) {
+        int effectiveCap = levelingManager.getLevelCap(data);
+        if (data.getLevel() >= effectiveCap) {
             return 1.0;
         }
 
-        double xpNeeded = levelingManager.getXpForNextLevel(data.getLevel());
+        double xpNeeded = levelingManager.getXpForNextLevel(data, data.getLevel());
         if (!Double.isFinite(xpNeeded) || xpNeeded <= 0.0) {
             return 0.0;
         }

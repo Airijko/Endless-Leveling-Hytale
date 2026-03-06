@@ -405,6 +405,7 @@ public class PlayerDataManager {
 
         profile.setXp(parseDouble(source.get("xp"), 0.0));
         profile.setLevel(parseInt(source.get("level"), 1));
+        profile.setPrestigeLevel(parseInt(source.get("prestige"), 0));
         profile.setSkillPoints(parseInt(source.get("skillPoints"), profile.getSkillPoints()));
         profile.setName(PlayerData.normalizeProfileName(parseString(source.get("name")), slot));
 
@@ -794,6 +795,7 @@ public class PlayerDataManager {
                     Map<String, Object> profileMap = new LinkedHashMap<>();
                     profileMap.put("xp", profile.getXp());
                     profileMap.put("level", profile.getLevel());
+                    profileMap.put("prestige", profile.getPrestigeLevel());
                     profileMap.put("skillPoints", profile.getSkillPoints());
                     profileMap.put("name", profile.getName());
 

@@ -208,6 +208,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set("#DetailTitleLabel.Text", profile.getName());
         ui.set("#DetailSubtitleLabel.Text", tr("ui.profile.list.slot", "Slot {0}", slot));
         ui.set("#DetailLevelValue.Text", String.valueOf(profile.getLevel()));
+        ui.set("#DetailPrestigeValue.Text", String.valueOf(profile.getPrestigeLevel()));
         ui.set("#DetailXpValue.Text", tr("ui.profile.list.xp", "{0} XP", formatNumber(profile.getXp())));
         ui.set("#DetailRaceValue.Text", getRaceDisplay(profile));
 
@@ -268,6 +269,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set("#DetailTitleLabel.Text", tr("ui.profile.detail.title", "Selected Profile"));
         ui.set("#DetailSubtitleLabel.Text", subtitle);
         ui.set("#DetailLevelValue.Text", tr("hud.common.unavailable", "--"));
+        ui.set("#DetailPrestigeValue.Text", tr("hud.common.unavailable", "--"));
         ui.set("#DetailXpValue.Text", tr("hud.common.unavailable", "--"));
         ui.set("#DetailRaceValue.Text", tr("hud.common.unavailable", "--"));
         applyAttributeDisplay(ui, "#AttributeLifeForceValue", "#AttributeLifeForceLevel", emptyAttributeDisplay());

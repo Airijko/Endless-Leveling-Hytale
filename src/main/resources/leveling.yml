@@ -7,7 +7,12 @@ default:
 baseSkillPoints: 12
 skillPointsPerLevel: 6
 
-player_level_cap: 100
+player_level_cap: 75
+
+prestige:
+  enabled: true
+  level_cap_increase_per_prestige: 25
+  base_xp_increase_per_prestige: 10
 
 Mob_Leveling:
   Experience:

@@ -498,8 +498,8 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         }
 
         int level = Math.max(1, playerData.getLevel());
-        int eligibleMilestones = augmentUnlockManager.getEligibleMilestoneCount(level);
-        int nextUnlockLevel = augmentUnlockManager.getNextUnlockLevel(level);
+        int eligibleMilestones = augmentUnlockManager.getEligibleMilestoneCount(playerData, level);
+        int nextUnlockLevel = augmentUnlockManager.getNextUnlockLevel(playerData, level);
 
         if (eligibleMilestones <= 0) {
             if (nextUnlockLevel > 0) {

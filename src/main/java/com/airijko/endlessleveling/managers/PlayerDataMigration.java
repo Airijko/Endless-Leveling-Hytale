@@ -125,6 +125,10 @@ public final class PlayerDataMigration {
                 ensureClassSlotTimestamps(migrated);
                 LOGGER.atInfo().log("Migrated %s from v7 to v8.", file.getName());
             }
+            case 8 -> {
+                ensureProfilePrestige(migrated);
+                LOGGER.atInfo().log("Migrated %s from v8 to v9.", file.getName());
+            }
             default -> LOGGER.atInfo().log("Bumped %s from v%d to v%d (default).", file.getName(), fromVersion,
                     fromVersion + 1);
         }
@@ -340,6 +344,44 @@ public final class PlayerDataMigration {
         classesMap.putIfAbsent("primaryLastChangedEpochSeconds", legacyTimestamp);
         classesMap.putIfAbsent("secondaryLastChangedEpochSeconds", legacyTimestamp);
         migrated.put("classes", classesMap);
+    }
+
+    private static void ensureProfilePrestige(Map<String, Object> migrated) {
+        int legacyPrestige = 0;
+        Object legacyNode = migrated.get("prestige");
+        if (legacyNode instanceof Number number) {
+            legacyPrestige = Math.max(0, number.intValue());
+        } else if (legacyNode instanceof String stringValue) {
+            try {
+                legacyPrestige = Math.max(0, Integer.parseInt(stringValue.trim()));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        Object profilesNode = migrated.get("profiles");
+        if (profilesNode instanceof Map<?, ?> rawProfiles) {
+            @SuppressWarnings("unchecked")
+            Map<Object, Object> profilesMap = (Map<Object, Object>) rawProfiles;
+            for (Map.Entry<Object, Object> entry : profilesMap.entrySet()) {
+                Map<String, Object> profileMap = toMutableStringObjectMap(entry.getValue());
+                if (profileMap == null) {
+                    profileMap = new LinkedHashMap<>();
+                }
+                int slot = parseProfileIndex(entry.getKey());
+                int fallback = slot == 1 ? legacyPrestige : 0;
+                profileMap.putIfAbsent("prestige", fallback);
+                profilesMap.put(entry.getKey(), profileMap);
+            }
+        } else {
+            Map<String, Object> profile = toMutableStringObjectMap(migrated.get("profile"));
+            if (profile == null) {
+                profile = new LinkedHashMap<>();
+            }
+            profile.putIfAbsent("prestige", legacyPrestige);
+            migrated.put("profile", profile);
+        }
+
+        migrated.remove("prestige");
     }
 
     private static int parseProfileIndex(Object key) {

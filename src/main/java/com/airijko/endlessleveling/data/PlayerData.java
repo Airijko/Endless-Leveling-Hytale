@@ -277,6 +277,20 @@ public class PlayerData {
         getActiveProfile().setLevel(level);
     }
 
+    public int getPrestigeLevel() {
+        return getActiveProfile().getPrestigeLevel();
+    }
+
+    public void setPrestigeLevel(int prestigeLevel) {
+        LOGGER.atFine().log("Setting Prestige for %s (UUID: %s) profile %d to %d", playerName, uuid,
+                activeProfileIndex, prestigeLevel);
+        getActiveProfile().setPrestigeLevel(prestigeLevel);
+    }
+
+    public void incrementPrestigeLevel() {
+        getActiveProfile().setPrestigeLevel(getActiveProfile().getPrestigeLevel() + 1);
+    }
+
     public int getSkillPoints() {
         return getActiveProfile().getSkillPoints();
     }
@@ -554,6 +568,7 @@ public class PlayerData {
     public static final class PlayerProfile {
         private double xp;
         private int level;
+        private int prestigeLevel;
         private int skillPoints;
         private final Map<SkillAttributeType, Integer> attributes;
         private final Map<PassiveType, Integer> passiveLevels;
@@ -575,6 +590,7 @@ public class PlayerData {
         private PlayerProfile(int startingSkillPoints, String name) {
             this.xp = 0.0;
             this.level = 1;
+            this.prestigeLevel = 0;
             this.skillPoints = Math.max(0, startingSkillPoints);
             this.attributes = new EnumMap<>(SkillAttributeType.class);
             for (SkillAttributeType type : SkillAttributeType.values()) {
@@ -621,6 +637,14 @@ public class PlayerData {
 
         public int getSkillPoints() {
             return skillPoints;
+        }
+
+        public int getPrestigeLevel() {
+            return prestigeLevel;
+        }
+
+        public void setPrestigeLevel(int prestigeLevel) {
+            this.prestigeLevel = Math.max(0, prestigeLevel);
         }
 
         public void setSkillPoints(int skillPoints) {

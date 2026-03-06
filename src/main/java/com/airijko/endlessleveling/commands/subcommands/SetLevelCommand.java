@@ -28,10 +28,8 @@ public class SetLevelCommand extends AbstractPlayerCommand {
     private final LevelingManager levelingManager;
 
     // Arguments: target player name, new level
-    private final RequiredArg<String> targetArg =
-            this.withRequiredArg("player", "Target player name", ArgTypes.STRING);
-    private final RequiredArg<Integer> levelArg =
-            this.withRequiredArg("level", "New level to set", ArgTypes.INTEGER);
+    private final RequiredArg<String> targetArg = this.withRequiredArg("player", "Target player name", ArgTypes.STRING);
+    private final RequiredArg<Integer> levelArg = this.withRequiredArg("level", "New level to set", ArgTypes.INTEGER);
 
     public SetLevelCommand() {
         super("setlevel", "Set a player's level");
@@ -47,20 +45,16 @@ public class SetLevelCommand extends AbstractPlayerCommand {
             @Nonnull Store<EntityStore> store,
             @Nonnull Ref<EntityStore> ref,
             @Nonnull PlayerRef senderRef,
-            @Nonnull World world
-    ) {
+            @Nonnull World world) {
         CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
 
         String targetName = targetArg.get(commandContext);
         int requestedLevel = levelArg.get(commandContext);
-        int levelCap = levelingManager.getLevelCap();
 
         if (requestedLevel < 1) {
             senderRef.sendMessage(Message.raw("Level must be 1 or higher."));
             return;
         }
-
-        int clampedLevel = Math.min(requestedLevel, levelCap);
 
         // Look up player by name in the data manager
         PlayerData targetData = playerDataManager.getByName(targetName);
@@ -69,25 +63,25 @@ public class SetLevelCommand extends AbstractPlayerCommand {
             return;
         }
 
+        int levelCap = levelingManager.getLevelCap(targetData);
+        int clampedLevel = Math.min(requestedLevel, levelCap);
+
         // Apply level change through LevelingManager
         levelingManager.setPlayerLevel(targetData, clampedLevel);
 
         if (requestedLevel != clampedLevel) {
             senderRef.sendMessage(Message.raw(
-                    "Requested level exceeds cap (" + levelCap + "). Applied cap instead."
-            ));
+                    "Requested level exceeds cap (" + levelCap + "). Applied cap instead."));
         }
 
         senderRef.sendMessage(Message.raw(
-                "Set level of " + targetName + " to " + clampedLevel
-        ));
+                "Set level of " + targetName + " to " + clampedLevel));
 
         // If target is online, notify them
         PlayerRef targetRef = Universe.get().getPlayer(targetData.getUuid());
         if (targetRef != null) {
             targetRef.sendMessage(Message.raw(
-                    "Your level has been set to " + clampedLevel + " by an admin!"
-            ));
+                    "Your level has been set to " + clampedLevel + " by an admin!"));
         }
     }
 }

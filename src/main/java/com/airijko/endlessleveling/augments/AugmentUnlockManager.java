@@ -69,7 +69,7 @@ public class AugmentUnlockManager {
                 playerData.getLevel(), unlockRules.size());
 
         int playerLevel = playerData.getLevel();
-        Map<PassiveTier, Integer> eligibleByTier = buildEligibleByTier(playerLevel);
+        Map<PassiveTier, Integer> eligibleByTier = buildEligibleByTier(playerData, playerLevel);
         Set<String> excludedAugmentIds = collectOwnedAugmentIds(playerData);
         excludedAugmentIds.addAll(collectArchetypeBlockedAugmentIds(playerData));
 
@@ -153,8 +153,26 @@ public class AugmentUnlockManager {
         return next == Integer.MAX_VALUE ? -1 : next;
     }
 
+    public int getNextUnlockLevel(@Nonnull PlayerData playerData, int currentLevel) {
+        int next = getNextUnlockLevel(currentLevel);
+        int prestigeLevel = Math.max(0, playerData.getPrestigeLevel());
+
+        if (prestigeLevel > 0 && currentLevel < 25) {
+            next = next <= 0 ? 25 : Math.min(next, 25);
+        }
+        if (prestigeLevel >= 5 && currentLevel < 50) {
+            next = next <= 0 ? 50 : Math.min(next, 50);
+        }
+
+        return next;
+    }
+
     public int getEligibleMilestoneCount(int playerLevel) {
-        Map<PassiveTier, Integer> eligibleByTier = buildEligibleByTier(playerLevel);
+        return getEligibleMilestoneCount(null, playerLevel);
+    }
+
+    public int getEligibleMilestoneCount(PlayerData playerData, int playerLevel) {
+        Map<PassiveTier, Integer> eligibleByTier = buildEligibleByTier(playerData, playerLevel);
         int total = 0;
         for (int count : eligibleByTier.values()) {
             total += Math.max(0, count);
@@ -163,7 +181,7 @@ public class AugmentUnlockManager {
     }
 
     public int getGrantedMilestoneCount(@Nonnull PlayerData playerData, int playerLevel) {
-        Map<PassiveTier, Integer> eligibleByTier = buildEligibleByTier(playerLevel);
+        Map<PassiveTier, Integer> eligibleByTier = buildEligibleByTier(playerData, playerLevel);
         int total = 0;
         for (Map.Entry<PassiveTier, Integer> entry : eligibleByTier.entrySet()) {
             String tierKey = entry.getKey().name();
@@ -366,7 +384,7 @@ public class AugmentUnlockManager {
         return count;
     }
 
-    private Map<PassiveTier, Integer> buildEligibleByTier(int playerLevel) {
+    private Map<PassiveTier, Integer> buildEligibleByTier(PlayerData playerData, int playerLevel) {
         Map<PassiveTier, Integer> eligibleByTier = new EnumMap<>(PassiveTier.class);
         for (UnlockRule rule : unlockRules) {
             int eligible = rule.countEligibleMilestones(playerLevel);
@@ -375,6 +393,31 @@ public class AugmentUnlockManager {
             }
             eligibleByTier.merge(rule.tier(), eligible, Integer::sum);
         }
+        appendPrestigeMilestones(eligibleByTier, playerData, playerLevel);
         return eligibleByTier;
+    }
+
+    private void appendPrestigeMilestones(Map<PassiveTier, Integer> eligibleByTier,
+            PlayerData playerData,
+            int playerLevel) {
+        if (eligibleByTier == null || playerData == null) {
+            return;
+        }
+
+        int prestigeLevel = Math.max(0, playerData.getPrestigeLevel());
+        if (prestigeLevel <= 0) {
+            return;
+        }
+
+        int bonusMythicMilestones = prestigeLevel >= 5 ? 1 : 0;
+        int bonusEliteMilestones = Math.max(0, prestigeLevel - bonusMythicMilestones);
+
+        if (bonusEliteMilestones > 0 && playerLevel >= 25) {
+            eligibleByTier.merge(PassiveTier.ELITE, bonusEliteMilestones, Integer::sum);
+        }
+
+        if (bonusMythicMilestones > 0 && playerLevel >= 50) {
+            eligibleByTier.merge(PassiveTier.MYTHIC, bonusMythicMilestones, Integer::sum);
+        }
     }
 }
