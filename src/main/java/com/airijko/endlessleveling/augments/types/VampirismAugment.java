@@ -17,12 +17,21 @@ public final class VampirismAugment extends YamlAugment implements AugmentHooks.
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> buffs = AugmentValueReader.getMap(passives, "buffs");
-        this.lifeStealPercent = AugmentValueReader.getNestedDouble(buffs, 0.0D, "life_steal", "value");
+        this.lifeStealPercent = normalizePercentPoints(
+                AugmentValueReader.getNestedDouble(buffs, 0.0D, "life_steal", "value"));
     }
 
     @Override
     public float onHit(AugmentHooks.HitContext context) {
         AugmentUtils.applyLifeSteal(context.getAttackerStats(), context.getDamage(), lifeStealPercent);
         return context.getDamage();
+    }
+
+    private double normalizePercentPoints(double configuredValue) {
+        double abs = Math.abs(configuredValue);
+        if (abs > 0.0D && abs <= 5.0D) {
+            return configuredValue * 100.0D;
+        }
+        return configuredValue;
     }
 }
