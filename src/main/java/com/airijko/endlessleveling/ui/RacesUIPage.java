@@ -139,6 +139,13 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             ui.set("#RaceSwapCooldownHint.Text", tr("ui.races.cooldown.bypassed_hint", "Operator bypass active."));
             return;
         }
+        boolean hasChangesRemaining = raceManager != null && raceManager.hasRaceSwitchesRemaining(data);
+        if (!hasChangesRemaining) {
+            ui.set("#RaceSwapCooldownValue.Text", tr("ui.races.cooldown.exhausted", "No changes left"));
+            ui.set("#RaceSwapCooldownHint.Text",
+                    tr("ui.races.error.no_changes_remaining", "No race changes remaining."));
+            return;
+        }
         long cooldownSeconds = raceManager.getChooseRaceCooldownSeconds();
         long remaining = computeCooldownRemaining(data, cooldownSeconds);
         if (remaining > 0) {
@@ -321,6 +328,12 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (operatorBypass) {
             ui.set("#RaceDetailCooldownWarning.Text",
                     tr("ui.races.cooldown.bypassed_detail", "Operator bypass active. Swapping is immediate."));
+            return;
+        }
+
+        if (raceManager != null && !raceManager.hasRaceSwitchesRemaining(data)) {
+            ui.set("#RaceDetailCooldownWarning.Text",
+                    tr("ui.races.error.no_changes_remaining", "No race changes remaining."));
             return;
         }
 
@@ -853,6 +866,12 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             return;
         }
 
+        if (!operatorBypass && raceManager != null && !raceManager.hasRaceSwitchesRemaining(playerData)) {
+            playerRef.sendMessage(Message.raw(tr("ui.races.error.no_changes_remaining", "No race changes remaining."))
+                    .color("#ff6666"));
+            return;
+        }
+
         if (!operatorBypass) {
             long cooldownSeconds = raceManager.getChooseRaceCooldownSeconds();
             long remaining = computeCooldownRemaining(playerData, cooldownSeconds);
@@ -864,12 +883,6 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                         Message.raw(".").color("#ffffff")));
                 return;
             }
-        }
-
-        if (!operatorBypass && raceManager != null && !raceManager.hasRaceSwitchesRemaining(playerData)) {
-            playerRef.sendMessage(Message.raw(tr("ui.races.error.no_changes_remaining", "No race changes remaining."))
-                    .color("#ff6666"));
-            return;
         }
 
         playerData.setRaceId(desired.getId());

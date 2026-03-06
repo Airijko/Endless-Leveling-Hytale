@@ -46,6 +46,7 @@ public class MobLevelingManager {
     private final Map<Integer, Float> entityMaxHealthSnapshots = new ConcurrentHashMap<>();
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private final ConfigManager configManager;
+    private final ConfigManager worldsConfigManager;
     private final PlayerDataManager playerDataManager;
 
     private enum LevelSourceMode {
@@ -62,12 +63,14 @@ public class MobLevelingManager {
 
     public MobLevelingManager(PluginFilesManager filesManager, PlayerDataManager playerDataManager) {
         this.configManager = new ConfigManager(filesManager, filesManager.getLevelingFile());
+        this.worldsConfigManager = new ConfigManager(filesManager, filesManager.getWorldsFile());
         this.playerDataManager = playerDataManager;
     }
 
     /** Reload mob leveling config and clear cached diffs. */
     public void reloadConfig() {
         configManager.load();
+        worldsConfigManager.load();
         cachedPlayerDiffs.clear();
         cachedPosDiffs.clear();
         mixedSourceChoiceByEntityKey.clear();
@@ -198,25 +201,25 @@ public class MobLevelingManager {
             return clampToConfiguredRange(override);
         }
 
-        LevelSourceMode mode = getLevelSourceMode();
+        LevelSourceMode mode = getLevelSourceMode(store);
         int level;
         try {
             level = switch (mode) {
                 case PLAYER -> resolvePlayerBasedLevelWithDeferredFallback(store, position, entityId, resolveAttempts);
                 case MIXED -> resolveMixedLevel(store, position, entityId);
                 case DISTANCE -> resolveDistanceLevel(store, position);
-                case FIXED -> getFixedLevel();
+                case FIXED -> getFixedLevel(store);
             };
         } catch (Throwable t) {
             LOGGER.atWarning().log("MobLeveling: failed to resolve level via mode %s: %s", mode, t.toString());
-            level = getFixedLevel();
+            level = getFixedLevel(store);
         }
 
         if (level <= 0) {
             return -1;
         }
 
-        return clampToConfiguredRange(level);
+        return clampToConfiguredRange(level, store);
     }
 
     private boolean isEligibleForMobLeveling(Ref<EntityStore> ref,
@@ -314,20 +317,20 @@ public class MobLevelingManager {
             return override;
         }
 
-        LevelSourceMode mode = getLevelSourceMode();
+        LevelSourceMode mode = getLevelSourceMode(store);
         int level;
         try {
             level = switch (mode) {
                 case PLAYER -> resolvePlayerBasedLevel(store, mobPosition, entityId);
                 case MIXED -> resolveMixedLevel(store, mobPosition, entityId);
                 case DISTANCE -> resolveDistanceLevel(store, mobPosition);
-                case FIXED -> getFixedLevel();
+                case FIXED -> getFixedLevel(store);
             };
         } catch (Throwable t) {
             LOGGER.atWarning().log("MobLeveling: failed to resolve level via mode %s: %s", mode, t.toString());
-            level = getFixedLevel();
+            level = getFixedLevel(store);
         }
-        return clampToConfiguredRange(level);
+        return clampToConfiguredRange(level, store);
     }
 
     /** True when mob levels are derived from nearby player levels. */
@@ -361,7 +364,7 @@ public class MobLevelingManager {
         int distanceLevel = resolveDistanceLevel(safeStore, mobPos);
         int playerLevel = resolvePlayerBasedLevelWithoutFallback(safeStore, mobPos, entityId);
         int playerLowerBound = resolvePlayerLowerBoundForMixed(safeStore, mobPos);
-        int xpMaxDifference = getExperienceXpMaxDifference();
+        int xpMaxDifference = getExperienceXpMaxDifference(safeStore);
         return String.format(
                 Locale.ROOT,
                 "distance=%d player=%d floor=%d xpMaxDiff=%d",
@@ -380,17 +383,17 @@ public class MobLevelingManager {
      */
     public LevelRange getPlayerBasedLevelRange(int playerLevel) {
         int level = Math.max(1, playerLevel);
-        int offset = getPlayerBasedOffset();
-        int minDiff = getPlayerBasedMinDifference();
-        int maxDiff = getPlayerBasedMaxDifference();
+        int offset = getPlayerBasedOffset(null);
+        int minDiff = getPlayerBasedMinDifference(null);
+        int maxDiff = getPlayerBasedMaxDifference(null);
         if (minDiff > maxDiff) {
             int tmp = minDiff;
             minDiff = maxDiff;
             maxDiff = tmp;
         }
 
-        int min = clampToConfiguredRange(level + minDiff + offset);
-        int max = clampToConfiguredRange(level + maxDiff + offset);
+        int min = clampToConfiguredRange(level + minDiff + offset, null);
+        int max = clampToConfiguredRange(level + maxDiff + offset, null);
         if (min > max) {
             int tmp = min;
             min = max;
@@ -460,7 +463,15 @@ public class MobLevelingManager {
     }
 
     private LevelSourceMode getLevelSourceMode() {
-        Object modeObj = configManager.get("Mob_Leveling.Level_Source.Mode", "FIXED", false);
+        return getLevelSourceMode(null, null);
+    }
+
+    private LevelSourceMode getLevelSourceMode(Store<EntityStore> store) {
+        return getLevelSourceMode(store, null);
+    }
+
+    private LevelSourceMode getLevelSourceMode(Store<EntityStore> store, Object worldHint) {
+        Object modeObj = getMobLevelingValue("Mob_Leveling.Level_Source.Mode", "FIXED", store, worldHint);
         if (modeObj == null)
             return LevelSourceMode.FIXED;
         String normalized = modeObj.toString().trim().toUpperCase();
@@ -483,8 +494,11 @@ public class MobLevelingManager {
         boolean spawnResolved = false;
 
         try {
-            Object centerRaw = configManager.get("Mob_Leveling.Level_Source.Distance_Level.Center_Coordinates", "SPAWN",
-                    false);
+            Object centerRaw = getMobLevelingValue(
+                    "Mob_Leveling.Level_Source.Distance_Level.Center_Coordinates",
+                    "SPAWN",
+                    store,
+                    null);
             String centerStr = centerRaw != null ? centerRaw.toString().trim() : "SPAWN";
 
             if (centerStr.equalsIgnoreCase("SPAWN")) {
@@ -517,10 +531,10 @@ public class MobLevelingManager {
         double distance = Math.sqrt((dx * dx) + (dz * dz));
 
         double blocksPerLevel = Math.max(1.0,
-                getConfigDouble("Mob_Leveling.Level_Source.Distance_Level.Blocks_Per_Level", 100.0));
-        int startLevel = getConfigInt("Mob_Leveling.Level_Source.Distance_Level.Start_Level", 1);
-        int minLevel = getConfigInt("Mob_Leveling.Level_Source.Distance_Level.Min_Level", 1);
-        int maxLevel = getConfigInt("Mob_Leveling.Level_Source.Distance_Level.Max_Level", 200);
+                getConfigDouble("Mob_Leveling.Level_Source.Distance_Level.Blocks_Per_Level", 100.0, store));
+        int startLevel = getConfigInt("Mob_Leveling.Level_Source.Distance_Level.Start_Level", 1, store);
+        int minLevel = getConfigInt("Mob_Leveling.Level_Source.Distance_Level.Min_Level", 1, store);
+        int maxLevel = getConfigInt("Mob_Leveling.Level_Source.Distance_Level.Max_Level", 200, store);
 
         int computed = startLevel + (int) Math.floor(distance / blocksPerLevel);
         if (minLevel > maxLevel) {
@@ -539,8 +553,11 @@ public class MobLevelingManager {
         String worldId = resolveWorldId(store, worldHint);
         String world = (worldId == null || worldId.isBlank()) ? "unknown-world" : worldId;
 
-        Object centerRaw = configManager.get("Mob_Leveling.Level_Source.Distance_Level.Center_Coordinates", "SPAWN",
-                false);
+        Object centerRaw = getMobLevelingValue(
+                "Mob_Leveling.Level_Source.Distance_Level.Center_Coordinates",
+                "SPAWN",
+                store,
+                worldHint);
         String centerStr = centerRaw != null ? centerRaw.toString().trim() : "SPAWN";
         if (centerStr.isBlank()) {
             centerStr = "SPAWN";
@@ -578,7 +595,7 @@ public class MobLevelingManager {
         return String.format(
                 Locale.ROOT,
                 "mode=%s world=%s source=%s center=(%.2f, %.2f) spawnResolved=%s resolution=%s",
-                getLevelSourceMode(),
+                getLevelSourceMode(store, worldHint),
                 world,
                 usingSpawn ? "SPAWN" : centerStr,
                 centerX,
@@ -760,7 +777,7 @@ public class MobLevelingManager {
     private int resolvePlayerBasedLevel(Store<EntityStore> store, Vector3d mobPos, Integer entityId) {
         int computed = computePlayerModeLevelFromNearestPlayer(store, mobPos, entityId);
         if (computed > 0) {
-            return clampToConfiguredRange(computed);
+            return clampToConfiguredRange(computed, store);
         }
 
         return -1;
@@ -776,7 +793,7 @@ public class MobLevelingManager {
 
         int computed = computePlayerModeLevelFromNearestPlayer(store, mobPos, entityId);
         if (computed > 0) {
-            return clampToConfiguredRange(computed);
+            return clampToConfiguredRange(computed, store);
         }
 
         return -1;
@@ -799,9 +816,9 @@ public class MobLevelingManager {
             return -1;
         }
 
-        int offset = getPlayerBasedOffset();
-        int minDiff = getPlayerBasedMinDifference();
-        int maxDiff = getPlayerBasedMaxDifference();
+        int offset = getPlayerBasedOffset(store);
+        int minDiff = getPlayerBasedMinDifference(store);
+        int maxDiff = getPlayerBasedMaxDifference(store);
         if (minDiff > maxDiff) {
             int tmp = minDiff;
             minDiff = maxDiff;
@@ -813,14 +830,14 @@ public class MobLevelingManager {
         int rolledDiff = samplePlayerDiff(entityId, mobPos, minDiff, maxDiff);
         int target = nearestPlayerLevel + offset + rolledDiff;
         int clamped = Math.max(minAllowed, Math.min(maxAllowed, target));
-        return clampToConfiguredRange(clamped);
+        return clampToConfiguredRange(clamped, store);
     }
 
     private int resolvePlayerBasedLevelWithoutFallback(Store<EntityStore> store, Vector3d mobPos, Integer entityId) {
         if (mobPos == null)
             return -1;
 
-        if (isPartyPlayerSourceEnabled()) {
+        if (isPartyPlayerSourceEnabled(store)) {
             int partyResolved = resolvePlayerBasedLevelWithPartySystem(store, mobPos, entityId);
             if (partyResolved > 0) {
                 return partyResolved;
@@ -841,9 +858,9 @@ public class MobLevelingManager {
         if (nearestPlayerLevel <= 0)
             return -1;
 
-        int offset = getPlayerBasedOffset();
-        int minDiff = getPlayerBasedMinDifference();
-        int maxDiff = getPlayerBasedMaxDifference();
+        int offset = getPlayerBasedOffset(store);
+        int minDiff = getPlayerBasedMinDifference(store);
+        int maxDiff = getPlayerBasedMaxDifference(store);
         if (minDiff > maxDiff) {
             int tmp = minDiff;
             minDiff = maxDiff;
@@ -869,7 +886,7 @@ public class MobLevelingManager {
 
         if (playerLevel > 0 && playerLowerBound > 0 && distanceLevel < playerLowerBound) {
             rememberMixedSourceChoice(store, entityId, MixedSourceChoice.PLAYER);
-            return clampToConfiguredRange(Math.max(playerLevel, playerLowerBound));
+            return clampToConfiguredRange(Math.max(playerLevel, playerLowerBound), store);
         }
 
         MixedSourceChoice choice = resolveMixedSourceChoice(store, mobPos, entityId);
@@ -892,13 +909,13 @@ public class MobLevelingManager {
             }
         }
 
-        MixedSourceChoice rolled = rollMixedSourceChoice(entityId, mobPos);
+        MixedSourceChoice rolled = rollMixedSourceChoice(store, entityId, mobPos);
         rememberMixedSourceChoice(store, entityId, rolled);
         return rolled;
     }
 
-    private MixedSourceChoice rollMixedSourceChoice(Integer entityId, Vector3d mobPos) {
-        double playerWeight = getMixedPlayerWeight();
+    private MixedSourceChoice rollMixedSourceChoice(Store<EntityStore> store, Integer entityId, Vector3d mobPos) {
+        double playerWeight = getMixedPlayerWeight(store);
         if (playerWeight <= 0.0D) {
             return MixedSourceChoice.DISTANCE;
         }
@@ -933,21 +950,21 @@ public class MobLevelingManager {
             return -1;
         }
 
-        int xpMaxDifference = getExperienceXpMaxDifference();
+        int xpMaxDifference = getExperienceXpMaxDifference(store);
 
-        if (isPartyPlayerSourceEnabled()) {
-            double radius = Math.max(0.0D, getPlayerPartyInfluenceRadius());
+        if (isPartyPlayerSourceEnabled(store)) {
+            double radius = Math.max(0.0D, getPlayerPartyInfluenceRadius(store));
             List<PlayerContext> nearbyPlayers = getPlayersWithinRadius(store, mobPos, radius);
             if (nearbyPlayers.isEmpty()) {
                 return -1;
             }
-            PartyContext dominant = resolveDominantPartyContext(nearbyPlayers);
+            PartyContext dominant = resolveDominantPartyContext(nearbyPlayers, store);
             if (dominant == null || dominant.members().isEmpty()) {
                 return -1;
             }
-            int vpl = computeVirtualPartyLevel(dominant.members());
+            int vpl = computeVirtualPartyLevel(dominant.members(), store);
             int floor = vpl - xpMaxDifference;
-            return clampToConfiguredRange(floor);
+            return clampToConfiguredRange(floor, store);
         }
 
         int nearestPlayerLevel = findNearestPlayerLevel(store, mobPos);
@@ -955,37 +972,37 @@ public class MobLevelingManager {
             return -1;
         }
         int floor = nearestPlayerLevel - xpMaxDifference;
-        return clampToConfiguredRange(floor);
+        return clampToConfiguredRange(floor, store);
     }
 
-    private int getExperienceXpMaxDifference() {
-        return Math.max(0, getConfigInt("Mob_Leveling.Experience.XP_Level_Range.Max_Difference", 10));
+    private int getExperienceXpMaxDifference(Store<EntityStore> store) {
+        return Math.max(0, getConfigInt("Mob_Leveling.Experience.XP_Level_Range.Max_Difference", 10, store));
     }
 
     private int resolvePlayerBasedLevelWithPartySystem(Store<EntityStore> store, Vector3d mobPos, Integer entityId) {
-        double radius = Math.max(0.0D, getPlayerPartyInfluenceRadius());
+        double radius = Math.max(0.0D, getPlayerPartyInfluenceRadius(store));
         List<PlayerContext> nearbyPlayers = getPlayersWithinRadius(store, mobPos, radius);
         if (nearbyPlayers.isEmpty()) {
             return -1;
         }
 
-        PartyContext dominant = resolveDominantPartyContext(nearbyPlayers);
+        PartyContext dominant = resolveDominantPartyContext(nearbyPlayers, store);
         if (dominant == null || dominant.members().isEmpty()) {
             return -1;
         }
 
-        int vpl = computeVirtualPartyLevel(dominant.members());
-        int offset = getPlayerBasedOffset();
-        int minDiff = getPlayerBasedMinDifference();
-        int maxDiff = getPlayerBasedMaxDifference();
+        int vpl = computeVirtualPartyLevel(dominant.members(), store);
+        int offset = getPlayerBasedOffset(store);
+        int minDiff = getPlayerBasedMinDifference(store);
+        int maxDiff = getPlayerBasedMaxDifference(store);
         if (minDiff > maxDiff) {
             int tmp = minDiff;
             minDiff = maxDiff;
             maxDiff = tmp;
         }
 
-        int minLevel = clampToConfiguredRange(vpl + offset + minDiff);
-        int maxLevel = clampToConfiguredRange(vpl + offset + maxDiff);
+        int minLevel = clampToConfiguredRange(vpl + offset + minDiff, store);
+        int maxLevel = clampToConfiguredRange(vpl + offset + maxDiff, store);
         if (minLevel > maxLevel) {
             int tmp = minLevel;
             minLevel = maxLevel;
@@ -1000,7 +1017,7 @@ public class MobLevelingManager {
         if (mobPos != null) {
             return resolveDistanceLevel(store, mobPos);
         }
-        return getFixedLevel();
+        return getFixedLevel(store);
     }
 
     private List<PlayerContext> getPlayersWithinRadius(Store<EntityStore> mobStore, Vector3d mobPos, double radius) {
@@ -1045,7 +1062,7 @@ public class MobLevelingManager {
         return nearby;
     }
 
-    private PartyContext resolveDominantPartyContext(List<PlayerContext> nearbyPlayers) {
+    private PartyContext resolveDominantPartyContext(List<PlayerContext> nearbyPlayers, Store<EntityStore> store) {
         if (nearbyPlayers == null || nearbyPlayers.isEmpty()) {
             return null;
         }
@@ -1085,7 +1102,7 @@ public class MobLevelingManager {
             return null;
         }
 
-        DominantPartyMode mode = getDominantPartyResolutionMode();
+        DominantPartyMode mode = getDominantPartyResolutionMode(store);
         PartyContext selected = null;
         for (PartyContext candidate : partyContexts) {
             if (candidate == null || candidate.members().isEmpty()) {
@@ -1158,12 +1175,12 @@ public class MobLevelingManager {
         };
     }
 
-    private int computeVirtualPartyLevel(List<PlayerContext> members) {
+    private int computeVirtualPartyLevel(List<PlayerContext> members, Store<EntityStore> store) {
         if (members == null || members.isEmpty()) {
             return 1;
         }
 
-        PartyLevelCalculation calculation = getPartyLevelCalculationMode();
+        PartyLevelCalculation calculation = getPartyLevelCalculationMode(store);
         return switch (calculation) {
             case MEDIAN -> medianLevel(members);
             case AVERAGE -> (int) Math.round(averageLevel(members));
@@ -1257,15 +1274,27 @@ public class MobLevelingManager {
     }
 
     private boolean isPartyPlayerSourceEnabled() {
-        return getPlayerBasedBoolean("Party_System.Enabled", false);
+        return isPartyPlayerSourceEnabled(null);
+    }
+
+    private boolean isPartyPlayerSourceEnabled(Store<EntityStore> store) {
+        return getPlayerBasedBoolean("Party_System.Enabled", false, store);
     }
 
     private double getPlayerPartyInfluenceRadius() {
-        return Math.max(0.0D, getPlayerBasedDouble("Party_System.Influence_Radius", 25.0D));
+        return getPlayerPartyInfluenceRadius(null);
+    }
+
+    private double getPlayerPartyInfluenceRadius(Store<EntityStore> store) {
+        return Math.max(0.0D, getPlayerBasedDouble("Party_System.Influence_Radius", 25.0D, store));
     }
 
     private PartyLevelCalculation getPartyLevelCalculationMode() {
-        String raw = getPlayerBasedString("Party_System.Level_Calculation", "AVERAGE");
+        return getPartyLevelCalculationMode(null);
+    }
+
+    private PartyLevelCalculation getPartyLevelCalculationMode(Store<EntityStore> store) {
+        String raw = getPlayerBasedString("Party_System.Level_Calculation", "AVERAGE", store);
         if (raw == null) {
             return PartyLevelCalculation.AVERAGE;
         }
@@ -1277,7 +1306,11 @@ public class MobLevelingManager {
     }
 
     private DominantPartyMode getDominantPartyResolutionMode() {
-        String raw = getPlayerBasedString("Party_System.Dominant_Party_Resolution.Mode", "MOST_MEMBERS");
+        return getDominantPartyResolutionMode(null);
+    }
+
+    private DominantPartyMode getDominantPartyResolutionMode(Store<EntityStore> store) {
+        String raw = getPlayerBasedString("Party_System.Dominant_Party_Resolution.Mode", "MOST_MEMBERS", store);
         if (raw == null) {
             return DominantPartyMode.MOST_MEMBERS;
         }
@@ -1290,30 +1323,50 @@ public class MobLevelingManager {
     }
 
     private int getPlayerBasedOffset() {
-        return getPlayerBasedInt("Offset", 0);
+        return getPlayerBasedOffset(null);
+    }
+
+    private int getPlayerBasedOffset(Store<EntityStore> store) {
+        return getPlayerBasedInt("Offset", 0, store);
     }
 
     private int getPlayerBasedMinDifference() {
-        return getPlayerBasedInt("Min_Difference", -3);
+        return getPlayerBasedMinDifference(null);
+    }
+
+    private int getPlayerBasedMinDifference(Store<EntityStore> store) {
+        return getPlayerBasedInt("Min_Difference", -3, store);
     }
 
     private int getPlayerBasedMaxDifference() {
-        return getPlayerBasedInt("Max_Difference", 3);
+        return getPlayerBasedMaxDifference(null);
+    }
+
+    private int getPlayerBasedMaxDifference(Store<EntityStore> store) {
+        return getPlayerBasedInt("Max_Difference", 3, store);
     }
 
     private String getPlayerBasedString(String suffix, String defaultValue) {
+        return getPlayerBasedString(suffix, defaultValue, null);
+    }
+
+    private String getPlayerBasedString(String suffix, String defaultValue, Store<EntityStore> store) {
         String primary = "Mob_Leveling.Level_Source.Player_Based." + suffix;
         String fallback = "Mob_Leveling.Player_Based." + suffix;
-        if (configManager.hasPath(primary)) {
-            Object raw = configManager.get(primary, defaultValue, false);
+        if (hasMobLevelingPath(primary, store, null)) {
+            Object raw = getMobLevelingValue(primary, defaultValue, store, null);
             return raw != null ? raw.toString() : defaultValue;
         }
-        Object raw = configManager.get(fallback, defaultValue, false);
+        Object raw = getMobLevelingValue(fallback, defaultValue, store, null);
         return raw != null ? raw.toString() : defaultValue;
     }
 
     private int getPlayerBasedInt(String suffix, int defaultValue) {
-        String raw = getPlayerBasedString(suffix, String.valueOf(defaultValue));
+        return getPlayerBasedInt(suffix, defaultValue, null);
+    }
+
+    private int getPlayerBasedInt(String suffix, int defaultValue, Store<EntityStore> store) {
+        String raw = getPlayerBasedString(suffix, String.valueOf(defaultValue), store);
         try {
             return Integer.parseInt(raw.trim());
         } catch (Exception ignored) {
@@ -1322,7 +1375,11 @@ public class MobLevelingManager {
     }
 
     private double getPlayerBasedDouble(String suffix, double defaultValue) {
-        String raw = getPlayerBasedString(suffix, String.valueOf(defaultValue));
+        return getPlayerBasedDouble(suffix, defaultValue, null);
+    }
+
+    private double getPlayerBasedDouble(String suffix, double defaultValue, Store<EntityStore> store) {
+        String raw = getPlayerBasedString(suffix, String.valueOf(defaultValue), store);
         try {
             return Double.parseDouble(raw.trim());
         } catch (Exception ignored) {
@@ -1331,7 +1388,11 @@ public class MobLevelingManager {
     }
 
     private boolean getPlayerBasedBoolean(String suffix, boolean defaultValue) {
-        String raw = getPlayerBasedString(suffix, String.valueOf(defaultValue));
+        return getPlayerBasedBoolean(suffix, defaultValue, null);
+    }
+
+    private boolean getPlayerBasedBoolean(String suffix, boolean defaultValue, Store<EntityStore> store) {
+        String raw = getPlayerBasedString(suffix, String.valueOf(defaultValue), store);
         if (raw == null) {
             return defaultValue;
         }
@@ -1339,22 +1400,34 @@ public class MobLevelingManager {
     }
 
     private double getMixedPlayerWeight() {
-        return clampWeight(getMixedDouble("Player_Weight", 0.5D));
+        return getMixedPlayerWeight(null);
+    }
+
+    private double getMixedPlayerWeight(Store<EntityStore> store) {
+        return clampWeight(getMixedDouble("Player_Weight", 0.5D, store));
     }
 
     private String getMixedString(String suffix, String defaultValue) {
+        return getMixedString(suffix, defaultValue, null);
+    }
+
+    private String getMixedString(String suffix, String defaultValue, Store<EntityStore> store) {
         String primary = "Mob_Leveling.Level_Source.Mixed." + suffix;
         String fallback = "Mob_Leveling.Mixed." + suffix;
-        if (configManager.hasPath(primary)) {
-            Object raw = configManager.get(primary, defaultValue, false);
+        if (hasMobLevelingPath(primary, store, null)) {
+            Object raw = getMobLevelingValue(primary, defaultValue, store, null);
             return raw != null ? raw.toString() : defaultValue;
         }
-        Object raw = configManager.get(fallback, defaultValue, false);
+        Object raw = getMobLevelingValue(fallback, defaultValue, store, null);
         return raw != null ? raw.toString() : defaultValue;
     }
 
     private double getMixedDouble(String suffix, double defaultValue) {
-        String raw = getMixedString(suffix, String.valueOf(defaultValue));
+        return getMixedDouble(suffix, defaultValue, null);
+    }
+
+    private double getMixedDouble(String suffix, double defaultValue, Store<EntityStore> store) {
+        String raw = getMixedString(suffix, String.valueOf(defaultValue), store);
         try {
             return Double.parseDouble(raw.trim());
         } catch (Exception ignored) {
@@ -1944,12 +2017,20 @@ public class MobLevelingManager {
     }
 
     private int getFixedLevel() {
-        return getConfigInt("Mob_Leveling.Level_Source.Fixed_Level.Level", 10);
+        return getFixedLevel(null);
+    }
+
+    private int getFixedLevel(Store<EntityStore> store) {
+        return getConfigInt("Mob_Leveling.Level_Source.Fixed_Level.Level", 10, store);
     }
 
     private int clampToConfiguredRange(int level) {
-        int min = getConfigInt("Mob_Leveling.Level_Range.Min", 1);
-        int max = getConfigInt("Mob_Leveling.Level_Range.Max", 200);
+        return clampToConfiguredRange(level, null);
+    }
+
+    private int clampToConfiguredRange(int level, Store<EntityStore> store) {
+        int min = getConfigInt("Mob_Leveling.Level_Range.Min", 1, store);
+        int max = getConfigInt("Mob_Leveling.Level_Range.Max", 200, store);
         if (min > max) {
             int tmp = min;
             min = max;
@@ -1963,7 +2044,11 @@ public class MobLevelingManager {
     }
 
     private int getConfigInt(String path, int defaultValue) {
-        Object raw = configManager.get(path, defaultValue, false);
+        return getConfigInt(path, defaultValue, null);
+    }
+
+    private int getConfigInt(String path, int defaultValue, Store<EntityStore> store) {
+        Object raw = getMobLevelingValue(path, defaultValue, store, null);
         if (raw == null)
             return defaultValue;
         try {
@@ -1976,7 +2061,11 @@ public class MobLevelingManager {
     }
 
     private double getConfigDouble(String path, double defaultValue) {
-        Object raw = configManager.get(path, defaultValue, false);
+        return getConfigDouble(path, defaultValue, null);
+    }
+
+    private double getConfigDouble(String path, double defaultValue, Store<EntityStore> store) {
+        Object raw = getMobLevelingValue(path, defaultValue, store, null);
         if (raw == null)
             return defaultValue;
         try {
@@ -1997,7 +2086,11 @@ public class MobLevelingManager {
     }
 
     private boolean getConfigBoolean(String path, boolean defaultValue) {
-        Object raw = configManager.get(path, defaultValue, false);
+        return getConfigBoolean(path, defaultValue, null);
+    }
+
+    private boolean getConfigBoolean(String path, boolean defaultValue, Store<EntityStore> store) {
+        Object raw = getMobLevelingValue(path, defaultValue, store, null);
         if (raw instanceof Boolean b)
             return b;
         if (raw instanceof Number n)
@@ -2005,6 +2098,153 @@ public class MobLevelingManager {
         if (raw instanceof String s)
             return Boolean.parseBoolean(s.trim());
         return defaultValue;
+    }
+
+    private boolean hasMobLevelingPath(String path, Store<EntityStore> store, Object worldHint) {
+        if (path == null || path.isBlank()) {
+            return false;
+        }
+
+        Object override = getWorldOverrideValue(path, store, worldHint);
+        if (override != null) {
+            return true;
+        }
+
+        return configManager.hasPath(path);
+    }
+
+    private Object getMobLevelingValue(String path, Object defaultValue, Store<EntityStore> store, Object worldHint) {
+        Object override = getWorldOverrideValue(path, store, worldHint);
+        if (override != null) {
+            return override;
+        }
+        return configManager.get(path, defaultValue, false);
+    }
+
+    private Object getWorldOverrideValue(String path, Store<EntityStore> store, Object worldHint) {
+        if (path == null || !path.startsWith("Mob_Leveling.")) {
+            return null;
+        }
+
+        String worldId = resolveWorldId(store, worldHint);
+        if (worldId == null || worldId.isBlank()) {
+            return null;
+        }
+
+        Object rootRaw = worldsConfigManager.get("World_Overrides", null, false);
+        if (!(rootRaw instanceof Map<?, ?> rootMap) || rootMap.isEmpty()) {
+            return null;
+        }
+
+        Object exact = resolveCaseInsensitive(rootMap, worldId);
+        if (exact instanceof Map<?, ?> exactMap) {
+            Object value = resolveNestedValue(exactMap, path.substring("Mob_Leveling.".length()));
+            if (value != null) {
+                return value;
+            }
+        }
+
+        String normalizedWorldId = normalizeWorldPattern(worldId);
+        Map<?, ?> bestPatternMap = null;
+        int bestSpecificity = -1;
+        int bestLength = -1;
+
+        for (Map.Entry<?, ?> entry : rootMap.entrySet()) {
+            Object keyObj = entry.getKey();
+            Object valueObj = entry.getValue();
+            if (!(keyObj instanceof String pattern) || !(valueObj instanceof Map<?, ?> mapValue)) {
+                continue;
+            }
+
+            if (pattern.equalsIgnoreCase(worldId)) {
+                continue;
+            }
+
+            String normalizedPattern = normalizeWorldPattern(pattern);
+            if (normalizedPattern == null || normalizedPattern.isBlank()) {
+                continue;
+            }
+
+            if (!matchesWildcard(normalizedWorldId, normalizedPattern)) {
+                continue;
+            }
+
+            int specificity = wildcardSpecificity(normalizedPattern);
+            int length = normalizedPattern.length();
+            if (specificity > bestSpecificity || (specificity == bestSpecificity && length > bestLength)) {
+                bestPatternMap = mapValue;
+                bestSpecificity = specificity;
+                bestLength = length;
+            }
+        }
+
+        if (bestPatternMap == null) {
+            return null;
+        }
+
+        return resolveNestedValue(bestPatternMap, path.substring("Mob_Leveling.".length()));
+    }
+
+    private String normalizeWorldPattern(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim().toLowerCase(Locale.ROOT);
+        return normalized.isBlank() ? null : normalized;
+    }
+
+    private int wildcardSpecificity(String pattern) {
+        if (pattern == null || pattern.isBlank()) {
+            return 0;
+        }
+        int stars = 0;
+        for (int i = 0; i < pattern.length(); i++) {
+            if (pattern.charAt(i) == '*') {
+                stars++;
+            }
+        }
+        return Math.max(0, pattern.length() - stars);
+    }
+
+    private Object resolveNestedValue(Map<?, ?> source, String dottedPath) {
+        if (source == null || dottedPath == null || dottedPath.isBlank()) {
+            return null;
+        }
+
+        String[] parts = dottedPath.split("\\.");
+        Object current = source;
+        for (String part : parts) {
+            if (!(current instanceof Map<?, ?> map)) {
+                return null;
+            }
+            current = resolveCaseInsensitive(map, part);
+            if (current == null) {
+                return null;
+            }
+        }
+        return current;
+    }
+
+    private Object resolveCaseInsensitive(Map<?, ?> source, String key) {
+        if (source == null || key == null) {
+            return null;
+        }
+
+        Object direct = source.get(key);
+        if (direct != null) {
+            return direct;
+        }
+
+        for (Map.Entry<?, ?> entry : source.entrySet()) {
+            Object entryKey = entry.getKey();
+            if (!(entryKey instanceof String textKey)) {
+                continue;
+            }
+            if (textKey.equalsIgnoreCase(key)) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     // --------------------

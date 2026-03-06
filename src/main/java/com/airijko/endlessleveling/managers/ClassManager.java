@@ -294,13 +294,46 @@ public class ClassManager {
             return false;
         if (maxClassSwitches < 0)
             return true;
-        return data.getClassSwitchCount() < maxClassSwitches;
+        boolean primaryRemaining = hasClassSwitchesRemaining(data, ClassAssignmentSlot.PRIMARY);
+        if (!isSecondaryClassEnabled()) {
+            return primaryRemaining;
+        }
+        boolean secondaryRemaining = hasClassSwitchesRemaining(data, ClassAssignmentSlot.SECONDARY);
+        return primaryRemaining || secondaryRemaining;
+    }
+
+    public boolean hasClassSwitchesRemaining(PlayerData data, ClassAssignmentSlot slot) {
+        if (data == null || slot == null)
+            return false;
+        if (maxClassSwitches < 0)
+            return true;
+        if (slot == ClassAssignmentSlot.SECONDARY && !isSecondaryClassEnabled()) {
+            return false;
+        }
+        return getClassSwitchCount(data, slot) < maxClassSwitches;
     }
 
     public int getRemainingClassSwitches(PlayerData data) {
         if (maxClassSwitches < 0 || data == null)
             return Integer.MAX_VALUE;
-        return Math.max(0, maxClassSwitches - data.getClassSwitchCount());
+        int primaryRemaining = getRemainingClassSwitches(data, ClassAssignmentSlot.PRIMARY);
+        if (!isSecondaryClassEnabled()) {
+            return primaryRemaining;
+        }
+        int secondaryRemaining = getRemainingClassSwitches(data, ClassAssignmentSlot.SECONDARY);
+        if (primaryRemaining == Integer.MAX_VALUE || secondaryRemaining == Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        }
+        return Math.max(0, primaryRemaining + secondaryRemaining);
+    }
+
+    public int getRemainingClassSwitches(PlayerData data, ClassAssignmentSlot slot) {
+        if (maxClassSwitches < 0 || data == null || slot == null)
+            return Integer.MAX_VALUE;
+        if (slot == ClassAssignmentSlot.SECONDARY && !isSecondaryClassEnabled()) {
+            return 0;
+        }
+        return Math.max(0, maxClassSwitches - getClassSwitchCount(data, slot));
     }
 
     public long getClassCooldownRemaining(PlayerData data, ClassAssignmentSlot slot) {
@@ -320,10 +353,20 @@ public class ClassManager {
         long now = Instant.now().getEpochSecond();
         if (slot == ClassAssignmentSlot.PRIMARY) {
             data.setLastPrimaryClassChangeEpochSeconds(now);
+            data.incrementPrimaryClassSwitchCount();
         } else {
             data.setLastSecondaryClassChangeEpochSeconds(now);
+            data.incrementSecondaryClassSwitchCount();
         }
-        data.incrementClassSwitchCount();
+    }
+
+    private int getClassSwitchCount(PlayerData data, ClassAssignmentSlot slot) {
+        if (data == null || slot == null) {
+            return 0;
+        }
+        return slot == ClassAssignmentSlot.PRIMARY
+                ? data.getPrimaryClassSwitchCount()
+                : data.getSecondaryClassSwitchCount();
     }
 
     private long calculateRemainingCooldown(long lastChangeEpochSeconds) {

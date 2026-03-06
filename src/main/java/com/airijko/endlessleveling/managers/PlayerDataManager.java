@@ -459,8 +459,21 @@ public class PlayerDataManager {
         if (secondaryClassTimestamp <= 0L && legacyClassTimestamp > 0L) {
             secondaryClassTimestamp = legacyClassTimestamp;
         }
+        int primaryClassSwitchCount = parseInt(classesNode != null ? classesNode.get("primarySwitchCount") : null, 0);
+        int secondaryClassSwitchCount = parseInt(classesNode != null ? classesNode.get("secondarySwitchCount") : null,
+                0);
+        int legacyClassSwitchCount = parseInt(classesNode != null ? classesNode.get("switchCount") : null, -1);
+        if (primaryClassSwitchCount <= 0 && secondaryClassSwitchCount <= 0 && legacyClassSwitchCount > 0) {
+            if (secondaryClassTimestamp > 0L && primaryClassTimestamp <= 0L) {
+                secondaryClassSwitchCount = legacyClassSwitchCount;
+            } else {
+                primaryClassSwitchCount = legacyClassSwitchCount;
+            }
+        }
         profile.setLastPrimaryClassChangeEpochSeconds(primaryClassTimestamp);
         profile.setLastSecondaryClassChangeEpochSeconds(secondaryClassTimestamp);
+        profile.setPrimaryClassSwitchCount(primaryClassSwitchCount);
+        profile.setSecondaryClassSwitchCount(secondaryClassSwitchCount);
     }
 
     private int parseProfileIndex(String key) {
@@ -808,8 +821,13 @@ public class PlayerDataManager {
                     }
                     long primaryChanged = profile.getLastPrimaryClassChangeEpochSeconds();
                     long secondaryChanged = profile.getLastSecondaryClassChangeEpochSeconds();
+                    int primarySwitchCount = profile.getPrimaryClassSwitchCount();
+                    int secondarySwitchCount = profile.getSecondaryClassSwitchCount();
                     classesSection.put("primaryLastChangedEpochSeconds", primaryChanged);
                     classesSection.put("secondaryLastChangedEpochSeconds", secondaryChanged);
+                    classesSection.put("primarySwitchCount", primarySwitchCount);
+                    classesSection.put("secondarySwitchCount", secondarySwitchCount);
+                    classesSection.put("switchCount", Math.max(0, primarySwitchCount + secondarySwitchCount));
                     classesSection.put("lastChangedEpochSeconds", Math.max(primaryChanged, secondaryChanged));
                     profileMap.put("classes", classesSection);
 

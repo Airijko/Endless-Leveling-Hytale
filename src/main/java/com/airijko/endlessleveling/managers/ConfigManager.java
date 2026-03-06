@@ -224,6 +224,7 @@ public class ConfigManager {
     private void ensureConfigUpToDate() {
         Integer currentVersion = extractConfigVersion(configMap);
         if (currentVersion != null && currentVersion >= bundledConfigVersion) {
+            ensureInlineVersionMarker();
             return;
         }
 
@@ -242,6 +243,7 @@ public class ConfigManager {
             return;
         }
         readConfigFromDisk();
+        ensureInlineVersionMarker();
     }
 
     private void backupCurrentConfig() {
@@ -325,12 +327,27 @@ public class ConfigManager {
         }
 
         for (Map.Entry<String, Object> entry : existingMap.entrySet()) {
+            if (VersionRegistry.CONFIG_VERSION_KEY.equals(entry.getKey())) {
+                continue;
+            }
             List<String> existingPath = appendPath(currentPath, entry.getKey());
             if (!result.containsKey(entry.getKey()) && !existingValueIndex.isConsumed(existingPath)) {
                 result.put(entry.getKey(), deepCopyValue(entry.getValue()));
             }
         }
         return result;
+    }
+
+    private void ensureInlineVersionMarker() {
+        if (configMap == null) {
+            return;
+        }
+        Integer inlineVersion = extractConfigVersion(configMap);
+        if (inlineVersion != null && inlineVersion == bundledConfigVersion) {
+            return;
+        }
+        configMap.put(VersionRegistry.CONFIG_VERSION_KEY, bundledConfigVersion);
+        save();
     }
 
     private List<String> appendPath(List<String> basePath, String nextKey) {

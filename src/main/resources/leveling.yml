@@ -107,6 +107,7 @@ Mob_Leveling:
         "Foal",
         "Stag",
         "Merchant",
+        "Trader",
         "Frog*",
       ]
 
@@ -242,6 +243,3 @@ Mob_Leveling:
   # -------------------------------------------------
   UI:
     Show_Mob_Level: true
-
-# DON'T EDIT THIS LINE BELOW
-config_version: 8

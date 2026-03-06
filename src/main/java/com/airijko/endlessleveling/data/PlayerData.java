@@ -498,6 +498,30 @@ public class PlayerData {
         getActiveProfile().incrementClassSwitchCount();
     }
 
+    public int getPrimaryClassSwitchCount() {
+        return getActiveProfile().getPrimaryClassSwitchCount();
+    }
+
+    public void setPrimaryClassSwitchCount(int count) {
+        getActiveProfile().setPrimaryClassSwitchCount(count);
+    }
+
+    public void incrementPrimaryClassSwitchCount() {
+        getActiveProfile().incrementPrimaryClassSwitchCount();
+    }
+
+    public int getSecondaryClassSwitchCount() {
+        return getActiveProfile().getSecondaryClassSwitchCount();
+    }
+
+    public void setSecondaryClassSwitchCount(int count) {
+        getActiveProfile().setSecondaryClassSwitchCount(count);
+    }
+
+    public void incrementSecondaryClassSwitchCount() {
+        getActiveProfile().incrementSecondaryClassSwitchCount();
+    }
+
     /**
      * Increase a skill attribute if the player has skill points.
      * Returns true if successful, false if not enough points.
@@ -543,6 +567,8 @@ public class PlayerData {
         private long lastPrimaryClassChangeEpochSeconds;
         private long lastSecondaryClassChangeEpochSeconds;
         private int classSwitchCount;
+        private int primaryClassSwitchCount;
+        private int secondaryClassSwitchCount;
 
         private String name;
 
@@ -568,6 +594,8 @@ public class PlayerData {
             this.lastPrimaryClassChangeEpochSeconds = 0L;
             this.lastSecondaryClassChangeEpochSeconds = 0L;
             this.classSwitchCount = 0;
+            this.primaryClassSwitchCount = 0;
+            this.secondaryClassSwitchCount = 0;
             this.name = (name == null || name.isBlank()) ? "Profile" : name;
         }
 
@@ -792,15 +820,42 @@ public class PlayerData {
         }
 
         public int getClassSwitchCount() {
-            return classSwitchCount;
+            return Math.max(0, primaryClassSwitchCount) + Math.max(0, secondaryClassSwitchCount);
         }
 
         public void setClassSwitchCount(int count) {
             this.classSwitchCount = Math.max(0, count);
+            this.primaryClassSwitchCount = Math.max(0, count);
+            this.secondaryClassSwitchCount = 0;
         }
 
         public void incrementClassSwitchCount() {
             this.classSwitchCount = Math.max(0, this.classSwitchCount + 1);
+            this.primaryClassSwitchCount = Math.max(0, this.primaryClassSwitchCount + 1);
+        }
+
+        public int getPrimaryClassSwitchCount() {
+            return Math.max(0, primaryClassSwitchCount);
+        }
+
+        public void setPrimaryClassSwitchCount(int count) {
+            this.primaryClassSwitchCount = Math.max(0, count);
+        }
+
+        public void incrementPrimaryClassSwitchCount() {
+            this.primaryClassSwitchCount = Math.max(0, this.primaryClassSwitchCount + 1);
+        }
+
+        public int getSecondaryClassSwitchCount() {
+            return Math.max(0, secondaryClassSwitchCount);
+        }
+
+        public void setSecondaryClassSwitchCount(int count) {
+            this.secondaryClassSwitchCount = Math.max(0, count);
+        }
+
+        public void incrementSecondaryClassSwitchCount() {
+            this.secondaryClassSwitchCount = Math.max(0, this.secondaryClassSwitchCount + 1);
         }
     }
 }

@@ -1,0 +1,41 @@
+# Per-world mob leveling overrides.
+#
+# World ids are matched case-insensitively.
+# Example wildcard pattern:
+#   instance-mj_instance_d01-*
+
+World_Overrides:
+  # Global fallback pattern example (optional)
+  # "*":
+  #   Level_Source:
+  #     Mode: "MIXED"
+
+  # Static world exact match
+  default:
+    Level_Source:
+      Mode: "MIXED"
+
+  # MAJOR DUNGEONS
+  instance-mj_instance_d01-*:
+    Level_Source:
+      Mode: "FIXED"
+      Fixed_Level:
+        Level: 25
+
+  instance-mj_instance_d02-*:
+    Level_Source:
+      Mode: "PLAYER"
+      Fixed_Level:
+        Level: 50
+
+  instance-mj_instance_d03-*:
+    Level_Source:
+      Mode: "PLAYER"
+      Fixed_Level:
+        Level: 75
+
+  instance-mj_instance_d04-*:
+    Level_Source:
+      Mode: "PLAYER"
+      Fixed_Level:
+        Level: 100

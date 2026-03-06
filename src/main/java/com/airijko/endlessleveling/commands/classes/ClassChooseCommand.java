@@ -253,7 +253,7 @@ public class ClassChooseCommand extends AbstractPlayerCommand {
         if (OperatorHelper.isOperator(senderRef)) {
             return true;
         }
-        if (!classManager.hasClassSwitchesRemaining(data)) {
+        if (!classManager.hasClassSwitchesRemaining(data, slot)) {
             senderRef.sendMessage(Message.join(
                     Message.raw("[Classes] ").color("#ff6666"),
                     Message.raw("You have no class changes remaining.").color("#ffffff")));

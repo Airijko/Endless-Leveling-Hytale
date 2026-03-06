@@ -133,18 +133,31 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             selectedClassId = primary.getId();
         }
 
+        boolean secondaryEnabled = classManager != null && classManager.isSecondaryClassEnabled();
+        boolean primaryChangesRemaining = classManager.hasClassSwitchesRemaining(playerData,
+                ClassAssignmentSlot.PRIMARY);
+        boolean secondaryChangesRemaining = secondaryEnabled
+                && classManager.hasClassSwitchesRemaining(playerData, ClassAssignmentSlot.SECONDARY);
+
         long cooldownSeconds = classManager.getChooseClassCooldownSeconds();
         long primaryCooldownRemaining = operatorBypass
                 ? 0L
-                : classManager.getClassCooldownRemaining(playerData, ClassAssignmentSlot.PRIMARY);
+                : (primaryChangesRemaining
+                        ? classManager.getClassCooldownRemaining(playerData, ClassAssignmentSlot.PRIMARY)
+                        : 0L);
         long secondaryCooldownRemaining = operatorBypass
                 ? 0L
-                : classManager.getClassCooldownRemaining(playerData, ClassAssignmentSlot.SECONDARY);
+                : (secondaryChangesRemaining
+                        ? classManager.getClassCooldownRemaining(playerData, ClassAssignmentSlot.SECONDARY)
+                        : 0L);
 
         updateCooldownCard(ui,
                 cooldownSeconds,
                 primaryCooldownRemaining,
                 secondaryCooldownRemaining,
+                primaryChangesRemaining,
+                secondaryChangesRemaining,
+                secondaryEnabled,
                 operatorBypass);
         updateStatusCard(ui, primary, secondary);
         buildClassList(ui,
@@ -152,8 +165,8 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 playerData,
                 primary,
                 secondary,
-                operatorBypass || primaryCooldownRemaining <= 0L,
-                operatorBypass || secondaryCooldownRemaining <= 0L);
+                operatorBypass || (primaryChangesRemaining && primaryCooldownRemaining <= 0L),
+                operatorBypass || (secondaryChangesRemaining && secondaryCooldownRemaining <= 0L));
         updateClassDetailPanel(ui,
                 playerData,
                 primary,
@@ -161,6 +174,8 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 cooldownSeconds,
                 primaryCooldownRemaining,
                 secondaryCooldownRemaining,
+                primaryChangesRemaining,
+                secondaryChangesRemaining,
                 operatorBypass);
     }
 
@@ -175,19 +190,32 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             selectedClassId = primary.getId();
         }
 
+        boolean secondaryEnabled = classManager != null && classManager.isSecondaryClassEnabled();
+        boolean primaryChangesRemaining = classManager.hasClassSwitchesRemaining(playerData,
+                ClassAssignmentSlot.PRIMARY);
+        boolean secondaryChangesRemaining = secondaryEnabled
+                && classManager.hasClassSwitchesRemaining(playerData, ClassAssignmentSlot.SECONDARY);
+
         long cooldownSeconds = classManager.getChooseClassCooldownSeconds();
         long primaryCooldownRemaining = operatorBypass
                 ? 0L
-                : classManager.getClassCooldownRemaining(playerData, ClassAssignmentSlot.PRIMARY);
+                : (primaryChangesRemaining
+                        ? classManager.getClassCooldownRemaining(playerData, ClassAssignmentSlot.PRIMARY)
+                        : 0L);
         long secondaryCooldownRemaining = operatorBypass
                 ? 0L
-                : classManager.getClassCooldownRemaining(playerData, ClassAssignmentSlot.SECONDARY);
+                : (secondaryChangesRemaining
+                        ? classManager.getClassCooldownRemaining(playerData, ClassAssignmentSlot.SECONDARY)
+                        : 0L);
 
         UICommandBuilder ui = new UICommandBuilder();
         updateCooldownCard(ui,
                 cooldownSeconds,
                 primaryCooldownRemaining,
                 secondaryCooldownRemaining,
+                primaryChangesRemaining,
+                secondaryChangesRemaining,
+                secondaryEnabled,
                 operatorBypass);
         updateStatusCard(ui, primary, secondary);
         refreshClassList(ui, primary, secondary);
@@ -198,6 +226,8 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 cooldownSeconds,
                 primaryCooldownRemaining,
                 secondaryCooldownRemaining,
+                primaryChangesRemaining,
+                secondaryChangesRemaining,
                 operatorBypass);
         sendUpdate(ui, false);
     }
@@ -206,6 +236,9 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             long cooldownSeconds,
             long primaryCooldownRemaining,
             long secondaryCooldownRemaining,
+            boolean primaryChangesRemaining,
+            boolean secondaryChangesRemaining,
+            boolean secondaryEnabled,
             boolean operatorBypass) {
         if (operatorBypass) {
             ui.set("#ClassSwapCooldownHint.Text",
@@ -214,8 +247,28 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             ui.set("#ClassSecondaryCooldownValue.Text", tr("ui.classes.cooldown.bypassed", "Bypassed"));
             return;
         }
-        ui.set("#ClassPrimaryCooldownValue.Text", formatSlotAvailability(primaryCooldownRemaining));
-        ui.set("#ClassSecondaryCooldownValue.Text", formatSlotAvailability(secondaryCooldownRemaining));
+        boolean allChangesExhausted = !primaryChangesRemaining && (!secondaryEnabled || !secondaryChangesRemaining);
+
+        ui.set("#ClassPrimaryCooldownValue.Text",
+                primaryChangesRemaining
+                        ? formatSlotAvailability(primaryCooldownRemaining)
+                        : tr("ui.classes.cooldown.exhausted", "No changes left"));
+
+        if (!secondaryEnabled) {
+            ui.set("#ClassSecondaryCooldownValue.Text", tr("ui.classes.detail.secondary_disabled", "Disabled"));
+        } else {
+            ui.set("#ClassSecondaryCooldownValue.Text",
+                    secondaryChangesRemaining
+                            ? formatSlotAvailability(secondaryCooldownRemaining)
+                            : tr("ui.classes.cooldown.exhausted", "No changes left"));
+        }
+
+        if (allChangesExhausted) {
+            ui.set("#ClassSwapCooldownHint.Text",
+                    tr("ui.classes.error.no_changes_remaining", "You have no class changes remaining."));
+            return;
+        }
+
         if (cooldownSeconds > 0L) {
             ui.set("#ClassSwapCooldownHint.Text",
                     tr("ui.classes.cooldown.each_swap", "Each swap triggers a {0} cooldown per slot.",
@@ -374,8 +427,11 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             long cooldownSeconds,
             long primaryCooldownRemaining,
             long secondaryCooldownRemaining,
+            boolean primaryChangesRemaining,
+            boolean secondaryChangesRemaining,
             boolean operatorBypass) {
         boolean secondaryEnabled = classManager != null && classManager.isSecondaryClassEnabled();
+        boolean allChangesExhausted = !primaryChangesRemaining && (!secondaryEnabled || !secondaryChangesRemaining);
         updateSorceryDisplay(ui, data);
         CharacterClassDefinition selection = resolveSelection(primary);
         if (selection == null) {
@@ -400,6 +456,8 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             if (operatorBypass) {
                 status += " "
                         + tr("ui.classes.cooldown.bypassed_detail", "Operator bypass active; swapping is immediate.");
+            } else if (allChangesExhausted) {
+                status += " " + tr("ui.classes.error.no_changes_remaining", "You have no class changes remaining.");
             } else if (primaryCooldownRemaining > 0L || (secondaryEnabled && secondaryCooldownRemaining > 0L)) {
                 status += " " + tr("ui.classes.detail.primary_slot", "Primary") + " "
                         + formatSlotAvailability(primaryCooldownRemaining);
@@ -442,8 +500,9 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         boolean canSecondary = (secondary == null || !secondary.getId().equalsIgnoreCase(selection.getId()))
                 && (primary == null || !primary.getId().equalsIgnoreCase(selection.getId()));
 
-        boolean canModifyPrimary = operatorBypass || primaryCooldownRemaining <= 0L;
-        boolean canModifySecondary = operatorBypass || secondaryCooldownRemaining <= 0L;
+        boolean canModifyPrimary = operatorBypass || (primaryChangesRemaining && primaryCooldownRemaining <= 0L);
+        boolean canModifySecondary = operatorBypass
+                || (secondaryEnabled && secondaryChangesRemaining && secondaryCooldownRemaining <= 0L);
         ui.set("#ConfirmPrimaryButton.Visible", canPrimary && canModifyPrimary);
         ui.set("#ConfirmSecondaryButton.Visible", secondaryEnabled && canSecondary && canModifySecondary);
 
@@ -460,6 +519,9 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (operatorBypass) {
             statusBuilder.append(' ').append(
                     tr("ui.classes.cooldown.bypassed_detail", "Operator bypass active; swapping is immediate."));
+        } else if (allChangesExhausted) {
+            statusBuilder.append(' ')
+                    .append(tr("ui.classes.error.no_changes_remaining", "You have no class changes remaining."));
         } else if (primaryCooldownRemaining > 0L || (secondaryEnabled && secondaryCooldownRemaining > 0L)) {
             statusBuilder.append(' ')
                     .append(tr("ui.classes.detail.primary_slot", "Primary"))
@@ -836,7 +898,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (OperatorHelper.isOperator(playerRef)) {
             return true;
         }
-        if (!classManager.hasClassSwitchesRemaining(data)) {
+        if (!classManager.hasClassSwitchesRemaining(data, slot)) {
             playerRef.sendMessage(
                     Message.raw(tr("ui.classes.error.no_changes_remaining", "You have no class changes remaining."))
                             .color("#ff6666"));

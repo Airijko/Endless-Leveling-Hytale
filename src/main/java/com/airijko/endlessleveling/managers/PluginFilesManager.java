@@ -49,6 +49,7 @@ public class PluginFilesManager {
 
     private final File configFile;
     private final File levelingFile;
+    private final File worldsFile;
     private final File partyDataFile;
     private final Object archiveLock = new Object();
     private Path currentArchiveSession;
@@ -71,6 +72,7 @@ public class PluginFilesManager {
 
         this.configFile = initYamlFile("config.yml");
         this.levelingFile = initYamlFile("leveling.yml");
+        this.worldsFile = initYamlFile("worlds.yml");
         this.weaponsFile = initYamlFile(WEAPONS_FILE_NAME);
         this.partyDataFile = initPartyDataFile();
 
@@ -135,6 +137,10 @@ public class PluginFilesManager {
 
     public File getLevelingFile() {
         return levelingFile;
+    }
+
+    public File getWorldsFile() {
+        return worldsFile;
     }
 
     /** Convenience method for player data file */
@@ -375,6 +381,8 @@ public class PluginFilesManager {
                         out.write(buffer, 0, length);
                     }
                 }
+
+                ensureConfigVersionMarkerOnCreate(resourceName, yamlFile);
                 LOGGER.atInfo().log("YAML file %s created at %s", resourceName, yamlFile.getAbsolutePath());
             } catch (IOException e) {
                 throw new IllegalStateException("Unable to create YAML file: " + resourceName, e);
@@ -384,6 +392,36 @@ public class PluginFilesManager {
         }
 
         return yamlFile;
+    }
+
+    private void ensureConfigVersionMarkerOnCreate(String resourceName, File yamlFile) throws IOException {
+        if (resourceName == null || yamlFile == null || !yamlFile.exists()) {
+            return;
+        }
+
+        Integer version = VersionRegistry.getResourceConfigVersion(resourceName);
+        if (version == null) {
+            return;
+        }
+
+        String content = Files.readString(yamlFile.toPath());
+        if (content.contains("config_version:")) {
+            return;
+        }
+
+        String lineBreak = content.contains("\r\n") ? "\r\n" : "\n";
+        StringBuilder suffix = new StringBuilder();
+        if (!content.endsWith("\n") && !content.endsWith("\r")) {
+            suffix.append(lineBreak);
+        }
+        suffix.append(lineBreak)
+                .append("# DON'T EDIT THIS LINE BELOW")
+                .append(lineBreak)
+                .append("config_version: ")
+                .append(version)
+                .append(lineBreak);
+
+        Files.writeString(yamlFile.toPath(), suffix.toString(), StandardOpenOption.APPEND);
     }
 
     private File initPartyDataFile() {

@@ -85,8 +85,13 @@ public class RaceChooseCommand extends AbstractPlayerCommand {
             return;
         }
 
-        long now = Instant.now().getEpochSecond();
         if (!OperatorHelper.isOperator(senderRef)) {
+            if (!raceManager.hasRaceSwitchesRemaining(data)) {
+                senderRef.sendMessage(Message.raw("No race changes remaining.").color("#ff6666"));
+                return;
+            }
+
+            long now = Instant.now().getEpochSecond();
             long cooldownSeconds = raceManager.getChooseRaceCooldownSeconds();
             long lastChange = data.getLastRaceChangeEpochSeconds();
             if (cooldownSeconds > 0 && lastChange > 0) {
@@ -103,7 +108,7 @@ public class RaceChooseCommand extends AbstractPlayerCommand {
         }
 
         data.setRaceId(desiredRace.getId());
-        data.setLastRaceChangeEpochSeconds(now);
+        raceManager.markRaceChange(data);
         playerDataManager.save(data);
 
         var skillManager = EndlessLeveling.getInstance().getSkillManager();

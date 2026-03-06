@@ -106,6 +106,14 @@ public class LevelingConfigManager {
         }
     }
 
+    private void save() {
+        try (FileWriter writer = new FileWriter(levelingFile)) {
+            yaml.dump(configMap, writer);
+        } catch (IOException e) {
+            LOGGER.atWarning().log("Failed to save leveling.yml: %s", e.getMessage());
+        }
+    }
+
     private Map<String, Object> toMutableMap(Object loaded) {
         Map<String, Object> target = new LinkedHashMap<>();
         if (loaded instanceof Map<?, ?> map) {
@@ -120,8 +128,10 @@ public class LevelingConfigManager {
 
     private void ensureUpToDateAndMigrate() {
         Integer currentVersion = extractConfigVersion(configMap);
-        if (currentVersion != null && currentVersion >= bundledConfigVersion)
+        if (currentVersion != null && currentVersion >= bundledConfigVersion) {
+            ensureInlineVersionMarker();
             return;
+        }
 
         String found = currentVersion == null ? "missing" : Integer.toString(currentVersion);
         LOGGER.atWarning().log("leveling.yml version is missing/outdated (found=%s, expected=%d). Refreshing...",
@@ -135,6 +145,7 @@ public class LevelingConfigManager {
             return;
         }
         readFromDisk();
+        ensureInlineVersionMarker();
     }
 
     private void backupCurrentFile() {
@@ -174,6 +185,18 @@ public class LevelingConfigManager {
         configMap = merged;
         LOGGER.atInfo().log("Rebuilt %s from bundled resource template and migrated existing values (version=%d)",
                 resourceName, bundledConfigVersion);
+    }
+
+    private void ensureInlineVersionMarker() {
+        if (configMap == null) {
+            return;
+        }
+        Integer inlineVersion = extractConfigVersion(configMap);
+        if (inlineVersion != null && inlineVersion == bundledConfigVersion) {
+            return;
+        }
+        configMap.put(VersionRegistry.CONFIG_VERSION_KEY, bundledConfigVersion);
+        save();
     }
 
     private Map<String, Object> loadBundledConfigMap() throws IOException {

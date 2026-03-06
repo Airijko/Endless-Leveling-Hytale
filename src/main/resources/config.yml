@@ -108,7 +108,7 @@ enable_secondary_class: true # Enable or disable secondary class assignments glo
 default_primary_class: "Adventurer" # Use built-in fallback default primary class
 default_secondary_class: "None" # Optional secondary class default (None disables it)
 choose_class_cooldown: 1800 # Cooldown (seconds) before changing class again
-class_max_switches: 1 # -1 = unlimited; 1 = one-time; any positive number caps total class swaps per player (primary/secondary combined)
+class_max_switches: 1 # -1 = unlimited; positive values apply per slot (primary and, if enabled, secondary each get their own cap)
 
 # ------------------------------------------------------------
 # LANGUAGE / LOCALIZATION
@@ -151,6 +151,3 @@ logging:
     # [listeners, systems]
     # [commands, commands.subcommands]
     # [managers.PlayerDataManager, managers.AugmentManager]
-
-# DON'T EDIT THIS LINE BELOW
-config_version: 23

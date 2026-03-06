@@ -74,6 +74,3 @@ types:
   unarmed:
     keywords:
       - fist
-
-# DON'T EDIT THIS LINE BELOW
-config_version: 1

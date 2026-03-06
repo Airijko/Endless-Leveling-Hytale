@@ -13,8 +13,9 @@ public final class VersionRegistry {
     public static final String CONFIG_VERSION_KEY = "config_version";
     public static final String PLAYERDATA_VERSION_KEY = "version";
 
-    public static final int CONFIG_YML_VERSION = 24;
+    public static final int CONFIG_YML_VERSION = 25;
     public static final int LEVELING_YML_VERSION = 9;
+    public static final int WORLDS_YML_VERSION = 1;
     public static final int WEAPONS_YML_VERSION = 2;
 
     public static final int PLAYERDATA_SCHEMA_VERSION = 8;
@@ -36,6 +37,7 @@ public final class VersionRegistry {
         return switch (resourceName.trim().toLowerCase(Locale.ROOT)) {
             case "config.yml" -> CONFIG_YML_VERSION;
             case "leveling.yml" -> LEVELING_YML_VERSION;
+            case "worlds.yml" -> WORLDS_YML_VERSION;
             case "weapons.yml" -> WEAPONS_YML_VERSION;
             default -> null;
         };
