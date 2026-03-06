@@ -1,5 +1,6 @@
 package com.airijko.endlessleveling.systems;
 
+import com.airijko.endlessleveling.compatibility.NameplateBuilderCompatibility;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.hypixel.hytale.component.ArchetypeChunk;
@@ -60,6 +61,13 @@ public class PlayerNameplateSystem extends TickingSystem<EntityStore> {
                 String label = String.format("Lv. %d %s", playerData.getLevel(), baseName);
                 String previous = lastLabels.get(uuid);
                 if (label.equals(previous)) {
+                    continue;
+                }
+
+                if (NameplateBuilderCompatibility.isAvailable()
+                        && NameplateBuilderCompatibility.registerPlayerLevel(ref.getStore(), ref,
+                                playerData.getLevel())) {
+                    lastLabels.put(uuid, label);
                     continue;
                 }
 

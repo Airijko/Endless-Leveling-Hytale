@@ -11,13 +11,15 @@ public final class NameplateBuilderCompatibility {
 
     private static final String API_CLASS = "com.frotty27.nameplatebuilder.api.NameplateAPI";
     private static final String SEGMENT_TARGET_CLASS = "com.frotty27.nameplatebuilder.api.SegmentTarget";
-    private static final String SEGMENT_ID = "mob_level";
+    private static final String MOB_SEGMENT_ID = "mob_level";
+    private static final String PLAYER_SEGMENT_ID = "player_level";
 
     private static volatile boolean initialized = false;
     private static volatile Method describeMethod = null;
     private static volatile Method registerMethod = null;
     private static volatile Method removeMethod = null;
     private static volatile Object segmentTargetNpcs = null;
+    private static volatile Object segmentTargetPlayers = null;
 
     private NameplateBuilderCompatibility() {
     }
@@ -35,9 +37,28 @@ public final class NameplateBuilderCompatibility {
             describeMethod.invoke(
                     null,
                     plugin,
-                    SEGMENT_ID,
+                    MOB_SEGMENT_ID,
                     "Mob Level",
                     segmentTargetNpcs,
+                    "Lv.10");
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    public static boolean describePlayerLevelSegment(JavaPlugin plugin) {
+        if (plugin == null || !ensureInitialized() || segmentTargetPlayers == null) {
+            return false;
+        }
+
+        try {
+            describeMethod.invoke(
+                    null,
+                    plugin,
+                    PLAYER_SEGMENT_ID,
+                    "Player Level",
+                    segmentTargetPlayers,
                     "Lv.10");
             return true;
         } catch (Throwable ignored) {
@@ -51,7 +72,20 @@ public final class NameplateBuilderCompatibility {
         }
 
         try {
-            registerMethod.invoke(null, store, entityRef, SEGMENT_ID, "Lv." + level);
+            registerMethod.invoke(null, store, entityRef, MOB_SEGMENT_ID, "Lv." + level);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    public static boolean registerPlayerLevel(Store<EntityStore> store, Ref<EntityStore> entityRef, int level) {
+        if (store == null || entityRef == null || level <= 0 || !ensureInitialized() || segmentTargetPlayers == null) {
+            return false;
+        }
+
+        try {
+            registerMethod.invoke(null, store, entityRef, PLAYER_SEGMENT_ID, "Lv." + level);
             return true;
         } catch (Throwable ignored) {
             return false;
@@ -64,7 +98,20 @@ public final class NameplateBuilderCompatibility {
         }
 
         try {
-            removeMethod.invoke(null, store, entityRef, SEGMENT_ID);
+            removeMethod.invoke(null, store, entityRef, MOB_SEGMENT_ID);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    public static boolean removePlayerLevel(Store<EntityStore> store, Ref<EntityStore> entityRef) {
+        if (store == null || entityRef == null || !ensureInitialized() || segmentTargetPlayers == null) {
+            return false;
+        }
+
+        try {
+            removeMethod.invoke(null, store, entityRef, PLAYER_SEGMENT_ID);
             return true;
         } catch (Throwable ignored) {
             return false;
@@ -104,13 +151,28 @@ public final class NameplateBuilderCompatibility {
                     String.class);
 
             segmentTargetNpcs = Enum.valueOf((Class<? extends Enum>) segmentTargetClass.asSubclass(Enum.class), "NPCS");
+            segmentTargetPlayers = resolveSegmentTargetPlayer(segmentTargetClass);
             return true;
         } catch (Throwable ignored) {
             describeMethod = null;
             registerMethod = null;
             removeMethod = null;
             segmentTargetNpcs = null;
+            segmentTargetPlayers = null;
             return false;
         }
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static Object resolveSegmentTargetPlayer(Class<?> segmentTargetClass) {
+        Class<? extends Enum> enumClass = segmentTargetClass.asSubclass(Enum.class);
+        String[] candidates = new String[] { "PLAYERS", "PLAYER" };
+        for (String candidate : candidates) {
+            try {
+                return Enum.valueOf(enumClass, candidate);
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        return null;
     }
 }

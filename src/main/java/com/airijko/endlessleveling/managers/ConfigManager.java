@@ -225,10 +225,28 @@ public class ConfigManager {
     private void ensureConfigUpToDate() {
         Integer currentVersion = extractConfigVersion(configMap);
         if (currentVersion != null && currentVersion >= bundledConfigVersion) {
+            boolean requiresTemplateRebuild = false;
             if (containsLegacyKeysMarker()) {
+                requiresTemplateRebuild = true;
                 LOGGER.atWarning().log(
                         "Detected deprecated legacy-key marker in %s; rebuilding using bundled template structure.",
                         resourceName);
+            } else if (shouldEnforceStrictTemplateMigration()) {
+                try {
+                    Map<String, Object> bundledMap = loadBundledConfigMap();
+                    if (hasTemplateShapeDrift(configMap, bundledMap)) {
+                        requiresTemplateRebuild = true;
+                        LOGGER.atWarning().log(
+                                "Detected template drift in %s; rebuilding to match bundled structure and ignore legacy keys.",
+                                resourceName);
+                    }
+                } catch (IOException e) {
+                    LOGGER.atWarning().log("Failed to validate template shape for %s: %s", resourceName,
+                            e.getMessage());
+                }
+            }
+
+            if (requiresTemplateRebuild) {
                 try {
                     rebuildFromBundledTemplatePreservingCurrentValues();
                     readConfigFromDisk();
@@ -257,6 +275,41 @@ public class ConfigManager {
         }
         readConfigFromDisk();
         ensureInlineVersionMarker();
+    }
+
+    private boolean shouldEnforceStrictTemplateMigration() {
+        return "config.yml".equalsIgnoreCase(resourceName);
+    }
+
+    private boolean hasTemplateShapeDrift(Map<String, Object> current, Map<String, Object> bundledTemplate) {
+        Map<String, Object> currentMap = current == null ? new LinkedHashMap<>() : current;
+        Map<String, Object> templateMap = bundledTemplate == null ? new LinkedHashMap<>() : bundledTemplate;
+
+        if (!currentMap.keySet().equals(templateMap.keySet())) {
+            return true;
+        }
+
+        for (Map.Entry<String, Object> entry : templateMap.entrySet()) {
+            String key = entry.getKey();
+            Object templateValue = entry.getValue();
+            Object currentValue = currentMap.get(key);
+
+            if (templateValue instanceof Map<?, ?> templateChild) {
+                if (!(currentValue instanceof Map<?, ?> currentChild)) {
+                    return true;
+                }
+                if (hasTemplateShapeDrift(toMutableMap(currentChild), toMutableMap(templateChild))) {
+                    return true;
+                }
+                continue;
+            }
+
+            if (!isCompatibleForMigration(templateValue, currentValue)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void backupCurrentConfig() {
