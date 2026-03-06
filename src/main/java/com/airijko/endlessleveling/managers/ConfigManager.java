@@ -8,12 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -306,14 +304,6 @@ public class ConfigManager {
 
     private Map<String, Object> mergeMapsPreservingUserValues(Map<String, Object> bundled,
             Map<String, Object> existing) {
-        ExistingValueIndex existingValueIndex = new ExistingValueIndex(existing);
-        return mergeMapsPreservingUserValues(bundled, existing, new ArrayList<>(), existingValueIndex);
-    }
-
-    private Map<String, Object> mergeMapsPreservingUserValues(Map<String, Object> bundled,
-            Map<String, Object> existing,
-            List<String> currentPath,
-            ExistingValueIndex existingValueIndex) {
         Map<String, Object> result = new LinkedHashMap<>();
         Map<String, Object> bundledMap = bundled == null ? new LinkedHashMap<>() : bundled;
         Map<String, Object> existingMap = existing == null ? new LinkedHashMap<>() : existing;
@@ -321,21 +311,19 @@ public class ConfigManager {
         for (Map.Entry<String, Object> entry : bundledMap.entrySet()) {
             String key = entry.getKey();
             Object bundledValue = entry.getValue();
-            List<String> targetPath = appendPath(currentPath, key);
             if (!existingMap.containsKey(key)) {
-                ExistingPathValue migrated = existingValueIndex.takeBestMatch(key, bundledValue, targetPath);
-                if (migrated != null) {
-                    result.put(key, deepCopyValue(migrated.value()));
-                    continue;
-                }
                 result.put(key, deepCopyValue(bundledValue));
                 continue;
             }
 
             Object existingValue = existingMap.get(key);
+            if (!isCompatibleForMigration(bundledValue, existingValue)) {
+                result.put(key, deepCopyValue(bundledValue));
+                continue;
+            }
+
             if (bundledValue instanceof Map<?, ?> bundledChild && existingValue instanceof Map<?, ?> existingChild) {
-                result.put(key, mergeMapsPreservingUserValues(toMutableMap(bundledChild), toMutableMap(existingChild),
-                        targetPath, existingValueIndex));
+                result.put(key, mergeMapsPreservingUserValues(toMutableMap(bundledChild), toMutableMap(existingChild)));
             } else {
                 result.put(key, deepCopyValue(existingValue));
             }
@@ -411,12 +399,6 @@ public class ConfigManager {
         }
     }
 
-    private List<String> appendPath(List<String> basePath, String nextKey) {
-        List<String> mergedPath = new ArrayList<>(basePath);
-        mergedPath.add(nextKey);
-        return mergedPath;
-    }
-
     private boolean isCompatibleForMigration(Object expectedValue, Object candidateValue) {
         if (expectedValue == null || candidateValue == null) {
             return true;
@@ -435,81 +417,6 @@ public class ConfigManager {
         }
         return expectedValue.getClass().isAssignableFrom(candidateValue.getClass())
                 || candidateValue.getClass().isAssignableFrom(expectedValue.getClass());
-    }
-
-    private int suffixSimilarity(List<String> leftPath, List<String> rightPath) {
-        int matches = 0;
-        int l = leftPath.size() - 1;
-        int r = rightPath.size() - 1;
-        while (l >= 0 && r >= 0) {
-            if (!Objects.equals(leftPath.get(l), rightPath.get(r))) {
-                break;
-            }
-            matches++;
-            l--;
-            r--;
-        }
-        return matches;
-    }
-
-    private String toPathKey(List<String> path) {
-        return String.join("\u001F", path);
-    }
-
-    private void indexExistingValues(Map<String, Object> map, List<String> currentPath,
-            Map<String, List<ExistingPathValue>> byKey) {
-        if (map == null) {
-            return;
-        }
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            List<String> path = appendPath(currentPath, entry.getKey());
-            ExistingPathValue pathValue = new ExistingPathValue(path, entry.getValue());
-            byKey.computeIfAbsent(entry.getKey(), ignored -> new ArrayList<>()).add(pathValue);
-            Object value = entry.getValue();
-            if (value instanceof Map<?, ?> nestedMap) {
-                indexExistingValues(toMutableMap(nestedMap), path, byKey);
-            }
-        }
-    }
-
-    private record ExistingPathValue(List<String> path, Object value) {
-    }
-
-    private final class ExistingValueIndex {
-        private final Map<String, List<ExistingPathValue>> valuesByKey = new LinkedHashMap<>();
-        private final Set<String> consumedPaths = new HashSet<>();
-
-        private ExistingValueIndex(Map<String, Object> existingRoot) {
-            indexExistingValues(existingRoot == null ? new LinkedHashMap<>() : existingRoot, new ArrayList<>(),
-                    valuesByKey);
-        }
-
-        private ExistingPathValue takeBestMatch(String key, Object expectedValue, List<String> targetPath) {
-            List<ExistingPathValue> candidates = valuesByKey.getOrDefault(key, Collections.emptyList());
-            ExistingPathValue best = null;
-            int bestScore = -1;
-            for (ExistingPathValue candidate : candidates) {
-                if (consumedPaths.contains(toPathKey(candidate.path()))) {
-                    continue;
-                }
-                if (!isCompatibleForMigration(expectedValue, candidate.value())) {
-                    continue;
-                }
-                int score = suffixSimilarity(candidate.path(), targetPath);
-                if (best == null || score > bestScore) {
-                    best = candidate;
-                    bestScore = score;
-                }
-            }
-            if (best != null) {
-                consumedPaths.add(toPathKey(best.path()));
-            }
-            return best;
-        }
-
-        private boolean isConsumed(List<String> path) {
-            return consumedPaths.contains(toPathKey(path));
-        }
     }
 
     private Object deepCopyValue(Object value) {
