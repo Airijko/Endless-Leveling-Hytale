@@ -8,3 +8,22 @@ baseSkillPoints: 12
 skillPointsPerLevel: 6
 
 player_level_cap: 100
+
+Mob_Leveling:
+  Experience:
+    Enabled: true
+    Scaling:
+      Mode: LINEAR
+      BonusAtMax: 3.0
+      MinMultiplier: 0.2
+    XP_Level_Range:
+      Enabled: true
+      Max_Difference: 15
+      Below_Range:
+        Multiplier: 0.0
+      Above_Range:
+        Multiplier: 0.05
+    Global_XP_Multiplier: 1.0
+  UI:
+    Show_Mob_Level: true
+    Show_Level_In_Name: true

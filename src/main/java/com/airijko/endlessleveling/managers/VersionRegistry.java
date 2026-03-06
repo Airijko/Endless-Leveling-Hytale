@@ -14,8 +14,8 @@ public final class VersionRegistry {
     public static final String PLAYERDATA_VERSION_KEY = "version";
 
     public static final int CONFIG_YML_VERSION = 25;
-    public static final int LEVELING_YML_VERSION = 10;
-    public static final int WORLDS_YML_VERSION = 3;
+    public static final int LEVELING_YML_VERSION = 11;
+    public static final int WORLDS_YML_VERSION = 5;
     public static final int WEAPONS_YML_VERSION = 2;
 
     public static final int PLAYERDATA_SCHEMA_VERSION = 8;

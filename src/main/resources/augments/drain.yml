@@ -6,6 +6,6 @@ category: ON_HIT
 
 passives:
   bonus_damage_on_hit:
-    value: 0.10 # 10% of target's current HP as bonus damage
-    target_stat: CURRENT_HP # calculates based on target's curren
-    cooldown: 1.0 # 1 second cooldown between procs
+    value: 0.05 # 5% of target's current HP as bonus damage
+    target_stat: CURRENT_HP # calculates based on target's current HP
+    cooldown: 4.0 # 4 second cooldown between procs

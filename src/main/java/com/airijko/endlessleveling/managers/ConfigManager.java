@@ -21,6 +21,9 @@ import com.hypixel.hytale.logger.HytaleLogger;
 public class ConfigManager {
 
     private static final Pattern KEY_LINE_PATTERN = Pattern.compile("^([A-Za-z0-9_\\-\\\"']+)\\s*:\\s*(.*)$");
+    private static final Pattern VERSION_LINE_PATTERN = Pattern.compile("(?m)^\\s*config_version\\s*:\\s*.*$");
+    private static final String LEGACY_KEYS_MARKER = "# Preserved legacy keys from previous config";
+    private static final String VERSION_MARKER_COMMENT = "# DON'T EDIT THIS LINE BELOW";
 
     private final PluginFilesManager filesManager;
     private final File configFile;
@@ -224,6 +227,18 @@ public class ConfigManager {
     private void ensureConfigUpToDate() {
         Integer currentVersion = extractConfigVersion(configMap);
         if (currentVersion != null && currentVersion >= bundledConfigVersion) {
+            if (containsLegacyKeysMarker()) {
+                LOGGER.atWarning().log(
+                        "Detected deprecated legacy-key marker in %s; rebuilding using bundled template structure.",
+                        resourceName);
+                try {
+                    rebuildFromBundledTemplatePreservingCurrentValues();
+                    readConfigFromDisk();
+                } catch (IOException e) {
+                    LOGGER.atWarning().log("Failed to rebuild %s without legacy marker: %s", resourceName,
+                            e.getMessage());
+                }
+            }
             ensureInlineVersionMarker();
             return;
         }
@@ -326,16 +341,27 @@ public class ConfigManager {
             }
         }
 
-        for (Map.Entry<String, Object> entry : existingMap.entrySet()) {
-            if (VersionRegistry.CONFIG_VERSION_KEY.equals(entry.getKey())) {
-                continue;
-            }
-            List<String> existingPath = appendPath(currentPath, entry.getKey());
-            if (!result.containsKey(entry.getKey()) && !existingValueIndex.isConsumed(existingPath)) {
-                result.put(entry.getKey(), deepCopyValue(entry.getValue()));
-            }
-        }
         return result;
+    }
+
+    private boolean containsLegacyKeysMarker() {
+        if (!configFile.exists()) {
+            return false;
+        }
+        try {
+            String content = Files.readString(configFile.toPath());
+            return content.contains(LEGACY_KEYS_MARKER);
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+
+    private void rebuildFromBundledTemplatePreservingCurrentValues() throws IOException {
+        Map<String, Object> bundledMap = loadBundledConfigMap();
+        Map<String, Object> merged = mergeMapsPreservingUserValues(bundledMap, configMap);
+        merged.put(VersionRegistry.CONFIG_VERSION_KEY, bundledConfigVersion);
+        writeMergedWithBundledTemplate(merged, bundledMap);
+        configMap = merged;
     }
 
     private void ensureInlineVersionMarker() {
@@ -347,7 +373,42 @@ public class ConfigManager {
             return;
         }
         configMap.put(VersionRegistry.CONFIG_VERSION_KEY, bundledConfigVersion);
-        save();
+        upsertInlineVersionMarker();
+    }
+
+    private void upsertInlineVersionMarker() {
+        if (!configFile.exists()) {
+            save();
+            return;
+        }
+
+        try {
+            String content = Files.readString(configFile.toPath());
+            String lineBreak = content.contains("\r\n") ? "\r\n" : "\n";
+            String versionLine = "config_version: " + bundledConfigVersion;
+
+            Matcher matcher = VERSION_LINE_PATTERN.matcher(content);
+            if (matcher.find()) {
+                String updated = matcher.replaceFirst(versionLine);
+                Files.writeString(configFile.toPath(), updated);
+                return;
+            }
+
+            StringBuilder rebuilt = new StringBuilder(content);
+            if (rebuilt.length() > 0 && rebuilt.charAt(rebuilt.length() - 1) != '\n') {
+                rebuilt.append(lineBreak);
+            }
+            rebuilt.append(lineBreak)
+                    .append(VERSION_MARKER_COMMENT)
+                    .append(lineBreak)
+                    .append(versionLine)
+                    .append(lineBreak);
+            Files.writeString(configFile.toPath(), rebuilt.toString());
+        } catch (IOException e) {
+            LOGGER.atWarning().log("Failed to update inline config_version marker for %s: %s",
+                    resourceName, e.getMessage());
+            save();
+        }
     }
 
     private List<String> appendPath(List<String> basePath, String nextKey) {
@@ -486,16 +547,9 @@ public class ConfigManager {
         Map<String, Object> overridesWithinTemplate = getTemplateScopedOverrides(merged, bundled);
         applyTemplateOverrides(lines, overridesWithinTemplate);
 
-        Map<String, Object> extraKeys = collectKeysMissingFromTemplate(merged, bundled);
         StringBuilder output = new StringBuilder(String.join(System.lineSeparator(), lines));
-        if (!extraKeys.isEmpty()) {
-            if (output.length() > 0 && output.charAt(output.length() - 1) != '\n') {
-                output.append(System.lineSeparator());
-            }
-            output.append(System.lineSeparator())
-                    .append("# Preserved legacy keys from previous config")
-                    .append(System.lineSeparator());
-            output.append(yaml.dump(extraKeys));
+        if (output.length() > 0 && output.charAt(output.length() - 1) != '\n') {
+            output.append(System.lineSeparator());
         }
 
         Files.writeString(configFile.toPath(), output.toString());
