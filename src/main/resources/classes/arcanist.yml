@@ -14,7 +14,7 @@ passives:
   - type: MANA_REGEN
     value: 0.03
   - type: EXECUTIONER
-    value: 5.00 # +500%damage to targets below the threshold
+    value: 5.00 # +500% damage to targets below the threshold
     threshold: 0.2 # Only applies to targets already below 20% HP
     cooldown: 45 # Seconds between executioner procs
   - type: INNATE_ATTRIBUTE_GAIN
@@ -23,4 +23,3 @@ passives:
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: sorcery
     value: 1.40
-

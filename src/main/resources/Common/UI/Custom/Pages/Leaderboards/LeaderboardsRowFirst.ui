@@ -1,36 +1,55 @@
 $C = "../../Common.ui";
 
 Group {
+  LayoutMode: Top;
+
+  Group {
     LayoutMode: Left;
-    Padding: (Vertical: 4);
+    Background: #352400(0.45);
+    Padding: (Horizontal: 12, Vertical: 8);
 
     Label #Rank {
-        Style: (
-          FontSize: 14,
-          TextColor: #ffd700,
-          RenderBold: true
-        );
-        Anchor: (Width: 40);
-        Text: "-";
+      Style: (FontSize: 13, TextColor: #ffd700, RenderBold: true);
+      Anchor: (Width: 70);
+      Text: "-";
     }
 
     Label #Name {
-        Style: (
-          FontSize: 14,
-          TextColor: #ffd700,
-          RenderBold: true
-        );
-        FlexWeight: 1;
-        Text: "-";
+      Style: (FontSize: 13, TextColor: #ffd700, RenderBold: true);
+      FlexWeight: 1;
+      Text: "-";
+    }
+
+    Label #Race {
+      Style: (FontSize: 13, TextColor: #ffe6a8);
+      Anchor: (Width: 130);
+      Text: "-";
+    }
+
+    Label #Class {
+      Style: (FontSize: 13, TextColor: #f5e4bc);
+      Anchor: (Width: 130);
+      Text: "-";
+    }
+
+    Label #Prestige {
+      Style: (FontSize: 13, TextColor: #ffcc66, RenderBold: true);
+      Anchor: (Width: 90);
+      Text: "-";
     }
 
     Label #Level {
-        Style: (
-          FontSize: 14,
-          TextColor: #ffd700,
-          RenderBold: true
-        );
-        Anchor: (Width: 80);
-        Text: "-";
+      Style: (FontSize: 13, TextColor: #ffd700, RenderBold: true);
+      Anchor: (Width: 80);
+      Text: "-";
     }
+
+    Label #Exp {
+      Style: (FontSize: 13, TextColor: #ffd98c);
+      Anchor: (Width: 140);
+      Text: "-";
+    }
+  }
+
+  Group { Anchor: (Height: 6); }
 }

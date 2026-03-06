@@ -122,6 +122,43 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                 ? Lang.tr(playerRef.getUuid(), "ui.common.toggle.disabled", "DISABLED")
                                 : data.isUseRaceModel() ? Lang.tr(playerRef.getUuid(), "ui.common.toggle.on", "ON")
                                                 : Lang.tr(playerRef.getUuid(), "ui.common.toggle.off", "OFF"));
+
+                ui.set("#SettingsTitleLabel.Text",
+                                Lang.tr(playerRef.getUuid(), "ui.settings.page.title", "Settings"));
+                ui.set("#SettingsIntroText.Text",
+                                Lang.tr(playerRef.getUuid(), "ui.settings.page.subtitle",
+                                                "Manage personal HUD, notifications, and visual preferences."));
+
+                String toggleText = Lang.tr(playerRef.getUuid(), "ui.settings.page.toggle_button", "TOGGLE");
+                ui.set("#PlayerHudToggle.Text", toggleText);
+                ui.set("#CriticalNotifToggle.Text", toggleText);
+                ui.set("#XpNotifToggle.Text", toggleText);
+                ui.set("#PassiveLevelUpNotifToggle.Text", toggleText);
+                ui.set("#LuckDoubleDropsNotifToggle.Text", toggleText);
+                ui.set("#HealthRegenNotifToggle.Text", toggleText);
+                ui.set("#RaceModelToggle.Text", toggleText);
+
+                ui.set("#PlayerHudDescription.Text",
+                                Lang.tr(playerRef.getUuid(), "ui.settings.description.player_hud",
+                                                "Show or hide the Endless Leveling HUD overlay."));
+                ui.set("#CriticalNotifDescription.Text",
+                                Lang.tr(playerRef.getUuid(), "ui.settings.description.critical_notif",
+                                                "Toggle floating alerts for critical strike events."));
+                ui.set("#XpNotifDescription.Text",
+                                Lang.tr(playerRef.getUuid(), "ui.settings.description.xp_notif",
+                                                "Show notifications whenever you gain experience."));
+                ui.set("#PassiveLevelUpNotifDescription.Text",
+                                Lang.tr(playerRef.getUuid(), "ui.settings.description.passive_levelup_notif",
+                                                "Display updates when passives rank up during play."));
+                ui.set("#LuckDoubleDropsNotifDescription.Text",
+                                Lang.tr(playerRef.getUuid(), "ui.settings.description.luck_double_notif",
+                                                "Toggle bonus drop proc notifications from luck effects."));
+                ui.set("#HealthRegenNotifDescription.Text",
+                                Lang.tr(playerRef.getUuid(), "ui.settings.description.health_regen_notif",
+                                                "Show notifications when health regeneration triggers."));
+                ui.set("#RaceModelDescription.Text",
+                                Lang.tr(playerRef.getUuid(), "ui.settings.description.race_model",
+                                                "Enable race-specific character visuals when available."));
         }
 
         @Override

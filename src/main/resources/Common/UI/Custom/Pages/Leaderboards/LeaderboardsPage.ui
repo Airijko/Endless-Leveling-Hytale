@@ -9,11 +9,26 @@ $Nav = "../Nav/LeftNavPanel.ui";
     Sounds: $C.@ButtonSounds,
 );
 
-@ButtonClusterWidth = 180;
+@FilterCompactLabelStyle = LabelStyle(
+    FontSize: 14,
+    TextColor: #bfcdd5,
+    RenderBold: true,
+    RenderUppercase: true,
+    HorizontalAlignment: Center,
+    VerticalAlignment: Center
+);
+
+@FilterCompactStyle = TextButtonStyle(
+    Default: (Background: $C.@DefaultSquareButtonDefaultBackground, LabelStyle: @FilterCompactLabelStyle),
+    Hovered: (Background: $C.@DefaultSquareButtonHoveredBackground, LabelStyle: @FilterCompactLabelStyle),
+    Pressed: (Background: $C.@DefaultSquareButtonPressedBackground, LabelStyle: @FilterCompactLabelStyle),
+    Disabled: (Background: $C.@DefaultSquareButtonDisabledBackground, LabelStyle: @FilterCompactLabelStyle),
+    Sounds: $C.@ButtonSounds,
+);
 
 $C.@PageOverlay {
     $C.@DecoratedContainer {
-        Anchor: (Width: 800, Height: 700);
+        Anchor: (Width: 1000, Height: 700);
         #Title {
             Group {
                 $C.@Title {
@@ -36,11 +51,30 @@ $C.@PageOverlay {
                 Anchor: (Right: 7, Bottom: 7);
 
                 // -------- Title --------
-                Label {
-                    Text: "Leaderboards";
+                Group #Header {
+                    LayoutMode: Left;
                     Anchor: (Height: 60);
                     Padding: (Horizontal: 16, Vertical: 10);
-                    Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
+
+                    Label #LeaderboardsTitleLabel {
+                        Text: "Leaderboards";
+                        Anchor: (Height: 60);
+                        Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
+                    }
+
+                    Group { FlexWeight: 1; }
+
+                    Group #LeaderboardsIntro {
+                        LayoutMode: Left;
+                        Background: #0b141f(0.92);
+                        Anchor: (Height: 40);
+                        Padding: (Full: 8);
+
+                        Label #LeaderboardsIntroText {
+                            Style: (TextColor: #aaccff, FontSize: 14, VerticalAlignment: Center);
+                            Text: "Top players ranked by level and experience.";
+                        }
+                    }
                 }
 
                 Group {
@@ -48,35 +82,154 @@ $C.@PageOverlay {
                     Background: #2b3542;
                 }
 
-                Group { Anchor: (Height: 10); }
-
                 // -------- TABLE --------
                 Group #Main {
                     LayoutMode: Top;
                     FlexWeight: 1;
                     Padding: (Full: 16);
 
-                    Group #Headers {
-                        LayoutMode: Left;
-                        Padding: (Vertical: 6);
+                    Group #HeaderCard {
+                        LayoutMode: Top;
+                        Background: #0b141f(0.92);
+                        Padding: (Full: 12);
 
-                        Label { Style: $C.@DefaultLabelStyle; Text: "#"; Anchor: (Width: 40); }
-                        Label { Style: $C.@DefaultLabelStyle; Text: "Player"; FlexWeight: 1; }
-                        Label { Style: $C.@DefaultLabelStyle; Text: "Level"; Anchor: (Width: 80); }
+                        Group #ControlRow {
+                            LayoutMode: Left;
+
+                            Label #SortLabel {
+                                Text: "Sort";
+                                Style: (TextColor: #c0cee5, FontSize: 13, RenderBold: true, VerticalAlignment: Center);
+                                Anchor: (Width: 40);
+                            }
+
+                            $C.@TextButton #SortByButton {
+                                Text: "BY: PRESTIGE";
+                                Anchor: (Width: 132, Height: 30);
+                                Padding: (Horizontal: 2, Vertical: 1);
+                                Style: @FilterCompactStyle;
+                            }
+
+                            Group { Anchor: (Width: 6); }
+
+                            $C.@TextButton #SortOrderButton {
+                                Text: "ORDER: DESC";
+                                Anchor: (Width: 124, Height: 30);
+                                Padding: (Horizontal: 2, Vertical: 1);
+                                Style: @FilterCompactStyle;
+                            }
+
+                            Group { Anchor: (Width: 12); }
+
+                            Label #FilterLabel {
+                                Text: "Filter";
+                                Style: (TextColor: #c0cee5, FontSize: 13, RenderBold: true, VerticalAlignment: Center);
+                                Anchor: (Width: 50);
+                            }
+
+                            $C.@TextButton #RaceFilterButton {
+                                Text: "RACE: ALL";
+                                Anchor: (Width: 125, Height: 30);
+                                Padding: (Horizontal: 2, Vertical: 1);
+                                Style: @FilterCompactStyle;
+                            }
+
+                            Group { Anchor: (Width: 6); }
+
+                            $C.@TextButton #ClassFilterButton {
+                                Text: "CLASS: ALL";
+                                Anchor: (Width: 125, Height: 30);
+                                Padding: (Horizontal: 2, Vertical: 1);
+                                Style: @FilterCompactStyle;
+                            }
+
+                            Group { FlexWeight: 1; }
+
+                            $C.@CancelTextButton #ResetFiltersButton {
+                                Text: "RESET";
+                                Anchor: (Width: 86, Height: 30);
+                                Padding: (Horizontal: 2, Vertical: 1);
+                            }
+                        }
+
+                        Group { Anchor: (Height: 8); }
+
+                        Label #LeaderboardsFilterSummary {
+                            Text: "Showing all players.";
+                            Style: (TextColor: #9ab6d4, FontSize: 12);
+                        }
+
+                        Group { Anchor: (Height: 8); }
+
+                        Group { Anchor: (Height: 1); Background: #2b3542; }
+
+                        Group { Anchor: (Height: 8); }
+
+                        Group #Headers {
+                            LayoutMode: Left;
+                            Padding: (Vertical: 4);
+
+                            Label #HeaderRank {
+                                Style: (TextColor: #c0cee5, FontSize: 13, RenderBold: true, RenderUppercase: true);
+                                Text: "Rank";
+                                Anchor: (Width: 70);
+                            }
+
+                            Label #HeaderPlayer {
+                                Style: (TextColor: #c0cee5, FontSize: 13, RenderBold: true, RenderUppercase: true);
+                                Text: "Player";
+                                FlexWeight: 1;
+                            }
+
+                            Label #HeaderRace {
+                                Style: (TextColor: #c0cee5, FontSize: 13, RenderBold: true, RenderUppercase: true);
+                                Text: "Race";
+                                Anchor: (Width: 130);
+                            }
+
+                            Label #HeaderClass {
+                                Style: (TextColor: #c0cee5, FontSize: 13, RenderBold: true, RenderUppercase: true);
+                                Text: "Class";
+                                Anchor: (Width: 130);
+                            }
+
+                            Label #HeaderPrestige {
+                                Style: (TextColor: #c0cee5, FontSize: 13, RenderBold: true, RenderUppercase: true);
+                                Text: "Prestige";
+                                Anchor: (Width: 90);
+                            }
+
+                            Label #HeaderLevel {
+                                Style: (TextColor: #c0cee5, FontSize: 13, RenderBold: true, RenderUppercase: true);
+                                Text: "Level";
+                                Anchor: (Width: 80);
+                            }
+
+                            Label #HeaderXp {
+                                Style: (TextColor: #c0cee5, FontSize: 13, RenderBold: true, RenderUppercase: true);
+                                Text: "XP";
+                                Anchor: (Width: 140);
+                            }
+                        }
+
+                        Group { Anchor: (Height: 1); Background: #2b3542; }
                     }
 
-                    Group { Anchor: (Height: 1); Background: #2b3542; }
+                    Group { Anchor: (Height: 8); }
 
-                    // Scrollable list of leaderboard rows; rows are added dynamically from code
-                    Group #Rows {
-                        Anchor: (Top: 2);
+                    Group #RowsContainer {
+                        LayoutMode: Top;
                         FlexWeight: 1;
-                        LayoutMode: TopScrolling;
-                        Padding: (Left: 0);
-                        ScrollbarStyle: $C.@DefaultScrollbarStyle;
+                        Background: #070b12(0.9);
+                        Padding: (Full: 8);
 
-                        Group #RowCards {
-                            LayoutMode: Top;
+                        Group #Rows {
+                            FlexWeight: 1;
+                            LayoutMode: TopScrolling;
+                            ScrollbarStyle: $C.@DefaultScrollbarStyle;
+
+                            Group #RowCards {
+                                LayoutMode: Top;
+                            }
                         }
                     }
                 }

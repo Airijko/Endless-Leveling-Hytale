@@ -9,11 +9,11 @@ attributes:
   strength: 0.8
   defense: 0.9
   haste: 0.9
-  precision: 5.0
+  precision: 15.0
   ferocity: 30.0
   stamina: 6.0
   flow: 50.0
-  sorcery: 1.1
+  sorcery: 1.2
   discipline: 0
 
 passives:

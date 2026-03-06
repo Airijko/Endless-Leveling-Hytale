@@ -1,24 +1,55 @@
 $C = "../../Common.ui";
 
 Group {
-    LayoutMode: Left;
-    Padding: (Vertical: 4);
+    LayoutMode: Top;
 
-    Label #Rank {
-        Style: $C.@DefaultLabelStyle;
-        Anchor: (Width: 40);
-        Text: "-";
+    Group {
+        LayoutMode: Left;
+        Background: #0b141f(0.82);
+        Padding: (Horizontal: 12, Vertical: 8);
+
+        Label #Rank {
+            Style: (TextColor: #c0cee5, FontSize: 13, RenderBold: true);
+            Anchor: (Width: 70);
+            Text: "-";
+        }
+
+        Label #Name {
+            Style: (TextColor: #f4f9ff, FontSize: 13, RenderBold: true);
+            FlexWeight: 1;
+            Text: "-";
+        }
+
+        Label #Race {
+            Style: (TextColor: #aaccff, FontSize: 13);
+            Anchor: (Width: 130);
+            Text: "-";
+        }
+
+        Label #Class {
+            Style: (TextColor: #cfd8e8, FontSize: 13);
+            Anchor: (Width: 130);
+            Text: "-";
+        }
+
+        Label #Prestige {
+            Style: (TextColor: #ffd79a, FontSize: 13, RenderBold: true);
+            Anchor: (Width: 90);
+            Text: "-";
+        }
+
+        Label #Level {
+            Style: (TextColor: #87dfff, FontSize: 13, RenderBold: true);
+            Anchor: (Width: 80);
+            Text: "-";
+        }
+
+        Label #Exp {
+            Style: (TextColor: #9fe0ff, FontSize: 13);
+            Anchor: (Width: 140);
+            Text: "-";
+        }
     }
 
-    Label #Name {
-        Style: $C.@DefaultLabelStyle;
-        FlexWeight: 1;
-        Text: "-";
-    }
-
-    Label #Level {
-        Style: $C.@DefaultLabelStyle;
-        Anchor: (Width: 80);
-        Text: "-";
-    }
+    Group { Anchor: (Height: 6); }
 }

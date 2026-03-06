@@ -69,6 +69,18 @@ ui:
       disabled: "disabled"
 
   settings:
+    page:
+      title: "Settings"
+      subtitle: "Manage personal HUD, notifications, and visual preferences."
+      toggle_button: "TOGGLE"
+    description:
+      player_hud: "Show or hide the Endless Leveling HUD overlay."
+      critical_notif: "Toggle floating alerts for critical strike events."
+      xp_notif: "Show notifications whenever you gain experience."
+      passive_levelup_notif: "Display updates when passives rank up during play."
+      luck_double_notif: "Toggle bonus drop proc notifications from luck effects."
+      health_regen_notif: "Show notifications when health regeneration triggers."
+      race_model: "Enable race-specific character visuals when available."
     player_hud:
       label: "Player HUD"
       toggled: "Player HUD {0}"
@@ -92,6 +104,40 @@ ui:
       globally_disabled: "Race model visuals are disabled by the server configuration."
       enabled: "Race model visuals enabled"
       disabled: "Race model visuals disabled"
+
+  leaderboards:
+    page:
+      title: "Leaderboards"
+      subtitle: "Top players ranked with live sort/filter controls. ({0} players)"
+    controls:
+      sort: "Sort"
+      filter: "Filter"
+      reset: "RESET"
+      sort_by_value: "BY: {0}"
+      sort_order_value: "ORDER: {0}"
+      race_value: "RACE: {0}"
+      class_value: "CLASS: {0}"
+    sort:
+      prestige: "PRESTIGE"
+      level: "LEVEL"
+      xp: "XP"
+      alphabetical: "ALPHABETICAL"
+      race: "RACE"
+      class: "CLASS"
+    order:
+      asc: "ASC"
+      desc: "DESC"
+    filter:
+      all: "ALL"
+    column:
+      rank: "Rank"
+      player: "Player"
+      race: "Race"
+      class: "Class"
+      prestige: "Prestige"
+      level: "Level"
+      xp: "XP"
+    summary: "Showing {0}/{1} players • Sort: {2} {3} • Filters: Race={4}, Class={5}"
 
   augments:
     tier:

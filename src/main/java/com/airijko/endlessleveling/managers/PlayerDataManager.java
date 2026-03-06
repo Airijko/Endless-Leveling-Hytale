@@ -274,8 +274,8 @@ public class PlayerDataManager {
 
     /**
      * Load all player data files from disk (if not already cached) and
-     * return a list of PlayerData sorted by level descending, then XP
-     * descending as a secondary key.
+     * return a list of PlayerData sorted by prestige descending, then level
+     * descending, then XP descending.
      */
     public List<PlayerData> getAllPlayersSortedByLevel() {
         File folder = filesManager.getPlayerDataFolder();
@@ -305,8 +305,9 @@ public class PlayerDataManager {
 
         List<PlayerData> all = new ArrayList<>(playerCache.values());
         all.sort(Comparator
-                .comparingInt(PlayerData::getLevel).reversed()
-                .thenComparingDouble(PlayerData::getXp).reversed());
+                .comparingInt(PlayerData::getPrestigeLevel).reversed()
+                .thenComparing(Comparator.comparingInt(PlayerData::getLevel).reversed())
+                .thenComparing(Comparator.comparingDouble(PlayerData::getXp).reversed()));
         return all;
     }
 

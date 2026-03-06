@@ -10,10 +10,12 @@ $Nav = "Nav/LeftNavPanel.ui";
 );
 
 @ButtonClusterWidth = 180;
+@SettingValueWidth = 96;
+@ToggleButtonWidth = 118;
 
 $C.@PageOverlay {
     $C.@DecoratedContainer {
-        Anchor: (Width: 800, Height: 700);
+        Anchor: (Width: 1000, Height: 700);
         #Title {
             Group {
                 $C.@Title {
@@ -35,12 +37,31 @@ $C.@PageOverlay {
                 LayoutMode: Top;
                 Anchor: (Right: 7, Bottom: 7);
 
-                // -------- Title -------
-                Label #Header {
-                    Text: "Settings";
+                // -------- Title --------
+                Group #Header {
+                    LayoutMode: Left;
                     Anchor: (Height: 60);
                     Padding: (Horizontal: 16, Vertical: 10);
-                    Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
+
+                    Label #SettingsTitleLabel {
+                        Text: "Settings";
+                        Anchor: (Height: 60);
+                        Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
+                    }
+
+                    Group { FlexWeight: 1; }
+
+                    Group #SettingsIntro {
+                        LayoutMode: Left;
+                        Background: #0b141f(0.92);
+                        Anchor: (Height: 40);
+                        Padding: (Full: 8);
+
+                        Label #SettingsIntroText {
+                            Style: (TextColor: #aaccff, FontSize: 14, VerticalAlignment: Center);
+                            Text: "Manage personal HUD, notifications, and visual preferences.";
+                        }
+                    }
                 }
 
                 Group {
@@ -50,112 +71,311 @@ $C.@PageOverlay {
 
                 // -------- OPTIONS --------
                 Group #Main {
-                    LayoutMode: Top;
+                    LayoutMode: TopScrolling;
+                    ScrollbarStyle: $C.@DefaultScrollbarStyle;
                     FlexWeight: 1;
                     Padding: (Full: 16);
 
-                    Group #PlayerHudRow {
-                        LayoutMode: Left;
-                        Padding: (Vertical: 8);
+                    Group #SettingsList {
+                        LayoutMode: Top;
 
-                        Label #PlayerHudLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "Player HUD"; }
-                        Label #PlayerHudValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+                        Group #PlayerHudRow {
+                            LayoutMode: Left;
+                            Background: #0b141f(0.84);
+                            Padding: (Full: 12);
 
-                        $C.@TextButton #PlayerHudToggle {
-                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
-                            Padding: (Horizontal: @ButtonPadding);
-                            Text: "Toggle";
-                            Style: @CustomStyle;
+                            Group {
+                                LayoutMode: Top;
+                                FlexWeight: 1;
+
+                                Group {
+                                    LayoutMode: Left;
+
+                                    Label #PlayerHudLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; Text: "Player HUD"; }
+
+                                    Label #PlayerHudValue {
+                                        Text: "ON";
+                                        Anchor: (Width: @SettingValueWidth, Height: 24);
+                                        Padding: (Horizontal: 8, Vertical: 4);
+                                        Style: (TextColor: #6fe3ff, FontSize: 12, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center);
+                                        Background: #061420;
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #PlayerHudDescription {
+                                    Text: "Show or hide the Endless Leveling HUD overlay.";
+                                    Style: (TextColor: #c0cee5, FontSize: 12);
+                                }
+                            }
+
+                            Group { Anchor: (Width: 12); }
+
+                            $C.@TextButton #PlayerHudToggle {
+                                Anchor: (Height: 32, Width: @ToggleButtonWidth);
+                                Padding: (Horizontal: 8, Vertical: 4);
+                                Text: "Toggle";
+                                Style: @CustomStyle;
+                            }
                         }
-                    }
 
-                    Group #CriticalNotifRow {
-                        LayoutMode: Left;
-                        Padding: (Vertical: 8);
+                        Group { Anchor: (Height: 10); }
 
-                        Label #CriticalNotifLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "Critical Hit Notifications"; }
-                        Label #CriticalNotifValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+                        Group #CriticalNotifRow {
+                            LayoutMode: Left;
+                            Background: #0b141f(0.84);
+                            Padding: (Full: 12);
 
-                        $C.@TextButton #CriticalNotifToggle {
-                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
-                            Padding: (Horizontal: @ButtonPadding);
-                            Text: "Toggle";
-                            Style: @CustomStyle;
+                            Group {
+                                LayoutMode: Top;
+                                FlexWeight: 1;
+
+                                Group {
+                                    LayoutMode: Left;
+
+                                    Label #CriticalNotifLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; Text: "Critical Hit Notifications"; }
+
+                                    Label #CriticalNotifValue {
+                                        Text: "ON";
+                                        Anchor: (Width: @SettingValueWidth, Height: 24);
+                                        Padding: (Horizontal: 8, Vertical: 4);
+                                        Style: (TextColor: #6fe3ff, FontSize: 12, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center);
+                                        Background: #061420;
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #CriticalNotifDescription {
+                                    Text: "Toggle floating alerts for critical strike events.";
+                                    Style: (TextColor: #c0cee5, FontSize: 12);
+                                }
+                            }
+
+                            Group { Anchor: (Width: 12); }
+
+                            $C.@TextButton #CriticalNotifToggle {
+                                Anchor: (Height: 32, Width: @ToggleButtonWidth);
+                                Padding: (Horizontal: 8, Vertical: 4);
+                                Text: "Toggle";
+                                Style: @CustomStyle;
+                            }
                         }
-                    }
 
-                    Group #XpNotifRow {
-                        LayoutMode: Left;
-                        Padding: (Vertical: 8);
+                        Group { Anchor: (Height: 10); }
 
-                        Label #XpNotifLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "XP Gain Notifications"; }
-                        Label #XpNotifValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+                        Group #XpNotifRow {
+                            LayoutMode: Left;
+                            Background: #0b141f(0.84);
+                            Padding: (Full: 12);
 
-                        $C.@TextButton #XpNotifToggle {
-                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
-                            Padding: (Horizontal: @ButtonPadding);
-                            Text: "Toggle";
-                            Style: @CustomStyle;
+                            Group {
+                                LayoutMode: Top;
+                                FlexWeight: 1;
+
+                                Group {
+                                    LayoutMode: Left;
+
+                                    Label #XpNotifLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; Text: "XP Gain Notifications"; }
+
+                                    Label #XpNotifValue {
+                                        Text: "ON";
+                                        Anchor: (Width: @SettingValueWidth, Height: 24);
+                                        Padding: (Horizontal: 8, Vertical: 4);
+                                        Style: (TextColor: #6fe3ff, FontSize: 12, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center);
+                                        Background: #061420;
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #XpNotifDescription {
+                                    Text: "Show notifications whenever you gain experience.";
+                                    Style: (TextColor: #c0cee5, FontSize: 12);
+                                }
+                            }
+
+                            Group { Anchor: (Width: 12); }
+
+                            $C.@TextButton #XpNotifToggle {
+                                Anchor: (Height: 32, Width: @ToggleButtonWidth);
+                                Padding: (Horizontal: 8, Vertical: 4);
+                                Text: "Toggle";
+                                Style: @CustomStyle;
+                            }
                         }
-                    }
 
-                    Group #PassiveLevelUpNotifRow {
-                        LayoutMode: Left;
-                        Padding: (Vertical: 8);
+                        Group { Anchor: (Height: 10); }
 
-                        Label #PassiveLevelUpNotifLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "Passive Level-Up Notifications"; }
-                        Label #PassiveLevelUpNotifValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+                        Group #PassiveLevelUpNotifRow {
+                            LayoutMode: Left;
+                            Background: #0b141f(0.84);
+                            Padding: (Full: 12);
 
-                        $C.@TextButton #PassiveLevelUpNotifToggle {
-                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
-                            Padding: (Horizontal: @ButtonPadding);
-                            Text: "Toggle";
-                            Style: @CustomStyle;
+                            Group {
+                                LayoutMode: Top;
+                                FlexWeight: 1;
+
+                                Group {
+                                    LayoutMode: Left;
+
+                                    Label #PassiveLevelUpNotifLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; Text: "Passive Level-Up Notifications"; }
+
+                                    Label #PassiveLevelUpNotifValue {
+                                        Text: "ON";
+                                        Anchor: (Width: @SettingValueWidth, Height: 24);
+                                        Padding: (Horizontal: 8, Vertical: 4);
+                                        Style: (TextColor: #6fe3ff, FontSize: 12, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center);
+                                        Background: #061420;
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #PassiveLevelUpNotifDescription {
+                                    Text: "Display updates when passives rank up during play.";
+                                    Style: (TextColor: #c0cee5, FontSize: 12);
+                                }
+                            }
+
+                            Group { Anchor: (Width: 12); }
+
+                            $C.@TextButton #PassiveLevelUpNotifToggle {
+                                Anchor: (Height: 32, Width: @ToggleButtonWidth);
+                                Padding: (Horizontal: 8, Vertical: 4);
+                                Text: "Toggle";
+                                Style: @CustomStyle;
+                            }
                         }
-                    }
 
-                    Group #LuckDoubleDropsNotifRow {
-                        LayoutMode: Left;
-                        Padding: (Vertical: 8);
+                        Group { Anchor: (Height: 10); }
 
-                        Label #LuckDoubleDropsNotifLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "Luck Double-Drop Notifications"; }
-                        Label #LuckDoubleDropsNotifValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+                        Group #LuckDoubleDropsNotifRow {
+                            LayoutMode: Left;
+                            Background: #0b141f(0.84);
+                            Padding: (Full: 12);
 
-                        $C.@TextButton #LuckDoubleDropsNotifToggle {
-                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
-                            Padding: (Horizontal: @ButtonPadding);
-                            Text: "Toggle";
-                            Style: @CustomStyle;
+                            Group {
+                                LayoutMode: Top;
+                                FlexWeight: 1;
+
+                                Group {
+                                    LayoutMode: Left;
+
+                                    Label #LuckDoubleDropsNotifLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; Text: "Luck Double-Drop Notifications"; }
+
+                                    Label #LuckDoubleDropsNotifValue {
+                                        Text: "ON";
+                                        Anchor: (Width: @SettingValueWidth, Height: 24);
+                                        Padding: (Horizontal: 8, Vertical: 4);
+                                        Style: (TextColor: #6fe3ff, FontSize: 12, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center);
+                                        Background: #061420;
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #LuckDoubleDropsNotifDescription {
+                                    Text: "Toggle bonus drop proc notifications from luck effects.";
+                                    Style: (TextColor: #c0cee5, FontSize: 12);
+                                }
+                            }
+
+                            Group { Anchor: (Width: 12); }
+
+                            $C.@TextButton #LuckDoubleDropsNotifToggle {
+                                Anchor: (Height: 32, Width: @ToggleButtonWidth);
+                                Padding: (Horizontal: 8, Vertical: 4);
+                                Text: "Toggle";
+                                Style: @CustomStyle;
+                            }
                         }
-                    }
 
-                    Group #HealthRegenNotifRow {
-                        LayoutMode: Left;
-                        Padding: (Vertical: 8);
+                        Group { Anchor: (Height: 10); }
 
-                        Label #HealthRegenNotifLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "Health Regen Notifications"; }
-                        Label #HealthRegenNotifValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+                        Group #HealthRegenNotifRow {
+                            LayoutMode: Left;
+                            Background: #0b141f(0.84);
+                            Padding: (Full: 12);
 
-                        $C.@TextButton #HealthRegenNotifToggle {
-                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
-                            Padding: (Horizontal: @ButtonPadding);
-                            Text: "Toggle";
-                            Style: @CustomStyle;
+                            Group {
+                                LayoutMode: Top;
+                                FlexWeight: 1;
+
+                                Group {
+                                    LayoutMode: Left;
+
+                                    Label #HealthRegenNotifLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; Text: "Health Regen Notifications"; }
+
+                                    Label #HealthRegenNotifValue {
+                                        Text: "ON";
+                                        Anchor: (Width: @SettingValueWidth, Height: 24);
+                                        Padding: (Horizontal: 8, Vertical: 4);
+                                        Style: (TextColor: #6fe3ff, FontSize: 12, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center);
+                                        Background: #061420;
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #HealthRegenNotifDescription {
+                                    Text: "Show notifications when health regeneration triggers.";
+                                    Style: (TextColor: #c0cee5, FontSize: 12);
+                                }
+                            }
+
+                            Group { Anchor: (Width: 12); }
+
+                            $C.@TextButton #HealthRegenNotifToggle {
+                                Anchor: (Height: 32, Width: @ToggleButtonWidth);
+                                Padding: (Horizontal: 8, Vertical: 4);
+                                Text: "Toggle";
+                                Style: @CustomStyle;
+                            }
                         }
-                    }
 
-                    Group #RaceModelRow {
-                        LayoutMode: Left;
-                        Padding: (Vertical: 8);
+                        Group { Anchor: (Height: 10); }
 
-                        Label #RaceModelLabel { Style: $C.@DefaultLabelStyle; FlexWeight: 1; Text: "Race Model Visuals"; }
-                        Label #RaceModelValue { Style: $C.@DefaultLabelStyle; Anchor: (Width: 80); Text: "ON"; }
+                        Group #RaceModelRow {
+                            LayoutMode: Left;
+                            Background: #0b141f(0.84);
+                            Padding: (Full: 12);
 
-                        $C.@TextButton #RaceModelToggle {
-                            Anchor: (Height: @PrimaryButtonHeight, Width: 120);
-                            Padding: (Horizontal: @ButtonPadding);
-                            Text: "Toggle";
-                            Style: @CustomStyle;
+                            Group {
+                                LayoutMode: Top;
+                                FlexWeight: 1;
+
+                                Group {
+                                    LayoutMode: Left;
+
+                                    Label #RaceModelLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; Text: "Race Model Visuals"; }
+
+                                    Label #RaceModelValue {
+                                        Text: "ON";
+                                        Anchor: (Width: @SettingValueWidth, Height: 24);
+                                        Padding: (Horizontal: 8, Vertical: 4);
+                                        Style: (TextColor: #6fe3ff, FontSize: 12, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center);
+                                        Background: #061420;
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #RaceModelDescription {
+                                    Text: "Enable race-specific character visuals when available.";
+                                    Style: (TextColor: #c0cee5, FontSize: 12);
+                                }
+                            }
+
+                            Group { Anchor: (Width: 12); }
+
+                            $C.@TextButton #RaceModelToggle {
+                                Anchor: (Height: 32, Width: @ToggleButtonWidth);
+                                Padding: (Horizontal: 8, Vertical: 4);
+                                Text: "Toggle";
+                                Style: @CustomStyle;
+                            }
                         }
                     }
                 }
