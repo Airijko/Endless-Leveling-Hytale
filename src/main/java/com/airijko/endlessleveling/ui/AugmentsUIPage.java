@@ -5,6 +5,7 @@ import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentManager;
 import com.airijko.endlessleveling.augments.AugmentUnlockManager;
 import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.enums.PassiveCategory;
 import com.airijko.endlessleveling.enums.PassiveTier;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.util.Lang;
@@ -265,8 +266,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         String neutralSelector = "#AugmentCard" + slotIndex + "Neutral";
         String notesSelector = "#AugmentCard" + slotIndex + "Notes";
 
-        // Temporary placeholder icon until augments supply their own.
-        ui.set(iconSelector + ".ItemId", "Ingredient_Ice_Essence");
+        ui.set(iconSelector + ".ItemId", resolveIconItemId(augment));
         ui.set(iconSelector + ".Visible", true);
 
         if (augment == null) {
@@ -536,6 +536,15 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
     private String tr(String key, String fallback, Object... args) {
         return Lang.tr(playerRef.getUuid(), key, fallback, args);
+    }
+
+    private String resolveIconItemId(AugmentDefinition augment) {
+        PassiveCategory category = augment != null ? augment.getCategory() : PassiveCategory.PASSIVE_STAT;
+        if (category == null) {
+            category = PassiveCategory.PASSIVE_STAT;
+        }
+        String iconItemId = category.getIconItemId();
+        return iconItemId == null || iconItemId.isBlank() ? "Ingredient_Ice_Essence" : iconItemId;
     }
 
     private static Map<String, String> createBuffNameOverrides() {
