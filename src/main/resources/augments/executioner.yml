@@ -7,5 +7,5 @@ category: ON_HIT
 passives:
   bonus_damage_on_hit:
     value: 5.00 # +500% damage to targets below the threshold
-    threshold: 0.2 # Only applies to targets already below 20% HP
+    threshold: 0.2 # Applies when target is below 20% HP or this hit drops them to/below 20%
     cooldown: 45 # Seconds between executioner procs

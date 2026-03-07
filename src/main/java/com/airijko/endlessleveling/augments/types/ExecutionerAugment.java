@@ -37,10 +37,18 @@ public final class ExecutionerAugment extends YamlAugment implements AugmentHook
         if (hp == null || hp.getMax() <= 0f) {
             return context.getDamage();
         }
-        double ratio = hp.get() / hp.getMax();
-        if (ratio > thresholdRatio) {
+        if (thresholdRatio <= 0.0D) {
             return context.getDamage();
         }
+
+        float currentHp = hp.get();
+        float thresholdHp = (float) (hp.getMax() * thresholdRatio);
+        float incomingDamage = Math.max(0f, context.getDamage());
+        float predictedHp = Math.max(0f, currentHp - incomingDamage);
+        if (currentHp > thresholdHp && predictedHp > thresholdHp) {
+            return context.getDamage();
+        }
+
         if (!AugmentUtils.consumeCooldown(context.getRuntimeState(), ID, getName(), cooldownMillis)) {
             return context.getDamage();
         }
