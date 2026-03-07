@@ -111,6 +111,15 @@ choose_class_cooldown: 1800 # Cooldown (seconds) before changing class again
 class_max_switches: 1 # -1 = unlimited; positive values apply per slot (primary and, if enabled, secondary each get their own cap)
 
 # ------------------------------------------------------------
+# SWAP ANTI-EXPLOIT
+# Auto-consume one race swap and one class swap-per-slot once players
+# hit the configured level threshold.
+# ------------------------------------------------------------
+swap_anti_exploit:
+  consume_at_level_enabled: true # If true, auto-consume 1 race swap and 1 class swap-per-slot at/above threshold
+  consume_at_level_threshold: 10 # Level where auto-consumption starts
+
+# ------------------------------------------------------------
 # LANGUAGE / LOCALIZATION
 # ------------------------------------------------------------
 language:
@@ -134,6 +143,8 @@ augments:
 # BALANCING / CUSTOMIZATION SETTINGS
 # ------------------------------------------------------------
 # IF YOU WANT TO CREATE CUSTOM CLASSES, RACES, SET THIS TO FALSE AND ADD YOUR FILES
+force_builtin_config: false # If true, overwrite config.yml with bundled defaults; if false, migrate existing config values into new template structure
+force_builtin_leveling: false # If true, overwrite leveling.yml with bundled defaults; if false, migrate existing leveling values into new template structure
 force_builtin_races: true # If true, ignore custom race files and keep bundled races in sync with updates
 force_builtin_classes: true # If true, ignore custom class files and keep bundled classes in sync with updates
 force_builtin_augments: true # If true, ignore custom augment files and keep bundled augments in sync with updates

@@ -223,6 +223,19 @@ public class ConfigManager {
     }
 
     private void ensureConfigUpToDate() {
+        if (isForceBundledTemplateEnabled()) {
+            try {
+                forceRefreshWithBundledTemplate();
+                readConfigFromDisk();
+            } catch (IOException e) {
+                LOGGER.atSevere().log("Unable to force-refresh %s from bundled defaults: %s",
+                        resourceName,
+                        e.getMessage());
+            }
+            ensureInlineVersionMarker();
+            return;
+        }
+
         Integer currentVersion = extractConfigVersion(configMap);
         if (currentVersion != null && currentVersion >= bundledConfigVersion) {
             boolean requiresTemplateRebuild = false;
@@ -275,6 +288,142 @@ public class ConfigManager {
         }
         readConfigFromDisk();
         ensureInlineVersionMarker();
+    }
+
+    private boolean isForceBundledTemplateEnabled() {
+        String forceFlagKey = getForceBuiltinFlagKey();
+        if (forceFlagKey == null) {
+            return false;
+        }
+
+        if ("config.yml".equalsIgnoreCase(resourceName)) {
+            return parseBoolean(configMap.get(forceFlagKey), false);
+        }
+
+        return readBooleanFromPrimaryConfig(forceFlagKey, false);
+    }
+
+    private String getForceBuiltinFlagKey() {
+        if ("config.yml".equalsIgnoreCase(resourceName)) {
+            return "force_builtin_config";
+        }
+        if ("leveling.yml".equalsIgnoreCase(resourceName)) {
+            return "force_builtin_leveling";
+        }
+        return null;
+    }
+
+    private boolean readBooleanFromPrimaryConfig(String key, boolean defaultValue) {
+        if (key == null || key.isBlank() || configFile == null) {
+            return defaultValue;
+        }
+
+        File parent = configFile.getParentFile();
+        if (parent == null) {
+            return defaultValue;
+        }
+
+        File rootConfig = new File(parent, "config.yml");
+        if (!rootConfig.exists()) {
+            return defaultValue;
+        }
+
+        try (FileReader reader = new FileReader(rootConfig)) {
+            Map<String, Object> rootMap = toMutableMap(yaml.load(reader));
+            return parseBoolean(rootMap.get(key), defaultValue);
+        } catch (Exception e) {
+            LOGGER.atWarning().log("Failed to read %s toggle '%s': %s",
+                    rootConfig.getName(),
+                    key,
+                    e.getMessage());
+            return defaultValue;
+        }
+    }
+
+    private boolean parseBoolean(Object raw, boolean defaultValue) {
+        if (raw == null) {
+            return defaultValue;
+        }
+        if (raw instanceof Boolean bool) {
+            return bool;
+        }
+        if (raw instanceof Number number) {
+            return number.intValue() != 0;
+        }
+        if (raw instanceof String text) {
+            String normalized = text.trim();
+            if (normalized.equalsIgnoreCase("true") || normalized.equals("1") || normalized.equalsIgnoreCase("yes")
+                    || normalized.equalsIgnoreCase("on")) {
+                return true;
+            }
+            if (normalized.equalsIgnoreCase("false") || normalized.equals("0")
+                    || normalized.equalsIgnoreCase("no") || normalized.equalsIgnoreCase("off")) {
+                return false;
+            }
+        }
+        return defaultValue;
+    }
+
+    private void forceRefreshWithBundledTemplate() throws IOException {
+        Map<String, Object> bundledMap = loadBundledConfigMap();
+        Map<String, Object> forcedDefaults = buildForcedDefaultsMap(bundledMap);
+
+        Map<String, Object> normalizedCurrent = normalizeForForcedComparison(configMap);
+        Map<String, Object> normalizedTarget = normalizeForForcedComparison(forcedDefaults);
+        if (Objects.equals(normalizedCurrent, normalizedTarget)) {
+            return;
+        }
+
+        if (createBackupOnRefresh) {
+            backupCurrentConfig();
+        }
+
+        writeMergedWithBundledTemplate(forcedDefaults, bundledMap);
+        configMap = forcedDefaults;
+
+        String forceFlagKey = getForceBuiltinFlagKey();
+        LOGGER.atInfo().log("Force-synced %s to bundled defaults (%s=true, version=%d)",
+                resourceName,
+                forceFlagKey,
+                bundledConfigVersion);
+    }
+
+    private Map<String, Object> buildForcedDefaultsMap(Map<String, Object> bundledMap) {
+        Map<String, Object> target = deepCopyMap(bundledMap);
+        target.put(VersionRegistry.CONFIG_VERSION_KEY, bundledConfigVersion);
+
+        if ("config.yml".equalsIgnoreCase(resourceName)) {
+            target.put("force_builtin_config", parseBoolean(configMap.get("force_builtin_config"), false));
+            target.put("force_builtin_leveling", parseBoolean(configMap.get("force_builtin_leveling"), false));
+        }
+
+        return target;
+    }
+
+    private Map<String, Object> normalizeForForcedComparison(Map<String, Object> source) {
+        Map<String, Object> normalized = deepCopyMap(source);
+        normalized.put(VersionRegistry.CONFIG_VERSION_KEY, bundledConfigVersion);
+
+        if ("config.yml".equalsIgnoreCase(resourceName)) {
+            normalized.remove("force_builtin_config");
+            normalized.remove("force_builtin_leveling");
+        }
+
+        return normalized;
+    }
+
+    private Map<String, Object> deepCopyMap(Map<String, Object> source) {
+        Map<String, Object> copy = new LinkedHashMap<>();
+        if (source == null) {
+            return copy;
+        }
+        for (Map.Entry<String, Object> entry : source.entrySet()) {
+            if (entry.getKey() == null) {
+                continue;
+            }
+            copy.put(entry.getKey(), deepCopyValue(entry.getValue()));
+        }
+        return copy;
     }
 
     private boolean shouldEnforceStrictTemplateMigration() {

@@ -10,9 +10,12 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.DelayedSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.nameplate.Nameplate;
 import com.hypixel.hytale.server.core.modules.entity.component.DisplayNameComponent;
+import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageCause;
 import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
@@ -24,10 +27,13 @@ import com.hypixel.hytale.server.core.modules.entitystats.modifier.StaticModifie
 import com.hypixel.hytale.server.core.modules.entitystats.modifier.StaticModifier.CalculationType;
 import com.hypixel.hytale.server.npc.entities.NPCEntity;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +52,9 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     private static final String MOB_HEALTH_SCALE_MODIFIER_KEY = "EL_MOB_HEALTH_SCALE";
     private static final float SYSTEM_INTERVAL_SECONDS = 0.15f;
     private static final long STALE_ENTITY_TTL_MILLIS = 100_000L;
+    private static final int CHUNK_BIT_SHIFT = 5;
+    private static final int MIN_PLAYER_VIEW_RADIUS_CHUNKS = 1;
+    private static final int PLAYER_VIEW_RADIUS_BUFFER_CHUNKS = 1;
 
     private final MobLevelingManager mobLevelingManager = EndlessLeveling.getInstance().getMobLevelingManager();
     private final Map<Long, Integer> healthAppliedLevel = new ConcurrentHashMap<>();
@@ -110,6 +119,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         long elapsedMillis = Math.max(1L, Math.round(Math.max(0.0f, deltaSeconds) * 1000.0f));
         long currentTimeMillis = (systemTimeMillis += elapsedMillis);
         Set<Long> processedEntityKeysThisStep = new HashSet<>();
+        List<PlayerChunkViewport> playerChunkViewports = snapshotPlayerChunkViewports(store);
 
         store.forEachChunk(ENTITY_QUERY,
                 (ArchetypeChunk<EntityStore> chunk, CommandBuffer<EntityStore> commandBuffer) -> {
@@ -131,8 +141,6 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                         }
 
                         trackedEntityIndexByEntityKey.put(entityKey, entityId);
-                        trackedStoreByEntityKey.put(entityKey, ref.getStore());
-                        lastSeenTimeByEntityKey.put(entityKey, currentTimeMillis);
 
                         PlayerRef playerRef = commandBuffer.getComponent(ref, PlayerRef.getComponentType());
                         if (playerRef != null && playerRef.isValid()) {
@@ -162,6 +170,44 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                         if (shouldResetAllMobs) {
                             clearLevelingStateForEntity(ref, commandBuffer, entityId, entityKey, "reload-rescale");
                         }
+
+                        boolean hasNearbyPlayerChunk = isWithinNearbyPlayerChunkViewport(
+                                ref,
+                                commandBuffer,
+                                playerChunkViewports);
+                        if (!hasNearbyPlayerChunk) {
+                            boolean hasTrackedState = healthAppliedLevel.containsKey(entityKey)
+                                    || settledHealthLevelByEntityKey.containsKey(entityKey)
+                                    || appliedNameplateLevelByEntityKey.containsKey(entityKey)
+                                    || levelResolveAttemptCountByEntityKey.containsKey(entityKey)
+                                    || levelResolveAssignmentCountByEntityKey.containsKey(entityKey)
+                                    || lastKnownEntitySignatureByEntityKey.containsKey(entityKey)
+                                    || lastHealthApplySkipReasonByEntityKey.containsKey(entityKey)
+                                    || forcedDeathLoggedEntityKeys.contains(entityKey)
+                                    || deathHandledEntityKeys.contains(entityKey)
+                                    || trackedStoreByEntityKey.containsKey(entityKey);
+                            if (hasTrackedState) {
+                                clearLevelingStateForEntity(
+                                        ref,
+                                        commandBuffer,
+                                        entityId,
+                                        entityKey,
+                                        "no-nearby-player-chunk");
+                                clearOrRemoveNameplate(ref, commandBuffer);
+                            } else {
+                                settledHealthLevelByEntityKey.remove(entityKey);
+                                appliedNameplateLevelByEntityKey.remove(entityKey);
+                                nameplateSyncReadyAtTimeByEntityKey.remove(entityKey);
+                                lastKnownEntitySignatureByEntityKey.remove(entityKey);
+                                lastHealthApplySkipReasonByEntityKey.remove(entityKey);
+                                trackedEntityIndexByEntityKey.remove(entityKey);
+                                trackedStoreByEntityKey.remove(entityKey);
+                            }
+                            continue;
+                        }
+
+                        trackedStoreByEntityKey.put(entityKey, ref.getStore());
+                        lastSeenTimeByEntityKey.put(entityKey, currentTimeMillis);
 
                         ensureDeadComponentWhenZeroHp(ref, commandBuffer);
 
@@ -797,6 +843,151 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     }
 
     private record TrackingIdentity(long key, boolean uuidBacked) {
+    }
+
+    private record PlayerChunkViewport(int chunkX, int chunkZ, int radiusChunks) {
+    }
+
+    private List<PlayerChunkViewport> snapshotPlayerChunkViewports(Store<EntityStore> currentStore) {
+        if (currentStore == null || currentStore.isShutdown()) {
+            return List.of();
+        }
+
+        Universe universe = Universe.get();
+        if (universe == null) {
+            return List.of();
+        }
+
+        List<PlayerChunkViewport> viewports = new ArrayList<>();
+        String currentWorldId = mobLevelingManager != null
+                ? mobLevelingManager.resolveWorldIdentifier(currentStore)
+                : null;
+
+        for (PlayerRef playerRef : universe.getPlayers()) {
+            if (playerRef == null || !playerRef.isValid()) {
+                continue;
+            }
+
+            Ref<EntityStore> playerEntityRef = playerRef.getReference();
+            if (playerEntityRef == null || !playerEntityRef.isValid()) {
+                continue;
+            }
+
+            Store<EntityStore> playerStore = playerEntityRef.getStore();
+            if (!isSameStoreOrWorld(currentStore, currentWorldId, playerStore)) {
+                continue;
+            }
+
+            TransformComponent transform = playerStore != null
+                    ? playerStore.getComponent(playerEntityRef, TransformComponent.getComponentType())
+                    : null;
+            Vector3d playerPosition = transform != null ? transform.getPosition() : null;
+            if (playerPosition == null) {
+                continue;
+            }
+
+            int viewRadiusChunks = resolvePlayerViewRadiusChunks(playerStore, playerEntityRef);
+            if (viewRadiusChunks <= 0) {
+                continue;
+            }
+
+            int chunkX = blockToChunk(playerPosition.getX());
+            int chunkZ = blockToChunk(playerPosition.getZ());
+            int viewportRadius = viewRadiusChunks + PLAYER_VIEW_RADIUS_BUFFER_CHUNKS;
+            viewports.add(new PlayerChunkViewport(chunkX, chunkZ, viewportRadius));
+        }
+
+        return viewports;
+    }
+
+    private boolean isSameStoreOrWorld(Store<EntityStore> currentStore,
+            String currentWorldId,
+            Store<EntityStore> candidateStore) {
+        if (currentStore == null || candidateStore == null) {
+            return false;
+        }
+
+        if (currentStore == candidateStore) {
+            return true;
+        }
+
+        if (mobLevelingManager == null) {
+            return false;
+        }
+
+        if (currentWorldId == null || currentWorldId.isBlank()) {
+            return false;
+        }
+
+        String candidateWorldId = mobLevelingManager.resolveWorldIdentifier(candidateStore);
+        if (candidateWorldId == null || candidateWorldId.isBlank()) {
+            return false;
+        }
+
+        return currentWorldId.equalsIgnoreCase(candidateWorldId);
+    }
+
+    private int resolvePlayerViewRadiusChunks(Store<EntityStore> playerStore, Ref<EntityStore> playerRef) {
+        if (playerStore == null || playerRef == null) {
+            return MIN_PLAYER_VIEW_RADIUS_CHUNKS;
+        }
+
+        Player player = playerStore.getComponent(playerRef, Player.getComponentType());
+        int configuredRadius = player != null ? player.getViewRadius() : 0;
+        return Math.max(MIN_PLAYER_VIEW_RADIUS_CHUNKS, configuredRadius);
+    }
+
+    private boolean isWithinNearbyPlayerChunkViewport(Ref<EntityStore> entityRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            List<PlayerChunkViewport> playerChunkViewports) {
+        if (entityRef == null || playerChunkViewports == null || playerChunkViewports.isEmpty()) {
+            return false;
+        }
+
+        Vector3d mobPosition = resolvePosition(entityRef, commandBuffer);
+        if (mobPosition == null) {
+            return false;
+        }
+
+        int mobChunkX = blockToChunk(mobPosition.getX());
+        int mobChunkZ = blockToChunk(mobPosition.getZ());
+        for (PlayerChunkViewport viewport : playerChunkViewports) {
+            if (viewport == null) {
+                continue;
+            }
+
+            int radiusChunks = Math.max(MIN_PLAYER_VIEW_RADIUS_CHUNKS, viewport.radiusChunks());
+            int dx = Math.abs(mobChunkX - viewport.chunkX());
+            int dz = Math.abs(mobChunkZ - viewport.chunkZ());
+            if (dx <= radiusChunks && dz <= radiusChunks) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Vector3d resolvePosition(Ref<EntityStore> entityRef, CommandBuffer<EntityStore> commandBuffer) {
+        if (entityRef == null) {
+            return null;
+        }
+
+        TransformComponent transform = null;
+        if (commandBuffer != null) {
+            transform = commandBuffer.getComponent(entityRef, TransformComponent.getComponentType());
+        }
+        if (transform == null) {
+            Store<EntityStore> store = entityRef.getStore();
+            if (store != null) {
+                transform = store.getComponent(entityRef, TransformComponent.getComponentType());
+            }
+        }
+
+        return transform != null ? transform.getPosition() : null;
+    }
+
+    private int blockToChunk(double blockCoordinate) {
+        return ((int) Math.floor(blockCoordinate)) >> CHUNK_BIT_SHIFT;
     }
 
     private Integer resolveAndAssignLevelOnce(Ref<EntityStore> ref,

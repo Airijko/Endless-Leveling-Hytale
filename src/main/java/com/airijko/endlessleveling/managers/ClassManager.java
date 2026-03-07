@@ -41,6 +41,8 @@ import java.util.stream.Stream;
 public class ClassManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+    private static final int SWAP_CONSUME_LEVEL_THRESHOLD_DEFAULT = 10;
+    private static final int SWAP_CONSUME_COUNT = 1;
 
     private final PluginFilesManager filesManager;
     private final ConfigManager configManager;
@@ -294,6 +296,7 @@ public class ClassManager {
             return false;
         if (maxClassSwitches < 0)
             return true;
+        applyLevelThresholdSwapConsumption(data);
         boolean primaryRemaining = hasClassSwitchesRemaining(data, ClassAssignmentSlot.PRIMARY);
         if (!isSecondaryClassEnabled()) {
             return primaryRemaining;
@@ -307,6 +310,7 @@ public class ClassManager {
             return false;
         if (maxClassSwitches < 0)
             return true;
+        applyLevelThresholdSwapConsumption(data);
         if (slot == ClassAssignmentSlot.SECONDARY && !isSecondaryClassEnabled()) {
             return false;
         }
@@ -316,6 +320,7 @@ public class ClassManager {
     public int getRemainingClassSwitches(PlayerData data) {
         if (maxClassSwitches < 0 || data == null)
             return Integer.MAX_VALUE;
+        applyLevelThresholdSwapConsumption(data);
         int primaryRemaining = getRemainingClassSwitches(data, ClassAssignmentSlot.PRIMARY);
         if (!isSecondaryClassEnabled()) {
             return primaryRemaining;
@@ -330,6 +335,7 @@ public class ClassManager {
     public int getRemainingClassSwitches(PlayerData data, ClassAssignmentSlot slot) {
         if (maxClassSwitches < 0 || data == null || slot == null)
             return Integer.MAX_VALUE;
+        applyLevelThresholdSwapConsumption(data);
         if (slot == ClassAssignmentSlot.SECONDARY && !isSecondaryClassEnabled()) {
             return 0;
         }
@@ -350,6 +356,7 @@ public class ClassManager {
         if (data == null || slot == null) {
             return;
         }
+        applyLevelThresholdSwapConsumption(data);
         long now = Instant.now().getEpochSecond();
         if (slot == ClassAssignmentSlot.PRIMARY) {
             data.setLastPrimaryClassChangeEpochSeconds(now);
@@ -364,9 +371,51 @@ public class ClassManager {
         if (data == null || slot == null) {
             return 0;
         }
+        applyLevelThresholdSwapConsumption(data);
         return slot == ClassAssignmentSlot.PRIMARY
                 ? data.getPrimaryClassSwitchCount()
                 : data.getSecondaryClassSwitchCount();
+    }
+
+    private void applyLevelThresholdSwapConsumption(PlayerData data) {
+        if (data == null || maxClassSwitches < 0) {
+            return;
+        }
+        if (!isSwapAntiExploitEnabled()) {
+            return;
+        }
+        if (data.getLevel() < getSwapConsumeLevelThreshold()) {
+            return;
+        }
+        if (data.getPrimaryClassSwitchCount() < SWAP_CONSUME_COUNT) {
+            data.setPrimaryClassSwitchCount(SWAP_CONSUME_COUNT);
+        }
+        if (data.getSecondaryClassSwitchCount() < SWAP_CONSUME_COUNT) {
+            data.setSecondaryClassSwitchCount(SWAP_CONSUME_COUNT);
+        }
+    }
+
+    private boolean isSwapAntiExploitEnabled() {
+        Object raw = configManager.get("swap_anti_exploit.consume_at_level_enabled", Boolean.TRUE, false);
+        return parseBoolean(raw, true);
+    }
+
+    private int getSwapConsumeLevelThreshold() {
+        Object raw = configManager.get(
+                "swap_anti_exploit.consume_at_level_threshold",
+                SWAP_CONSUME_LEVEL_THRESHOLD_DEFAULT,
+                false);
+        if (raw instanceof Number number) {
+            return Math.max(1, number.intValue());
+        }
+        if (raw instanceof String text) {
+            try {
+                return Math.max(1, Integer.parseInt(text.trim()));
+            } catch (NumberFormatException ignored) {
+                return SWAP_CONSUME_LEVEL_THRESHOLD_DEFAULT;
+            }
+        }
+        return SWAP_CONSUME_LEVEL_THRESHOLD_DEFAULT;
     }
 
     private long calculateRemainingCooldown(long lastChangeEpochSeconds) {

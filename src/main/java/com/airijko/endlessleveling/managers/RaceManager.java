@@ -45,6 +45,8 @@ import java.lang.reflect.Method;
 public class RaceManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+    private static final int SWAP_CONSUME_LEVEL_THRESHOLD_DEFAULT = 10;
+    private static final int SWAP_CONSUME_COUNT = 1;
     private final ConcurrentHashMap<UUID, Long> modelApplyTimestamps = new ConcurrentHashMap<>();
 
     private final PluginFilesManager filesManager;
@@ -179,13 +181,53 @@ public class RaceManager {
             return false;
         if (maxRaceSwitches < 0)
             return true;
+        applyLevelThresholdSwapConsumption(data);
         return data.getRaceSwitchCount() < maxRaceSwitches;
     }
 
     public int getRemainingRaceSwitches(PlayerData data) {
         if (maxRaceSwitches < 0 || data == null)
             return Integer.MAX_VALUE;
+        applyLevelThresholdSwapConsumption(data);
         return Math.max(0, maxRaceSwitches - data.getRaceSwitchCount());
+    }
+
+    private void applyLevelThresholdSwapConsumption(PlayerData data) {
+        if (data == null || maxRaceSwitches < 0) {
+            return;
+        }
+        if (!isSwapAntiExploitEnabled()) {
+            return;
+        }
+        if (data.getLevel() < getSwapConsumeLevelThreshold()) {
+            return;
+        }
+        if (data.getRaceSwitchCount() < SWAP_CONSUME_COUNT) {
+            data.setRaceSwitchCount(SWAP_CONSUME_COUNT);
+        }
+    }
+
+    private boolean isSwapAntiExploitEnabled() {
+        Object raw = configManager.get("swap_anti_exploit.consume_at_level_enabled", Boolean.TRUE, false);
+        return parseBoolean(raw, true);
+    }
+
+    private int getSwapConsumeLevelThreshold() {
+        Object raw = configManager.get(
+                "swap_anti_exploit.consume_at_level_threshold",
+                SWAP_CONSUME_LEVEL_THRESHOLD_DEFAULT,
+                false);
+        if (raw instanceof Number number) {
+            return Math.max(1, number.intValue());
+        }
+        if (raw instanceof String text) {
+            try {
+                return Math.max(1, Integer.parseInt(text.trim()));
+            } catch (NumberFormatException ignored) {
+                return SWAP_CONSUME_LEVEL_THRESHOLD_DEFAULT;
+            }
+        }
+        return SWAP_CONSUME_LEVEL_THRESHOLD_DEFAULT;
     }
 
     public boolean isRaceModelGloballyDisabled() {
@@ -273,6 +315,7 @@ public class RaceManager {
     public void markRaceChange(PlayerData data) {
         if (data == null)
             return;
+        applyLevelThresholdSwapConsumption(data);
         data.incrementRaceSwitchCount();
         data.setLastRaceChangeEpochSeconds(Instant.now().getEpochSecond());
     }

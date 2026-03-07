@@ -165,8 +165,8 @@ World_Overrides:
         Per_Level: 0.075
       Damage:
         Enabled: true
-        Base_Multiplier: 1.0
-        Per_Level: 0.04
+        Base_Multiplier: 1.25
+        Per_Level: 0.05
       Defense:
         Enabled: true
         At_Negative_Max_Difference: 0.0
@@ -177,8 +177,8 @@ World_Overrides:
       Azaroth:
         Level: 50
         Health_Multiplier: 4.0
-        Damage_Multiplier: 1.4
-        Defense_Multiplier: 0.35
+        Damage_Multiplier: 1.5
+        Defense_Multiplier: 0.45
 
   instance-mj_instance_d02-*:
     Level_Source:
@@ -192,8 +192,8 @@ World_Overrides:
         Per_Level: 0.075
       Damage:
         Enabled: true
-        Base_Multiplier: 1.0
-        Per_Level: 0.04
+        Base_Multiplier: 1.25
+        Per_Level: 0.05
       Defense:
         Enabled: true
         At_Negative_Max_Difference: 0.0
@@ -204,8 +204,8 @@ World_Overrides:
       Katherina:
         Level: 75
         Health_Multiplier: 5.0
-        Damage_Multiplier: 2.0
-        Defense_Multiplier: 0.5
+        Damage_Multiplier: 2.25
+        Defense_Multiplier: 0.55
       Construct_Ancient_Dark_Titan:
         Level: 75
         Health_Multiplier: 4.0

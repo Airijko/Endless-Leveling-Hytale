@@ -446,6 +446,7 @@ public class PlayerDataManager {
         Object raceNode = source.get("race");
         profile.setRaceId(parseRaceId(raceNode));
         profile.setLastRaceChangeEpochSeconds(parseRaceLastChanged(raceNode));
+        profile.setRaceSwitchCount(parseRaceSwitchCount(raceNode, source));
 
         Map<String, Object> classesNode = castToStringObjectMap(source.get("classes"));
         String primaryClassId = parseClassId(classesNode != null ? classesNode.get("primary") : null);
@@ -624,6 +625,30 @@ public class PlayerDataManager {
             }
         }
         return 0L;
+    }
+
+    private int parseRaceSwitchCount(Object raceNode, Map<String, Object> profileSource) {
+        Map<String, Object> raceMap = castToStringObjectMap(raceNode);
+        if (raceMap != null) {
+            int direct = parseInt(raceMap.get("switchCount"), -1);
+            if (direct >= 0) {
+                return direct;
+            }
+
+            int alternate = parseInt(raceMap.get("raceSwitchCount"), -1);
+            if (alternate >= 0) {
+                return alternate;
+            }
+        }
+
+        if (profileSource != null) {
+            int legacy = parseInt(profileSource.get("raceSwitchCount"), -1);
+            if (legacy >= 0) {
+                return legacy;
+            }
+        }
+
+        return 0;
     }
 
     private String parseClassId(Object classNode) {
@@ -815,6 +840,7 @@ public class PlayerDataManager {
                         raceSection.put("name", raceDisplay);
                     }
                     raceSection.put("lastChangedEpochSeconds", profile.getLastRaceChangeEpochSeconds());
+                    raceSection.put("switchCount", profile.getRaceSwitchCount());
                     profileMap.put("race", raceSection);
 
                     Map<String, Object> classesSection = new LinkedHashMap<>();
