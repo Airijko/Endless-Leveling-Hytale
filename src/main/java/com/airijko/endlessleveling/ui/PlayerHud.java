@@ -1,6 +1,5 @@
 package com.airijko.endlessleveling.ui;
 
-import com.airijko.endlessleveling.compatibility.MultipleHudCompatibility;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.managers.LevelingManager;
@@ -77,8 +76,12 @@ public class PlayerHud extends CustomUIHud {
             return; // HUD has not finished building, so skip pushing state to avoid missing element
                     // errors.
         }
+        if (!targetPlayerRef.isValid()) {
+            unregister(targetPlayerRef.getUuid());
+            return; // Player is no longer connected; avoid sending UI commands to stale HUD roots.
+        }
         PlayerData data = getPlayerData();
-        if (data == null || !data.isPlayerHudEnabled()) {
+        if (data == null) {
             return; // Do not push updates when the HUD is disabled or data is unavailable.
         }
         uiCommandBuilder.set("#Level.Text", resolveHudLabel());
@@ -102,14 +105,6 @@ public class PlayerHud extends CustomUIHud {
             setClassIcon(uiCommandBuilder, "#SecondaryIcon", resolveClassIconId(false));
         }
         update(false, uiCommandBuilder);
-    }
-
-    private String resolveLevelValue() {
-        PlayerData data = getPlayerData();
-        if (data == null) {
-            return "--";
-        }
-        return Integer.toString(data.getLevel());
     }
 
     private String resolveRaceLabel() {
@@ -328,9 +323,13 @@ public class PlayerHud extends CustomUIHud {
         if (hud == null || !hud.built.get()) {
             return;
         }
+        if (!hud.targetPlayerRef.isValid()) {
+            unregister(uuid);
+            return;
+        }
 
         PlayerData data = hud.getPlayerData();
-        if (data == null || !data.isPlayerHudEnabled()) {
+        if (data == null) {
             return;
         }
 
@@ -348,7 +347,10 @@ public class PlayerHud extends CustomUIHud {
         if (uuid == null) {
             return;
         }
-        ACTIVE_HUDS.remove(uuid);
+        PlayerHud removed = ACTIVE_HUDS.remove(uuid);
+        if (removed != null) {
+            removed.built.set(false);
+        }
     }
 
     public static boolean isActive(UUID uuid) {
@@ -359,26 +361,20 @@ public class PlayerHud extends CustomUIHud {
     }
 
     public static void open(@Nonnull Player player, @Nonnull PlayerRef playerRef) {
-        // Prefer MultipleHUD if installed, fall back to vanilla HudManager.
-        if (MultipleHudCompatibility.showHud(player, playerRef, new PlayerHud(playerRef))) {
-            LOGGER.atInfo().log("Opened PlayerHud via MultipleHUD for %s", playerRef.getUuid());
+        var existingHud = player.getHudManager().getCustomHud();
+        if (existingHud instanceof PlayerHud existingPlayerHud) {
+            ACTIVE_HUDS.put(playerRef.getUuid(), existingPlayerHud);
+            LOGGER.atFine().log("PlayerHud already active for %s; skipping duplicate open", playerRef.getUuid());
             return;
         }
 
-        LOGGER.atInfo().log("Opening PlayerHud via default HudManager for %s", playerRef.getUuid());
-        player.getHudManager().setCustomHud(playerRef, new PlayerHud(playerRef));
-    }
-
-    public static void close(@Nonnull Player player, @Nonnull PlayerRef playerRef) {
-        LOGGER.atInfo().log("Closing PlayerHud for %s", playerRef.getUuid());
-
-        // Prefer MultipleHUD if installed, fall back to vanilla HudManager.
-        if (MultipleHudCompatibility.showHud(player, playerRef, new EmptyHud(playerRef))) {
-            unregister(playerRef.getUuid());
-            return;
-        }
-
-        player.getHudManager().setCustomHud(playerRef, new EmptyHud(playerRef));
         unregister(playerRef.getUuid());
+        PlayerHud newHud = new PlayerHud(playerRef);
+        // Register before setCustomHud() so periodic refresh ticks do not target a
+        // stale HUD.
+        ACTIVE_HUDS.put(playerRef.getUuid(), newHud);
+        LOGGER.atInfo().log("Opening PlayerHud via default HudManager for %s", playerRef.getUuid());
+        player.getHudManager().setCustomHud(playerRef, newHud);
     }
+
 }

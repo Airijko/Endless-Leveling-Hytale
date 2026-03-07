@@ -8,6 +8,7 @@ import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.managers.SkillManager;
+import com.airijko.endlessleveling.ui.PlayerHud;
 import com.airijko.endlessleveling.util.Lang;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
@@ -104,6 +105,8 @@ public class PlayerDataListener {
     public void onPlayerDisconnect(PlayerDisconnectEvent event) {
         var playerRef = event.getPlayerRef();
         UUID uuid = playerRef.getUuid();
+
+        PlayerHud.unregister(uuid);
 
         PlayerData data = playerDataManager.get(uuid);
         if (data != null) {

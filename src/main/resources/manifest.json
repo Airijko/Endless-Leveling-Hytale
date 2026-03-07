@@ -12,7 +12,6 @@
   "ServerVersion": "*",
   "Dependencies": {},
   "OptionalDependencies": {
-    "Buuz135:MultipleHUD": ">=1.0.1",
     "Frotty27:NameplateBuilder": "*",
     "tsumori:PartyPro": ">=0.8.0"
   },

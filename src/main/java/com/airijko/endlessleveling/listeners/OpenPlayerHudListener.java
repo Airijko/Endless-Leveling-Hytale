@@ -1,7 +1,5 @@
 package com.airijko.endlessleveling.listeners;
 
-import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.ui.PlayerHud;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -26,14 +24,6 @@ public class OpenPlayerHudListener {
             Store<EntityStore> store = ref.getStore();
             PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
             if (playerRef == null) {
-                return;
-            }
-
-            PlayerData data = EndlessLeveling.getInstance()
-                    .getPlayerDataManager()
-                    .get(playerRef.getUuid());
-
-            if (data == null || !data.isPlayerHudEnabled()) {
                 return;
             }
 

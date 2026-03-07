@@ -159,7 +159,7 @@ public class LevelingManager {
             if (player.getXp() != 0) {
                 player.setXp(0);
                 playerDataManager.save(player);
-                refreshHudIfEnabled(player);
+                refreshHud(player);
             }
             return;
         }
@@ -188,7 +188,7 @@ public class LevelingManager {
         }
 
         playerDataManager.save(player);
-        refreshHudIfEnabled(player);
+        refreshHud(player);
     }
 
     public double getXpForNextLevel(int level) {
@@ -237,7 +237,7 @@ public class LevelingManager {
         }
 
         notifyLevelUp(player);
-        refreshHudIfEnabled(player);
+        refreshHud(player);
         pushPartyProHudText(player);
         requestAttributeResync(player);
     }
@@ -327,14 +327,14 @@ public class LevelingManager {
         LOGGER.atInfo().log("Player %s level changed from %d to %d",
                 player.getPlayerName(), oldLevel, newLevel);
 
-        refreshHudIfEnabled(player);
+        refreshHud(player);
         pushPartyProHudText(player);
         requestAttributeResync(player);
     }
 
-    /** Only refresh the HUD when it is enabled for this player. */
-    private void refreshHudIfEnabled(PlayerData player) {
-        if (player == null || !player.isPlayerHudEnabled()) {
+    /** Refresh the HUD after level changes. */
+    private void refreshHud(PlayerData player) {
+        if (player == null) {
             return;
         }
         PlayerHud.refreshHud(player.getUuid());
@@ -401,7 +401,7 @@ public class LevelingManager {
         }
 
         playerDataManager.save(player);
-        refreshHudIfEnabled(player);
+        refreshHud(player);
         pushPartyProHudText(player);
         requestAttributeResync(player);
 

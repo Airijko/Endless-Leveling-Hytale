@@ -1,14 +1,14 @@
 $C = "../Common.ui";
 
 $Hotbar = "Hotbar.ui";
-Group {
+Group #EndlessPlayerHud {
   LayoutMode: Bottom;
   Anchor: (Bottom: 0, Width: 675, Height: 12);
 
-  Group {
+  Group #Content {
     LayoutMode: Middle;
 
-    Group {
+    Group #XpBar {
       Anchor: (Left: 0, Width: 675, Height: 12);
       Background: "XPBackground.png";
 
@@ -69,7 +69,7 @@ Group #InfoPanel {
     }
   }
 
-  Group {
+  Group #PrimaryClassRow {
     LayoutMode: Left;
 
     ItemIcon #PrimaryIcon {
