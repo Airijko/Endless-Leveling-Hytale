@@ -235,6 +235,7 @@ public class EndlessLeveling extends JavaPlugin {
         this.getEntityStoreRegistry()
                 .registerSystem(new SwiftnessKillSystem(playerDataManager, passiveManager, archetypePassiveManager,
                         skillManager, augmentExecutor));
+        this.getEntityStoreRegistry().registerSystem(new MobDamageScalingSystem(mobLevelingManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerDefenseListener(playerDataManager, skillManager, passiveManager,
                         archetypePassiveManager, augmentExecutor));
@@ -250,7 +251,6 @@ public class EndlessLeveling extends JavaPlugin {
         this.getEntityStoreRegistry().registerSystem(mobLevelingSystem);
         this.getEntityStoreRegistry().registerSystem(new HudRefreshSystem());
         this.getEntityStoreRegistry().registerSystem(new WitherEffectSystem());
-        this.getEntityStoreRegistry().registerSystem(new MobDamageScalingSystem(mobLevelingManager));
 
         // Register commands
         this.getCommandRegistry().registerCommand(new EndlessLevelingCommand("skills", "Skills menu"));

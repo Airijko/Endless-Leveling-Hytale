@@ -20,7 +20,8 @@ public final class UndyingRageAugment extends YamlAugment
 
     private final long durationMillis;
     private final long cooldownMillis;
-    private final double healthThreshold;
+    private final double healthThresholdPercent;
+    private final double minHealthHp;
     private final double maxBonusFerocity;
     private final double fullValueAtHealthPercent;
     private final String bonusScalingStat;
@@ -41,9 +42,13 @@ public final class UndyingRageAugment extends YamlAugment
 
         this.durationMillis = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(rage, "duration", 0.0D));
         this.cooldownMillis = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(rage, "cooldown", 0.0D));
-        this.healthThreshold = clamp01(AugmentValueReader.getDouble(rage,
+        this.healthThresholdPercent = clamp01(AugmentValueReader.getDouble(rage,
                 "health_threshold",
                 AugmentValueReader.getDouble(rage, "min_health_percent", 0.0D)));
+        this.minHealthHp = Math.max(0.0D,
+                AugmentValueReader.getDouble(rage,
+                        "min_health_hp",
+                        AugmentValueReader.getDouble(rage, "health_threshold_hp", 0.0D)));
 
         this.bonusScalingStat = String.valueOf(bonusDamage.getOrDefault("scaling_stat", "missing_health_percent"))
                 .trim()
@@ -77,17 +82,17 @@ public final class UndyingRageAugment extends YamlAugment
         }
         var state = runtime.getState(ID);
 
-        float thresholdHp = (float) (hp.getMax() * healthThreshold);
+        float thresholdHp = AugmentUtils.resolveThresholdHp(hp.getMax(), minHealthHp, healthThresholdPercent);
+        float survivalFloor = AugmentUtils.resolveSurvivalFloor(hp.getMax(), thresholdHp);
         float projected = hp.get() - context.getIncomingDamage();
         var playerRef = AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getDefenderRef());
 
         // While rage is active, prevent execution below configured threshold.
         if (state.getExpiresAt() > now) {
-            if (projected < thresholdHp) {
-                context.getStatMap().setStatValue(DefaultEntityStatTypes.getHealth(), Math.max(thresholdHp, hp.get()));
-                return 0f;
-            }
-            return context.getIncomingDamage();
+            return AugmentUtils.applyUnkillableThreshold(context.getStatMap(),
+                    context.getIncomingDamage(),
+                    thresholdHp,
+                    survivalFloor);
         }
 
         // Only trigger when the incoming hit would push HP under threshold.
@@ -101,7 +106,7 @@ public final class UndyingRageAugment extends YamlAugment
 
         state.setExpiresAt(now + durationMillis);
         state.setStacks(1);
-        context.getStatMap().setStatValue(DefaultEntityStatTypes.getHealth(), thresholdHp);
+        context.getStatMap().setStatValue(DefaultEntityStatTypes.getHealth(), Math.max(survivalFloor, hp.get()));
         if (playerRef != null && playerRef.isValid()) {
             AugmentUtils.sendAugmentMessage(playerRef,
                     Lang.tr(playerRef.getUuid(),

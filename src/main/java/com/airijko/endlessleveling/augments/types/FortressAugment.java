@@ -21,7 +21,8 @@ public final class FortressAugment extends YamlAugment
         implements AugmentHooks.OnLowHpAugment, AugmentHooks.PassiveStatAugment {
     public static final String ID = "fortress";
 
-    private final double healthThresholdRatio;
+    private final double healthThresholdPercent;
+    private final double minHealthHp;
     private final long shieldDuration;
     private final long buffDuration;
     private final double defenseBuff;
@@ -36,8 +37,12 @@ public final class FortressAugment extends YamlAugment
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> shield = AugmentValueReader.getMap(passives, "shield_phase");
         Map<String, Object> buff = AugmentValueReader.getMap(passives, "buff_phase");
-        this.healthThresholdRatio = Math.max(0.0D,
+        this.healthThresholdPercent = Math.max(0.0D,
                 Math.min(1.0D, AugmentValueReader.getDouble(shield, "health_threshold", 0.05D)));
+        this.minHealthHp = Math.max(0.0D,
+                AugmentValueReader.getDouble(shield,
+                        "min_health_hp",
+                        AugmentValueReader.getDouble(shield, "health_threshold_hp", 0.0D)));
         this.shieldDuration = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(shield, "duration", 0.0D));
         this.cooldownMillis = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(shield, "cooldown", 0.0D));
         this.buffDuration = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(buff, "duration", 0.0D));
@@ -59,7 +64,19 @@ public final class FortressAugment extends YamlAugment
         long now = System.currentTimeMillis();
         var state = runtime.getState(ID);
         if (isShieldActive(state, now)) {
-            return 0f;
+            EntityStatValue activeHp = context.getStatMap() == null
+                    ? null
+                    : context.getStatMap().get(DefaultEntityStatTypes.getHealth());
+            if (activeHp == null || activeHp.getMax() <= 0f) {
+                return context.getIncomingDamage();
+            }
+            float activeThreshold = AugmentUtils.resolveThresholdHp(activeHp.getMax(), minHealthHp,
+                    healthThresholdPercent);
+            float activeFloor = AugmentUtils.resolveSurvivalFloor(activeHp.getMax(), activeThreshold);
+            return AugmentUtils.applyUnkillableThreshold(context.getStatMap(),
+                    context.getIncomingDamage(),
+                    activeThreshold,
+                    activeFloor);
         }
 
         if (state.getStacks() > 0) {
@@ -73,7 +90,8 @@ public final class FortressAugment extends YamlAugment
             return context.getIncomingDamage();
         }
 
-        double thresholdHp = hp.getMax() * healthThresholdRatio;
+        float thresholdHp = AugmentUtils.resolveThresholdHp(hp.getMax(), minHealthHp, healthThresholdPercent);
+        float survivalFloor = AugmentUtils.resolveSurvivalFloor(hp.getMax(), thresholdHp);
         double projected = hp.get() - context.getIncomingDamage();
         if (projected > thresholdHp) {
             return context.getIncomingDamage();
@@ -88,6 +106,10 @@ public final class FortressAugment extends YamlAugment
         long buffExpiresAt = now + Math.max(0L, buffDuration);
         state.setExpiresAt(shieldExpiresAt);
         state.setStoredValue(buffExpiresAt);
+        float damageToApply = resolveDamageToLeaveFloor(hp.get(), context.getIncomingDamage(), survivalFloor);
+        if (damageToApply <= 0f) {
+            context.getStatMap().setStatValue(DefaultEntityStatTypes.getHealth(), Math.max(survivalFloor, hp.get()));
+        }
 
         applyAttributeBonuses(runtime, buffExpiresAt);
         applyMovementLock(context.getDefenderRef(), context.getCommandBuffer(), true);
@@ -103,7 +125,7 @@ public final class FortressAugment extends YamlAugment
                             buffDuration / 1000.0D));
         }
 
-        return 0f;
+        return damageToApply;
     }
 
     @Override
@@ -152,6 +174,14 @@ public final class FortressAugment extends YamlAugment
                 && state.getStacks() == 1
                 && state.getExpiresAt() > 0L
                 && now <= state.getExpiresAt();
+    }
+
+    private float resolveDamageToLeaveFloor(float currentHealth, float incomingDamage, float survivalFloor) {
+        float safeCurrent = Math.max(0.0f, currentHealth);
+        float safeIncoming = Math.max(0.0f, incomingDamage);
+        float safeFloor = Math.max(1.0f, survivalFloor);
+        float maxAllowedDamage = Math.max(0.0f, safeCurrent - safeFloor);
+        return Math.min(safeIncoming, maxAllowedDamage);
     }
 
     private void applyAttributeBonuses(AugmentRuntimeState runtime, long expiresAt) {

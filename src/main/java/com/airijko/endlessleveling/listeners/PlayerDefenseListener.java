@@ -9,6 +9,7 @@ import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.systems.MobDamageScalingSystem;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
@@ -67,7 +68,10 @@ public class PlayerDefenseListener extends DamageEventSystem {
 	@Override
 	@Nonnull
 	public Set<Dependency<EntityStore>> getDependencies() {
-		return Set.of(new SystemDependency<>(Order.BEFORE, DamageSystems.ApplyDamage.class));
+		return Set.of(
+				new SystemDependency<>(Order.AFTER, PlayerCombatListener.class),
+				new SystemDependency<>(Order.AFTER, MobDamageScalingSystem.class),
+				new SystemDependency<>(Order.BEFORE, DamageSystems.ApplyDamage.class));
 	}
 
 	@Override

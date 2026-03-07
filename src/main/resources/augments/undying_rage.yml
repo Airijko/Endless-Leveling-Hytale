@@ -7,7 +7,11 @@ category: ON_LOW_HP
 passives:
   rage:
     duration: 10 # lasts 10 seconds
-    health_threshold: 0.01 # 1% HP floor trigger; if ready, you won't go below this when it procs
+    min_health_hp: 1 # flat HP trigger/floor
+    # Legacy alias still supported:
+    # health_threshold_hp: 1
+    # Optional percent mode instead of flat HP:
+    # health_threshold: 0.01
     cooldown: 100 # seconds before it can trigger again after ending
 
   bonus_damage:

@@ -83,6 +83,37 @@ public final class AugmentUtils {
         return (float) Math.max(0.0D, Math.min(1.0D, value));
     }
 
+    public static float resolveThresholdHp(float maxHealth, double minHealthHp, double thresholdPercent) {
+        float clampedMax = Math.max(1.0f, maxHealth);
+        if (minHealthHp > 0.0D) {
+            return (float) Math.min(clampedMax, minHealthHp);
+        }
+        return (float) (clampedMax * clampPercent(thresholdPercent));
+    }
+
+    public static float resolveSurvivalFloor(float maxHealth, float configuredThresholdHp) {
+        float threshold = Math.max(0.0f, configuredThresholdHp);
+        float clampedMax = Math.max(1.0f, maxHealth);
+        return Math.max(1.0f, Math.min(clampedMax, threshold));
+    }
+
+    public static float applyUnkillableThreshold(EntityStatMap statMap,
+            float incomingDamage,
+            float thresholdHp,
+            float survivalFloor) {
+        EntityStatValue hp = statMap == null ? null : statMap.get(DefaultEntityStatTypes.getHealth());
+        if (hp == null || hp.getMax() <= 0f) {
+            return incomingDamage;
+        }
+        float safeIncoming = Math.max(0.0f, incomingDamage);
+        float projected = hp.get() - safeIncoming;
+        if (projected < thresholdHp) {
+            statMap.setStatValue(DefaultEntityStatTypes.getHealth(), Math.max(survivalFloor, hp.get()));
+            return 0f;
+        }
+        return safeIncoming;
+    }
+
     public static long secondsToMillis(double seconds) {
         if (seconds <= 0) {
             return 0L;

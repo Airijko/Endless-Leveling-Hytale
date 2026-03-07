@@ -15,6 +15,7 @@ public final class RebirthAugment extends YamlAugment implements AugmentHooks.On
 
     private final double healPercent;
     private final double minHealthPercent;
+    private final double minHealthHp;
     private final long cooldownMillis;
 
     public RebirthAugment(AugmentDefinition definition) {
@@ -23,6 +24,10 @@ public final class RebirthAugment extends YamlAugment implements AugmentHooks.On
         Map<String, Object> heal = AugmentValueReader.getMap(passives, "heal_on_trigger");
         this.healPercent = AugmentValueReader.getDouble(heal, "value", 0.0D);
         this.minHealthPercent = AugmentValueReader.getDouble(heal, "min_health_percent", 0.0D);
+        this.minHealthHp = Math.max(0.0D,
+                AugmentValueReader.getDouble(heal,
+                        "min_health_hp",
+                        AugmentValueReader.getDouble(heal, "health_threshold_hp", 0.0D)));
         this.cooldownMillis = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(heal, "cooldown", 0.0D));
     }
 
@@ -41,7 +46,8 @@ public final class RebirthAugment extends YamlAugment implements AugmentHooks.On
             return context.getIncomingDamage();
         }
 
-        double thresholdHp = hp.getMax() * minHealthPercent;
+        float thresholdHp = AugmentUtils.resolveThresholdHp(hp.getMax(), minHealthHp, minHealthPercent);
+        float survivalFloor = AugmentUtils.resolveSurvivalFloor(hp.getMax(), thresholdHp);
         double projectedHp = hp.get() - context.getIncomingDamage();
         if (projectedHp > thresholdHp) {
             return context.getIncomingDamage();
@@ -51,10 +57,15 @@ public final class RebirthAugment extends YamlAugment implements AugmentHooks.On
             return context.getIncomingDamage();
         }
 
+        AugmentUtils.applyUnkillableThreshold(context.getStatMap(),
+                context.getIncomingDamage(),
+                thresholdHp,
+                survivalFloor);
         double healAmount = hp.getMax() * healPercent;
+        float healed = (float) Math.min(hp.getMax(), hp.get() + healAmount);
         context.getStatMap().setStatValue(
                 DefaultEntityStatTypes.getHealth(),
-                (float) Math.min(hp.getMax(), hp.get() + healAmount));
+                Math.max(survivalFloor, healed));
         var playerRef = AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getDefenderRef());
         if (playerRef != null && playerRef.isValid()) {
             AugmentUtils.sendAugmentMessage(playerRef,
