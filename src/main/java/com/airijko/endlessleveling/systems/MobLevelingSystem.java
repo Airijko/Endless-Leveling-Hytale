@@ -326,13 +326,11 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                                 && resolveAssignments > 0;
 
                         if (showMobLevelUi && initializationSettled) {
-                            Integer nameplateAppliedLevel = appliedNameplateLevelByEntityKey.get(entityKey);
-                            if (nameplateAppliedLevel == null || !nameplateAppliedLevel.equals(appliedLevel)) {
-                                boolean nameplateApplied = applyNameplate(ref, commandBuffer, includeLevelInName,
-                                        entityKey);
-                                if (nameplateApplied) {
-                                    appliedNameplateLevelByEntityKey.put(entityKey, appliedLevel);
-                                }
+                            // Re-apply regularly so HP text stays in sync with live combat damage.
+                            boolean nameplateApplied = applyNameplate(ref, commandBuffer, includeLevelInName,
+                                    entityKey);
+                            if (nameplateApplied) {
+                                appliedNameplateLevelByEntityKey.put(entityKey, appliedLevel);
                             }
                         } else {
                             clearOrRemoveNameplate(ref, commandBuffer, entityKey);

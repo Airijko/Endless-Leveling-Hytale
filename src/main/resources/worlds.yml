@@ -21,6 +21,12 @@ World_Overrides:
         Dominant_Party_Resolution:
           Mode: "MOST_MEMBERS"
         Max_Internal_Level_Gap: 999
+    # Applies to all mobs in the world override, including Mob_Overrides entries.
+    Damage_Max_Difference:
+      Enabled: true
+      # Same level or lower always uses 1.0x damage.
+      At_Positive_Max_Difference: 3.0
+      Above_Positive_Max_Difference: 5.0
 
   # Static world exact match
   default:
@@ -168,6 +174,9 @@ World_Overrides:
         At_Positive_Max_Difference: 0.8
         Below_Negative_Max_Difference: 0.0
         Above_Positive_Max_Difference: 0.9
+    # Disables damage scaling when level difference exceeds the configured threshold, instead of applying the At_Positive_Max_Difference multiplier.
+    # Damage_Max_Difference:
+    #   Enabled: false
 
   # ------------------------------------------------------------
   # MAJOR DUNGEONS

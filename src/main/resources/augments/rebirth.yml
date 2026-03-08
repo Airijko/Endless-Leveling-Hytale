@@ -10,4 +10,4 @@ passives:
     min_health_hp: 1 # flat HP trigger/floor
     # Optional percent mode instead of flat HP:
     # min_health_percent: 0.01
-    cooldown: 360 # 360 seconds cooldown
+    cooldown: 100 # 100 seconds cooldown

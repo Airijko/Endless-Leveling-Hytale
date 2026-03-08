@@ -52,11 +52,25 @@ public class MobDamageScalingSystem extends DamageEventSystem {
         // If the source is an entity but not a player, scale the damage
         if (damage.getSource() instanceof Damage.EntitySource entitySource) {
             Ref<EntityStore> attackerRef = entitySource.getRef();
+            Ref<EntityStore> targetRef = archetypeChunk.getReferenceTo(index);
             PlayerRef attackerPlayer = commandBuffer.getComponent(attackerRef, PlayerRef.getComponentType());
             if (attackerPlayer == null || !attackerPlayer.isValid()) {
                 // Treat as mob source
                 int mobLevel = levelingManager.resolveMobLevel(attackerRef, commandBuffer);
-                double mult = levelingManager.getMobDamageMultiplierForLevel(attackerRef, commandBuffer, mobLevel);
+                PlayerRef defenderPlayer = commandBuffer.getComponent(targetRef, PlayerRef.getComponentType());
+
+                double mult;
+                if (defenderPlayer != null && defenderPlayer.isValid()) {
+                    int playerLevel = levelingManager.getPlayerLevel(defenderPlayer);
+                    mult = levelingManager.getMobDamageMultiplierForLevels(
+                            attackerRef,
+                            commandBuffer,
+                            mobLevel,
+                            playerLevel);
+                } else {
+                    mult = levelingManager.getMobDamageMultiplierForLevel(attackerRef, commandBuffer, mobLevel);
+                }
+
                 float old = damage.getAmount();
                 float updated = (float) (old * mult);
                 damage.setAmount(updated);

@@ -12,7 +12,7 @@ passives:
     # Optional percent mode instead of flat HP:
     # health_threshold: 0.05
     duration: 5 # lasts 5 seconds
-    cooldown: 360 # second cooldown
+    cooldown: 100 # second cooldown
 
   buff_phase:
     duration: 15 # lasts 15 seconds

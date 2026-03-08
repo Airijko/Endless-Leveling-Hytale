@@ -677,7 +677,8 @@ public class MobLevelingManager {
             Object scalingRaw = resolveCaseInsensitive(mapValue, "Scaling");
             if (scalingRaw instanceof Map<?, ?> scalingMap) {
                 healthScaling = parseMobOverrideLinearScaling(resolveCaseInsensitive(scalingMap, "Health"));
-                damageScaling = parseMobOverrideLinearScaling(resolveCaseInsensitive(scalingMap, "Damage"));
+                Object damageScalingRaw = resolveCaseInsensitive(scalingMap, "Damage");
+                damageScaling = parseMobOverrideLinearScaling(damageScalingRaw);
                 defenseScaling = parseMobOverrideDefenseScaling(resolveCaseInsensitive(scalingMap, "Defense"));
             }
         }
@@ -2156,6 +2157,13 @@ public class MobLevelingManager {
         return Math.max(1, data.getLevel());
     }
 
+    public int getPlayerLevel(PlayerRef playerRef) {
+        if (playerRef == null || !playerRef.isValid()) {
+            return 1;
+        }
+        return getPlayerLevel(playerRef.getUuid());
+    }
+
     /** Whether mob leveling is enabled (Mob_Leveling.Enabled) */
     public boolean isMobLevelingEnabled() {
         Object raw = getMobLevelingValue("Mob_Leveling.Enabled", Boolean.TRUE, null, null);
@@ -2555,6 +2563,135 @@ public class MobLevelingManager {
         return baseMultiplier;
     }
 
+    /**
+     * Resolve final mob damage multiplier for a mob-vs-player matchup.
+     * This combines level-based damage scaling and max-difference scaling.
+     */
+    public double getMobDamageMultiplierForLevels(int mobLevel, int playerLevel) {
+        double baseMultiplier = getMobDamageMultiplierForLevel(mobLevel);
+        double differenceMultiplier = getMobDamageMaxDifferenceMultiplierForLevels(mobLevel, playerLevel);
+        return Math.max(0.0001D, baseMultiplier * differenceMultiplier);
+    }
+
+    public double getMobDamageMultiplierForLevels(Ref<EntityStore> ref,
+            CommandBuffer<EntityStore> commandBuffer,
+            int mobLevel,
+            int playerLevel) {
+        Store<EntityStore> store = ref != null ? ref.getStore() : null;
+        double baseMultiplier = getMobDamageMultiplierForLevel(ref, commandBuffer, mobLevel);
+
+        int safeMobLevel = Math.max(1, mobLevel);
+        int safePlayerLevel = Math.max(1, playerLevel);
+        int levelDifference = safeMobLevel - safePlayerLevel;
+
+        double differenceMultiplier = getMobDamageMaxDifferenceMultiplierForLevelDifference(store, levelDifference);
+
+        return Math.max(0.0001D, baseMultiplier * differenceMultiplier);
+    }
+
+    public double getMobDamageMaxDifferenceMultiplierForLevels(int mobLevel, int playerLevel) {
+        return getMobDamageMaxDifferenceMultiplierForLevels(null, mobLevel, playerLevel);
+    }
+
+    private double getMobDamageMaxDifferenceMultiplierForLevels(Store<EntityStore> store, int mobLevel,
+            int playerLevel) {
+        int safeMobLevel = Math.max(1, mobLevel);
+        int safePlayerLevel = Math.max(1, playerLevel);
+        int levelDifference = safeMobLevel - safePlayerLevel;
+        return getMobDamageMaxDifferenceMultiplierForLevelDifference(store, levelDifference);
+    }
+
+    private double getMobDamageMaxDifferenceMultiplierForLevelDifference(Store<EntityStore> store,
+            int levelDifference) {
+        if (!isMobDamageMaxDifferenceScalingEnabled(store)) {
+            return 1.0D;
+        }
+
+        int maxDifference = Math.max(0,
+                getGlobalConfigInt("Mob_Leveling.Experience.XP_Level_Range.Max_Difference", 10));
+        double atPositiveMax = clampNonNegativeMultiplier(
+                getMobDamageMaxDifferenceConfigDouble("At_Positive_Max_Difference", 1.0D, store));
+
+        // Baseline at same level: default 1.0x, but allow explicit zeroing behavior
+        // when
+        // At_Positive_Max_Difference is configured as 0 and negative-side keys are
+        // omitted.
+        double sameLevelBase = atPositiveMax <= 0.0D ? 0.0D : 1.0D;
+
+        double atNegativeMax = clampNonNegativeMultiplier(
+                getMobDamageMaxDifferenceConfigDouble("At_Negative_Max_Difference", sameLevelBase, store));
+        double belowNegativeMax = clampNonNegativeMultiplier(
+                getMobDamageMaxDifferenceConfigDouble("Below_Negative_Max_Difference", atNegativeMax, store));
+        double abovePositiveMax = clampNonNegativeMultiplier(
+                getMobDamageMaxDifferenceConfigDouble("Above_Positive_Max_Difference", 1.0D, store));
+
+        if (maxDifference <= 0) {
+            if (levelDifference > 0) {
+                return abovePositiveMax;
+            }
+            if (levelDifference < 0) {
+                return belowNegativeMax;
+            }
+            return sameLevelBase;
+        }
+
+        if (levelDifference == 0) {
+            return sameLevelBase;
+        }
+
+        if (levelDifference < -maxDifference) {
+            return belowNegativeMax;
+        }
+
+        if (levelDifference > maxDifference) {
+            return abovePositiveMax;
+        }
+
+        if (levelDifference < 0) {
+            double ratio = Math.abs(levelDifference) / (double) maxDifference;
+            return lerp(sameLevelBase, atNegativeMax, ratio);
+        }
+
+        double ratio = levelDifference / (double) maxDifference;
+        return lerp(sameLevelBase, atPositiveMax, ratio);
+    }
+
+    private boolean isMobDamageMaxDifferenceScalingEnabled(Store<EntityStore> store) {
+        return getMobDamageMaxDifferenceConfigBoolean("Enabled", true, store);
+    }
+
+    private double getMobDamageMaxDifferenceConfigDouble(String suffix,
+            double defaultValue,
+            Store<EntityStore> store) {
+        String modernPath = "Mob_Leveling.Damage_Max_Difference." + suffix;
+        if (hasMobLevelingPath(modernPath, store, null)) {
+            return getConfigDouble(modernPath, defaultValue, store);
+        }
+
+        String legacyPath = "Mob_Leveling.Scaling.Damage.Max_Difference." + suffix;
+        if (hasMobLevelingPath(legacyPath, store, null)) {
+            return getConfigDouble(legacyPath, defaultValue, store);
+        }
+
+        return defaultValue;
+    }
+
+    private boolean getMobDamageMaxDifferenceConfigBoolean(String suffix,
+            boolean defaultValue,
+            Store<EntityStore> store) {
+        String modernPath = "Mob_Leveling.Damage_Max_Difference." + suffix;
+        if (hasMobLevelingPath(modernPath, store, null)) {
+            return getConfigBoolean(modernPath, defaultValue, store);
+        }
+
+        String legacyPath = "Mob_Leveling.Scaling.Damage.Max_Difference." + suffix;
+        if (hasMobLevelingPath(legacyPath, store, null)) {
+            return getConfigBoolean(legacyPath, defaultValue, store);
+        }
+
+        return defaultValue;
+    }
+
     public boolean isMobDamageScalingEnabled() {
         Object raw = getMobLevelingValue("Mob_Leveling.Scaling.Damage.Enabled", Boolean.FALSE, null, null);
         if (raw instanceof Boolean b)
@@ -2771,6 +2908,13 @@ public class MobLevelingManager {
             return 0.0D;
         }
         return Math.max(0.0D, Math.min(1.0D, value));
+    }
+
+    private double clampNonNegativeMultiplier(double value) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            return 1.0D;
+        }
+        return Math.max(0.0D, value);
     }
 
     private double lerp(double start, double end, double ratio) {
@@ -3531,4 +3675,5 @@ public class MobLevelingManager {
             Double belowNegativeMaxDifference,
             Double abovePositiveMaxDifference) {
     }
+
 }

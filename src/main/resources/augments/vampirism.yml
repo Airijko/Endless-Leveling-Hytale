@@ -7,5 +7,5 @@ category: ON_HIT
 passives:
   buffs:
     life_steal:
-      value: 0.15 # +15% life steal on dealt damage
+      value: 0.125 # +12.5% life steal on dealt damage
       category: ON_HIT
