@@ -10,6 +10,7 @@ import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.ui.PlayerHud;
 import com.airijko.endlessleveling.util.Lang;
+import com.airijko.endlessleveling.util.WorldContextUtil;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
@@ -54,6 +55,7 @@ public class PlayerDataListener {
             return;
         }
         UUID uuid = playerRef.getUuid();
+        boolean inInstanceWorld = WorldContextUtil.isInstanceContext(player.getWorld(), entityRef, store);
 
         // Load or create PlayerData
         PlayerData playerData = playerDataManager.loadOrCreate(uuid, playerRef.getUsername());
@@ -80,7 +82,7 @@ public class PlayerDataListener {
             }
         }
 
-        if (raceManager != null) {
+        if (raceManager != null && !inInstanceWorld) {
             raceManager.applyRaceModelOnLogin(playerData);
         }
 
