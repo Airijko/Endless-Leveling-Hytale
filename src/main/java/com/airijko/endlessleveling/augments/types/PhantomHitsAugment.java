@@ -12,7 +12,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public final class PhantomHitsAugment extends YamlAugment implements AugmentHooks.OnHitAugment {
     public static final String ID = "phantom_hits";
-    private static final long INTERNAL_COOLDOWN_MILLIS = 400L;
+    public static final long INTERNAL_COOLDOWN_MILLIS = 400L;
 
     private final double flatDamage;
     private final double strengthScaling;

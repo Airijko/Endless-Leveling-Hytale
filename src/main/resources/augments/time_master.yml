@@ -1,7 +1,7 @@
 id: time_master
 name: "Time Master"
 tier: ELITE
-description: "Killing enemies accelerates the cooldown recovery of all your augments."
+description: "Killing enemies reduces the cooldown of all your augments and passives."
 category: ON_KILL
 
 passives:

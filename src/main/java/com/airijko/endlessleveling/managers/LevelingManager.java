@@ -143,6 +143,10 @@ public class LevelingManager {
 
         totalBonus += (disciplineBonusPercent / 100.0D);
 
+        double totalLuck = passiveManager != null ? passiveManager.getLuckValue(player) : 0.0D;
+        double luckXpBonusPercent = getLuckXpBonusPercent(totalLuck);
+        totalBonus += (luckXpBonusPercent / 100.0D);
+
         if (totalBonus != 0.0D) {
             adjustedXp *= Math.max(0.0D, 1.0D + totalBonus);
         }
@@ -187,6 +191,15 @@ public class LevelingManager {
 
         playerDataManager.save(player);
         refreshHud(player);
+    }
+
+    public double getLuckXpBonusPercent(double totalLuckPercent) {
+        double clampedLuck = Math.max(0.0D, totalLuckPercent);
+        if (clampedLuck <= 100.0D) {
+            return clampedLuck;
+        }
+        double extraLuck = clampedLuck - 100.0D;
+        return 100.0D + (extraLuck * 2.0D);
     }
 
     public double getXpForNextLevel(int level) {

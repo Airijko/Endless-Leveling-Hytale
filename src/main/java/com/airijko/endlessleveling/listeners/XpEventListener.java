@@ -129,14 +129,19 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
             disciplineBonusPercent = skillManager.getDisciplineXpBonusPercent(playerData);
         }
 
-        double additiveBonus = archetypeXpBonus + (disciplineBonusPercent / 100.0D);
+        double totalLuck = getLuckValue(playerData, snapshot);
+        double luckXpBonusPercent = levelingManager != null
+                ? levelingManager.getLuckXpBonusPercent(totalLuck)
+                : 0.0D;
+
+        double additiveBonus = archetypeXpBonus
+                + (disciplineBonusPercent / 100.0D)
+                + (luckXpBonusPercent / 100.0D);
         double projectedPersonalXp = xpAfterKillRules * Math.max(0.0D, 1.0D + additiveBonus);
         double killRulesMultiplier = baseXp > 0.0D ? xpAfterKillRules / baseXp : 0.0D;
 
-        double totalLuck = getLuckValue(playerData, snapshot);
-
         LOGGER.atInfo().log(
-                "XP-Report target=%d player=%s playerLvl=%d mobLvl=%d blacklisted=%s sourceMaxHP=%.3f (cached=%.3f live=%.3f) baseXP=%.3f killRulesXP=%.3f killRulesMult=%.4f archetypeXpBonus=%.4f disciplineBonusPct=%.3f additiveMult=%.4f projectedPersonalXP=%.3f luck=%.4f luckAffectsXp=%s",
+                "XP-Report target=%d player=%s playerLvl=%d mobLvl=%d blacklisted=%s sourceMaxHP=%.3f (cached=%.3f live=%.3f) baseXP=%.3f killRulesXP=%.3f killRulesMult=%.4f archetypeXpBonus=%.4f disciplineBonusPct=%.3f luckXpBonusPct=%.3f additiveMult=%.4f projectedPersonalXP=%.3f luck=%.4f luckAffectsXp=%s",
                 ref.getIndex(),
                 playerUuid,
                 playerData.getLevel(),
@@ -150,10 +155,11 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
                 killRulesMultiplier,
                 archetypeXpBonus,
                 disciplineBonusPercent,
+                luckXpBonusPercent,
                 Math.max(0.0D, 1.0D + additiveBonus),
                 projectedPersonalXp,
                 totalLuck,
-                false);
+                true);
 
         LOGGER.atInfo().log("Granting XP (before party share): %f to player %s", xpAfterKillRules, playerUuid);
 
@@ -171,12 +177,9 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
     }
 
     private double getLuckValue(PlayerData playerData, ArchetypePassiveSnapshot snapshot) {
-        double archetypeLuck = snapshot == null ? 0.0D : snapshot.getValue(ArchetypePassiveType.LUCK);
-        if (passiveManager == null || playerData == null) {
-            return archetypeLuck;
+        if (passiveManager != null && playerData != null) {
+            return passiveManager.getLuckValue(playerData);
         }
-        var passiveSnapshot = passiveManager.getSnapshot(playerData, PassiveType.LUCK);
-        double innateLuck = passiveSnapshot != null && passiveSnapshot.isUnlocked() ? passiveSnapshot.value() : 0.0D;
-        return archetypeLuck + innateLuck;
+        return snapshot == null ? 0.0D : snapshot.getValue(ArchetypePassiveType.LUCK);
     }
 }

@@ -1,0 +1,20 @@
+id: phase_rush
+name: "Phase Rush"
+tier: MYTHIC
+description: "Rapid attacks accelerate your combat tempo and convert speed into power."
+category: ON_HIT
+
+passives:
+  buffs:
+    haste:
+      value: 0.50 # +50% base haste
+
+  hit_counter:
+    hits_required: 5
+
+  haste_burst:
+    multiplier: 2.0 # double haste
+    duration: 3 # seconds
+
+  haste_to_damage_conversion:
+    conversion_percent: 0.50 # 50% of haste becomes bonus damage

@@ -1,7 +1,12 @@
 package com.airijko.endlessleveling.managers;
 
+import com.airijko.endlessleveling.EndlessLeveling;
+import com.airijko.endlessleveling.augments.AugmentDefinition;
+import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.PassiveType;
+import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.systems.PassiveRegenSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
@@ -229,15 +234,56 @@ public class PassiveManager {
     }
 
     /**
-     * Returns the player's computed luck value. The downstream usage is not yet
-     * defined,
-     * but persisting the value keeps player data forward-compatible.
+     * Returns total luck percent from innate passives, archetype passives, and
+     * selected augment luck bonuses.
      */
     public double getLuckValue(@Nonnull PlayerData playerData) {
         PassiveSnapshot snapshot = getSnapshot(playerData, PassiveType.LUCK);
+        double innateLuck = snapshot != null && snapshot.isUnlocked() ? snapshot.value() : 0.0D;
+        double archetypeLuck = resolveArchetypeLuck(playerData);
+        double augmentLuck = resolveSelectedAugmentLuck(playerData);
+        double totalLuck = Math.max(0.0D, innateLuck + archetypeLuck + augmentLuck);
         LOGGER.atFiner().log("Computed luck value for %s: %f",
-                playerData.getPlayerName(), snapshot.value());
-        return snapshot != null && snapshot.isUnlocked() ? snapshot.value() : 0.0;
+                playerData.getPlayerName(), totalLuck);
+        return totalLuck;
+    }
+
+    private double resolveArchetypeLuck(@Nonnull PlayerData playerData) {
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        ArchetypePassiveManager archetypeManager = plugin != null ? plugin.getArchetypePassiveManager() : null;
+        if (archetypeManager == null) {
+            return 0.0D;
+        }
+        return Math.max(0.0D, archetypeManager.getSnapshot(playerData).getValue(ArchetypePassiveType.LUCK));
+    }
+
+    private double resolveSelectedAugmentLuck(@Nonnull PlayerData playerData) {
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null || plugin.getAugmentManager() == null) {
+            return 0.0D;
+        }
+        Map<String, String> selectedAugments = playerData.getSelectedAugmentsSnapshot();
+        if (selectedAugments.isEmpty()) {
+            return 0.0D;
+        }
+
+        double total = 0.0D;
+        for (String augmentId : selectedAugments.values()) {
+            if (augmentId == null || augmentId.isBlank()) {
+                continue;
+            }
+            AugmentDefinition definition = plugin.getAugmentManager().getAugment(augmentId.trim().toLowerCase());
+            if (definition == null) {
+                continue;
+            }
+            Map<String, Object> passives = definition.getPassives();
+            Map<String, Object> buffs = AugmentValueReader.getMap(passives, "buffs");
+            double luckValue = AugmentValueReader.getNestedDouble(buffs, 0.0D, "luck", "value");
+            if (luckValue > 0.0D) {
+                total += luckValue * 100.0D;
+            }
+        }
+        return Math.max(0.0D, total);
     }
 
     private int computePassiveLevel(PassiveDefinition definition, int playerLevel) {

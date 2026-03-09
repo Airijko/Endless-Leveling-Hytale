@@ -26,10 +26,17 @@ public final class FourLeafCloverAugment extends YamlAugment implements AugmentH
         if (context == null || context.getRuntimeState() == null) {
             return;
         }
+        // Preserve the configured luck percent in runtime state for
+        // debugging/inspection.
+        context.getRuntimeState().getState(ID).setStoredValue(Math.max(0.0D, luckBonus * 100.0D));
+
+        // Keep the legacy Discipline source pinned to zero so stale runtime data cannot
+        // continue applying XP gain after migrating Four Leaf Clover to luck-based
+        // scaling.
         AugmentUtils.setAttributeBonus(context.getRuntimeState(),
                 ID + "_discipline",
                 SkillAttributeType.DISCIPLINE,
-                luckBonus * 100.0D,
+                0.0D,
                 0L);
     }
 }

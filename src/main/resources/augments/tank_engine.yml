@@ -1,0 +1,14 @@
+id: tank_engine
+name: "Tank Engine"
+tier: MYTHIC
+description: "Sustained combat massively increases your maximum health."
+category: PASSIVE_STAT
+
+passives:
+  stacking_health:
+    flat_health_per_stack: 5 # +5 HP per stack
+    percent_max_health_per_stack: 0.02 # +2% max health per stack
+    percent_cap: 1.0 # caps at +100% max health
+    max_stacks: 50
+    duration_per_stack: 10 # seconds
+    exclude_flat_from_percent_scaling: true # flat HP does not contribute to % scaling
