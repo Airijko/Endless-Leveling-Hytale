@@ -8,12 +8,8 @@ passives:
   bonus_damage:
     scaling_stat: missing_health_percent # scales with missing HP
     max_bonus_damage: 1 # up to 100% bonus damage at full missing HP
-    full_value_at_health_percent: 0.15 # full bonus damage when player health is at or below 15%
+    full_value_at_health_percent: 0.25 # full bonus damage when player health is at or below 25%
 
   self_damage:
     percent_of_current_hp: 0.05 # loses 5% of current HP per hit
 
-  execution_heal:
-    trigger_threshold: 0.30 # target must be below 30% max HP
-    heal_percent_missing_hp: 0.2 # heal 20% of YOUR missing HP
-    cooldown_per_target: 4

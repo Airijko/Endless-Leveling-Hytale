@@ -129,19 +129,28 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                         }
 
                         EntityRuntimeState existingState = entityStates.get(entityKey);
+                        boolean hasLockedLevel = hasAnyLevelLock(ref, entityId, existingState);
 
                         PlayerRef playerRef = commandBuffer.getComponent(ref, PlayerRef.getComponentType());
                         if (playerRef != null && playerRef.isValid()) {
-                            clearOrRemoveNameplate(ref, commandBuffer, entityKey, existingState);
-                            clearMobHealthScaleModifierForPlayer(ref, commandBuffer);
-                            entityStates.remove(entityKey);
+                            if (hasLockedLevel || (existingState != null && existingState.hasTrackedState())) {
+                                clearLevelingStateForEntity(ref, commandBuffer, entityId, entityKey);
+                            } else {
+                                clearOrRemoveNameplate(ref, commandBuffer, entityKey, existingState);
+                                clearMobHealthScaleModifierForPlayer(ref, commandBuffer);
+                                entityStates.remove(entityKey);
+                            }
                             continue;
                         }
 
                         NPCEntity npcEntity = commandBuffer.getComponent(ref, NPCEntity.getComponentType());
                         if (npcEntity == null) {
-                            clearOrRemoveNameplate(ref, commandBuffer, entityKey, existingState);
-                            entityStates.remove(entityKey);
+                            if (hasLockedLevel || (existingState != null && existingState.hasTrackedState())) {
+                                clearLevelingStateForEntity(ref, commandBuffer, entityId, entityKey);
+                            } else {
+                                clearOrRemoveNameplate(ref, commandBuffer, entityKey, existingState);
+                                entityStates.remove(entityKey);
+                            }
                             continue;
                         }
 
@@ -156,7 +165,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                                 playerChunkViewports);
                         if (!hasNearbyPlayerChunk) {
                             boolean hasTrackedState = existingState != null && existingState.hasTrackedState();
-                            if (hasTrackedState) {
+                            if (hasTrackedState || hasLockedLevel) {
                                 clearLevelingStateForEntity(
                                         ref,
                                         commandBuffer,
@@ -658,6 +667,20 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             state.trackedStore = store;
         }
         return state;
+    }
+
+    private boolean hasAnyLevelLock(Ref<EntityStore> ref, int entityId, EntityRuntimeState state) {
+        if (state != null && state.appliedLevel > 0) {
+            return true;
+        }
+
+        if (mobLevelingManager == null || entityId < 0) {
+            return false;
+        }
+
+        Store<EntityStore> store = ref != null ? ref.getStore() : null;
+        Integer overrideLevel = mobLevelingManager.getEntityLevelOverride(store, entityId);
+        return overrideLevel != null && overrideLevel > 0;
     }
 
     private long toEntityKey(Store<EntityStore> store, int entityId) {

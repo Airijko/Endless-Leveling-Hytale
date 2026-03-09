@@ -1,0 +1,11 @@
+id: time_master
+name: "Time Master"
+tier: MYTHIC
+description: "Killing enemies accelerates the cooldown recovery of all your augments."
+category: ON_KILL
+
+passives:
+  cooldown_reduction:
+    flat_seconds: 1 # reduces cooldown by 1 second
+    percent_remaining: 0.075 # reduces an additional 7.5% of remaining cooldown
+    affects: all_augments
