@@ -1,6 +1,6 @@
 id: magic_blade
 name: "Magic Blade"
-tier: MYTHIC
+tier: ELITE
 description: "Your magical power empowers your weapons, converting Sorcery into weapon damage and empowering swords."
 category: PASSIVE_STAT
 

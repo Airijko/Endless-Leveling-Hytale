@@ -1,6 +1,6 @@
 id: bailout
 name: "Bailout"
-tier: MYTHIC
+tier: ELITE
 description: "Cheat death briefly and rapidly decay unless you secure a kill."
 category: ON_DEATH
 

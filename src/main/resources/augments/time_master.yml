@@ -1,6 +1,6 @@
 id: time_master
 name: "Time Master"
-tier: MYTHIC
+tier: ELITE
 description: "Killing enemies accelerates the cooldown recovery of all your augments."
 category: ON_KILL
 
