@@ -1,5 +1,5 @@
-id: phantom_bolts
-name: "Phantom Bolts"
+id: phantom_hits
+name: "Phantom Hits"
 tier: ELITE
 description: "Your attacks fire additional phantom strikes that scale with both Strength and Sorcery."
 category: ON_HIT

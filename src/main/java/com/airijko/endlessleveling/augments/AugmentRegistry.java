@@ -36,7 +36,7 @@ public final class AugmentRegistry {
             Map.entry(NestingDollAugment.ID, NestingDollAugment::new),
             Map.entry(OverdriveAugment.ID, OverdriveAugment::new),
             Map.entry(OverhealAugment.ID, OverhealAugment::new),
-            Map.entry(PhantomBoltsAugment.ID, PhantomBoltsAugment::new),
+            Map.entry(PhantomHitsAugment.ID, PhantomHitsAugment::new),
             Map.entry(PredatorAugment.ID, PredatorAugment::new),
             Map.entry(RagingMomentumAugment.ID, RagingMomentumAugment::new),
             Map.entry(RebirthAugment.ID, RebirthAugment::new),

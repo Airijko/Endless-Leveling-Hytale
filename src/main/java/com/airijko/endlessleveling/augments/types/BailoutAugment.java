@@ -78,7 +78,7 @@ public final class BailoutAugment extends YamlAugment
                 state.setStoredValue(drainMaxHpPercentPerSecond);
                 state.setExpiresAt(0L);
             } else {
-                state.clear();
+                clearDecayState(state);
             }
         }
 
@@ -107,7 +107,7 @@ public final class BailoutAugment extends YamlAugment
         EntityStatValue hp = context.getStatMap().get(DefaultEntityStatTypes.getHealth());
         if (hp == null || hp.get() <= 0f) {
             executePlayerDeath(context);
-            state.clear();
+            clearDecayState(state);
             return;
         }
 
@@ -136,8 +136,18 @@ public final class BailoutAugment extends YamlAugment
         context.getStatMap().setStatValue(DefaultEntityStatTypes.getHealth(), newHp);
         if (newHp <= 0.0001f) {
             executePlayerDeath(context);
-            state.clear();
+            clearDecayState(state);
         }
+    }
+
+    private void clearDecayState(AugmentState state) {
+        if (state == null) {
+            return;
+        }
+        // Preserve lastProc so Bailout still respects the configured cooldown.
+        state.setStacks(0);
+        state.setStoredValue(0.0D);
+        state.setExpiresAt(0L);
     }
 
     private void executePlayerDeath(AugmentHooks.PassiveStatContext context) {
@@ -194,7 +204,7 @@ public final class BailoutAugment extends YamlAugment
             return;
         }
 
-        state.clear();
+        clearDecayState(state);
 
         if (emergencyHealMissingPercent <= 0.0D || context.getCommandBuffer() == null
                 || context.getKillerRef() == null) {

@@ -2,6 +2,7 @@ package com.airijko.endlessleveling.augments.types;
 
 import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentHooks;
+import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentState;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
 import com.airijko.endlessleveling.managers.SkillManager;
@@ -9,15 +10,16 @@ import com.airijko.endlessleveling.managers.SkillManager;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class PhantomBoltsAugment extends YamlAugment implements AugmentHooks.OnHitAugment {
-    public static final String ID = "phantom_bolts";
+public final class PhantomHitsAugment extends YamlAugment implements AugmentHooks.OnHitAugment {
+    public static final String ID = "phantom_hits";
+    private static final long INTERNAL_COOLDOWN_MILLIS = 400L;
 
     private final double flatDamage;
     private final double strengthScaling;
     private final double sorceryScaling;
     private final boolean canCrit;
 
-    public PhantomBoltsAugment(AugmentDefinition definition) {
+    public PhantomHitsAugment(AugmentDefinition definition) {
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> phantomDamage = AugmentValueReader.getMap(passives, "phantom_damage");
@@ -32,6 +34,15 @@ public final class PhantomBoltsAugment extends YamlAugment implements AugmentHoo
     public float onHit(AugmentHooks.HitContext context) {
         if (context == null) {
             return 0f;
+        }
+
+        AugmentState state = null;
+        if (context.getRuntimeState() != null) {
+            state = context.getRuntimeState().getState(ID);
+            long now = System.currentTimeMillis();
+            if (state.getLastProc() > 0L && now - state.getLastProc() < INTERNAL_COOLDOWN_MILLIS) {
+                return context.getDamage();
+            }
         }
 
         SkillManager skillManager = context.getSkillManager();
@@ -54,6 +65,10 @@ public final class PhantomBoltsAugment extends YamlAugment implements AugmentHoo
                 double ferocity = skillManager.calculatePlayerFerocity(context.getPlayerData());
                 phantomDamage *= 1.0D + (ferocity / 100.0D);
             }
+        }
+
+        if (state != null) {
+            state.setLastProc(System.currentTimeMillis());
         }
 
         return context.getDamage() + (float) phantomDamage;

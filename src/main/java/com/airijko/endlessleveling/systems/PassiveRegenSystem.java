@@ -4,6 +4,7 @@ import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentRuntimeState;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager.CooldownState;
+import com.airijko.endlessleveling.augments.types.OverhealAugment;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.PassiveType;
@@ -536,6 +537,10 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         }
 
         float applied = (float) Math.min(maxHealth - currentHealth, bonusAmount);
+        double overflow = Math.max(0.0D, bonusAmount - applied);
+        if (overflow > 0.0D) {
+            OverhealAugment.recordOverhealOverflow(statMap, overflow);
+        }
         if (applied <= 0) {
             runtimeState.setLastHealingSample(currentHealth);
             return;
@@ -581,11 +586,22 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
 
         float current = statValue.get();
         float max = statValue.getMax();
+        double potential = perSecond * deltaSeconds;
+        if (potential <= 0.0D) {
+            return;
+        }
         if (current >= max) {
+            if (statIndex == DefaultEntityStatTypes.getHealth()) {
+                OverhealAugment.recordOverhealOverflow(statMap, potential);
+            }
             return;
         }
 
-        float gain = (float) Math.min(max - current, perSecond * deltaSeconds);
+        float gain = (float) Math.min(max - current, potential);
+        double overflow = Math.max(0.0D, potential - gain);
+        if (overflow > 0.0D && statIndex == DefaultEntityStatTypes.getHealth()) {
+            OverhealAugment.recordOverhealOverflow(statMap, overflow);
+        }
         if (gain <= 0) {
             return;
         }
@@ -645,7 +661,18 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         }
 
         double allowed = Math.min(remaining, potential);
+        if (current >= max) {
+            if (allowed > 0.0D) {
+                OverhealAugment.recordOverhealOverflow(statMap, allowed);
+            }
+            return;
+        }
+
         float applied = (float) Math.min(max - current, allowed);
+        double overflow = Math.max(0.0D, allowed - applied);
+        if (overflow > 0.0D) {
+            OverhealAugment.recordOverhealOverflow(statMap, overflow);
+        }
         if (applied <= 0f) {
             return;
         }

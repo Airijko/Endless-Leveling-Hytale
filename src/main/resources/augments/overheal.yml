@@ -1,13 +1,13 @@
 id: overheal
 name: "Overheal"
 tier: ELITE
-description: "Excess healing grants temporary bonus health that slowly decays. Also grants Life Steal."
+description: "Any healing beyond max health is stored as a temporary decaying shield. Also grants Life Steal."
 category: ON_HIT
 
 passives:
   overheal_shield:
-    max_bonus_health_percent: 0.15 # up to +15% bonus total health from excess healing
-    duration: 5 # bonus health decays over 5 seconds
+    max_shield_percent: 0.15 # store up to 15% of max health as overheal shield
+    decay_duration: 5 # shield value decays over 5 seconds
 
   buffs:
     lifesteal:

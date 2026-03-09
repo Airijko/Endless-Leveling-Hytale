@@ -1,6 +1,7 @@
 package com.airijko.endlessleveling.augments;
 
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentRuntimeState;
+import com.airijko.endlessleveling.augments.types.OverhealAugment;
 import com.airijko.endlessleveling.util.Lang;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.hypixel.hytale.component.CommandBuffer;
@@ -38,6 +39,10 @@ public final class AugmentUtils {
         float applied = (float) Math.min(max - current, amount);
         if (applied > 0f) {
             statMap.setStatValue(DefaultEntityStatTypes.getHealth(), current + applied);
+        }
+        double overflow = Math.max(0.0D, amount - applied);
+        if (overflow > 0.0D) {
+            OverhealAugment.recordOverhealOverflow(statMap, overflow);
         }
         return applied;
     }

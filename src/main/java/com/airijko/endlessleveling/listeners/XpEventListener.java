@@ -72,18 +72,21 @@ public class XpEventListener extends DeathSystems.OnDeathSystem {
         if (deathInfo == null)
             return;
 
-        if (!(deathInfo.getSource() instanceof Damage.EntitySource entitySource))
+        UUID playerUuid = null;
+
+        if (deathInfo.getSource() instanceof Damage.EntitySource entitySource) {
+            var attackerRef = entitySource.getRef();
+            if (attackerRef != null && attackerRef.isValid()) {
+                PlayerRef player = store.getComponent(attackerRef, PlayerRef.getComponentType());
+                if (player != null && player.isValid()) {
+                    playerUuid = player.getUuid();
+                }
+            }
+        }
+
+        if (playerUuid == null)
             return;
 
-        var attackerRef = entitySource.getRef();
-        if (!attackerRef.isValid())
-            return;
-
-        PlayerRef player = store.getComponent(attackerRef, PlayerRef.getComponentType());
-        if (player == null)
-            return;
-
-        UUID playerUuid = player.getUuid();
         var playerData = playerDataManager.get(playerUuid);
         if (playerData == null)
             return;
