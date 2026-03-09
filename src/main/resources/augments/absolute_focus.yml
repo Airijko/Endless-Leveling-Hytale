@@ -11,4 +11,4 @@ passives:
 
   excess_crit_conversion:
     stat: crit_chance
-    conversion_ratio: 0.5 # excess crit converts to bonus damage at 1:2 ratio
+    conversion_ratio: 2.0 # 1% excess crit converts to 2% bonus damage

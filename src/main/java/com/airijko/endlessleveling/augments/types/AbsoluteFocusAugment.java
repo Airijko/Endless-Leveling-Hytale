@@ -39,18 +39,30 @@ public final class AbsoluteFocusAugment extends YamlAugment implements AugmentHo
             return context.getDamage();
         }
 
+        float originalDamage = context.getDamage();
         double totalBonusMultiplier = resolveExcessCritDamageBonus(skillManager, context);
+        boolean activated = false;
 
         if (guaranteedCritChance > 0.0D
                 && AugmentUtils.consumeCooldown(context.getRuntimeState(), ID, getName(),
                         guaranteedCritCooldownMillis)) {
+            activated = true;
             if (!context.isCritical()) {
                 double ferocity = skillManager.calculatePlayerFerocity(context.getPlayerData());
                 totalBonusMultiplier += (ferocity / 100.0D) * guaranteedCritChance;
             }
         }
-
-        return AugmentUtils.applyMultiplier(context.getDamage(), totalBonusMultiplier);
+        float finalDamage = AugmentUtils.applyMultiplier(originalDamage, totalBonusMultiplier);
+        if (activated) {
+            AugmentUtils.sendAugmentMessage(
+                    AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getAttackerRef()),
+                    String.format("%s activated! Damage %.2f -> %.2f (+%.2f%%)",
+                            getName(),
+                            originalDamage,
+                            finalDamage,
+                            Math.max(0.0D, totalBonusMultiplier * 100.0D)));
+        }
+        return finalDamage;
     }
 
     private double resolveExcessCritDamageBonus(SkillManager skillManager, AugmentHooks.HitContext context) {
