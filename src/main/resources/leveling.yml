@@ -25,7 +25,7 @@ Mob_Leveling:
       Enabled: true
       Max_Difference: 15
       Below_Range:
-        Multiplier: 0.0
+        Multiplier: 0.05
       Above_Range:
         Multiplier: 0.05
     Global_XP_Multiplier: 1.0

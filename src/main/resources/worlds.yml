@@ -21,6 +21,10 @@ World_Overrides:
         Dominant_Party_Resolution:
           Mode: "MOST_MEMBERS"
         Max_Internal_Level_Gap: 999
+    Scaling:
+      Level_Scaling_Difference:
+        # Shared +/- level range used by defense and damage max-difference scaling.
+        Range: 15
     # Applies to all mobs in the world override, including Mob_Overrides entries.
     Damage_Max_Difference:
       Enabled: true
@@ -160,6 +164,11 @@ World_Overrides:
         # Player mode specific tuning.
         Influence_Radius: 25
     Scaling:
+      # Optional per-world override for the level-difference cap used by:
+      # - Scaling.Defense.(At/Below/Above)_* fields
+      # - Damage_Max_Difference interpolation range
+      # Level_Scaling_Difference:
+      #   Range: 15
       Health:
         Enabled: true
         Base_Multiplier: 1.0

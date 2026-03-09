@@ -1447,6 +1447,29 @@ public class MobLevelingManager {
         return Math.max(0, getGlobalConfigInt("Mob_Leveling.Experience.XP_Level_Range.Max_Difference", 10));
     }
 
+    private int getMobScalingLevelDifferenceRange(Store<EntityStore> store) {
+        String preferredPath = "Mob_Leveling.Scaling.Level_Scaling_Difference.Range";
+        if (hasMobLevelingPath(preferredPath, store, null)) {
+            return Math.max(0, getConfigInt(preferredPath, 10, store));
+        }
+
+        // Backward compatibility for previous naming.
+        String legacyPathV2 = "Mob_Leveling.Scaling.Level_Difference.Range";
+        if (hasMobLevelingPath(legacyPathV2, store, null)) {
+            return Math.max(0, getConfigInt(legacyPathV2, 10, store));
+        }
+
+        // Backward compatibility for older key format.
+        String legacyPath = "Mob_Leveling.Scaling.Level_Difference.Max_Difference";
+        if (hasMobLevelingPath(legacyPath, store, null)) {
+            return Math.max(0, getConfigInt(legacyPath, 10, store));
+        }
+
+        // Backward compatibility: if the dedicated scaling value is not configured,
+        // reuse the XP range max difference so existing servers keep current behavior.
+        return getExperienceXpMaxDifference(store);
+    }
+
     private int resolvePlayerBasedLevelWithPartySystem(Store<EntityStore> store, Vector3d mobPos, Integer entityId) {
         double radius = Math.max(0.0D, getPlayerPartyInfluenceRadius(store));
         List<PlayerContext> nearbyPlayers = getPlayersWithinRadius(store, mobPos, radius);
@@ -2607,8 +2630,7 @@ public class MobLevelingManager {
             return 1.0D;
         }
 
-        int maxDifference = Math.max(0,
-                getGlobalConfigInt("Mob_Leveling.Experience.XP_Level_Range.Max_Difference", 10));
+        int maxDifference = getMobScalingLevelDifferenceRange(store);
         double atPositiveMax = clampNonNegativeMultiplier(
                 getMobDamageMaxDifferenceConfigDouble("At_Positive_Max_Difference", 1.0D, store));
 
@@ -2818,8 +2840,7 @@ public class MobLevelingManager {
             return 0.0D;
         }
 
-        int maxDifference = Math.max(0,
-                getGlobalConfigInt("Mob_Leveling.Experience.XP_Level_Range.Max_Difference", 10));
+        int maxDifference = getMobScalingLevelDifferenceRange(store);
 
         double atNegativeMax = scaling.atNegativeMaxDifference() != null
                 ? clampReduction(scaling.atNegativeMaxDifference())
@@ -2871,8 +2892,7 @@ public class MobLevelingManager {
             return 0.0D;
         }
 
-        int maxDifference = Math.max(0,
-                getGlobalConfigInt("Mob_Leveling.Experience.XP_Level_Range.Max_Difference", 10));
+        int maxDifference = getMobScalingLevelDifferenceRange(store);
         double atNegativeMax = clampReduction(
                 getConfigDouble("Mob_Leveling.Scaling.Defense.At_Negative_Max_Difference", 0.0D, store));
         double atPositiveMax = clampReduction(

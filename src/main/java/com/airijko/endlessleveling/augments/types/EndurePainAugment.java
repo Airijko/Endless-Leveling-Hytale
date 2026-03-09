@@ -14,10 +14,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class BloodEchoAugment extends YamlAugment
+public final class EndurePainAugment extends YamlAugment
         implements AugmentHooks.OnDamageTakenAugment, AugmentHooks.OnHitAugment, AugmentHooks.OnKillAugment,
         AugmentHooks.PassiveStatAugment {
-    public static final String ID = "blood_echo";
+    public static final String ID = "endure_pain";
     private static final Map<UUID, Double> LAST_HIT_DAMAGE = new ConcurrentHashMap<>();
 
     private final double bleedPercent;
@@ -25,7 +25,7 @@ public final class BloodEchoAugment extends YamlAugment
     private final double healOnKillPercent;
     private final boolean resetOnKill;
 
-    public BloodEchoAugment(AugmentDefinition definition) {
+    public EndurePainAugment(AugmentDefinition definition) {
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> heal = AugmentValueReader.getMap(passives, "heal_over_time");
