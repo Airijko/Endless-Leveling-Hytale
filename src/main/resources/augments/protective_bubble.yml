@@ -1,0 +1,10 @@
+id: protective_bubble
+name: "Protective Bubble"
+tier: ELITE
+description: "Negate one incoming attack and become briefly immune when the bubble pops."
+category: ON_DAMAGE_TAKEN
+
+passives:
+  immunity_bubble:
+    immunity_window: 0.25 # seconds of immunity for the triggering attack window
+    cooldown: 25 # seconds

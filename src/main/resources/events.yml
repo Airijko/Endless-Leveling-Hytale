@@ -1,0 +1,26 @@
+# Event hooks for server-side automation.
+# Commands support placeholders:
+# {player_name}, {player}, {player_uuid}, {player_level},
+# {old_prestige_level}, {new_prestige_level}, {prestige_level},
+# {old_player_level}, {new_player_level}, {level}
+
+events:
+  prestige_level_up:
+    enabled: true
+    # false = run as console sender, true = run as the player.
+    as_player: false
+    commands:
+      - "say {player_name} reached prestige {new_prestige_level}!"
+
+  player_level_up:
+    enabled: true
+    # If omitted or empty, commands run on every level up.
+    trigger_levels: [10]
+    # false = run as console sender, true = run as the player.
+    as_player: false
+    commands:
+      - "give {player_name} armor_copper_head 1"
+      - "give {player_name} armor_copper_chest 1"
+      - "give {player_name} armor_copper_hands 1"
+      - "give {player_name} armor_copper_legs 1"
+      - "give {player_name} Weapon_Sword_Coppy 1"

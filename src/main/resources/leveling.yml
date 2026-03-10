@@ -13,6 +13,23 @@ prestige:
   enabled: true
   level_cap_increase_per_prestige: 25
   base_xp_increase_per_prestige: 10
+  # Prestige augment unlock milestones are now fully data-driven.
+  # Each rule grants milestone slots for the configured tier.
+  # Use explicit prestige_levels for clarity (recommended).
+  # Optional: required_player_level gates unlocks until the player reaches that level.
+  augment_unlock_tiers:
+    - tier: ELITE
+      prestige_levels: [2, 4, 6, 8]
+    - tier: MYTHIC
+      prestige_levels: [10]
+
+  # Prestige reroll milestones for pending augment offers.
+  # Each unlocked milestone grants one reroll token for the configured tier.
+  augment_reroll_tiers:
+    - tier: ELITE
+      prestige_levels: [3, 7, 11]
+    - tier: MYTHIC
+      prestige_levels: [5, 15]
 
 Mob_Leveling:
   Experience:

@@ -1,0 +1,11 @@
+id: brute_force
+name: "Brute Force"
+tier: ELITE
+description: "Trade all critical potential for overwhelming raw power."
+category: PASSIVE_STAT
+
+passives:
+  brute_force:
+    precision_lock_value: 10000 # effectively disables crit and prevents crit gain
+    strength_multiplier: 1.75 # 1.75x effective strength
+    sorcery_multiplier: 1.75 # 1.75x effective sorcery

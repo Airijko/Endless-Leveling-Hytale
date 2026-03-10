@@ -1,0 +1,15 @@
+id: death_bomb
+name: "Death Bomb"
+tier: ELITE
+description: "On death, prime a delayed explosion that scales from your vitality and combat stats."
+category: ON_DAMAGE_TAKEN
+
+passives:
+  death_bomb:
+    delay: 3 # seconds after dying before detonation
+    radius: 5 # explosion radius in blocks
+    cooldown: 0 # optional cooldown between death-bomb triggers
+    damage_scaling:
+      max_health_ratio: 0.50 # 50% of your max health as base damage
+      strength_ratio: 0.10 # +10% of your strength
+      sorcery_ratio: 0.10 # +10% of your sorcery

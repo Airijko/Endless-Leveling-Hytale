@@ -310,6 +310,9 @@ public class ConfigManager {
         if ("leveling.yml".equalsIgnoreCase(resourceName)) {
             return "force_builtin_leveling";
         }
+        if ("events.yml".equalsIgnoreCase(resourceName)) {
+            return "force_builtin_events";
+        }
         return null;
     }
 
@@ -395,6 +398,7 @@ public class ConfigManager {
         if ("config.yml".equalsIgnoreCase(resourceName)) {
             target.put("force_builtin_config", parseBoolean(configMap.get("force_builtin_config"), false));
             target.put("force_builtin_leveling", parseBoolean(configMap.get("force_builtin_leveling"), false));
+            target.put("force_builtin_events", parseBoolean(configMap.get("force_builtin_events"), false));
         }
 
         return target;
@@ -407,6 +411,7 @@ public class ConfigManager {
         if ("config.yml".equalsIgnoreCase(resourceName)) {
             normalized.remove("force_builtin_config");
             normalized.remove("force_builtin_leveling");
+            normalized.remove("force_builtin_events");
         }
 
         return normalized;

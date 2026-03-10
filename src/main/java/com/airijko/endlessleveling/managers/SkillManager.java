@@ -31,6 +31,7 @@ public class SkillManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final double DEFENSE_MAX_REDUCTION = 80.0;
+    private static final double PRECISION_MAX_PERCENT = 100.0;
     private static final double DEFENSE_CURVE_START = 25.0;
     private static final double DEFENSE_SHARP_CURVE_START = 70.0;
     private static final double DEFENSE_MID_SEGMENT_SLOPE = 20.0 / 45.0;
@@ -217,6 +218,114 @@ public class SkillManager {
 
         LOGGER.atInfo().log("Reset skill attributes for %s. Total skill points set to %d",
                 player.getPlayerName(), totalSkillPoints);
+    }
+
+    /**
+     * Refunds attribute points that no longer provide value due hard caps:
+     * Precision crit chance capped at 100%, Defense reduction capped at 80%.
+     */
+    public CapRefundResult autoRefundCappedAttributes(PlayerData playerData) {
+        if (playerData == null) {
+            return CapRefundResult.none();
+        }
+
+        int precisionLevel = Math.max(0, playerData.getPlayerSkillAttributeLevel(SkillAttributeType.PRECISION));
+        int defenseLevel = Math.max(0, playerData.getPlayerSkillAttributeLevel(SkillAttributeType.DEFENSE));
+
+        int precisionCapLevel = findFirstPrecisionCapLevel(playerData, precisionLevel);
+        int defenseCapLevel = findFirstDefenseCapLevel(playerData, defenseLevel);
+
+        int precisionRefund = 0;
+        if (precisionCapLevel >= 0 && precisionLevel > precisionCapLevel) {
+            precisionRefund = precisionLevel - precisionCapLevel;
+            playerData.setPlayerSkillAttributeLevel(SkillAttributeType.PRECISION, precisionCapLevel);
+        }
+
+        int defenseRefund = 0;
+        if (defenseCapLevel >= 0 && defenseLevel > defenseCapLevel) {
+            defenseRefund = defenseLevel - defenseCapLevel;
+            playerData.setPlayerSkillAttributeLevel(SkillAttributeType.DEFENSE, defenseCapLevel);
+        }
+
+        int totalRefund = precisionRefund + defenseRefund;
+        if (totalRefund <= 0) {
+            return CapRefundResult.none();
+        }
+
+        playerData.setSkillPoints(playerData.getSkillPoints() + totalRefund);
+        return new CapRefundResult(totalRefund, precisionRefund, defenseRefund);
+    }
+
+    private int findFirstPrecisionCapLevel(PlayerData playerData, int currentLevel) {
+        if (currentLevel <= 0) {
+            return -1;
+        }
+
+        double currentPercent = getPrecisionPercentWithoutAugment(playerData, currentLevel);
+        if (currentPercent < PRECISION_MAX_PERCENT - 1e-6D) {
+            return -1;
+        }
+
+        int low = 0;
+        int high = currentLevel;
+        while (low < high) {
+            int mid = low + ((high - low) / 2);
+            double midPercent = getPrecisionPercentWithoutAugment(playerData, mid);
+            if (midPercent >= PRECISION_MAX_PERCENT - 1e-6D) {
+                high = mid;
+            } else {
+                low = mid + 1;
+            }
+        }
+        return Math.max(0, low);
+    }
+
+    private double getPrecisionPercentWithoutAugment(PlayerData playerData, int level) {
+        double racePercent = attributeManager != null
+                ? attributeManager.getRaceAttribute(playerData, SkillAttributeType.PRECISION, 0.0D)
+                : 0.0D;
+        double perPoint = getSkillAttributeConfigValue(SkillAttributeType.PRECISION);
+        double innate = getInnateAttributeBonus(playerData, SkillAttributeType.PRECISION);
+        return racePercent + (Math.max(0, level) * perPoint) + innate;
+    }
+
+    private int findFirstDefenseCapLevel(PlayerData playerData, int currentLevel) {
+        if (currentLevel <= 0) {
+            return -1;
+        }
+
+        double currentReduction = getDefenseReductionPercentWithoutAugment(playerData, currentLevel);
+        if (currentReduction < DEFENSE_MAX_REDUCTION - 1e-6D) {
+            return -1;
+        }
+
+        int low = 0;
+        int high = currentLevel;
+        while (low < high) {
+            int mid = low + ((high - low) / 2);
+            double midReduction = getDefenseReductionPercentWithoutAugment(playerData, mid);
+            if (midReduction >= DEFENSE_MAX_REDUCTION - 1e-6D) {
+                high = mid;
+            } else {
+                low = mid + 1;
+            }
+        }
+        return Math.max(0, low);
+    }
+
+    private double getDefenseReductionPercentWithoutAugment(PlayerData playerData, int level) {
+        double raceMultiplier = attributeManager != null
+                ? attributeManager.getRaceAttribute(playerData, SkillAttributeType.DEFENSE, 1.0D)
+                : 1.0D;
+        if (raceMultiplier < 0.0D) {
+            raceMultiplier = 0.0D;
+        }
+
+        double perPoint = getSkillAttributeConfigValue(SkillAttributeType.DEFENSE);
+        double innate = getInnateAttributeBonus(playerData, SkillAttributeType.DEFENSE);
+        double rawDefenseValue = (Math.max(0, level) * perPoint) + innate;
+        double scaledValue = rawDefenseValue * raceMultiplier;
+        return applyDefenseCurve(scaledValue);
     }
 
     // Sorcery / skill modifiers
@@ -635,6 +744,16 @@ public class SkillManager {
             float innateValue,
             float totalValue,
             float resistance) {
+    }
+
+    public record CapRefundResult(int totalRefunded, int precisionRefunded, int defenseRefunded) {
+        public static CapRefundResult none() {
+            return new CapRefundResult(0, 0, 0);
+        }
+
+        public boolean refunded() {
+            return totalRefunded > 0;
+        }
     }
 
     // Defense / skill modifiers

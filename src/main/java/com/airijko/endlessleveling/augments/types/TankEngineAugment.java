@@ -6,17 +6,20 @@ import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentRuntime
 import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
+import com.hypixel.hytale.component.CommandBuffer;
+import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.modules.entitystats.modifier.Modifier.ModifierTarget;
 import com.hypixel.hytale.server.core.modules.entitystats.modifier.StaticModifier;
 import com.hypixel.hytale.server.core.modules.entitystats.modifier.StaticModifier.CalculationType;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import java.util.Map;
 
 public final class TankEngineAugment extends YamlAugment
-        implements AugmentHooks.PassiveStatAugment, AugmentHooks.OnHitAugment {
+        implements AugmentHooks.PassiveStatAugment, AugmentHooks.OnHitAugment, AugmentHooks.OnDamageTakenAugment {
     public static final String ID = "tank_engine";
     private static final String MAX_HP_BONUS_KEY = ID + "_max_hp_bonus";
 
@@ -50,20 +53,18 @@ public final class TankEngineAugment extends YamlAugment
             return context != null ? context.getDamage() : 0f;
         }
 
-        var state = context.getRuntimeState().getState(ID);
-        int current = Math.max(0, state.getStacks());
-        if (current < maxStacks) {
-            state.setStacks(current + 1);
-            if (current == 0) {
-                var playerRef = AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getAttackerRef());
-                if (playerRef != null && playerRef.isValid()) {
-                    AugmentUtils.sendAugmentMessage(playerRef,
-                            String.format("%s activated!", getName()));
-                }
-            }
-        }
-        state.setLastProc(System.currentTimeMillis());
+        gainStack(context.getRuntimeState(), context.getCommandBuffer(), context.getAttackerRef());
         return context.getDamage();
+    }
+
+    @Override
+    public float onDamageTaken(AugmentHooks.DamageTakenContext context) {
+        if (context == null || context.getRuntimeState() == null) {
+            return context != null ? context.getIncomingDamage() : 0f;
+        }
+
+        gainStack(context.getRuntimeState(), context.getCommandBuffer(), context.getDefenderRef());
+        return context.getIncomingDamage();
     }
 
     @Override
@@ -134,5 +135,27 @@ public final class TankEngineAugment extends YamlAugment
         float ratio = previousMax > 0.01f ? previousCurrent / previousMax : 1.0f;
         float adjustedCurrent = Math.max(1.0f, Math.min(newMax, ratio * newMax));
         statMap.setStatValue(DefaultEntityStatTypes.getHealth(), adjustedCurrent);
+    }
+
+    private void gainStack(AugmentRuntimeState runtime,
+            CommandBuffer<EntityStore> commandBuffer,
+            Ref<EntityStore> entityRef) {
+        if (runtime == null) {
+            return;
+        }
+
+        var state = runtime.getState(ID);
+        int current = Math.max(0, state.getStacks());
+        if (current < maxStacks) {
+            state.setStacks(current + 1);
+            if (current == 0) {
+                var playerRef = AugmentUtils.getPlayerRef(commandBuffer, entityRef);
+                if (playerRef != null && playerRef.isValid()) {
+                    AugmentUtils.sendAugmentMessage(playerRef,
+                            String.format("%s activated!", getName()));
+                }
+            }
+        }
+        state.setLastProc(System.currentTimeMillis());
     }
 }

@@ -991,6 +991,9 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     tr("ui.races.passive.desc.retaliation", "{0} reflect", formatPercentValue(value)),
                     formatWindowDetail(window),
                     formatCooldownDetail(cooldown));
+            case ABSORB -> appendDetails(
+                    tr("ui.races.passive.desc.absorb", "{0} dmg reduction", formatPercentValue(value)),
+                    formatCooldownDetail(cooldown));
             case EXECUTIONER -> appendDetails(
                     tr("ui.races.passive.desc.executioner", "{0} finisher", formatPercentValue(value)),
                     formatThresholdDetail(threshold, tr("ui.races.passive.scope.target_hp", "target HP")),

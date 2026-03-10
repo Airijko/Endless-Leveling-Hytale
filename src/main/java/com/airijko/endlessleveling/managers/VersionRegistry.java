@@ -13,16 +13,17 @@ public final class VersionRegistry {
     public static final String CONFIG_VERSION_KEY = "config_version";
     public static final String PLAYERDATA_VERSION_KEY = "version";
 
-    public static final int CONFIG_YML_VERSION = 28;
-    public static final int LEVELING_YML_VERSION = 13;
-    public static final int WORLDS_YML_VERSION = 14;
+    public static final int CONFIG_YML_VERSION = 29;
+    public static final int LEVELING_YML_VERSION = 17;
+    public static final int EVENTS_YML_VERSION = 2;
+    public static final int WORLDS_YML_VERSION = 15;
     public static final int WEAPONS_YML_VERSION = 3;
 
-    public static final int PLAYERDATA_SCHEMA_VERSION = 10;
+    public static final int PLAYERDATA_SCHEMA_VERSION = 11;
 
-    public static final int BUILTIN_AUGMENTS_VERSION = 15;
-    public static final int BUILTIN_CLASSES_VERSION = 9;
-    public static final int BUILTIN_RACES_VERSION = 9;
+    public static final int BUILTIN_AUGMENTS_VERSION = 16;
+    public static final int BUILTIN_CLASSES_VERSION = 10;
+    public static final int BUILTIN_RACES_VERSION = 10;
     public static final int BUILTIN_LANG_VERSION = 2;
 
     public static final String AUGMENTS_VERSION_FILE = "augments.version";
@@ -37,6 +38,7 @@ public final class VersionRegistry {
         return switch (resourceName.trim().toLowerCase(Locale.ROOT)) {
             case "config.yml" -> CONFIG_YML_VERSION;
             case "leveling.yml" -> LEVELING_YML_VERSION;
+            case "events.yml" -> EVENTS_YML_VERSION;
             case "worlds.yml" -> WORLDS_YML_VERSION;
             case "weapons.yml" -> WEAPONS_YML_VERSION;
             default -> null;

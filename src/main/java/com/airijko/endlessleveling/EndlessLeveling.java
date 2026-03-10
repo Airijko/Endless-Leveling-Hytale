@@ -57,6 +57,7 @@ public class EndlessLeveling extends JavaPlugin {
     private MobLevelingManager mobLevelingManager;
     private SkillManager skillManager;
     private PassiveManager passiveManager;
+    private EventHookManager eventHookManager;
     private PartyManager partyManager;
     private RaceManager raceManager;
     private ClassManager classManager;
@@ -89,6 +90,10 @@ public class EndlessLeveling extends JavaPlugin {
 
     public PassiveManager getPassiveManager() {
         return passiveManager;
+    }
+
+    public EventHookManager getEventHookManager() {
+        return eventHookManager;
     }
 
     public PartyManager getPartyManager() {
@@ -175,16 +180,19 @@ public class EndlessLeveling extends JavaPlugin {
         archetypePassiveManager = new ArchetypePassiveManager(raceManager, classManager);
         playerAttributeManager = new PlayerAttributeManager(raceManager);
         passiveManager = new PassiveManager(configManager);
+        eventHookManager = new EventHookManager(new ConfigManager(filesManager, filesManager.getEventsFile()));
         augmentManager = new AugmentManager(filesManager.getAugmentsFolder().toPath(), filesManager, configManager);
         augmentRuntimeManager = new AugmentRuntimeManager();
         skillManager = new SkillManager(filesManager, playerAttributeManager, archetypePassiveManager, passiveManager,
                 augmentRuntimeManager);
         augmentExecutor = new AugmentExecutor(augmentManager, augmentRuntimeManager, skillManager);
         playerDataManager = new PlayerDataManager(filesManager, skillManager, raceManager, classManager);
-        augmentUnlockManager = new AugmentUnlockManager(configManager, augmentManager, playerDataManager,
+        ConfigManager levelingConfigManager = new ConfigManager(filesManager, filesManager.getLevelingFile());
+        augmentUnlockManager = new AugmentUnlockManager(configManager, levelingConfigManager, augmentManager,
+                playerDataManager,
                 archetypePassiveManager);
         levelingManager = new LevelingManager(playerDataManager, filesManager, skillManager, archetypePassiveManager,
-                passiveManager, augmentUnlockManager);
+                passiveManager, augmentUnlockManager, eventHookManager);
         mobLevelingManager = new MobLevelingManager(filesManager, playerDataManager);
         partyManager = new PartyManager(playerDataManager, levelingManager);
         if (!partyManager.isAvailable()) {

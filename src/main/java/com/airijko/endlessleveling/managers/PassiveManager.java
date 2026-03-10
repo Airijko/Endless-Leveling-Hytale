@@ -399,6 +399,7 @@ public class PassiveManager {
         private long retaliationCooldownExpiresAt;
         private long retaliationWindowExpiresAt;
         private double retaliationDamageStored;
+        private long absorbCooldownExpiresAt;
         private long executionerCooldownExpiresAt;
         private long trueEdgeCooldownExpiresAt;
         private long swiftnessActiveUntil;
@@ -562,6 +563,7 @@ public class PassiveManager {
             this.retaliationCooldownExpiresAt = 0L;
             this.retaliationWindowExpiresAt = 0L;
             this.retaliationDamageStored = 0.0D;
+            this.absorbCooldownExpiresAt = 0L;
             this.executionerCooldownExpiresAt = 0L;
             this.trueEdgeCooldownExpiresAt = 0L;
             this.swiftnessActiveUntil = 0L;
@@ -625,6 +627,14 @@ public class PassiveManager {
 
         public void setRetaliationDamageStored(double retaliationDamageStored) {
             this.retaliationDamageStored = Math.max(0.0D, retaliationDamageStored);
+        }
+
+        public long getAbsorbCooldownExpiresAt() {
+            return absorbCooldownExpiresAt;
+        }
+
+        public void setAbsorbCooldownExpiresAt(long absorbCooldownExpiresAt) {
+            this.absorbCooldownExpiresAt = absorbCooldownExpiresAt;
         }
 
         public long getExecutionerCooldownExpiresAt() {

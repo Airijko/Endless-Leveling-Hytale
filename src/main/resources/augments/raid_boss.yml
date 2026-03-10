@@ -1,0 +1,12 @@
+id: raid_boss
+name: "Raid Boss"
+tier: MYTHIC
+description: "Tower over the battlefield with massive vitality and crushing damage."
+category: PASSIVE_STAT
+
+passives:
+  buffs:
+    max_health_percent:
+      value: 0.50 # +50% bonus health
+    bonus_damage:
+      value: 0.20 # +20% bonus damage

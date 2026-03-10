@@ -55,6 +55,7 @@ public enum PassiveStackingStyle {
                     SPECIAL_CHARGE_BONUS,
                     RAVENOUS_STRIKE,
                     SECOND_WIND,
+                    ABSORB,
                     BERZERKER,
                     SWIFTNESS ->
                 DIMINISHING;

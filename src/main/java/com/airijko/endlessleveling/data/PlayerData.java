@@ -428,6 +428,22 @@ public class PlayerData {
         getActiveProfile().clearSelectedAugments();
     }
 
+    public int getAugmentRerollsUsedForTier(String tierKey) {
+        return getActiveProfile().getAugmentRerollsUsed(tierKey);
+    }
+
+    public void setAugmentRerollsUsedForTier(String tierKey, int used) {
+        getActiveProfile().setAugmentRerollsUsed(tierKey, used);
+    }
+
+    public void incrementAugmentRerollsUsedForTier(String tierKey) {
+        getActiveProfile().setAugmentRerollsUsed(tierKey, getAugmentRerollsUsedForTier(tierKey) + 1);
+    }
+
+    public Map<String, Integer> getAugmentRerollsUsedSnapshot() {
+        return Collections.unmodifiableMap(new LinkedHashMap<>(getActiveProfile().getAugmentRerollsUsed()));
+    }
+
     public int getPassiveLevel(PassiveType type) {
         return getActiveProfile().getPassiveLevel(type);
     }
@@ -574,6 +590,7 @@ public class PlayerData {
         private final Map<PassiveType, Integer> passiveLevels;
         private final Map<String, List<String>> augmentOffers;
         private final Map<String, String> selectedAugments;
+        private final Map<String, Integer> augmentRerollsUsed;
         private String raceId;
         private long lastRaceChangeEpochSeconds;
         private int raceSwitchCount;
@@ -602,6 +619,7 @@ public class PlayerData {
             }
             this.augmentOffers = new LinkedHashMap<>();
             this.selectedAugments = new LinkedHashMap<>();
+            this.augmentRerollsUsed = new LinkedHashMap<>();
             this.raceId = null;
             this.lastRaceChangeEpochSeconds = 0L;
             this.raceSwitchCount = 0;
@@ -683,6 +701,10 @@ public class PlayerData {
             return selectedAugments;
         }
 
+        public Map<String, Integer> getAugmentRerollsUsed() {
+            return augmentRerollsUsed;
+        }
+
         public List<String> getAugmentOffers(String tierKey) {
             if (tierKey == null || tierKey.isBlank()) {
                 return List.of();
@@ -749,6 +771,28 @@ public class PlayerData {
 
         public void clearSelectedAugments() {
             selectedAugments.clear();
+        }
+
+        public int getAugmentRerollsUsed(String tierKey) {
+            String key = normalizeTierKey(tierKey);
+            if (key == null) {
+                return 0;
+            }
+            return Math.max(0, augmentRerollsUsed.getOrDefault(key, 0));
+        }
+
+        public void setAugmentRerollsUsed(String tierKey, int used) {
+            String key = normalizeTierKey(tierKey);
+            if (key == null) {
+                return;
+            }
+
+            int normalized = Math.max(0, used);
+            if (normalized <= 0) {
+                augmentRerollsUsed.remove(key);
+                return;
+            }
+            augmentRerollsUsed.put(key, normalized);
         }
 
         private String normalizeTierKey(String tierKey) {

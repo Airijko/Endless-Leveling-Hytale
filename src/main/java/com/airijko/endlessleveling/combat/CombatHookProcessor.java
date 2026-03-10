@@ -15,6 +15,7 @@ import com.airijko.endlessleveling.managers.PassiveManager.PassiveRuntimeState;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.passives.settings.AbsorbSettings;
 import com.airijko.endlessleveling.passives.settings.BerzerkerSettings;
 import com.airijko.endlessleveling.passives.settings.ExecutionerSettings;
 import com.airijko.endlessleveling.passives.settings.FirstStrikeSettings;
@@ -223,6 +224,7 @@ public final class CombatHookProcessor {
 
         FirstStrikeSettings firstStrikeSettings = FirstStrikeSettings.fromSnapshot(archetypeSnapshot);
         RetaliationSettings retaliationSettings = RetaliationSettings.fromSnapshot(archetypeSnapshot);
+        AbsorbSettings absorbSettings = AbsorbSettings.fromSnapshot(archetypeSnapshot);
         boolean firstStrikeAugmentSelected = hasSelectedAugment(defender, FirstStrikeAugment.ID);
 
         float originalAmount = damage.getAmount();
@@ -238,6 +240,10 @@ public final class CombatHookProcessor {
                     ctx.commandBuffer(),
                     ctx.statMap(),
                     defenseReducedAmount);
+        }
+
+        if (runtimeState != null) {
+            postAugmentAmount = applyAbsorb(runtimeState, absorbSettings, ctx.defenderPlayer(), postAugmentAmount);
         }
 
         float adjustedAmount = postAugmentAmount;
@@ -736,6 +742,34 @@ public final class CombatHookProcessor {
 
         runtimeState.setFirstStrikeCooldownExpiresAt(now + settings.cooldownMillis());
         runtimeState.setFirstStrikeReadyNotified(false);
+    }
+
+    private float applyAbsorb(@Nonnull PassiveRuntimeState runtimeState,
+            @Nonnull AbsorbSettings settings,
+            PlayerRef defenderPlayer,
+            float incomingDamage) {
+        if (!settings.enabled() || incomingDamage <= 0f) {
+            return incomingDamage;
+        }
+
+        long now = System.currentTimeMillis();
+        if (now < runtimeState.getAbsorbCooldownExpiresAt()) {
+            return incomingDamage;
+        }
+
+        double reduction = Math.max(0.0D, Math.min(1.0D, settings.reductionPercent()));
+        if (reduction <= 0.0D) {
+            return incomingDamage;
+        }
+
+        runtimeState.setAbsorbCooldownExpiresAt(now + settings.cooldownMillis());
+        float reduced = (float) (incomingDamage * (1.0D - reduction));
+
+        sendPassiveMessage(defenderPlayer,
+                String.format("Absorb triggered! Reduced incoming damage by %.0f%%. Cooldown: %.0fs",
+                        reduction * 100.0D,
+                        settings.cooldownMillis() / 1000.0D));
+        return Math.max(0.0f, reduced);
     }
 
     private void sendPassiveMessage(PlayerRef playerRef, String text) {

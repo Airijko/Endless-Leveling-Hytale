@@ -7,6 +7,7 @@ import com.airijko.endlessleveling.classes.ClassWeaponResolver;
 import com.airijko.endlessleveling.classes.WeaponConfig;
 import com.airijko.endlessleveling.managers.ClassManager;
 import com.airijko.endlessleveling.managers.ConfigManager;
+import com.airijko.endlessleveling.managers.EventHookManager;
 import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.LoggingManager;
 import com.airijko.endlessleveling.managers.LanguageManager;
@@ -44,6 +45,7 @@ public class ReloadCommand extends AbstractPlayerCommand {
     private final SkillManager skillManager;
     private final AugmentManager augmentManager;
     private final AugmentUnlockManager augmentUnlockManager;
+    private final EventHookManager eventHookManager;
     private final MobLevelingSystem mobLevelingSystem;
     private final PluginFilesManager filesManager;
 
@@ -60,6 +62,7 @@ public class ReloadCommand extends AbstractPlayerCommand {
         this.skillManager = plugin != null ? plugin.getSkillManager() : null;
         this.augmentManager = plugin != null ? plugin.getAugmentManager() : null;
         this.augmentUnlockManager = plugin != null ? plugin.getAugmentUnlockManager() : null;
+        this.eventHookManager = plugin != null ? plugin.getEventHookManager() : null;
         this.mobLevelingSystem = plugin != null ? plugin.getMobLevelingSystem() : null;
         this.filesManager = plugin != null ? plugin.getFilesManager() : null;
     }
@@ -126,6 +129,10 @@ public class ReloadCommand extends AbstractPlayerCommand {
                     augmentUnlockManager.ensureUnlocks(data);
                 }
             }
+        }
+
+        if (eventHookManager != null) {
+            eventHookManager.reload();
         }
 
         senderRef.sendMessage(

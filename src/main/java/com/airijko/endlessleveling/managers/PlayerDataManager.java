@@ -438,6 +438,13 @@ public class PlayerDataManager {
             }
         }
 
+        Map<String, Object> rerollsNode = castToStringObjectMap(source.get("augmentRerollsUsed"));
+        if (rerollsNode != null) {
+            for (Map.Entry<String, Object> entry : rerollsNode.entrySet()) {
+                profile.setAugmentRerollsUsed(entry.getKey(), parseInt(entry.getValue(), 0));
+            }
+        }
+
         Object raceNode = source.get("race");
         profile.setRaceId(parseRaceId(raceNode));
         profile.setLastRaceChangeEpochSeconds(parseRaceLastChanged(raceNode));
@@ -874,6 +881,17 @@ public class PlayerDataManager {
                     });
                     if (!profileSelectedAugments.isEmpty()) {
                         profileMap.put("selectedAugments", profileSelectedAugments);
+                    }
+
+                    Map<String, Integer> profileRerollsUsed = new LinkedHashMap<>();
+                    profile.getAugmentRerollsUsed().forEach((tier, used) -> {
+                        int normalized = Math.max(0, used == null ? 0 : used);
+                        if (normalized > 0) {
+                            profileRerollsUsed.put(tier, normalized);
+                        }
+                    });
+                    if (!profileRerollsUsed.isEmpty()) {
+                        profileMap.put("augmentRerollsUsed", profileRerollsUsed);
                     }
 
                     Map<String, Integer> profilePassives = new LinkedHashMap<>();

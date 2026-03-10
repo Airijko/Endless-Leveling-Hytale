@@ -35,31 +35,56 @@ public class AugmentUnlockManager {
     private static final int DEFAULT_OFFER_COUNT = 3;
 
     private final ConfigManager configManager;
+    private final ConfigManager levelingConfigManager;
     private final AugmentManager augmentManager;
     private final PlayerDataManager playerDataManager;
     private final ArchetypePassiveManager archetypePassiveManager;
     private volatile List<UnlockRule> unlockRules;
+    private volatile List<PrestigeUnlockRule> prestigeUnlockRules;
+    private volatile List<PrestigeRerollRule> prestigeRerollRules;
 
     public AugmentUnlockManager(@Nonnull ConfigManager configManager,
+            @Nonnull ConfigManager levelingConfigManager,
             @Nonnull AugmentManager augmentManager,
             @Nonnull PlayerDataManager playerDataManager,
             ArchetypePassiveManager archetypePassiveManager) {
         this.configManager = Objects.requireNonNull(configManager, "configManager");
+        this.levelingConfigManager = Objects.requireNonNull(levelingConfigManager, "levelingConfigManager");
         this.augmentManager = Objects.requireNonNull(augmentManager, "augmentManager");
         this.playerDataManager = Objects.requireNonNull(playerDataManager, "playerDataManager");
         this.archetypePassiveManager = archetypePassiveManager;
         this.unlockRules = List.of();
+        this.prestigeUnlockRules = List.of();
+        this.prestigeRerollRules = List.of();
         reload();
     }
 
     /** Reload unlock milestone rules from config.yml. */
     public synchronized void reload() {
+        levelingConfigManager.load();
         List<UnlockRule> parsed = parseRules();
+        List<PrestigeUnlockRule> parsedPrestige = parsePrestigeRules();
+        List<PrestigeRerollRule> parsedRerolls = parsePrestigeRerollRules();
         this.unlockRules = parsed;
+        this.prestigeUnlockRules = parsedPrestige;
+        this.prestigeRerollRules = parsedRerolls;
         if (parsed.isEmpty()) {
             LOGGER.atWarning().log("No augment unlock rules parsed. Check config augments.unlocks for tiers/levels.");
         } else {
             LOGGER.atInfo().log("Loaded %d augment unlock rules", parsed.size());
+        }
+
+        if (parsedPrestige.isEmpty()) {
+            LOGGER.atWarning()
+                    .log("No prestige augment unlock rules parsed. Check leveling.yml prestige.augment_unlock_tiers.");
+        } else {
+            LOGGER.atInfo().log("Loaded %d prestige augment unlock rules", parsedPrestige.size());
+        }
+
+        if (parsedRerolls.isEmpty()) {
+            LOGGER.atInfo().log("No prestige reroll rules parsed. Reroll unlocks are disabled.");
+        } else {
+            LOGGER.atInfo().log("Loaded %d prestige reroll rules", parsedRerolls.size());
         }
     }
 
@@ -128,6 +153,69 @@ public class AugmentUnlockManager {
     }
 
     /**
+     * Returns how many rerolls are still available for the given tier.
+     */
+    public int getRemainingRerolls(@Nonnull PlayerData playerData, @Nonnull PassiveTier tier) {
+        if (playerData == null || tier == null) {
+            return 0;
+        }
+
+        int playerLevel = Math.max(1, playerData.getLevel());
+        int prestigeLevel = Math.max(0, playerData.getPrestigeLevel());
+        int eligible = getEligibleRerollsForTier(playerData, tier, prestigeLevel, playerLevel);
+        int used = Math.max(0, playerData.getAugmentRerollsUsedForTier(tier.name()));
+        return Math.max(0, eligible - used);
+    }
+
+    /**
+     * Consumes one reroll for a tier and rerolls pending offers in that tier.
+     *
+     * @return true when a reroll was consumed and offers were updated.
+     */
+    public boolean tryConsumeReroll(@Nonnull PlayerData playerData, @Nonnull PassiveTier tier) {
+        if (playerData == null || tier == null) {
+            return false;
+        }
+
+        if (getRemainingRerolls(playerData, tier) <= 0) {
+            return false;
+        }
+
+        String tierKey = tier.name();
+        List<String> existingOffers = new ArrayList<>(playerData.getAugmentOffersForTier(tierKey));
+        int bundleCount = countPendingUnlockBundles(existingOffers);
+        if (bundleCount <= 0) {
+            return false;
+        }
+
+        Set<String> excludedAugmentIds = collectOwnedAugmentIds(playerData);
+        List<String> rerolledOffers = new ArrayList<>();
+        for (int i = 0; i < bundleCount; i++) {
+            List<String> rolled = rollOffers(tier, excludedAugmentIds);
+            if (rolled.isEmpty()) {
+                continue;
+            }
+
+            rerolledOffers.addAll(rolled);
+            for (String augmentId : rolled) {
+                String normalizedId = normalizeAugmentId(augmentId);
+                if (normalizedId != null) {
+                    excludedAugmentIds.add(normalizedId);
+                }
+            }
+        }
+
+        if (rerolledOffers.isEmpty()) {
+            return false;
+        }
+
+        playerData.setAugmentOffersForTier(tierKey, rerolledOffers);
+        playerData.incrementAugmentRerollsUsedForTier(tierKey);
+        playerDataManager.save(playerData);
+        return true;
+    }
+
+    /**
      * Clears selected augments and pending offers, then rerolls unlocks the player
      * is
      * currently eligible for.
@@ -178,6 +266,10 @@ public class AugmentUnlockManager {
             }
         }
 
+        if (trimExcessRerollUsage(playerData)) {
+            updated = true;
+        }
+
         if (updated) {
             playerDataManager.save(playerData);
         }
@@ -216,11 +308,15 @@ public class AugmentUnlockManager {
         int next = getNextUnlockLevel(currentLevel);
         int prestigeLevel = Math.max(0, playerData.getPrestigeLevel());
 
-        if (prestigeLevel > 0 && currentLevel < 25) {
-            next = next <= 0 ? 25 : Math.min(next, 25);
-        }
-        if (prestigeLevel >= 5 && currentLevel < 50) {
-            next = next <= 0 ? 50 : Math.min(next, 50);
+        for (PrestigeUnlockRule rule : prestigeUnlockRules) {
+            if (rule.countEligibleIgnoringPlayerLevel(prestigeLevel) <= 0) {
+                continue;
+            }
+
+            int requiredPlayerLevel = rule.requiredPlayerLevel();
+            if (requiredPlayerLevel > currentLevel) {
+                next = next <= 0 ? requiredPlayerLevel : Math.min(next, requiredPlayerLevel);
+            }
         }
 
         return next;
@@ -418,6 +514,293 @@ public class AugmentUnlockManager {
         }
     }
 
+    private List<PrestigeUnlockRule> parsePrestigeRules() {
+        Object raw = levelingConfigManager.get("prestige.augment_unlock_tiers", Collections.emptyList(), false);
+        if (!(raw instanceof List<?> list) || list.isEmpty()) {
+            return defaultPrestigeRules();
+        }
+
+        List<PrestigeUnlockRule> rules = new ArrayList<>();
+        for (Object entry : list) {
+            if (!(entry instanceof Map<?, ?> map)) {
+                continue;
+            }
+
+            PassiveTier tier = parseTier(map.get("tier"));
+            if (tier == null) {
+                continue;
+            }
+
+            int requiredPlayerLevel = parseInt(map.get("required_player_level"), 0);
+            if (requiredPlayerLevel < 0) {
+                continue;
+            }
+
+            Set<Integer> prestigeLevels = parseLevels(map.get("prestige_levels"));
+            if (!prestigeLevels.isEmpty()) {
+                rules.add(PrestigeUnlockRule.explicit(tier, prestigeLevels, requiredPlayerLevel));
+                continue;
+            }
+
+            int requiredPrestigeLevel = parseInt(map.get("required_prestige_level"), 1);
+            int maxUnlocks = parseInt(map.get("max_unlocks"), -1);
+
+            if (requiredPrestigeLevel <= 0 || maxUnlocks == 0) {
+                continue;
+            }
+
+            rules.add(PrestigeUnlockRule.progressive(tier, requiredPrestigeLevel, requiredPlayerLevel, maxUnlocks));
+        }
+
+        if (rules.isEmpty()) {
+            return defaultPrestigeRules();
+        }
+
+        rules.sort(Comparator
+                .comparing(PrestigeUnlockRule::firstPrestigeLevel)
+                .thenComparing(PrestigeUnlockRule::requiredPlayerLevel)
+                .thenComparing(PrestigeUnlockRule::tier));
+        return rules;
+    }
+
+    private List<PrestigeUnlockRule> defaultPrestigeRules() {
+        // Compatibility fallback when prestige.augment_unlock_tiers is absent.
+        return List.of(
+                PrestigeUnlockRule.explicit(PassiveTier.ELITE, Set.of(2, 4, 6, 8), 0),
+                PrestigeUnlockRule.explicit(PassiveTier.MYTHIC, Set.of(10), 0));
+    }
+
+    private List<PrestigeRerollRule> parsePrestigeRerollRules() {
+        Object raw = levelingConfigManager.get("prestige.augment_reroll_tiers", Collections.emptyList(), false);
+        if (!(raw instanceof List<?> list) || list.isEmpty()) {
+            return List.of();
+        }
+
+        List<PrestigeRerollRule> rules = new ArrayList<>();
+        for (Object entry : list) {
+            if (!(entry instanceof Map<?, ?> map)) {
+                continue;
+            }
+
+            PassiveTier tier = parseTier(map.get("tier"));
+            if (tier == null) {
+                continue;
+            }
+
+            int requiredPlayerLevel = parseInt(map.get("required_player_level"), 0);
+            if (requiredPlayerLevel < 0) {
+                continue;
+            }
+
+            Set<Integer> prestigeLevels = parseLevels(map.get("prestige_levels"));
+            if (!prestigeLevels.isEmpty()) {
+                rules.add(PrestigeRerollRule.explicit(tier, prestigeLevels, requiredPlayerLevel));
+                continue;
+            }
+
+            int requiredPrestigeLevel = parseInt(map.get("required_prestige_level"), 1);
+            int maxRerolls = parseInt(map.get("max_rerolls"), -1);
+
+            if (requiredPrestigeLevel <= 0 || maxRerolls == 0) {
+                continue;
+            }
+
+            rules.add(PrestigeRerollRule.progressive(tier, requiredPrestigeLevel, requiredPlayerLevel, maxRerolls));
+        }
+
+        if (rules.isEmpty()) {
+            return List.of();
+        }
+
+        rules.sort(Comparator
+                .comparing(PrestigeRerollRule::firstPrestigeLevel)
+                .thenComparing(PrestigeRerollRule::requiredPlayerLevel)
+                .thenComparing(PrestigeRerollRule::tier));
+        return rules;
+    }
+
+    private int parseInt(Object value, int defaultValue) {
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value instanceof String text) {
+            try {
+                return Integer.parseInt(text.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return defaultValue;
+    }
+
+    private int getEligibleRerollsForTier(PlayerData playerData,
+            PassiveTier tier,
+            int prestigeLevel,
+            int playerLevel) {
+        if (playerData == null || tier == null || prestigeLevel <= 0 || prestigeRerollRules.isEmpty()) {
+            return 0;
+        }
+
+        int total = 0;
+        for (PrestigeRerollRule rule : prestigeRerollRules) {
+            if (rule.tier() != tier) {
+                continue;
+            }
+            total += Math.max(0, rule.countEligibleMilestones(prestigeLevel, playerLevel));
+        }
+
+        return total;
+    }
+
+    private boolean trimExcessRerollUsage(PlayerData playerData) {
+        if (playerData == null || prestigeRerollRules.isEmpty()) {
+            return false;
+        }
+
+        int prestigeLevel = Math.max(0, playerData.getPrestigeLevel());
+        int playerLevel = Math.max(1, playerData.getLevel());
+        boolean updated = false;
+
+        for (PassiveTier tier : PassiveTier.values()) {
+            int eligible = getEligibleRerollsForTier(playerData, tier, prestigeLevel, playerLevel);
+            int used = playerData.getAugmentRerollsUsedForTier(tier.name());
+            if (used > eligible) {
+                playerData.setAugmentRerollsUsedForTier(tier.name(), eligible);
+                updated = true;
+            }
+        }
+
+        return updated;
+    }
+
+    private record PrestigeUnlockRule(PassiveTier tier,
+            Set<Integer> prestigeLevels,
+            int requiredPrestigeLevel,
+            int requiredPlayerLevel,
+            int maxUnlocks) {
+
+        static PrestigeUnlockRule explicit(PassiveTier tier, Set<Integer> prestigeLevels, int requiredPlayerLevel) {
+            return new PrestigeUnlockRule(tier,
+                    prestigeLevels == null ? Set.of() : Set.copyOf(prestigeLevels),
+                    1,
+                    requiredPlayerLevel,
+                    1);
+        }
+
+        static PrestigeUnlockRule progressive(PassiveTier tier,
+                int requiredPrestigeLevel,
+                int requiredPlayerLevel,
+                int maxUnlocks) {
+            return new PrestigeUnlockRule(tier,
+                    Set.of(),
+                    requiredPrestigeLevel,
+                    requiredPlayerLevel,
+                    maxUnlocks);
+        }
+
+        int firstPrestigeLevel() {
+            if (!prestigeLevels.isEmpty()) {
+                int min = Integer.MAX_VALUE;
+                for (int level : prestigeLevels) {
+                    if (level > 0 && level < min) {
+                        min = level;
+                    }
+                }
+                return min == Integer.MAX_VALUE ? Integer.MAX_VALUE : min;
+            }
+            return requiredPrestigeLevel;
+        }
+
+        int countEligibleIgnoringPlayerLevel(int prestigeLevel) {
+            if (prestigeLevels.isEmpty()) {
+                if (prestigeLevel < requiredPrestigeLevel) {
+                    return 0;
+                }
+
+                int unlocked = (prestigeLevel - requiredPrestigeLevel) + 1;
+                if (maxUnlocks > 0) {
+                    return Math.min(unlocked, maxUnlocks);
+                }
+                return unlocked;
+            }
+
+            int count = 0;
+            for (int level : prestigeLevels) {
+                if (level > 0 && prestigeLevel >= level) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        int countEligibleMilestones(int prestigeLevel, int playerLevel) {
+            if (playerLevel < requiredPlayerLevel) {
+                return 0;
+            }
+            return countEligibleIgnoringPlayerLevel(prestigeLevel);
+        }
+    }
+
+    private record PrestigeRerollRule(PassiveTier tier,
+            Set<Integer> prestigeLevels,
+            int requiredPrestigeLevel,
+            int requiredPlayerLevel,
+            int maxRerolls) {
+
+        static PrestigeRerollRule explicit(PassiveTier tier, Set<Integer> prestigeLevels, int requiredPlayerLevel) {
+            return new PrestigeRerollRule(tier,
+                    prestigeLevels == null ? Set.of() : Set.copyOf(prestigeLevels),
+                    1,
+                    requiredPlayerLevel,
+                    1);
+        }
+
+        static PrestigeRerollRule progressive(PassiveTier tier,
+                int requiredPrestigeLevel,
+                int requiredPlayerLevel,
+                int maxRerolls) {
+            return new PrestigeRerollRule(tier,
+                    Set.of(),
+                    requiredPrestigeLevel,
+                    requiredPlayerLevel,
+                    maxRerolls);
+        }
+
+        int firstPrestigeLevel() {
+            if (!prestigeLevels.isEmpty()) {
+                int min = Integer.MAX_VALUE;
+                for (int level : prestigeLevels) {
+                    if (level > 0 && level < min) {
+                        min = level;
+                    }
+                }
+                return min == Integer.MAX_VALUE ? Integer.MAX_VALUE : min;
+            }
+            return requiredPrestigeLevel;
+        }
+
+        int countEligibleMilestones(int prestigeLevel, int playerLevel) {
+            if (playerLevel < requiredPlayerLevel || prestigeLevel < requiredPrestigeLevel) {
+                return 0;
+            }
+
+            if (!prestigeLevels.isEmpty()) {
+                int count = 0;
+                for (int level : prestigeLevels) {
+                    if (level > 0 && prestigeLevel >= level) {
+                        count++;
+                    }
+                }
+                return count;
+            }
+
+            int unlocked = (prestigeLevel - requiredPrestigeLevel) + 1;
+            if (maxRerolls > 0) {
+                return Math.min(unlocked, maxRerolls);
+            }
+            return unlocked;
+        }
+    }
+
     private int countPendingUnlockBundles(List<String> offers) {
         if (offers == null || offers.isEmpty()) {
             return 0;
@@ -532,19 +915,16 @@ public class AugmentUnlockManager {
         }
 
         int prestigeLevel = Math.max(0, playerData.getPrestigeLevel());
-        if (prestigeLevel <= 0) {
+        if (prestigeLevel <= 0 || prestigeUnlockRules.isEmpty()) {
             return;
         }
 
-        int bonusMythicMilestones = prestigeLevel >= 5 ? 1 : 0;
-        int bonusEliteMilestones = Math.max(0, prestigeLevel - bonusMythicMilestones);
-
-        if (bonusEliteMilestones > 0 && playerLevel >= 25) {
-            eligibleByTier.merge(PassiveTier.ELITE, bonusEliteMilestones, Integer::sum);
-        }
-
-        if (bonusMythicMilestones > 0 && playerLevel >= 50) {
-            eligibleByTier.merge(PassiveTier.MYTHIC, bonusMythicMilestones, Integer::sum);
+        for (PrestigeUnlockRule rule : prestigeUnlockRules) {
+            int bonusMilestones = rule.countEligibleMilestones(prestigeLevel, playerLevel);
+            if (bonusMilestones <= 0) {
+                continue;
+            }
+            eligibleByTier.merge(rule.tier(), bonusMilestones, Integer::sum);
         }
     }
 }

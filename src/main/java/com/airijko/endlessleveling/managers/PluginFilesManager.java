@@ -49,6 +49,7 @@ public class PluginFilesManager {
 
     private final File configFile;
     private final File levelingFile;
+    private final File eventsFile;
     private final File worldsFile;
     private final File partyDataFile;
     private final Object archiveLock = new Object();
@@ -72,6 +73,7 @@ public class PluginFilesManager {
 
         this.configFile = initYamlFile("config.yml");
         this.levelingFile = initYamlFile("leveling.yml");
+        this.eventsFile = initYamlFile("events.yml");
         this.worldsFile = initYamlFile("worlds.yml");
         this.weaponsFile = initYamlFile(WEAPONS_FILE_NAME);
         this.partyDataFile = initPartyDataFile();
@@ -137,6 +139,10 @@ public class PluginFilesManager {
 
     public File getLevelingFile() {
         return levelingFile;
+    }
+
+    public File getEventsFile() {
+        return eventsFile;
     }
 
     public File getWorldsFile() {

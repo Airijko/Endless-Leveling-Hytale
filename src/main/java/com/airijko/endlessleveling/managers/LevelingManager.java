@@ -34,6 +34,7 @@ public class LevelingManager {
     private final ArchetypePassiveManager archetypePassiveManager;
     private final PassiveManager passiveManager;
     private final AugmentUnlockManager augmentUnlockManager;
+    private final EventHookManager eventHookManager;
 
     private double baseXp;
     private double multiplier;
@@ -55,13 +56,15 @@ public class LevelingManager {
 
     public LevelingManager(PlayerDataManager playerDataManager, PluginFilesManager filesManager,
             SkillManager skillManager, ArchetypePassiveManager archetypePassiveManager,
-            PassiveManager passiveManager, AugmentUnlockManager augmentUnlockManager) {
+            PassiveManager passiveManager, AugmentUnlockManager augmentUnlockManager,
+            EventHookManager eventHookManager) {
         this.playerDataManager = playerDataManager;
         this.configManager = new ConfigManager(filesManager, filesManager.getLevelingFile());
         this.skillManager = skillManager;
         this.archetypePassiveManager = archetypePassiveManager;
         this.passiveManager = passiveManager;
         this.augmentUnlockManager = augmentUnlockManager;
+        this.eventHookManager = eventHookManager;
 
         loadConfigValues();
     }
@@ -227,14 +230,17 @@ public class LevelingManager {
             return;
         }
 
+        int oldLevel = player.getLevel();
         double xpForLevel = getXpForNextLevel(player, player.getLevel());
         player.setXp(player.getXp() - xpForLevel);
-        player.setLevel(player.getLevel() + 1);
+        player.setLevel(oldLevel + 1);
 
         if (player.getLevel() >= effectiveCap) {
             player.setLevel(effectiveCap);
             player.setXp(0);
         }
+
+        int newLevel = player.getLevel();
 
         // Delegate skill point addition to SkillManager
         skillManager.addSkillPoints(player);
@@ -251,6 +257,10 @@ public class LevelingManager {
         refreshHud(player);
         pushPartyProHudText(player);
         requestAttributeResync(player);
+
+        if (eventHookManager != null && newLevel > oldLevel) {
+            eventHookManager.onPlayerLevelUp(player, oldLevel, newLevel);
+        }
     }
 
     private void notifyAvailableAugments(PlayerData player) {
@@ -398,7 +408,8 @@ public class LevelingManager {
             return PrestigeResult.NOT_AT_CAP;
         }
 
-        int nextPrestigeLevel = Math.max(0, player.getPrestigeLevel()) + 1;
+        int oldPrestigeLevel = Math.max(0, player.getPrestigeLevel());
+        int nextPrestigeLevel = oldPrestigeLevel + 1;
         player.setPrestigeLevel(nextPrestigeLevel);
         player.setLevel(1);
         player.setXp(0.0D);
@@ -412,6 +423,11 @@ public class LevelingManager {
         }
 
         playerDataManager.save(player);
+
+        if (eventHookManager != null) {
+            eventHookManager.onPrestigeLevelUp(player, oldPrestigeLevel, nextPrestigeLevel);
+        }
+
         refreshHud(player);
         pushPartyProHudText(player);
         requestAttributeResync(player);

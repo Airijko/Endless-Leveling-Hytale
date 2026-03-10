@@ -98,6 +98,7 @@ public final class FrozenDomainAugment extends YamlAugment implements AugmentHoo
     }
 
     private static final class ActiveFrozen {
+        Ref<EntityStore> targetRef;
         long expiresAt;
         double slowPercent;
         MovementSnapshot movementSnapshot;
@@ -204,6 +205,7 @@ public final class FrozenDomainAugment extends YamlAugment implements AugmentHoo
 
             String key = keyFor(targetRef, commandBuffer);
             ActiveFrozen state = ACTIVE_FROST.computeIfAbsent(key, unused -> new ActiveFrozen());
+            state.targetRef = targetRef;
             state.expiresAt = now + REAPPLY_GRACE_MILLIS;
             state.slowPercent = slowPercent;
             applySlowIfPossible(state, commandBuffer, targetRef);
@@ -227,27 +229,12 @@ public final class FrozenDomainAugment extends YamlAugment implements AugmentHoo
                 continue;
             }
 
-            Ref<EntityStore> targetRef = findRefByKey(entry.getKey(), commandBuffer);
-            if (targetRef != null) {
+            Ref<EntityStore> targetRef = state.targetRef;
+            if (targetRef != null && targetRef.isValid()) {
                 clearSlowIfPossible(state, commandBuffer, targetRef);
             }
             ACTIVE_FROST.remove(entry.getKey());
         }
-    }
-
-    private Ref<EntityStore> findRefByKey(String key, CommandBuffer<EntityStore> commandBuffer) {
-        if (key == null || key.isBlank() || commandBuffer == null) {
-            return null;
-        }
-        for (Ref<EntityStore> ref : commandBuffer.getEntities()) {
-            if (ref == null || !ref.isValid()) {
-                continue;
-            }
-            if (key.equals(keyFor(ref, commandBuffer))) {
-                return ref;
-            }
-        }
-        return null;
     }
 
     private static String keyFor(Ref<EntityStore> ref, CommandBuffer<EntityStore> commandBuffer) {

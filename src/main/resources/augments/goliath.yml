@@ -1,0 +1,14 @@
+id: goliath
+name: "Goliath"
+tier: ELITE
+description: "Become a towering presence with greater vitality and empowered combat stats."
+category: PASSIVE_STAT
+
+passives:
+  buffs:
+    max_health_percent:
+      value: 0.20 # +20% maximum health
+    strength:
+      value: 0.10 # +10% strength
+    sorcery:
+      value: 0.10 # +10% sorcery

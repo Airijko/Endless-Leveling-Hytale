@@ -1,0 +1,12 @@
+id: blood_echo
+name: "Blood Echo"
+tier: ELITE
+description: "Convert healing into extra damage and sustain through lifesteal."
+category: ON_HIT
+
+passives:
+  buffs:
+    lifesteal:
+      value: 0.05 # 5% lifesteal
+    healing_to_damage:
+      value: 0.20 # 20% of healing is added as bonus damage (includes excess healing)
