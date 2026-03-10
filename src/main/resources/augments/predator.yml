@@ -8,11 +8,13 @@ passives:
   buffs:
     haste:
       value: 0.12 # +12% Haste per stack
-      duration: 10 # seconds
     strength:
       value: 0.06 # +6% Strength per stack
-      duration: 10 # seconds
     max_stacks: 4
+
+  duration:
+    seconds: 10 # stack duration; refreshed on each kill
+
   debuffs:
     defense:
       value: -0.10 # -10% Defense

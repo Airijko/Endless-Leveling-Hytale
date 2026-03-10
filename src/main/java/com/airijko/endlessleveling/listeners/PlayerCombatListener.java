@@ -46,6 +46,7 @@ import java.util.Set;
 public class PlayerCombatListener extends DamageEventSystem {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+    private static final long TRUE_EDGE_INTERNAL_COOLDOWN_MILLIS = 400L;
 
     private final PlayerDataManager playerDataManager;
     private final PassiveManager passiveManager;
@@ -142,15 +143,20 @@ public class PlayerCombatListener extends DamageEventSystem {
         double reduction = 0.0D;
         PlayerRef targetPlayer = commandBuffer.getComponent(targetRef, PlayerRef.getComponentType());
         boolean targetIsPlayer = targetPlayer != null && targetPlayer.isValid();
+        long now = System.currentTimeMillis();
+        TrueEdgeSettings trueEdgeSettings = resolveTrueEdgeSettings(archetypeSnapshot);
+        boolean trueEdgeReady = isTrueEdgeOffCooldown(runtimeState, now);
 
-        TrueEdgeComputation trueEdge = computeTrueEdgeConversion(
-                targetRef,
-                commandBuffer,
-                archetypeSnapshot,
-                incomingBeforeDefense,
-                playerLevel,
-                reduction,
-                targetIsPlayer);
+        TrueEdgeComputation trueEdge = trueEdgeReady
+                ? computeTrueEdgeConversion(
+                        targetRef,
+                        commandBuffer,
+                        trueEdgeSettings,
+                        incomingBeforeDefense,
+                        playerLevel,
+                        reduction,
+                        targetIsPlayer)
+                : TrueEdgeComputation.none();
         float normalAfterConversion = (float) Math.max(0.0D,
                 incomingBeforeDefense - trueEdge.convertedDamageFromNormal());
         adjusted = normalAfterConversion;
@@ -175,14 +181,19 @@ public class PlayerCombatListener extends DamageEventSystem {
         // only
         // shifts damage buckets and level-difference defense is the sole true-damage
         // reducer.
-        trueEdge = computeTrueEdgeConversion(
-                targetRef,
-                commandBuffer,
-                archetypeSnapshot,
-                incomingBeforeDefense,
-                playerLevel,
-                reduction,
-                targetIsPlayer);
+        trueEdge = trueEdgeReady
+                ? computeTrueEdgeConversion(
+                        targetRef,
+                        commandBuffer,
+                        trueEdgeSettings,
+                        incomingBeforeDefense,
+                        playerLevel,
+                        reduction,
+                        targetIsPlayer)
+                : TrueEdgeComputation.none();
+        if (trueEdgeReady && trueEdge.triggered() && runtimeState != null) {
+            runtimeState.setTrueEdgeCooldownExpiresAt(now + TRUE_EDGE_INTERNAL_COOLDOWN_MILLIS);
+        }
         double reducedAugmentTrueDamage = applyLevelDifferenceReductionToTrueDamage(
                 result.trueDamageBonus(),
                 targetRef,
@@ -267,12 +278,11 @@ public class PlayerCombatListener extends DamageEventSystem {
 
     private TrueEdgeComputation computeTrueEdgeConversion(Ref<EntityStore> targetRef,
             CommandBuffer<EntityStore> commandBuffer,
-            ArchetypePassiveSnapshot archetypeSnapshot,
+            TrueEdgeSettings settings,
             float outgoingDamageBeforeDefense,
             int attackerLevel,
             double mobReduction,
             boolean targetIsPlayer) {
-        TrueEdgeSettings settings = resolveTrueEdgeSettings(archetypeSnapshot);
         if (!settings.enabled()) {
             return TrueEdgeComputation.none();
         }
@@ -300,6 +310,13 @@ public class PlayerCombatListener extends DamageEventSystem {
         }
 
         return new TrueEdgeComputation(convertedDamageFromNormal, reducedTrueDamage);
+    }
+
+    private boolean isTrueEdgeOffCooldown(PassiveRuntimeState runtimeState, long now) {
+        if (runtimeState == null) {
+            return true;
+        }
+        return now >= runtimeState.getTrueEdgeCooldownExpiresAt();
     }
 
     private TrueEdgeSettings resolveTrueEdgeSettings(ArchetypePassiveSnapshot snapshot) {
@@ -446,6 +463,10 @@ public class PlayerCombatListener extends DamageEventSystem {
 
         private static TrueEdgeComputation none() {
             return NONE;
+        }
+
+        private boolean triggered() {
+            return convertedDamageFromNormal > 0.0D || reducedTrueDamage > 0.0D;
         }
     }
 }

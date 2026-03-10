@@ -25,9 +25,16 @@ public final class PredatorAugment extends YamlAugment
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> buffs = AugmentValueReader.getMap(passives, "buffs");
+        Map<String, Object> duration = AugmentValueReader.getMap(passives, "duration");
         this.maxStacks = AugmentValueReader.getInt(buffs, "max_stacks", 0);
-        this.durationMillis = AugmentUtils
-                .secondsToMillis(AugmentValueReader.getNestedDouble(buffs, 0.0D, "haste", "duration"));
+        double durationSeconds = AugmentValueReader.getDouble(duration, "seconds", 0.0D);
+        if (durationSeconds <= 0.0D) {
+            // Backward compatibility for older predator.yml layout.
+            durationSeconds = Math.max(
+                    AugmentValueReader.getNestedDouble(buffs, 0.0D, "haste", "duration"),
+                    AugmentValueReader.getNestedDouble(buffs, 0.0D, "strength", "duration"));
+        }
+        this.durationMillis = AugmentUtils.secondsToMillis(durationSeconds);
         this.strengthPerStack = AugmentValueReader.getNestedDouble(buffs, 0.0D, "strength", "value");
         this.hastePerStack = AugmentValueReader.getNestedDouble(buffs, 0.0D, "haste", "value");
         Map<String, Object> debuffs = AugmentValueReader.getMap(passives, "debuffs");
@@ -51,7 +58,8 @@ public final class PredatorAugment extends YamlAugment
                 maxStacks,
                 AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getKillerRef()),
                 getName());
-        state.setExpiresAt(System.currentTimeMillis() + durationMillis);
+        long now = System.currentTimeMillis();
+        state.setExpiresAt(durationMillis > 0L ? now + durationMillis : 0L);
         applyAttributeBonuses(runtime, stacks, state.getExpiresAt());
     }
 
@@ -109,8 +117,7 @@ public final class PredatorAugment extends YamlAugment
         if (runtime == null) {
             return;
         }
-        long duration = expiresAt > 0L ? Math.max(0L, expiresAt - System.currentTimeMillis()) : 0L;
-        long expiresAtMillis = duration > 0L ? expiresAt : 0L;
+        long expiresAtMillis = durationMillis > 0L && stacks > 0 ? Math.max(0L, expiresAt) : 0L;
         double hasteBonus = stacks * hastePerStack * 100.0D;
         double strengthBonus = stacks * strengthPerStack * 100.0D;
         runtime.setAttributeBonus(SkillAttributeType.HASTE, ID + "_haste", hasteBonus, expiresAtMillis);

@@ -12,6 +12,7 @@ import java.util.Map;
 
 public final class ConquerorAugment extends YamlAugment implements AugmentHooks.OnHitAugment {
     public static final String ID = "conqueror";
+    public static final long INTERNAL_COOLDOWN_MILLIS = 400L;
 
     private final double bonusDamagePerStack;
     private final int maxStacks;
@@ -68,9 +69,13 @@ public final class ConquerorAugment extends YamlAugment implements AugmentHooks.
         float preMitigatedDamage = context.getDamage();
         float updatedDamage = AugmentUtils.applyMultiplier(preMitigatedDamage, stacks * bonusDamagePerStack);
         if (stacks >= maxStacks && (maxStackFlatTrueDamage > 0.0D || maxStackTrueDamagePercent > 0.0D)) {
-            double bonusTrueDamage = maxStackFlatTrueDamage
-                    + (Math.max(0.0D, updatedDamage) * maxStackTrueDamagePercent);
-            context.addTrueDamageBonus(bonusTrueDamage);
+            boolean cooldownReady = state.getLastProc() <= 0L || now - state.getLastProc() >= INTERNAL_COOLDOWN_MILLIS;
+            if (cooldownReady) {
+                double bonusTrueDamage = maxStackFlatTrueDamage
+                        + (Math.max(0.0D, updatedDamage) * maxStackTrueDamagePercent);
+                context.addTrueDamageBonus(bonusTrueDamage);
+                state.setLastProc(now);
+            }
         }
         return updatedDamage;
     }

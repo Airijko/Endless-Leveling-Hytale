@@ -400,6 +400,7 @@ public class PassiveManager {
         private long retaliationWindowExpiresAt;
         private double retaliationDamageStored;
         private long executionerCooldownExpiresAt;
+        private long trueEdgeCooldownExpiresAt;
         private long swiftnessActiveUntil;
         private int swiftnessStacks;
         private long lastMobKillMillis;
@@ -562,6 +563,7 @@ public class PassiveManager {
             this.retaliationWindowExpiresAt = 0L;
             this.retaliationDamageStored = 0.0D;
             this.executionerCooldownExpiresAt = 0L;
+            this.trueEdgeCooldownExpiresAt = 0L;
             this.swiftnessActiveUntil = 0L;
             this.swiftnessStacks = 0;
             this.lastHealingSample = Float.NaN;
@@ -631,6 +633,14 @@ public class PassiveManager {
 
         public void setExecutionerCooldownExpiresAt(long executionerCooldownExpiresAt) {
             this.executionerCooldownExpiresAt = executionerCooldownExpiresAt;
+        }
+
+        public long getTrueEdgeCooldownExpiresAt() {
+            return trueEdgeCooldownExpiresAt;
+        }
+
+        public void setTrueEdgeCooldownExpiresAt(long trueEdgeCooldownExpiresAt) {
+            this.trueEdgeCooldownExpiresAt = trueEdgeCooldownExpiresAt;
         }
 
         public long getSwiftnessActiveUntil() {

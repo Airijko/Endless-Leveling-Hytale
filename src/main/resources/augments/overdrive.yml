@@ -11,6 +11,10 @@ passives:
     crit_damage:
       value: 0.05 # +5% Critical Damage per stack
     max_stacks: 8
+
+  duration:
+    seconds: 8 # stack duration; refreshed on each hit
+
   stack_loss_conditions:
     on_miss: true # lose a stack when an attack misses
     on_damage_taken: true # lose a stack when taking damage
