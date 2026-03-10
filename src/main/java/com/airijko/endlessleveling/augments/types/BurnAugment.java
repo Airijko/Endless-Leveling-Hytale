@@ -5,6 +5,7 @@ import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentHooks;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
+import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.managers.PartyManager;
 import com.hypixel.hytale.builtin.mounts.NPCMountComponent;
 import com.hypixel.hytale.component.CommandBuffer;
@@ -31,12 +32,15 @@ public final class BurnAugment extends YamlAugment implements AugmentHooks.Passi
     private final double bonusScalingPer100Health;
     private final double baseRadius;
     private final double healthPerRadiusBlock;
+    private final double lifeForceFlatBonus;
 
     public BurnAugment(AugmentDefinition definition) {
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> auraBurn = AugmentValueReader.getMap(passives, "aura_burn");
         Map<String, Object> radiusScaling = AugmentValueReader.getMap(auraBurn, "radius_health_scaling");
+        Map<String, Object> buffs = AugmentValueReader.getMap(passives, "buffs");
+        Map<String, Object> lifeForce = AugmentValueReader.getMap(buffs, "life_force");
 
         this.basePercentPerSecond = Math.max(0.0D,
                 AugmentValueReader.getDouble(auraBurn, "base_max_hp_percent_per_second", 0.0D));
@@ -45,6 +49,7 @@ public final class BurnAugment extends YamlAugment implements AugmentHooks.Passi
         this.baseRadius = Math.max(0.0D, AugmentValueReader.getDouble(auraBurn, "radius", 0.0D));
         this.healthPerRadiusBlock = Math.max(0.0D,
                 AugmentValueReader.getDouble(radiusScaling, "health_per_block", 0.0D));
+        this.lifeForceFlatBonus = Math.max(0.0D, AugmentValueReader.getDouble(lifeForce, "value", 0.0D));
     }
 
     @Override
@@ -52,6 +57,14 @@ public final class BurnAugment extends YamlAugment implements AugmentHooks.Passi
         if (context == null || context.getCommandBuffer() == null || context.getPlayerRef() == null
                 || context.getStatMap() == null) {
             return;
+        }
+
+        if (context.getRuntimeState() != null) {
+            context.getRuntimeState().setAttributeBonus(
+                    SkillAttributeType.LIFE_FORCE,
+                    ID + "_life_force",
+                    lifeForceFlatBonus,
+                    0L);
         }
 
         EntityStatValue sourceHp = context.getStatMap().get(DefaultEntityStatTypes.getHealth());

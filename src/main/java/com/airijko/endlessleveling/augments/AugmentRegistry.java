@@ -30,6 +30,7 @@ public final class AugmentRegistry {
             Map.entry(FirstStrikeAugment.ID, FirstStrikeAugment::new),
             Map.entry(FortressAugment.ID, FortressAugment::new),
             Map.entry(FourLeafCloverAugment.ID, FourLeafCloverAugment::new),
+            Map.entry(FrozenDomainAugment.ID, FrozenDomainAugment::new),
             Map.entry(GiantSlayerAugment.ID, GiantSlayerAugment::new),
             Map.entry(GlassCannonAugment.ID, GlassCannonAugment::new),
             Map.entry(MagicBladeAugment.ID, MagicBladeAugment::new),

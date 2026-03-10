@@ -1,0 +1,17 @@
+id: frozen_domain
+name: "Frozen Domain"
+tier: ELITE
+description: "Create a freezing aura that slows nearby enemies, steals part of that speed, and fortifies your life force."
+category: PASSIVE_STAT
+
+passives:
+  aura_frozen_domain:
+    slow_percent: 0.30 # slows targets by 30% of their total movement speed
+    stolen_slow_ratio: 0.20 # 20% of applied slow is gained as movement speed per affected target
+    radius: 5 # base radius in blocks
+    radius_health_scaling:
+      health_per_block: 175 # gain +1 block radius per 175 max HP
+
+  buffs:
+    life_force:
+      value: 100 # flat life_force bonus

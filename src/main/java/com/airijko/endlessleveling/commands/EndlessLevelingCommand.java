@@ -39,7 +39,7 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
 
         public EndlessLevelingCommand(@Nonnull String name, @Nonnull String description) {
                 super(name, description);
-                this.addAliases("el", "endlessleveling", "skill", "eskills");
+                this.addAliases("el", "endlessleveling", "skill", "eskills", "skills", "lvl", "level");
                 this.addSubCommand(new SetLevelCommand());
                 this.addSubCommand(new SetPrestigeCommand());
                 this.addSubCommand(new ResetLevelCommand());
