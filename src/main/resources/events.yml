@@ -7,20 +7,36 @@
 events:
   prestige_level_up:
     enabled: true
-    # false = run as console sender, true = run as the player.
+    # Run as console (false) or as the player (true).
     as_player: false
+    # "*" = every prestige level, "[1,2,3]" = specific prestige levels.
     commands:
-      - "say {player_name} reached prestige {new_prestige_level}!"
+      "*":
+        - "say {player_name} reached prestige {new_prestige_level}!"
 
   player_level_up:
     enabled: true
-    # If omitted or empty, commands run on every level up.
-    trigger_levels: [10]
-    # false = run as console sender, true = run as the player.
+    # Run as console (false) or as the player (true).
     as_player: false
+    # Default for mapped command groups:
+    # true = recur each prestige cycle, false = prestige 0 only.
+    repeat_access_prestiges: true
+    # "*/5" = every 5 levels, "[10,20,30]" = specific levels.
+    # In mapped rules, use prestige_levels to target specific prestiges.
     commands:
-      - "give {player_name} armor_copper_head 1"
-      - "give {player_name} armor_copper_chest 1"
-      - "give {player_name} armor_copper_hands 1"
-      - "give {player_name} armor_copper_legs 1"
-      - "give {player_name} Weapon_Sword_Coppy 1"
+      "*/10":
+        repeat_access_prestiges: true
+        commands:
+          - "say {player_name} reached level {level}!"
+      "[10]":
+        repeat_access_prestiges: false
+        commands:
+          - "give {player_name} Armor_Copper_Head 1"
+          - "give {player_name} Armor_Copper_Chest 1"
+          - "give {player_name} Armor_Copper_Hands 1"
+          - "give {player_name} Armor_Copper_Legs 1"
+          - "give {player_name} Weapon_Sword_Copper 1"
+      # "[25]":
+      #   prestige_levels: [2] # Only trigger at prestige 2, regardless of repeat_access_prestiges
+      #   commands:
+      #     - "say {player_name} hit level 25 on prestige {prestige_level}!"

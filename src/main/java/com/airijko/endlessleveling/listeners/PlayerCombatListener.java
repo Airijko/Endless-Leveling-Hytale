@@ -29,6 +29,7 @@ import com.hypixel.hytale.server.core.modules.entity.damage.DamageCause;
 import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
+import com.hypixel.hytale.server.core.meta.MetaKey;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
@@ -47,6 +48,8 @@ public class PlayerCombatListener extends DamageEventSystem {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final long TRUE_EDGE_INTERNAL_COOLDOWN_MILLIS = 400L;
+    public static final MetaKey<Boolean> AUGMENT_DOT_DAMAGE = Damage.META_REGISTRY
+            .registerMetaObject(data -> Boolean.FALSE);
 
     private final PlayerDataManager playerDataManager;
     private final PassiveManager passiveManager;
@@ -122,21 +125,24 @@ public class PlayerCombatListener extends DamageEventSystem {
         EntityStatMap attackerStats = commandBuffer.getComponent(attackerRef, EntityStatMap.getComponentType());
         EntityStatMap targetStats = commandBuffer.getComponent(targetRef, EntityStatMap.getComponentType());
 
-        CombatHookProcessor.OutgoingResult result = combatHookProcessor.processOutgoing(
-                new CombatHookProcessor.OutgoingContext(
-                        playerData,
-                        attackerPlayer,
-                        attackerRef,
-                        targetRef,
-                        commandBuffer,
-                        damage,
-                        weapon,
-                        runtimeState,
-                        archetypeSnapshot,
-                        attackerStats,
-                        targetStats));
+        boolean isAugmentDot = isAugmentDotDamage(damage);
+        CombatHookProcessor.OutgoingResult result = isAugmentDot
+                ? new CombatHookProcessor.OutgoingResult(damage.getAmount(), false, 0.0D)
+                : combatHookProcessor.processOutgoing(
+                        new CombatHookProcessor.OutgoingContext(
+                                playerData,
+                                attackerPlayer,
+                                attackerRef,
+                                targetRef,
+                                commandBuffer,
+                                damage,
+                                weapon,
+                                runtimeState,
+                                archetypeSnapshot,
+                                attackerStats,
+                                targetStats));
 
-        float adjusted = result.finalDamage();
+        float adjusted = Math.max(0.0f, result.finalDamage());
         float incomingBeforeDefense = adjusted;
         int mobLevel = -1;
         int playerLevel = Math.max(1, playerData.getLevel());
@@ -147,7 +153,7 @@ public class PlayerCombatListener extends DamageEventSystem {
         TrueEdgeSettings trueEdgeSettings = resolveTrueEdgeSettings(archetypeSnapshot);
         boolean trueEdgeReady = isTrueEdgeOffCooldown(runtimeState, now);
 
-        TrueEdgeComputation trueEdge = trueEdgeReady
+        TrueEdgeComputation trueEdge = (!isAugmentDot && trueEdgeReady)
                 ? computeTrueEdgeConversion(
                         targetRef,
                         commandBuffer,
@@ -181,7 +187,7 @@ public class PlayerCombatListener extends DamageEventSystem {
         // only
         // shifts damage buckets and level-difference defense is the sole true-damage
         // reducer.
-        trueEdge = trueEdgeReady
+        trueEdge = (!isAugmentDot && trueEdgeReady)
                 ? computeTrueEdgeConversion(
                         targetRef,
                         commandBuffer,
@@ -191,16 +197,18 @@ public class PlayerCombatListener extends DamageEventSystem {
                         reduction,
                         targetIsPlayer)
                 : TrueEdgeComputation.none();
-        if (trueEdgeReady && trueEdge.triggered() && runtimeState != null) {
+        if (!isAugmentDot && trueEdgeReady && trueEdge.triggered() && runtimeState != null) {
             runtimeState.setTrueEdgeCooldownExpiresAt(now + TRUE_EDGE_INTERNAL_COOLDOWN_MILLIS);
         }
-        double reducedAugmentTrueDamage = applyLevelDifferenceReductionToTrueDamage(
-                result.trueDamageBonus(),
-                targetRef,
-                commandBuffer,
-                playerLevel,
-                reduction,
-                targetIsPlayer);
+        double reducedAugmentTrueDamage = isAugmentDot
+                ? 0.0D
+                : applyLevelDifferenceReductionToTrueDamage(
+                        result.trueDamageBonus(),
+                        targetRef,
+                        commandBuffer,
+                        playerLevel,
+                        reduction,
+                        targetIsPlayer);
 
         float targetHp = Float.NaN;
         float targetMax = Float.NaN;
@@ -245,6 +253,18 @@ public class PlayerCombatListener extends DamageEventSystem {
                 targetIsPlayer);
 
         damage.setAmount(finalAdjusted);
+    }
+
+    public static Damage createAugmentDotDamage(Ref<EntityStore> sourceRef, float amount) {
+        Damage dotDamage = sourceRef != null
+                ? new Damage(new Damage.EntitySource(sourceRef), DamageCause.PHYSICAL, amount)
+                : new Damage(Damage.NULL_SOURCE, DamageCause.PHYSICAL, amount);
+        dotDamage.putMetaObject(AUGMENT_DOT_DAMAGE, Boolean.TRUE);
+        return dotDamage;
+    }
+
+    public static boolean isAugmentDotDamage(Damage damage) {
+        return damage != null && Boolean.TRUE.equals(damage.getIfPresentMetaObject(AUGMENT_DOT_DAMAGE));
     }
 
     private float applyTrueEdgeDamage(Ref<EntityStore> attackerRef,

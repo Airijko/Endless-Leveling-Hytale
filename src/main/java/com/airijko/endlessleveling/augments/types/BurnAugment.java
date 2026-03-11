@@ -7,13 +7,15 @@ import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
+import com.airijko.endlessleveling.listeners.PlayerCombatListener;
 import com.airijko.endlessleveling.managers.PartyManager;
 import com.hypixel.hytale.builtin.mounts.NPCMountComponent;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
-import com.hypixel.hytale.server.core.modules.entity.damage.DamageCause;
-import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
+import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
+import com.hypixel.hytale.server.core.modules.entity.component.Invulnerable;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
@@ -94,12 +96,11 @@ public final class BurnAugment extends YamlAugment implements AugmentHooks.Passi
         }
 
         double ratioThisTick = percentPerSecond * deltaSeconds;
-        UUID sourceUuid = context.getPlayerData() != null ? context.getPlayerData().getUuid() : null;
+        UUID sourceUuid = resolveSourceUuid(context, sourceRef, commandBuffer);
         PartyManager partyManager = resolvePartyManager();
         UUID sourcePartyLeader = resolvePartyLeader(partyManager, sourceUuid);
 
         HashSet<Integer> visitedEntityIds = new HashSet<>();
-        long now = System.currentTimeMillis();
         for (Ref<EntityStore> targetRef : TargetUtil.getAllEntitiesInSphere(
                 sourceTransform.getPosition(),
                 radius,
@@ -113,10 +114,13 @@ public final class BurnAugment extends YamlAugment implements AugmentHooks.Passi
             if (targetRef.equals(sourceRef)) {
                 continue;
             }
-            if (isPetEntity(targetRef, commandBuffer)) {
+            if (isFriendlyPetTarget(sourceUuid, sourcePartyLeader, targetRef, commandBuffer, partyManager)) {
                 continue;
             }
             if (isSamePartyTarget(sourceUuid, sourcePartyLeader, targetRef, commandBuffer, partyManager)) {
+                continue;
+            }
+            if (isInvulnerableTarget(targetRef, commandBuffer)) {
                 continue;
             }
 
@@ -131,36 +135,9 @@ public final class BurnAugment extends YamlAugment implements AugmentHooks.Passi
                 continue;
             }
 
-            boolean rageActive = AugmentUtils.isUndyingRageActive(commandBuffer, targetRef, now);
-
-            if (burnDamage >= targetHp.get() && !rageActive) {
-                markBurnKill(sourceRef, targetRef, commandBuffer, targetStats);
-                continue;
-            }
-
-            float minimumHealthFloor = rageActive ? 1.0f : 0.0f;
-            float updatedHealth = (float) Math.max(minimumHealthFloor, targetHp.get() - burnDamage);
-            targetStats.setStatValue(DefaultEntityStatTypes.getHealth(), updatedHealth);
+            Damage burnTickDamage = PlayerCombatListener.createAugmentDotDamage(sourceRef, (float) burnDamage);
+            DamageSystems.executeDamage(targetRef, commandBuffer, burnTickDamage);
         }
-    }
-
-    private void markBurnKill(Ref<EntityStore> sourceRef,
-            Ref<EntityStore> targetRef,
-            CommandBuffer<EntityStore> commandBuffer,
-            EntityStatMap targetStats) {
-        if (targetRef == null || commandBuffer == null || targetStats == null) {
-            return;
-        }
-
-        if (commandBuffer.getComponent(targetRef, DeathComponent.getComponentType()) == null) {
-            Damage damage = sourceRef != null
-                    ? new Damage(new Damage.EntitySource(sourceRef), DamageCause.PHYSICAL, Float.MAX_VALUE)
-                    : new Damage(Damage.NULL_SOURCE, DamageCause.PHYSICAL, Float.MAX_VALUE);
-            DeathComponent.tryAddComponent(commandBuffer, targetRef, damage);
-        }
-
-        // Keep health state consistent with the lethal burn tick.
-        targetStats.setStatValue(DefaultEntityStatTypes.getHealth(), 0.0f);
     }
 
     private double resolveRadius(double attackerMaxHealth) {
@@ -170,8 +147,53 @@ public final class BurnAugment extends YamlAugment implements AugmentHooks.Passi
         return baseRadius + Math.floor(attackerMaxHealth / healthPerRadiusBlock);
     }
 
-    private boolean isPetEntity(Ref<EntityStore> targetRef, CommandBuffer<EntityStore> commandBuffer) {
-        return commandBuffer.getComponent(targetRef, NPCMountComponent.getComponentType()) != null;
+    private UUID resolveSourceUuid(AugmentHooks.PassiveStatContext context,
+            Ref<EntityStore> sourceRef,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (context != null && context.getPlayerData() != null && context.getPlayerData().getUuid() != null) {
+            return context.getPlayerData().getUuid();
+        }
+
+        PlayerRef sourcePlayer = AugmentUtils.getPlayerRef(commandBuffer, sourceRef);
+        return sourcePlayer != null && sourcePlayer.isValid() ? sourcePlayer.getUuid() : null;
+    }
+
+    private boolean isInvulnerableTarget(Ref<EntityStore> targetRef, CommandBuffer<EntityStore> commandBuffer) {
+        if (targetRef == null || commandBuffer == null) {
+            return false;
+        }
+
+        if (commandBuffer.getArchetype(targetRef).contains(Invulnerable.getComponentType())) {
+            return true;
+        }
+
+        EffectControllerComponent effectController = commandBuffer.getComponent(targetRef,
+                EffectControllerComponent.getComponentType());
+        return effectController != null && effectController.isInvulnerable();
+    }
+
+    private boolean isFriendlyPetTarget(UUID sourceUuid,
+            UUID sourcePartyLeader,
+            Ref<EntityStore> targetRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            PartyManager partyManager) {
+        NPCMountComponent mountComponent = commandBuffer.getComponent(targetRef, NPCMountComponent.getComponentType());
+        if (mountComponent == null) {
+            return false;
+        }
+
+        PlayerRef ownerPlayer = mountComponent.getOwnerPlayerRef();
+        if (ownerPlayer == null || !ownerPlayer.isValid() || ownerPlayer.getUuid() == null) {
+            return true;
+        }
+
+        // Keep all owned mounts/tamed entities safe from burn ticks.
+        UUID ownerUuid = ownerPlayer.getUuid();
+        if (sourceUuid != null && sourceUuid.equals(ownerUuid)) {
+            return true;
+        }
+
+        return isSamePartyUuid(sourceUuid, sourcePartyLeader, ownerUuid, partyManager);
     }
 
     private boolean isSamePartyTarget(UUID sourceUuid,
@@ -190,6 +212,17 @@ public final class BurnAugment extends YamlAugment implements AugmentHooks.Passi
 
         UUID targetUuid = targetPlayer.getUuid();
         if (targetUuid == null) {
+            return false;
+        }
+
+        return isSamePartyUuid(sourceUuid, sourcePartyLeader, targetUuid, partyManager);
+    }
+
+    private boolean isSamePartyUuid(UUID sourceUuid,
+            UUID sourcePartyLeader,
+            UUID targetUuid,
+            PartyManager partyManager) {
+        if (sourceUuid == null || targetUuid == null || partyManager == null || !partyManager.isAvailable()) {
             return false;
         }
 

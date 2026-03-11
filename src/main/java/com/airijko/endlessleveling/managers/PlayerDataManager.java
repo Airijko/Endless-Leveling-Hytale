@@ -37,6 +37,7 @@ public class PlayerDataManager {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
     private final PluginFilesManager filesManager;
+    private final ConfigManager configManager;
     private final SkillManager skillManager;
     private final RaceManager raceManager;
     private final ClassManager classManager;
@@ -52,10 +53,12 @@ public class PlayerDataManager {
     }
 
     public PlayerDataManager(PluginFilesManager filesManager,
+            ConfigManager configManager,
             SkillManager skillManager,
             RaceManager raceManager,
             ClassManager classManager) {
         this.filesManager = filesManager;
+        this.configManager = configManager;
         this.skillManager = skillManager;
         this.raceManager = raceManager;
         this.classManager = classManager;
@@ -347,7 +350,18 @@ public class PlayerDataManager {
             useRaceModelDefault = false;
         }
         data.setUseRaceModel(useRaceModelDefault);
-        data.setLanguage(PlayerData.DEFAULT_LANGUAGE);
+        data.setLanguage(resolveConfiguredDefaultLanguage());
+    }
+
+    private String resolveConfiguredDefaultLanguage() {
+        if (configManager == null) {
+            return PlayerData.DEFAULT_LANGUAGE;
+        }
+        Object configured = configManager.get("language.locale", PlayerData.DEFAULT_LANGUAGE, false);
+        if (configured instanceof String locale && !locale.isBlank()) {
+            return locale;
+        }
+        return PlayerData.DEFAULT_LANGUAGE;
     }
 
     public void initializeSwapDefaultsForNewProfile(PlayerData data, int profileIndex) {
@@ -1175,7 +1189,12 @@ public class PlayerDataManager {
         data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
         data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
         data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
-        data.setLanguage(parseString(language));
+        String configuredLanguage = parseString(language);
+        if (configuredLanguage == null || configuredLanguage.isBlank()) {
+            data.setLanguage(resolveConfiguredDefaultLanguage());
+        } else {
+            data.setLanguage(configuredLanguage);
+        }
         boolean useRaceModelValue = parseBoolean(useRaceModel, defaultUseRaceModel());
         if (isRaceModelGloballyDisabled()) {
             useRaceModelValue = false;

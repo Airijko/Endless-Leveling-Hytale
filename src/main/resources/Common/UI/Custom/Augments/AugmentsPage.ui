@@ -24,7 +24,7 @@ $C.@PageOverlay {
 
                         #Title {
                             Group {
-                                $C.@Title #AugmentActionInfo { @Text = "AUGMENT"; }
+                                $C.@Title #AugmentActionInfo { @Text = "ENDLESS LEVELING"; }
                             }
                         }
 
@@ -42,6 +42,7 @@ $C.@PageOverlay {
                                 Text: "No augments available to choose.";
                                 Style: (FontSize: 14, TextColor: #ff9f9f, RenderBold: true, Wrap: true, VerticalAlignment: Center);
                                 Anchor: (Height: 34);
+                                Padding: (Horizontal: 12);
                             }
 
                             Group { Anchor: (Height: 10); }
@@ -50,6 +51,7 @@ $C.@PageOverlay {
                                 Text: "Augments are powerful passive enhancements that permanently strengthen your character. Earn them by reaching level milestones and through prestige.";
                                 Style: (FontSize: 12, TextColor: #7a9abf, Wrap: true);
                                 Anchor: (Bottom: 10);
+                                Padding: (Horizontal: 12);
                             }
 
                             Group {
@@ -61,30 +63,35 @@ $C.@PageOverlay {
                                 Text: "YOUR COLLECTION";
                                 Style: (FontSize: 11, TextColor: #9fb6d3, RenderBold: true, HorizontalAlignment: Center);
                                 Anchor: (Height: 16, Bottom: 8);
+                                Padding: (Horizontal: 12);
                             }
 
                             Label #AugmentStatTotal {
                                 Text: "Total: 0 / 0";
                                 Style: (FontSize: 13, TextColor: #c5d4e8);
                                 Anchor: (Height: 20, Bottom: 4);
+                                Padding: (Horizontal: 12);
                             }
 
                             Label #AugmentStatMythic {
                                 Text: "Mythic: 0 / 0";
                                 Style: (FontSize: 13, TextColor: #b084e0);
                                 Anchor: (Height: 20, Bottom: 4);
+                                Padding: (Horizontal: 12);
                             }
 
                             Label #AugmentStatElite {
                                 Text: "Elite: 0 / 0";
                                 Style: (FontSize: 13, TextColor: #7ec8f5);
                                 Anchor: (Height: 20, Bottom: 4);
+                                Padding: (Horizontal: 12);
                             }
 
                             Label #AugmentStatCommon {
                                 Text: "Common: 0 / 0";
                                 Style: (FontSize: 13, TextColor: #e6c168);
                                 Anchor: (Height: 20, Bottom: 10);
+                                Padding: (Horizontal: 12);
                             }
 
                             Group {
@@ -96,24 +103,28 @@ $C.@PageOverlay {
                                 Text: "REROLLS USED";
                                 Style: (FontSize: 11, TextColor: #9fb6d3, RenderBold: true, HorizontalAlignment: Center);
                                 Anchor: (Height: 16, Bottom: 8);
+                                Padding: (Horizontal: 12);
                             }
 
                             Label #AugmentRerollMythic {
                                 Text: "Mythic: 0";
                                 Style: (FontSize: 13, TextColor: #b084e0);
                                 Anchor: (Height: 20, Bottom: 4);
+                                Padding: (Horizontal: 12);
                             }
 
                             Label #AugmentRerollElite {
                                 Text: "Elite: 0";
                                 Style: (FontSize: 13, TextColor: #7ec8f5);
                                 Anchor: (Height: 20, Bottom: 4);
+                                Padding: (Horizontal: 12);
                             }
 
                             Label #AugmentRerollCommon {
                                 Text: "Common: 0";
                                 Style: (FontSize: 13, TextColor: #e6c168);
                                 Anchor: (Height: 20, Bottom: 10);
+                                Padding: (Horizontal: 12);
                             }
 
                             Group { FlexWeight: 1; }
@@ -122,6 +133,7 @@ $C.@PageOverlay {
                                 Text: "Hover over an augment to preview it.";
                                 Style: (FontSize: 12, TextColor: #5a7a9a, Wrap: true, HorizontalAlignment: Center);
                                 Anchor: (Bottom: 4);
+                                Padding: (Horizontal: 12);
                             }
                         }
                     }
@@ -166,6 +178,8 @@ $C.@PageOverlay {
                                     Style: (FontSize: 14, TextColor: #9fb6d3, RenderBold: true);
                                     Anchor: (Height: 24);
                                 }
+
+                                Group { Anchor: (Height: 1); }
 
                                 // UNLOCKED SECTION
                                 Group #UnlockedSection {
@@ -293,6 +307,7 @@ $C.@PageOverlay {
                                 Text: "";
                                 Style: (FontSize: 13, TextColor: #c5d4e8, Wrap: true);
                                 Anchor: (Bottom: 10);
+                                Padding: (Horizontal: 12);
                                 Visible: false;
                             }
 
@@ -300,6 +315,7 @@ $C.@PageOverlay {
                             Group #AugmentInfoDivider2 {
                                 Anchor: (Height: 1, Bottom: 10);
                                 Background: #ffffff(0.08);
+                                Padding: (Horizontal: 12);
                                 Visible: false;
                             }
 
@@ -307,7 +323,9 @@ $C.@PageOverlay {
                             Label #AugmentInfoValues {
                                 Text: "";
                                 Style: (FontSize: 12, TextColor: #9fb6d3, Wrap: true);
+                                Padding: (Horizontal: 12);
                                 Visible: false;
+                                
                             }
                         }
                     }

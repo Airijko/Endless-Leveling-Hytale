@@ -5,6 +5,7 @@ import com.airijko.endlessleveling.augments.AugmentHooks;
 import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
+import com.airijko.endlessleveling.listeners.PlayerCombatListener;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -14,8 +15,7 @@ import com.hypixel.hytale.server.core.asset.type.entityeffect.config.OverlapBeha
 import com.hypixel.hytale.server.core.entity.entities.player.movement.MovementManager;
 import com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
-import com.hypixel.hytale.server.core.modules.entity.damage.DamageCause;
-import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
+import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
@@ -202,37 +202,14 @@ public final class WitherAugment extends YamlAugment implements AugmentHooks.OnH
         long elapsedMillis = Math.max(TICK_INTERVAL_MILLIS, now - (state.nextTickAt - TICK_INTERVAL_MILLIS));
         double elapsedSeconds = elapsedMillis / 1000.0D;
         double damage = hp.getMax() * state.percentPerSecond * elapsedSeconds;
-        boolean rageActive = AugmentUtils.isUndyingRageActive(commandBuffer, ref, now);
-        if (damage >= hp.get() && !rageActive) {
-            markWitherKill(state.sourceRef, ref, commandBuffer, statMap);
-            clearSlowIfPossible(state, commandBuffer, ref);
-            ACTIVE_WITHER.remove(key);
+        if (damage <= 0.0D) {
+            state.nextTickAt = now + TICK_INTERVAL_MILLIS;
             return;
         }
 
-        float minimumHealthFloor = rageActive ? 1.0f : 0.0f;
-        float updated = Math.max(minimumHealthFloor, (float) (hp.get() - damage));
-        statMap.setStatValue(DefaultEntityStatTypes.getHealth(), updated);
+        Damage witherTickDamage = PlayerCombatListener.createAugmentDotDamage(state.sourceRef, (float) damage);
+        DamageSystems.executeDamage(ref, commandBuffer, witherTickDamage);
         state.nextTickAt = now + TICK_INTERVAL_MILLIS;
-    }
-
-    private static void markWitherKill(Ref<EntityStore> sourceRef,
-            Ref<EntityStore> targetRef,
-            CommandBuffer<EntityStore> commandBuffer,
-            EntityStatMap targetStats) {
-        if (targetRef == null || commandBuffer == null || targetStats == null) {
-            return;
-        }
-
-        if (commandBuffer.getComponent(targetRef, DeathComponent.getComponentType()) == null) {
-            Damage damage = sourceRef != null
-                    ? new Damage(new Damage.EntitySource(sourceRef), DamageCause.PHYSICAL, Float.MAX_VALUE)
-                    : new Damage(Damage.NULL_SOURCE, DamageCause.PHYSICAL, Float.MAX_VALUE);
-            DeathComponent.tryAddComponent(commandBuffer, targetRef, damage);
-        }
-
-        // Keep health state consistent with the lethal wither tick.
-        targetStats.setStatValue(DefaultEntityStatTypes.getHealth(), 0.0f);
     }
 
     private static String keyFor(Ref<EntityStore> ref, CommandBuffer<EntityStore> commandBuffer) {
