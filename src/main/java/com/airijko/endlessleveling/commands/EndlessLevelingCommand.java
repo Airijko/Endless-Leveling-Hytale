@@ -1,5 +1,6 @@
 package com.airijko.endlessleveling.commands;
 
+import com.airijko.endlessleveling.commands.augments.AugmentCommand;
 import com.airijko.endlessleveling.commands.subcommands.ApplyModifiersCommand;
 import com.airijko.endlessleveling.commands.subcommands.OpenPageSubCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetAllPlayersCommand;
@@ -10,16 +11,12 @@ import com.airijko.endlessleveling.commands.subcommands.ResetCooldownsCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetSkillPointsCommand;
 import com.airijko.endlessleveling.commands.subcommands.ReloadCommand;
 import com.airijko.endlessleveling.commands.subcommands.LanguageCommand;
-import com.airijko.endlessleveling.commands.subcommands.AugmentRefreshCommand;
-import com.airijko.endlessleveling.commands.subcommands.AugmentRerollCommand;
-import com.airijko.endlessleveling.commands.subcommands.ResetAugmentsCommand;
 import com.airijko.endlessleveling.commands.subcommands.AugmentTestCommand;
 import com.airijko.endlessleveling.commands.subcommands.PrestigeCommand;
 import com.airijko.endlessleveling.commands.subcommands.SetLevelCommand;
 import com.airijko.endlessleveling.commands.subcommands.SetPrestigeCommand;
 import com.airijko.endlessleveling.commands.subcommands.DebugCommand;
 import com.airijko.endlessleveling.ui.SkillsUIPage;
-import com.airijko.endlessleveling.ui.AugmentsUIPage;
 import com.airijko.endlessleveling.ui.LeaderboardsUIPage;
 import com.airijko.endlessleveling.ui.ProfileUIPage;
 import com.airijko.endlessleveling.ui.SettingsUIPage;
@@ -55,9 +52,6 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
                 this.addSubCommand(new ReloadCommand());
                 this.addSubCommand(new LanguageCommand());
                 this.addSubCommand(new AugmentCommand());
-                this.addSubCommand(new AugmentRerollCommand());
-                this.addSubCommand(new AugmentRefreshCommand());
-                this.addSubCommand(new ResetAugmentsCommand());
                 this.addSubCommand(new AugmentTestCommand());
 
                 addGuiShortcut("leaderboards", "Open the EndlessLeveling Leaderboards page",
@@ -68,8 +62,6 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
                                 playerRef -> new ProfileUIPage(playerRef, CustomPageLifetime.CanDismiss));
                 addGuiShortcut("attributes", "Open the EndlessLeveling Skills page",
                                 playerRef -> new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));
-                addGuiShortcut("augments", "Open the EndlessLeveling Augments page",
-                                playerRef -> new AugmentsUIPage(playerRef, CustomPageLifetime.CanDismiss));
         }
 
         @Override

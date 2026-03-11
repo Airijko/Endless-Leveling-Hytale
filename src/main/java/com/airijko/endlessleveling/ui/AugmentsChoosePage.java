@@ -34,7 +34,7 @@ import java.util.Set;
 /**
  * Augments page that displays three random augment definitions.
  */
-public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
+public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
     private static final int CARD_COUNT = 3;
     private static final String COLOR_BUFF = "#8adf9e";
@@ -52,7 +52,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private final PlayerDataManager playerDataManager;
     private final PlayerRef playerRef;
 
-    public AugmentsUIPage(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime) {
+    public AugmentsChoosePage(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime) {
         super(playerRef, lifetime, SkillsUIPage.Data.CODEC);
         EndlessLeveling plugin = EndlessLeveling.getInstance();
         this.augmentManager = plugin != null ? plugin.getAugmentManager() : null;
@@ -224,7 +224,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         Player player = store.getComponent(ref, Player.getComponentType());
         if (player != null) {
             player.getPageManager().openCustomPage(ref, store,
-                    new AugmentsUIPage(playerRef, CustomPageLifetime.CanDismiss));
+                    new AugmentsChoosePage(playerRef, CustomPageLifetime.CanDismiss));
         }
     }
 

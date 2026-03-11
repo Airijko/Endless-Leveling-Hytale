@@ -6,9 +6,9 @@ icon: "Weapon_Spear_Tribal"
 
 weapons:
   - type: SWORD
-    damage: 1.25
+    damage: 1.35
   - type: SPEAR
-    damage: 1.25
+    damage: 1.35
   - type: DAGGER
     damage: 1.05
 
@@ -22,7 +22,7 @@ passives:
     value: 0.40
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: strength
-    value: 1.20
+    value: 1.3
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: life_force
     value: 1.5
