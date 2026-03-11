@@ -4,7 +4,7 @@ $Hotbar = "Hotbar.ui";
 
 Group #EndlessPlayerHud {
   LayoutMode: Bottom;
-  Anchor: (Bottom: 140, Width: 634, Height: 24);
+  Anchor: (Bottom: 135, Width: 634, Height: 24);
 
   Label #Level {
     Anchor: (Left: 0, Width: 4, Height: 18, Right: 4);
@@ -17,11 +17,11 @@ Group #EndlessPlayerHud {
 
     Group #XpBar {
       Anchor: (Left: 0, Width: 634, Height: 24);
-      Background: "XPBackground.png";
+      Background: "Endless_XPBackground.png";
 
       ProgressBar #ProgressBar {
         Anchor: (Width: 634, Height: 24);
-        BarTexturePath: "XPFill.png";
+        BarTexturePath: "Endless_XPFill.png";
       }
     }
   }

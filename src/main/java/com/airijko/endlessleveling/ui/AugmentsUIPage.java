@@ -56,6 +56,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private final PlayerRef playerRef;
 
     private String searchQuery = "";
+    private String selectedAugmentId = null;
 
     public AugmentsUIPage(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime) {
         super(playerRef, lifetime, SkillsUIPage.Data.CODEC);
@@ -73,12 +74,13 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull Store<EntityStore> store) {
         ui.append("Augments/AugmentsPage.ui");
         ui.set("#SearchInput.Value", this.searchQuery);
-        ui.set("#OpenAugmentsChooseButton.Text", "OPEN CHOOSE PAGE");
+        ui.set("#OpenAugmentsChooseButton.Text", "CHOOSE AUGMENTS");
         events.addEventBinding(ValueChanged, "#SearchInput", of("@SearchQuery", "#SearchInput.Value"), false);
         events.addEventBinding(Activating, "#OpenAugmentsChooseButton", of("Action", "augment:open_choose"),
                 false);
 
-        buildGrid(ui);
+        buildGrid(ui, events);
+        applyInfoPanel(ui, selectedAugmentId);
     }
 
     @Override
@@ -88,9 +90,18 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         super.handleDataEvent(ref, store, data);
 
         if (data.action != null && !data.action.isBlank()) {
-            String action = data.action.trim().toLowerCase(Locale.ROOT);
-            if ("augment:open_choose".equals(action)) {
+            String action = data.action.trim();
+            if ("augment:open_choose".equalsIgnoreCase(action)) {
                 openChoosePage(ref, store);
+                return;
+            }
+            if (action.startsWith("augment:select:")) {
+                String id = action.substring("augment:select:".length());
+                this.selectedAugmentId = id.isBlank() ? null : id;
+                UICommandBuilder commandBuilder = new UICommandBuilder();
+                UIEventBuilder eventBuilder = new UIEventBuilder();
+                applyInfoPanel(commandBuilder, this.selectedAugmentId);
+                this.sendUpdate(commandBuilder, eventBuilder, false);
                 return;
             }
         }
@@ -100,12 +111,12 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             UICommandBuilder commandBuilder = new UICommandBuilder();
             UIEventBuilder eventBuilder = new UIEventBuilder();
             commandBuilder.set("#SearchInput.Value", data.searchQuery);
-            buildGrid(commandBuilder);
+            buildGrid(commandBuilder, eventBuilder);
             this.sendUpdate(commandBuilder, eventBuilder, false);
         }
     }
 
-    private void buildGrid(@Nonnull UICommandBuilder ui) {
+    private void buildGrid(@Nonnull UICommandBuilder ui, @Nonnull UIEventBuilder events) {
         // Clear all section grids
         ui.clear("#UnlockedCards");
         ui.clear("#MythicCards");
@@ -175,16 +186,71 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set("#AugmentsResultLabel.Text", "Results: " + totalResults);
 
         // Build UNLOCKED section
-        buildSection(ui, unlockedAugments, "#UnlockedCards", "#UnlockedSection", ownedIds);
+        buildSection(ui, events, unlockedAugments, "#UnlockedCards", "#UnlockedSection", ownedIds);
 
         // Build MYTHIC section
-        buildSection(ui, mythicAugments, "#MythicCards", "#MythicSection", ownedIds);
+        buildSection(ui, events, mythicAugments, "#MythicCards", "#MythicSection", ownedIds);
 
         // Build ELITE section
-        buildSection(ui, eliteAugments, "#EliteCards", "#EliteSection", ownedIds);
+        buildSection(ui, events, eliteAugments, "#EliteCards", "#EliteSection", ownedIds);
 
         // Build COMMON section
-        buildSection(ui, commonAugments, "#CommonCards", "#CommonSection", ownedIds);
+        buildSection(ui, events, commonAugments, "#CommonCards", "#CommonSection", ownedIds);
+    }
+
+    private void applyInfoPanel(@Nonnull UICommandBuilder ui, String augmentId) {
+        AugmentDefinition def = (augmentId != null && augmentManager != null)
+                ? augmentManager.getAugment(augmentId)
+                : null;
+
+        if (def == null) {
+            ui.set("#AugmentInfoIcon.Visible", false);
+            ui.set("#AugmentInfoName.Text", "Select an augment");
+            ui.set("#AugmentInfoName.Style.TextColor", "#9fb6d3");
+            ui.set("#AugmentInfoTier.Visible", false);
+            ui.set("#AugmentInfoDivider.Visible", false);
+            ui.set("#AugmentInfoDescription.Visible", false);
+            ui.set("#AugmentInfoDivider2.Visible", false);
+            ui.set("#AugmentInfoValues.Visible", false);
+            return;
+        }
+
+        ui.set("#AugmentInfoIcon.ItemId", resolveIconItemId(def));
+        ui.set("#AugmentInfoIcon.Visible", true);
+        ui.set("#AugmentInfoName.Text", def.getName());
+        ui.set("#AugmentInfoName.Style.TextColor", tierColor(def.getTier()));
+
+        String tierName = def.getTier() != null ? def.getTier().name() : "";
+        ui.set("#AugmentInfoTier.Text", tierName);
+        ui.set("#AugmentInfoTier.Style.TextColor", tierColor(def.getTier()));
+        ui.set("#AugmentInfoTier.Visible", !tierName.isBlank());
+
+        ui.set("#AugmentInfoDivider.Visible", true);
+
+        String desc = def.getDescription();
+        boolean hasDesc = desc != null && !desc.isBlank();
+        ui.set("#AugmentInfoDescription.Text", hasDesc ? desc : "");
+        ui.set("#AugmentInfoDescription.Visible", hasDesc);
+
+        String valuesText = buildValuesText(def);
+        boolean hasValues = !valuesText.isBlank();
+        ui.set("#AugmentInfoDivider2.Visible", hasValues);
+        ui.set("#AugmentInfoValues.Text", valuesText);
+        ui.set("#AugmentInfoValues.Visible", hasValues);
+    }
+
+    private String buildValuesText(AugmentDefinition def) {
+        Map<String, Object> passives = def.getPassives();
+        if (passives == null || passives.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, Object> entry : passives.entrySet()) {
+            if (sb.length() > 0)
+                sb.append("\n");
+            sb.append(entry.getKey()).append(": ").append(entry.getValue());
+        }
+        return sb.toString();
     }
 
     private void openChoosePage(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
@@ -223,6 +289,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private void buildSection(@Nonnull UICommandBuilder ui,
+            @Nonnull UIEventBuilder events,
             @Nonnull List<AugmentDefinition> augments,
             @Nonnull String cardsSelector,
             @Nonnull String sectionSelector,
@@ -250,6 +317,8 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
             boolean owned = ownedIds.contains(def.getId());
             ui.set(base + " #ItemName.Style.TextColor", owned ? tierColor(def.getTier()) : COLOR_UNOWNED);
+
+            events.addEventBinding(Activating, base, of("Action", "augment:select:" + def.getId()), false);
 
             cardsInCurrentRow++;
             if (cardsInCurrentRow >= GRID_ITEMS_PER_ROW) {
