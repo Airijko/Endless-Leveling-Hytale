@@ -29,6 +29,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType.Activating;
+import static com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType.MouseEntered;
+import static com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType.MouseExited;
 import static com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType.ValueChanged;
 import static com.hypixel.hytale.server.core.ui.builder.EventData.of;
 
@@ -37,7 +39,7 @@ import static com.hypixel.hytale.server.core.ui.builder.EventData.of;
  */
 public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
-    private static final int GRID_ITEMS_PER_ROW = 7;
+    private static final int GRID_ITEMS_PER_ROW = 5;
     private static final String COLOR_MYTHIC_OWNED = "#b084e0";
     private static final String COLOR_ELITE_OWNED = "#7ec8f5";
     private static final String COLOR_COMMON_OWNED = "#e6c168";
@@ -95,6 +97,25 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 openChoosePage(ref, store);
                 return;
             }
+            if (action.startsWith("augment:hover:")) {
+                if (this.selectedAugmentId == null) {
+                    String id = action.substring("augment:hover:".length());
+                    UICommandBuilder commandBuilder = new UICommandBuilder();
+                    UIEventBuilder eventBuilder = new UIEventBuilder();
+                    applyInfoPanel(commandBuilder, id.isBlank() ? null : id);
+                    this.sendUpdate(commandBuilder, eventBuilder, false);
+                }
+                return;
+            }
+            if ("augment:hoverend".equals(action)) {
+                if (this.selectedAugmentId == null) {
+                    UICommandBuilder commandBuilder = new UICommandBuilder();
+                    UIEventBuilder eventBuilder = new UIEventBuilder();
+                    applyInfoPanel(commandBuilder, null);
+                    this.sendUpdate(commandBuilder, eventBuilder, false);
+                }
+                return;
+            }
             if (action.startsWith("augment:select:")) {
                 String id = action.substring("augment:select:".length());
                 this.selectedAugmentId = id.isBlank() ? null : id;
@@ -139,6 +160,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             augmentUnlockManager.ensureUnlocks(playerData);
         }
         applyChooseAvailability(ui, playerData);
+        applyLeftPanel(ui, playerData);
 
         Set<String> ownedIds = resolveOwnedIds(playerData);
         Collection<AugmentDefinition> all = augmentManager.getAugments().values();
@@ -288,6 +310,39 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return false;
     }
 
+    private void applyLeftPanel(@Nonnull UICommandBuilder ui, PlayerData playerData) {
+        Set<String> ownedIds = resolveOwnedIds(playerData);
+        Collection<AugmentDefinition> allDefs = augmentManager != null ? augmentManager.getAugments().values()
+                : List.of();
+
+        long totalMythic = allDefs.stream().filter(d -> d.getTier() == PassiveTier.MYTHIC).count();
+        long totalElite = allDefs.stream().filter(d -> d.getTier() == PassiveTier.ELITE).count();
+        long totalCommon = allDefs.stream().filter(d -> d.getTier() == PassiveTier.COMMON).count();
+
+        long mythicOwned = ownedIds.stream()
+                .map(id -> augmentManager != null ? augmentManager.getAugment(id) : null)
+                .filter(d -> d != null && d.getTier() == PassiveTier.MYTHIC)
+                .count();
+        long eliteOwned = ownedIds.stream()
+                .map(id -> augmentManager != null ? augmentManager.getAugment(id) : null)
+                .filter(d -> d != null && d.getTier() == PassiveTier.ELITE)
+                .count();
+        long commonOwned = ownedIds.stream()
+                .map(id -> augmentManager != null ? augmentManager.getAugment(id) : null)
+                .filter(d -> d != null && d.getTier() == PassiveTier.COMMON)
+                .count();
+
+        ui.set("#AugmentStatTotal.Text", "Total: " + ownedIds.size() + " / " + allDefs.size());
+        ui.set("#AugmentStatMythic.Text", "Mythic: " + mythicOwned + " / " + totalMythic);
+        ui.set("#AugmentStatElite.Text", "Elite: " + eliteOwned + " / " + totalElite);
+        ui.set("#AugmentStatCommon.Text", "Common: " + commonOwned + " / " + totalCommon);
+
+        Map<String, Integer> rerolls = playerData != null ? playerData.getAugmentRerollsUsedSnapshot() : Map.of();
+        ui.set("#AugmentRerollMythic.Text", "Mythic: " + rerolls.getOrDefault("MYTHIC", 0));
+        ui.set("#AugmentRerollElite.Text", "Elite: " + rerolls.getOrDefault("ELITE", 0));
+        ui.set("#AugmentRerollCommon.Text", "Common: " + rerolls.getOrDefault("COMMON", 0));
+    }
+
     private void buildSection(@Nonnull UICommandBuilder ui,
             @Nonnull UIEventBuilder events,
             @Nonnull List<AugmentDefinition> augments,
@@ -319,6 +374,8 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             ui.set(base + " #ItemName.Style.TextColor", owned ? tierColor(def.getTier()) : COLOR_UNOWNED);
 
             events.addEventBinding(Activating, base, of("Action", "augment:select:" + def.getId()), false);
+            events.addEventBinding(MouseEntered, base, of("Action", "augment:hover:" + def.getId()), false);
+            events.addEventBinding(MouseExited, base, of("Action", "augment:hoverend"), false);
 
             cardsInCurrentRow++;
             if (cardsInCurrentRow >= GRID_ITEMS_PER_ROW) {

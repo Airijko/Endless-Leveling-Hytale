@@ -3,7 +3,7 @@ $C = "../Common.ui";
 // Single augment tile used by the searchable grid.
 
 Button {
-    Anchor: (Width: 131, Bottom: 10, Right: 10);
+    Anchor: (Width: 136, Bottom: 10, Right: 10);
     Padding: (Full: 12);
     Background: (Color: #1a1a1a(0.6));
     LayoutMode: Top;
@@ -18,7 +18,7 @@ Button {
     TextTooltipStyle: $C.@DefaultTextTooltipStyle;
 
     ItemIcon #ItemIcon {
-        Anchor: (Width: 64, Height: 64, Bottom: 5);
+        Anchor: (Width: 67, Height: 67, Bottom: 5);
         Visible: true;
     }
 

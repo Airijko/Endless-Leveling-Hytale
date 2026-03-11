@@ -38,11 +38,89 @@ $C.@PageOverlay {
                                 Padding: (Horizontal: 12);
                             }
 
+                            Label #AugmentsChooseAvailabilityLabel {
+                                Text: "No augments available to choose.";
+                                Style: (FontSize: 14, TextColor: #ff9f9f, RenderBold: true, Wrap: true, VerticalAlignment: Center);
+                                Anchor: (Height: 34);
+                            }
+
+                            Group { Anchor: (Height: 10); }
+
+                            Label {
+                                Text: "Augments are powerful passive enhancements that permanently strengthen your character. Earn them by reaching level milestones and through prestige.";
+                                Style: (FontSize: 12, TextColor: #7a9abf, Wrap: true);
+                                Anchor: (Bottom: 10);
+                            }
+
+                            Group {
+                                Anchor: (Height: 1, Bottom: 10);
+                                Background: #ffffff(0.08);
+                            }
+
+                            Label {
+                                Text: "YOUR COLLECTION";
+                                Style: (FontSize: 11, TextColor: #9fb6d3, RenderBold: true, HorizontalAlignment: Center);
+                                Anchor: (Height: 16, Bottom: 8);
+                            }
+
+                            Label #AugmentStatTotal {
+                                Text: "Total: 0 / 0";
+                                Style: (FontSize: 13, TextColor: #c5d4e8);
+                                Anchor: (Height: 20, Bottom: 4);
+                            }
+
+                            Label #AugmentStatMythic {
+                                Text: "Mythic: 0 / 0";
+                                Style: (FontSize: 13, TextColor: #b084e0);
+                                Anchor: (Height: 20, Bottom: 4);
+                            }
+
+                            Label #AugmentStatElite {
+                                Text: "Elite: 0 / 0";
+                                Style: (FontSize: 13, TextColor: #7ec8f5);
+                                Anchor: (Height: 20, Bottom: 4);
+                            }
+
+                            Label #AugmentStatCommon {
+                                Text: "Common: 0 / 0";
+                                Style: (FontSize: 13, TextColor: #e6c168);
+                                Anchor: (Height: 20, Bottom: 10);
+                            }
+
+                            Group {
+                                Anchor: (Height: 1, Bottom: 10);
+                                Background: #ffffff(0.08);
+                            }
+
+                            Label {
+                                Text: "REROLLS USED";
+                                Style: (FontSize: 11, TextColor: #9fb6d3, RenderBold: true, HorizontalAlignment: Center);
+                                Anchor: (Height: 16, Bottom: 8);
+                            }
+
+                            Label #AugmentRerollMythic {
+                                Text: "Mythic: 0";
+                                Style: (FontSize: 13, TextColor: #b084e0);
+                                Anchor: (Height: 20, Bottom: 4);
+                            }
+
+                            Label #AugmentRerollElite {
+                                Text: "Elite: 0";
+                                Style: (FontSize: 13, TextColor: #7ec8f5);
+                                Anchor: (Height: 20, Bottom: 4);
+                            }
+
+                            Label #AugmentRerollCommon {
+                                Text: "Common: 0";
+                                Style: (FontSize: 13, TextColor: #e6c168);
+                                Anchor: (Height: 20, Bottom: 10);
+                            }
+
                             Group { FlexWeight: 1; }
 
                             Label #AugmentsInfoText {
-                                Text: "View and manage your unlocked augments.";
-                                Style: (FontSize: 13, TextColor: #5a7a9a, Wrap: true, HorizontalAlignment: Center);
+                                Text: "Hover over an augment to preview it.";
+                                Style: (FontSize: 12, TextColor: #5a7a9a, Wrap: true, HorizontalAlignment: Center);
                                 Anchor: (Bottom: 4);
                             }
                         }
@@ -87,18 +165,6 @@ $C.@PageOverlay {
                                     Text: "Results: 0";
                                     Style: (FontSize: 14, TextColor: #9fb6d3, RenderBold: true);
                                     Anchor: (Height: 24);
-                                }
-
-                                // BUTTONS SECTION
-                                Group #ButtonsSection {
-                                    Anchor: (Bottom: 10);
-                                    LayoutMode: Left;
-
-                                    Label #AugmentsChooseAvailabilityLabel {
-                                        Text: "No augments available to choose.";
-                                        Style: (FontSize: 14, TextColor: #ff9f9f, RenderBold: true, Wrap: true, VerticalAlignment: Center);
-                                        Anchor: (Height: 34);
-                                    }
                                 }
 
                                 // UNLOCKED SECTION
