@@ -202,11 +202,11 @@ World_Overrides:
   # ------------------------------------------------------------
   instance-mj_instance_d01-*:
     Level_Source:
-      Mode: "TIERS"
+      Mode: "TIERED"
       Base_Level:
         Level: 20-35
       Tiers:
-        Total_Tiers: 4
+        Total_Tiers: "ENDLESS"
         Levels_Per_Tier: 20
         Player_Adaptation:
           Enabled: true
@@ -243,11 +243,11 @@ World_Overrides:
 
   instance-mj_instance_d02-*:
     Level_Source:
-      Mode: "TIERS"
+      Mode: "TIERED"
       Base_Level:
         Level: 40-55
       Tiers:
-        Total_Tiers: 4
+        Total_Tiers: "ENDLESS"
         Levels_Per_Tier: 20
         Player_Adaptation:
           Enabled: true
@@ -297,11 +297,11 @@ World_Overrides:
 
   instance-mj_instance_d03-*:
     Level_Source:
-      Mode: "TIERS"
+      Mode: "TIERED"
       Base_Level:
         Level: 60-75
       Tiers:
-        Total_Tiers: 4
+        Total_Tiers: "ENDLESS"
         Levels_Per_Tier: 20
         Player_Adaptation:
           Enabled: true
@@ -369,11 +369,11 @@ World_Overrides:
   # ------------------------------------------------------------
   instance-endgame_frozen_dungeon-*:
     Level_Source:
-      Mode: "TIERS"
+      Mode: "TIERED"
       Base_Level:
         Level: 10-25
       Tiers:
-        Total_Tiers: 4
+        Total_Tiers: "ENDLESS"
         Levels_Per_Tier: 20
         Player_Adaptation:
           Enabled: true
@@ -409,11 +409,11 @@ World_Overrides:
 
   instance-endgame_swamp_dungeon-*:
     Level_Source:
-      Mode: "TIERS"
+      Mode: "TIERED"
       Base_Level:
         Level: 30-45
       Tiers:
-        Total_Tiers: 4
+        Total_Tiers: "ENDLESS"
         Levels_Per_Tier: 20
         Player_Adaptation:
           Enabled: true
@@ -452,11 +452,11 @@ World_Overrides:
   # ------------------------------------------------------------
   instance-shiva_dungeon-*:
     Level_Source:
-      Mode: "TIERS"
+      Mode: "TIERED"
       Base_Level:
         Level: 35-50
       Tiers:
-        Total_Tiers: 4
+        Total_Tiers: "ENDLESS"
         Levels_Per_Tier: 20
         Player_Adaptation:
           Enabled: true

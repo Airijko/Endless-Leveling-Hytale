@@ -284,7 +284,7 @@ public class LevelingManager {
             builder.append("- ").append(tier.name()).append("\n");
         }
         builder.append(Lang.tr(playerRef.getUuid(), "notify.augments.available.footer",
-                "Use /el augments to choose."));
+                "Use /el augments choose."));
         playerRef.sendMessage(Message.raw(builder.toString()).color("#4fd7f7"));
     }
 

@@ -175,9 +175,11 @@ public class MobLevelingManager {
     }
 
     private int resolveTierLockForPlayerContext(Store<EntityStore> store, UUID sourcePlayerUuid) {
-        int totalTiers = Math.max(1, getConfigInt("Mob_Leveling.Level_Source.Tiers.Total_Tiers", 1, store));
+        TierCount tierCount = resolveTierCount(store);
+        int totalTiers = tierCount.totalTiers();
+        boolean endlessTiers = tierCount.endless();
         int levelsPerTier = Math.max(0, getConfigInt("Mob_Leveling.Level_Source.Tiers.Levels_Per_Tier", 25, store));
-        if (totalTiers <= 1 || levelsPerTier <= 0) {
+        if ((!endlessTiers && totalTiers <= 1) || levelsPerTier <= 0) {
             return 1;
         }
 
@@ -190,7 +192,7 @@ public class MobLevelingManager {
         int tierPromotionAllowance = getTierPromotionAllowance(store);
         TierPromotionAllowanceMode allowanceMode = getTierPromotionAllowanceMode(store);
         return applyTierPromotionAllowance(referencePlayerLevel, baseRange, totalTiers, levelsPerTier, 1,
-                tierPromotionAllowance, allowanceMode);
+                tierPromotionAllowance, allowanceMode, endlessTiers);
     }
 
     private int resolveTierReferenceLevelForPlayerContext(Store<EntityStore> store, UUID sourcePlayerUuid) {
@@ -1161,6 +1163,9 @@ public class MobLevelingManager {
         String normalized = modeObj.toString().trim().toUpperCase();
         if (normalized.isEmpty())
             return LevelSourceMode.FIXED;
+        // "TIERED" is the canonical name; "TIERS" is kept for backward compatibility.
+        if ("TIERED".equals(normalized))
+            normalized = "TIERS";
         try {
             return LevelSourceMode.valueOf(normalized);
         } catch (IllegalArgumentException ignored) {
@@ -2258,6 +2263,9 @@ public class MobLevelingManager {
     private record PartyContext(UUID partyId, List<PlayerContext> members) {
     }
 
+    private record TierCount(int totalTiers, boolean endless) {
+    }
+
     private int samplePlayerDiff(Integer entityId, Vector3d mobPos, int minDiff, int maxDiff) {
         int span = Math.max(1, (maxDiff - minDiff) + 1);
         long baseSeed = entityId != null ? entityId.longValue() : hashPosition(mobPos);
@@ -3284,27 +3292,34 @@ public class MobLevelingManager {
     }
 
     private int resolveTierLevelOffset(Store<EntityStore> store, Integer entityId, Vector3d mobPosition) {
-        int totalTiers = Math.max(1, getConfigInt("Mob_Leveling.Level_Source.Tiers.Total_Tiers", 1, store));
+        TierCount tierCount = resolveTierCount(store);
+        int totalTiers = tierCount.totalTiers();
+        boolean endlessTiers = tierCount.endless();
         int levelsPerTier = Math.max(0, getConfigInt("Mob_Leveling.Level_Source.Tiers.Levels_Per_Tier", 25, store));
-        if (totalTiers <= 1 || levelsPerTier <= 0) {
+        if ((!endlessTiers && totalTiers <= 1) || levelsPerTier <= 0) {
             return 0;
         }
 
-        int resolvedTier = resolveTierIndex(store, entityId, mobPosition, totalTiers, levelsPerTier);
-        return Math.max(0, resolvedTier - 1) * levelsPerTier;
+        int resolvedTier = resolveTierIndex(store, entityId, mobPosition, totalTiers, levelsPerTier, endlessTiers);
+        long tierOffset = (long) Math.max(0, resolvedTier - 1) * (long) levelsPerTier;
+        return tierOffset > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) tierOffset;
     }
 
     private int resolveTierIndex(Store<EntityStore> store,
             Integer entityId,
             Vector3d mobPosition,
             int totalTiers,
-            int levelsPerTier) {
+            int levelsPerTier,
+            boolean endlessTiers) {
         Integer lockedTier = resolveLockedTierForStore(store);
         if (lockedTier != null && lockedTier > 0) {
-            return Math.max(1, Math.min(totalTiers, lockedTier));
+            return endlessTiers ? Math.max(1, lockedTier) : Math.max(1, Math.min(totalTiers, lockedTier));
         }
 
         if (!isTierPlayerAdaptationEnabled(store) || mobPosition == null) {
+            if (endlessTiers) {
+                return 1;
+            }
             return sampleLevel(1, totalTiers, entityId, mobPosition);
         }
 
@@ -3317,7 +3332,7 @@ public class MobLevelingManager {
         int tierPromotionAllowance = getTierPromotionAllowance(store);
         TierPromotionAllowanceMode allowanceMode = getTierPromotionAllowanceMode(store);
         return applyTierPromotionAllowance(referencePlayerLevel, baseRange, totalTiers, levelsPerTier, 1,
-                tierPromotionAllowance, allowanceMode);
+                tierPromotionAllowance, allowanceMode, endlessTiers);
     }
 
     private Integer resolveLockedTierForStore(Store<EntityStore> store) {
@@ -3352,11 +3367,30 @@ public class MobLevelingManager {
             int levelsPerTier,
             int initialTier,
             int promotionAllowance,
-            TierPromotionAllowanceMode allowanceMode) {
+            TierPromotionAllowanceMode allowanceMode,
+            boolean endlessTiers) {
         int safePlayerLevel = Math.max(1, playerLevel);
-        int resolvedTier = Math.max(1, Math.min(totalTiers, initialTier));
+        int resolvedTier = endlessTiers
+                ? Math.max(1, initialTier)
+                : Math.max(1, Math.min(totalTiers, initialTier));
         int allowance = Math.max(0, promotionAllowance);
         TierPromotionAllowanceMode mode = allowanceMode != null ? allowanceMode : TierPromotionAllowanceMode.BELOW;
+
+        if (endlessTiers) {
+            if (levelsPerTier <= 0) {
+                return resolvedTier;
+            }
+
+            if (mode == TierPromotionAllowanceMode.ABOVE) {
+                long numerator = (long) safePlayerLevel - (long) baseRange.max() - (long) allowance;
+                int extra = (int) Math.floorDiv(numerator, levelsPerTier);
+                return Math.max(resolvedTier, Math.max(1, extra + 2));
+            }
+
+            long numerator = (long) safePlayerLevel - (long) baseRange.min() + (long) allowance;
+            int extra = (int) Math.floorDiv(numerator, levelsPerTier);
+            return Math.max(resolvedTier, Math.max(1, extra + 1));
+        }
 
         for (int tier = resolvedTier + 1; tier <= totalTiers; tier++) {
             LevelRange tierRange = getTierRange(baseRange, tier, levelsPerTier);
@@ -3378,9 +3412,26 @@ public class MobLevelingManager {
         return resolvedTier;
     }
 
+    private TierCount resolveTierCount(Store<EntityStore> store) {
+        Object raw = getMobLevelingValue("Mob_Leveling.Level_Source.Tiers.Total_Tiers", 1, store, null);
+        if (raw instanceof String text) {
+            String normalized = text.trim().toUpperCase(Locale.ROOT);
+            if ("ENDLESS".equals(normalized) || "INFINITE".equals(normalized)) {
+                return new TierCount(1, true);
+            }
+        }
+
+        Integer parsed = parseInteger(raw);
+        if (parsed != null) {
+            return new TierCount(Math.max(1, parsed), false);
+        }
+        return new TierCount(1, false);
+    }
+
     private LevelRange getTierRange(LevelRange baseRange, int tier, int levelsPerTier) {
         int safeTier = Math.max(1, tier);
-        int tierOffset = Math.max(0, safeTier - 1) * Math.max(0, levelsPerTier);
+        long tierOffsetLong = (long) Math.max(0, safeTier - 1) * (long) Math.max(0, levelsPerTier);
+        int tierOffset = tierOffsetLong > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) tierOffsetLong;
         return new LevelRange(baseRange.min() + tierOffset, baseRange.max() + tierOffset);
     }
 
