@@ -43,6 +43,8 @@ public class AugmentUnlockManager {
     private volatile List<UnlockRule> unlockRules;
     private volatile List<PrestigeUnlockRule> prestigeUnlockRules;
     private volatile List<PrestigeRerollRule> prestigeRerollRules;
+    private volatile int playerLevelCap;
+    private volatile int prestigeLevelCapIncrease;
 
     public AugmentUnlockManager(@Nonnull ConfigManager configManager,
             @Nonnull ConfigManager levelingConfigManager,
@@ -57,6 +59,8 @@ public class AugmentUnlockManager {
         this.unlockRules = List.of();
         this.prestigeUnlockRules = List.of();
         this.prestigeRerollRules = List.of();
+        this.playerLevelCap = 100;
+        this.prestigeLevelCapIncrease = 10;
         reload();
     }
 
@@ -66,6 +70,9 @@ public class AugmentUnlockManager {
     public synchronized void reload() {
         configManager.load();
         levelingConfigManager.load();
+        this.playerLevelCap = Math.max(1, parseInt(levelingConfigManager.get("player_level_cap", 100, false), 100));
+        this.prestigeLevelCapIncrease = Math
+                .max(0, parseInt(levelingConfigManager.get("prestige.level_cap_increase_per_prestige", 10, false), 10));
         List<UnlockRule> parsed = parseRules();
         List<PrestigeUnlockRule> parsedPrestige = parsePrestigeRules();
         List<PrestigeRerollRule> parsedRerolls = parsePrestigeRerollRules();
@@ -357,7 +364,19 @@ public class AugmentUnlockManager {
     }
 
     public int getNextUnlockLevel(@Nonnull PlayerData playerData, int currentLevel) {
-        int next = getNextUnlockLevel(currentLevel);
+        int localLevel = Math.max(1, currentLevel);
+        int progressionLevel = getProgressionLevel(playerData, localLevel);
+        int progressionOffset = Math.max(0, progressionLevel - localLevel);
+        int next = Integer.MAX_VALUE;
+
+        for (UnlockRule rule : unlockRules) {
+            int candidate = rule.nextEligibleLevelAfter(localLevel, progressionLevel, progressionOffset);
+            if (candidate > localLevel && candidate < next) {
+                next = candidate;
+            }
+        }
+
+        next = next == Integer.MAX_VALUE ? -1 : next;
         int prestigeLevel = Math.max(0, playerData.getPrestigeLevel());
 
         for (PrestigeUnlockRule rule : prestigeUnlockRules) {
@@ -366,8 +385,9 @@ public class AugmentUnlockManager {
             }
 
             int requiredPlayerLevel = rule.requiredPlayerLevel();
-            if (requiredPlayerLevel > currentLevel) {
-                next = next <= 0 ? requiredPlayerLevel : Math.min(next, requiredPlayerLevel);
+            int nextLocalForGate = requiredPlayerLevel - progressionOffset;
+            if (nextLocalForGate > localLevel) {
+                next = next <= 0 ? nextLocalForGate : Math.min(next, nextLocalForGate);
             }
         }
 
@@ -735,6 +755,10 @@ public class AugmentUnlockManager {
             int levelInterval,
             int maxUnlocks) {
 
+        boolean isProgressive() {
+            return levels.isEmpty();
+        }
+
         static UnlockRule explicit(PassiveTier tier, Set<Integer> levels) {
             return new UnlockRule(tier,
                     levels == null ? Set.of() : Set.copyOf(levels),
@@ -755,13 +779,18 @@ public class AugmentUnlockManager {
         }
 
         int countEligibleMilestones(int playerLevel) {
-            if (levels.isEmpty()) {
-                if (playerLevel < requiredPlayerLevel) {
+            return countEligibleMilestones(playerLevel, playerLevel);
+        }
+
+        int countEligibleMilestones(int playerLevel, int progressionLevel) {
+            if (isProgressive()) {
+                int effectiveLevel = playerLevel;
+                if (effectiveLevel < requiredPlayerLevel) {
                     return 0;
                 }
 
                 int interval = Math.max(1, levelInterval);
-                int unlocked = ((playerLevel - requiredPlayerLevel) / interval) + 1;
+                int unlocked = ((effectiveLevel - requiredPlayerLevel) / interval) + 1;
                 if (maxUnlocks > 0) {
                     return Math.min(unlocked, maxUnlocks);
                 }
@@ -778,25 +807,33 @@ public class AugmentUnlockManager {
         }
 
         int nextEligibleLevelAfter(int currentLevel) {
-            if (levels.isEmpty()) {
+            return nextEligibleLevelAfter(currentLevel, currentLevel, 0);
+        }
+
+        int nextEligibleLevelAfter(int currentLevel, int progressionLevel, int progressionOffset) {
+            if (isProgressive()) {
                 if (maxUnlocks == 0) {
                     return -1;
                 }
 
                 int interval = Math.max(1, levelInterval);
-                if (currentLevel < requiredPlayerLevel) {
-                    return requiredPlayerLevel;
+                int effectiveLevel = currentLevel;
+                int nextLocalLevel;
+
+                if (effectiveLevel < requiredPlayerLevel) {
+                    nextLocalLevel = requiredPlayerLevel;
+                } else {
+                    int progressionIndex = ((effectiveLevel - requiredPlayerLevel) / interval) + 1;
+                    nextLocalLevel = requiredPlayerLevel + (progressionIndex * interval);
                 }
 
-                int progressionIndex = ((currentLevel - requiredPlayerLevel) / interval) + 1;
-                int next = requiredPlayerLevel + (progressionIndex * interval);
                 if (maxUnlocks > 0) {
                     int last = requiredPlayerLevel + ((maxUnlocks - 1) * interval);
-                    if (next > last) {
+                    if (nextLocalLevel > last) {
                         return -1;
                     }
                 }
-                return next;
+                return nextLocalLevel;
             }
 
             int next = Integer.MAX_VALUE;
@@ -1223,21 +1260,52 @@ public class AugmentUnlockManager {
     }
 
     private Map<PassiveTier, Integer> buildEligibleByTier(PlayerData playerData, int playerLevel) {
+        int localLevel = Math.max(1, playerLevel);
+        int progressionLevel = getProgressionLevel(playerData, localLevel);
         Map<PassiveTier, Integer> eligibleByTier = new EnumMap<>(PassiveTier.class);
         for (UnlockRule rule : unlockRules) {
-            int eligible = rule.countEligibleMilestones(playerLevel);
+            int eligible = rule.countEligibleMilestones(localLevel, progressionLevel);
             if (eligible <= 0) {
                 continue;
             }
             eligibleByTier.merge(rule.tier(), eligible, Integer::sum);
         }
-        appendPrestigeMilestones(eligibleByTier, playerData, playerLevel);
+        appendPrestigeMilestones(eligibleByTier, playerData, localLevel, progressionLevel);
         return eligibleByTier;
+    }
+
+    private int getProgressionLevel(PlayerData playerData, int playerLevel) {
+        int localLevel = Math.max(1, playerLevel);
+        if (playerData == null) {
+            return localLevel;
+        }
+
+        int prestigeLevel = Math.max(0, playerData.getPrestigeLevel());
+        if (prestigeLevel <= 0) {
+            return localLevel;
+        }
+
+        long offset = 0L;
+        for (int i = 0; i < prestigeLevel; i++) {
+            offset += getConfiguredLevelCapForPrestige(i);
+            if (offset >= Integer.MAX_VALUE) {
+                return Integer.MAX_VALUE;
+            }
+        }
+
+        long progression = offset + localLevel;
+        return progression >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) progression;
+    }
+
+    private int getConfiguredLevelCapForPrestige(int prestigeLevel) {
+        int safePrestige = Math.max(0, prestigeLevel);
+        return Math.max(1, playerLevelCap + (prestigeLevelCapIncrease * safePrestige));
     }
 
     private void appendPrestigeMilestones(Map<PassiveTier, Integer> eligibleByTier,
             PlayerData playerData,
-            int playerLevel) {
+            int playerLevel,
+            int progressionLevel) {
         if (eligibleByTier == null || playerData == null) {
             return;
         }
@@ -1248,7 +1316,8 @@ public class AugmentUnlockManager {
         }
 
         for (PrestigeUnlockRule rule : prestigeUnlockRules) {
-            int bonusMilestones = rule.countEligibleMilestones(prestigeLevel, playerLevel);
+            int effectiveGateLevel = Math.max(playerLevel, progressionLevel);
+            int bonusMilestones = rule.countEligibleMilestones(prestigeLevel, effectiveGateLevel);
             if (bonusMilestones <= 0) {
                 continue;
             }

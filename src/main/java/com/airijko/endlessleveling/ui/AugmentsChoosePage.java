@@ -96,17 +96,9 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
     }
 
     private String resolveTierTitle(PlayerData playerData, List<AugmentDefinition> augments) {
-        if (playerData != null) {
-            Map<String, List<String>> offers = playerData.getAugmentOffersSnapshot();
-            if (!offers.getOrDefault(PassiveTier.MYTHIC.name(), List.of()).isEmpty()) {
-                return PassiveTier.MYTHIC.name();
-            }
-            if (!offers.getOrDefault(PassiveTier.ELITE.name(), List.of()).isEmpty()) {
-                return PassiveTier.ELITE.name();
-            }
-            if (!offers.getOrDefault(PassiveTier.COMMON.name(), List.of()).isEmpty()) {
-                return PassiveTier.COMMON.name();
-            }
+        PassiveTier activeTier = resolveActiveOfferTier(playerData);
+        if (activeTier != null) {
+            return activeTier.name();
         }
 
         if (augments == null || augments.isEmpty()) {
@@ -131,13 +123,10 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
         List<String> offerIds = new ArrayList<>();
         if (playerData != null) {
             Map<String, List<String>> offers = playerData.getAugmentOffersSnapshot();
-            // Prioritize higher tiers first (MYTHIC -> ELITE -> COMMON)
-            PassiveTier[] priority = { PassiveTier.MYTHIC, PassiveTier.ELITE, PassiveTier.COMMON };
-            for (PassiveTier tier : priority) {
-                List<String> tierOffers = offers.getOrDefault(tier.name(), List.of());
-                offerIds.addAll(tierOffers);
+            PassiveTier activeTier = resolveActiveOfferTier(playerData);
+            if (activeTier != null) {
+                offerIds.addAll(offers.getOrDefault(activeTier.name(), List.of()));
             }
-
         }
 
         List<AugmentDefinition> resolved = new ArrayList<>();
@@ -235,15 +224,35 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
 
     private List<AugmentChoice> collectChoices(PlayerData playerData) {
         List<AugmentChoice> choices = new ArrayList<>();
+        if (playerData == null) {
+            return choices;
+        }
+
+        Map<String, List<String>> offers = playerData.getAugmentOffersSnapshot();
+        PassiveTier activeTier = resolveActiveOfferTier(playerData);
+        if (activeTier == null) {
+            return choices;
+        }
+
+        List<String> tierOffers = offers.getOrDefault(activeTier.name(), List.of());
+        for (String id : tierOffers) {
+            choices.add(new AugmentChoice(id, activeTier));
+        }
+        return choices;
+    }
+
+    private PassiveTier resolveActiveOfferTier(PlayerData playerData) {
+        if (playerData == null) {
+            return null;
+        }
         Map<String, List<String>> offers = playerData.getAugmentOffersSnapshot();
         PassiveTier[] priority = { PassiveTier.MYTHIC, PassiveTier.ELITE, PassiveTier.COMMON };
         for (PassiveTier tier : priority) {
-            List<String> tierOffers = offers.getOrDefault(tier.name(), List.of());
-            for (String id : tierOffers) {
-                choices.add(new AugmentChoice(id, tier));
+            if (!offers.getOrDefault(tier.name(), List.of()).isEmpty()) {
+                return tier;
             }
         }
-        return choices;
+        return null;
     }
 
     private record AugmentChoice(String id, PassiveTier tier) {

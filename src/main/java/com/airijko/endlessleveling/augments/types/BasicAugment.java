@@ -12,7 +12,8 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class BasicAugment extends YamlAugment implements AugmentHooks.PassiveStatAugment {
-    public static final String ID = "basic";
+    public static final String ID = "common";
+    private static final String LEGACY_ID = "basic";
     private static final String OFFER_DELIMITER = "::";
 
     private final BonusRange lifeForceRange;
@@ -199,12 +200,17 @@ public final class BasicAugment extends YamlAugment implements AugmentHooks.Pass
             return null;
         }
         String raw = augmentId.trim().toLowerCase(Locale.ROOT);
+        String payload;
         String prefix = ID + OFFER_DELIMITER;
-        if (!raw.startsWith(prefix)) {
+        String legacyPrefix = LEGACY_ID + OFFER_DELIMITER;
+        if (raw.startsWith(prefix)) {
+            payload = raw.substring(prefix.length());
+        } else if (raw.startsWith(legacyPrefix)) {
+            payload = raw.substring(legacyPrefix.length());
+        } else {
             return null;
         }
 
-        String payload = raw.substring(prefix.length());
         int split = payload.indexOf(OFFER_DELIMITER);
         if (split <= 0 || split >= payload.length() - OFFER_DELIMITER.length()) {
             return null;

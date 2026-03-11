@@ -1,5 +1,5 @@
-id: basic
-name: "Basic"
+id: common
+name: "Common"
 tier: COMMON
 stackable: true
 description: "Small raw boosts to your core stats."

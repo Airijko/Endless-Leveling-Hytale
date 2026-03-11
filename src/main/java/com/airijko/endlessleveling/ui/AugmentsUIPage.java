@@ -250,7 +250,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set("#AugmentInfoIcon.Visible", true);
         String displayName = def.getName();
         if (commonStatOffer != null && BasicAugment.ID.equalsIgnoreCase(def.getId())) {
-            displayName = tr("ui.augments.common_stat.name", "Basic - {0}",
+            displayName = tr("ui.augments.common_stat.name", "Common - {0}",
                     formatCommonStatDisplayName(commonStatOffer.attributeKey()));
         }
         ui.set("#AugmentInfoName.Text", displayName);
@@ -987,12 +987,60 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             return;
         }
 
-        int rowIndex = 0;
-        int cardsInCurrentRow = 0;
+        List<OwnedAugmentCard> mythicCards = new ArrayList<>();
+        List<OwnedAugmentCard> eliteCards = new ArrayList<>();
+        List<OwnedAugmentCard> commonCards = new ArrayList<>();
+        List<OwnedAugmentCard> uncategorizedCards = new ArrayList<>();
 
         for (OwnedAugmentCard card : cards) {
+            AugmentDefinition definition = augmentManager != null ? augmentManager.getAugment(card.id()) : null;
+            PassiveTier tier = definition != null ? definition.getTier() : null;
+            if (tier == PassiveTier.MYTHIC) {
+                mythicCards.add(card);
+            } else if (tier == PassiveTier.ELITE) {
+                eliteCards.add(card);
+            } else if (tier == PassiveTier.COMMON) {
+                commonCards.add(card);
+            } else {
+                uncategorizedCards.add(card);
+            }
+        }
+
+        int rowIndex = 0;
+        boolean hasPreviousTierGroup = false;
+
+        rowIndex = appendOwnedTierGroup(ui, events, cardsSelector, mythicCards, rowIndex, hasPreviousTierGroup);
+        hasPreviousTierGroup = hasPreviousTierGroup || !mythicCards.isEmpty();
+
+        rowIndex = appendOwnedTierGroup(ui, events, cardsSelector, eliteCards, rowIndex, hasPreviousTierGroup);
+        hasPreviousTierGroup = hasPreviousTierGroup || !eliteCards.isEmpty();
+
+        rowIndex = appendOwnedTierGroup(ui, events, cardsSelector, commonCards, rowIndex, hasPreviousTierGroup);
+        hasPreviousTierGroup = hasPreviousTierGroup || !commonCards.isEmpty();
+
+        appendOwnedTierGroup(ui, events, cardsSelector, uncategorizedCards, rowIndex, hasPreviousTierGroup);
+    }
+
+    private int appendOwnedTierGroup(@Nonnull UICommandBuilder ui,
+            @Nonnull UIEventBuilder events,
+            @Nonnull String cardsSelector,
+            @Nonnull List<OwnedAugmentCard> tierCards,
+            int rowIndex,
+            boolean addTopGap) {
+        if (tierCards.isEmpty()) {
+            return rowIndex;
+        }
+
+        int cardsInCurrentRow = 0;
+        boolean firstRowInGroup = true;
+
+        for (OwnedAugmentCard card : tierCards) {
             if (cardsInCurrentRow == 0) {
-                ui.appendInline(cardsSelector, "Group { LayoutMode: Left; Anchor: (Bottom: 0); }");
+                String rowLayout = (addTopGap && firstRowInGroup)
+                        ? "Group { LayoutMode: Left; Anchor: (Bottom: 0); Padding: (Top: 14); }"
+                        : "Group { LayoutMode: Left; Anchor: (Bottom: 0); }";
+                ui.appendInline(cardsSelector, rowLayout);
+                firstRowInGroup = false;
             }
 
             ui.append(cardsSelector + "[" + rowIndex + "]", "Augments/AugmentGridEntry.ui");
@@ -1015,6 +1063,11 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 rowIndex++;
             }
         }
+
+        if (cardsInCurrentRow > 0) {
+            rowIndex++;
+        }
+        return rowIndex;
     }
 
     private List<AugmentDefinition> applySearch(List<AugmentDefinition> source) {
@@ -1037,31 +1090,64 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             return List.of();
         }
 
-        LinkedHashSet<String> rawSelected = new LinkedHashSet<>();
+        Map<String, OwnedAugmentCard> firstCardByGroup = new java.util.LinkedHashMap<>();
+        Map<String, Integer> countByGroup = new HashMap<>();
+        Map<String, Double> totalCommonValueByGroup = new HashMap<>();
+
         for (String id : playerData.getSelectedAugmentsSnapshot().values()) {
             if (id != null && !id.isBlank()) {
-                rawSelected.add(id);
+                String rawId = id;
+                AugmentDefinition definition = augmentManager.getAugment(rawId);
+                if (definition == null) {
+                    continue;
+                }
+
+                String displayName = definition.getName();
+                String icon = resolveIconItemId(definition);
+                String groupKey;
+
+                BasicAugment.BasicStatOffer offer = BasicAugment.parseStatOfferId(rawId);
+                if (offer != null && BasicAugment.ID.equalsIgnoreCase(definition.getId())) {
+                    String attributeKey = offer.attributeKey() == null ? "" : offer.attributeKey().trim();
+                    displayName = tr("ui.augments.common_stat.name", "Common - {0}",
+                            formatCommonStatDisplayName(attributeKey));
+                    icon = resolveCommonStatIcon(attributeKey, icon);
+                    groupKey = "common_stat:" + attributeKey.toLowerCase(Locale.ROOT);
+                    totalCommonValueByGroup.merge(groupKey, offer.rolledValue(), Double::sum);
+                } else {
+                    String canonicalId = definition.getId();
+                    if (canonicalId == null || canonicalId.isBlank()) {
+                        canonicalId = rawId;
+                    }
+                    groupKey = canonicalId.toLowerCase(Locale.ROOT);
+                }
+
+                firstCardByGroup.putIfAbsent(groupKey, new OwnedAugmentCard(rawId, displayName, icon));
+                countByGroup.merge(groupKey, 1, Integer::sum);
             }
         }
 
-        List<OwnedAugmentCard> cards = new ArrayList<>(rawSelected.size());
-        for (String rawId : rawSelected) {
-            AugmentDefinition definition = augmentManager.getAugment(rawId);
-            if (definition == null) {
-                continue;
+        List<OwnedAugmentCard> cards = new ArrayList<>(firstCardByGroup.size());
+        for (Map.Entry<String, OwnedAugmentCard> entry : firstCardByGroup.entrySet()) {
+            String groupKey = entry.getKey();
+            OwnedAugmentCard baseCard = entry.getValue();
+            int count = Math.max(1, countByGroup.getOrDefault(groupKey, 1));
+
+            String infoId = baseCard.id();
+            if (groupKey.startsWith("common_stat:")) {
+                String attributeKey = groupKey.substring("common_stat:".length());
+                double totalValue = totalCommonValueByGroup.getOrDefault(groupKey, 0.0D);
+                infoId = BasicAugment.buildStatOfferId(attributeKey, totalValue);
             }
 
-            String displayName = definition.getName();
-            String icon = resolveIconItemId(definition);
-            BasicAugment.BasicStatOffer offer = BasicAugment.parseStatOfferId(rawId);
-            if (offer != null && BasicAugment.ID.equalsIgnoreCase(definition.getId())) {
-                displayName = tr("ui.augments.common_stat.name", "Basic - {0}",
-                        formatCommonStatDisplayName(offer.attributeKey()));
-                icon = resolveCommonStatIcon(offer.attributeKey(), icon);
+            String displayName = baseCard.displayName();
+            if (count > 1) {
+                displayName = tr("ui.augments.unlocked.count_suffix", "{0} x{1}", displayName, count);
             }
 
-            cards.add(new OwnedAugmentCard(rawId, displayName, icon));
+            cards.add(new OwnedAugmentCard(infoId, displayName, baseCard.iconItemId()));
         }
+
         return cards;
     }
 
