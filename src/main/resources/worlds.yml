@@ -197,7 +197,7 @@ World_Overrides:
     Mob_Overrides:
       Azaroth:
         Level: 40
-        Augments: [rebirth, frozen_domain, conqueror, executioner]
+        Augments: [rebirth, frozen_domain, wither]
         Scaling:
           Health:
             Base_Multiplier: 1.0
@@ -240,7 +240,7 @@ World_Overrides:
     Mob_Overrides:
       Katherina:
         Level: 60
-        Augments: [undying_rage, bloodthirster, vampirism]
+        Augments: [undying_rage, bloodthirster, vampirism, executioner]
         Scaling:
           Health:
             Base_Multiplier: 1.0
@@ -374,7 +374,7 @@ World_Overrides:
     Mob_Overrides:
       Endgame_Dragon_Frost:
         Level: 30
-        Augments: [nesting_doll, conqueror]
+        Augments: [nesting_doll]
         Scaling:
           Health:
             Base_Multiplier: 2.0
@@ -417,7 +417,7 @@ World_Overrides:
     Mob_Overrides:
       Endgame_Hedera:
         Level: 50
-        Augments: [rebirth, conqueror]
+        Augments: [rebirth]
         Scaling:
           Health:
             Base_Multiplier: 2.0

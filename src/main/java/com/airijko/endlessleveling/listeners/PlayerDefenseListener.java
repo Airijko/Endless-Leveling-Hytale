@@ -1,8 +1,11 @@
 package com.airijko.endlessleveling.listeners;
 
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentExecutor;
+import com.airijko.endlessleveling.augments.MobAugmentExecutor;
 import com.airijko.endlessleveling.combat.CombatHookProcessor;
 import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.managers.MobLevelingManager;
 import com.airijko.endlessleveling.managers.PassiveManager;
 import com.airijko.endlessleveling.managers.PassiveManager.PassiveRuntimeState;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
@@ -19,14 +22,19 @@ import com.hypixel.hytale.component.dependency.Order;
 import com.hypixel.hytale.component.dependency.SystemDependency;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
+import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
+import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import javax.annotation.Nonnull;
 
 /**
@@ -41,17 +49,23 @@ public class PlayerDefenseListener extends DamageEventSystem {
 	private final PassiveManager passiveManager;
 	private final ArchetypePassiveManager archetypePassiveManager;
 	private final AugmentExecutor augmentExecutor;
+	private final MobAugmentExecutor mobAugmentExecutor;
+	private final MobLevelingManager mobLevelingManager;
 	private final CombatHookProcessor combatHookProcessor;
 
 	public PlayerDefenseListener(PlayerDataManager playerDataManager, SkillManager skillManager,
 			PassiveManager passiveManager,
 			ArchetypePassiveManager archetypePassiveManager,
-			AugmentExecutor augmentExecutor) {
+			AugmentExecutor augmentExecutor,
+			MobAugmentExecutor mobAugmentExecutor,
+			MobLevelingManager mobLevelingManager) {
 		this.playerDataManager = playerDataManager;
 		this.skillManager = skillManager;
 		this.passiveManager = passiveManager;
 		this.archetypePassiveManager = archetypePassiveManager;
 		this.augmentExecutor = augmentExecutor;
+		this.mobAugmentExecutor = mobAugmentExecutor;
+		this.mobLevelingManager = mobLevelingManager;
 		this.combatHookProcessor = new CombatHookProcessor(skillManager,
 				passiveManager,
 				archetypePassiveManager,
@@ -96,6 +110,57 @@ public class PlayerDefenseListener extends DamageEventSystem {
 		if (damage.getSource() instanceof Damage.EntitySource entitySource) {
 			attackerRef = entitySource.getRef();
 		}
+		UUID mobAttackerUuid = null;
+
+		if (attackerRef != null && mobAugmentExecutor != null && mobLevelingManager != null) {
+			PlayerRef attackerPlayer = commandBuffer.getComponent(attackerRef, PlayerRef.getComponentType());
+			boolean attackerIsPlayer = attackerPlayer != null && attackerPlayer.isValid();
+			if (!attackerIsPlayer) {
+				List<String> attackerAugments = mobLevelingManager.getMobOverrideAugmentIds(attackerRef,
+						attackerRef.getStore(), commandBuffer);
+				if (!attackerAugments.isEmpty()) {
+					UUID attackerUuid = resolveEntityUuid(attackerRef, attackerRef.getStore(), commandBuffer);
+					if (attackerUuid != null) {
+						mobAttackerUuid = attackerUuid;
+						if (!mobAugmentExecutor.hasMobAugments(attackerUuid)) {
+							EndlessLeveling plugin = EndlessLeveling.getInstance();
+							if (plugin != null && plugin.getAugmentManager() != null
+									&& plugin.getAugmentRuntimeManager() != null) {
+								mobAugmentExecutor.registerMobAugments(attackerUuid,
+										attackerAugments,
+										plugin.getAugmentManager(),
+										plugin.getAugmentRuntimeManager());
+							}
+						}
+
+						EntityStatMap attackerStats = commandBuffer.getComponent(attackerRef,
+								EntityStatMap.getComponentType());
+						EntityStatMap defenderStats = commandBuffer.getComponent(targetRef,
+								EntityStatMap.getComponentType());
+						float originalDamage = damage.getAmount();
+						var onHit = mobAugmentExecutor.applyOnHit(attackerUuid,
+								attackerRef,
+								targetRef,
+								commandBuffer,
+								attackerStats,
+								defenderStats,
+								originalDamage);
+						damage.setAmount(onHit.damage());
+
+						float appliedTrueDamage = applyMobTrueDamage(targetRef, commandBuffer, onHit.trueDamageBonus());
+						if (Math.abs(onHit.damage() - originalDamage) > 0.0001f || appliedTrueDamage > 0f) {
+							LOGGER.atInfo().log(
+									"MobOnHitAugments attacker=%d defender=%s damage=%.3f true=%.3f augments=%s",
+									attackerRef.getIndex(),
+									defenderPlayer.getUsername(),
+									onHit.damage(),
+									appliedTrueDamage,
+									attackerAugments);
+						}
+					}
+				}
+			}
+		}
 
 		PassiveRuntimeState runtimeState = passiveManager != null
 				? passiveManager.getRuntimeState(playerData.getUuid())
@@ -118,10 +183,75 @@ public class PlayerDefenseListener extends DamageEventSystem {
 						statMap));
 
 		damage.setAmount(result.finalDamage());
+		if (mobAttackerUuid != null && attackerRef != null && statMap != null) {
+			EntityStatValue hp = statMap.get(DefaultEntityStatTypes.getHealth());
+			if (hp != null && hp.getMax() > 0f && hp.get() > 0f) {
+				float predictedAfterHit = hp.get() - result.finalDamage();
+				if (predictedAfterHit <= 0f) {
+					mobAugmentExecutor.handleKill(
+							mobAttackerUuid,
+							attackerRef,
+							targetRef,
+							commandBuffer,
+							statMap);
+				}
+			}
+		}
 		float reducedBy = result.originalDamage() - result.finalDamage();
 		LOGGER.atInfo().log(
 				"PlayerDefenseListener: Player %s took %.2f damage (original: %.2f, reduced by %.2f, %.1f%% resistance)",
 				defenderPlayer.getUsername(), result.finalDamage(), result.originalDamage(), reducedBy,
 				result.resistance() * 100);
+	}
+
+	private float applyMobTrueDamage(Ref<EntityStore> defenderRef,
+			CommandBuffer<EntityStore> commandBuffer,
+			double rawTrueDamage) {
+		if (defenderRef == null || commandBuffer == null || rawTrueDamage <= 0.0D) {
+			return 0.0f;
+		}
+
+		EntityStatMap statMap = commandBuffer.getComponent(defenderRef, EntityStatMap.getComponentType());
+		if (statMap == null) {
+			return 0.0f;
+		}
+
+		EntityStatValue hp = statMap.get(DefaultEntityStatTypes.getHealth());
+		if (hp == null || hp.getMax() <= 0f || hp.get() <= 0f) {
+			return 0.0f;
+		}
+
+		float current = hp.get();
+		float applied = (float) Math.min(current, rawTrueDamage);
+		if (applied <= 0f) {
+			return 0.0f;
+		}
+
+		statMap.setStatValue(DefaultEntityStatTypes.getHealth(), Math.max(0.0f, current - applied));
+		return applied;
+	}
+
+	private UUID resolveEntityUuid(Ref<EntityStore> ref,
+			Store<EntityStore> store,
+			CommandBuffer<EntityStore> commandBuffer) {
+		if (ref == null) {
+			return null;
+		}
+
+		UUIDComponent uuidComponent = commandBuffer != null
+				? commandBuffer.getComponent(ref, UUIDComponent.getComponentType())
+				: null;
+		if (uuidComponent == null && store != null) {
+			uuidComponent = store.getComponent(ref, UUIDComponent.getComponentType());
+		}
+		if (uuidComponent == null) {
+			return null;
+		}
+
+		try {
+			return uuidComponent.getUuid();
+		} catch (Throwable ignored) {
+			return null;
+		}
 	}
 }

@@ -1,6 +1,8 @@
 package com.airijko.endlessleveling.listeners;
 
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentExecutor;
+import com.airijko.endlessleveling.augments.MobAugmentExecutor;
 import com.airijko.endlessleveling.combat.CombatHookProcessor;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
@@ -22,6 +24,7 @@ import com.hypixel.hytale.component.dependency.Order;
 import com.hypixel.hytale.component.dependency.SystemDependency;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
@@ -40,6 +43,7 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Listens for player-inflicted damage and applies EndlessLeveling combat logic.
@@ -56,6 +60,7 @@ public class PlayerCombatListener extends DamageEventSystem {
     private final PlayerDataManager playerDataManager;
     private final PassiveManager passiveManager;
     private final ArchetypePassiveManager archetypePassiveManager;
+    private final MobAugmentExecutor mobAugmentExecutor;
     private final MobLevelingManager mobLevelingManager;
     private final CombatHookProcessor combatHookProcessor;
 
@@ -65,10 +70,12 @@ public class PlayerCombatListener extends DamageEventSystem {
             ArchetypePassiveManager archetypePassiveManager,
             ClassManager classManager,
             AugmentExecutor augmentExecutor,
+            MobAugmentExecutor mobAugmentExecutor,
             MobLevelingManager mobLevelingManager) {
         this.playerDataManager = playerDataManager;
         this.passiveManager = passiveManager;
         this.archetypePassiveManager = archetypePassiveManager;
+        this.mobAugmentExecutor = mobAugmentExecutor;
         this.mobLevelingManager = mobLevelingManager;
         this.combatHookProcessor = new CombatHookProcessor(skillManager,
                 passiveManager,
@@ -224,6 +231,14 @@ public class PlayerCombatListener extends DamageEventSystem {
         }
 
         float finalAdjusted = Math.max(0.0f, adjusted);
+        if (!targetIsPlayer) {
+            finalAdjusted = applyMobAugmentsIfPresent(targetRef,
+                    store,
+                    attackerRef,
+                    commandBuffer,
+                    targetStats,
+                    finalAdjusted);
+        }
         float appliedTrueDamage = applyTrueEdgeDamage(
                 attackerRef,
                 targetRef,
@@ -255,6 +270,88 @@ public class PlayerCombatListener extends DamageEventSystem {
                 targetIsPlayer);
 
         damage.setAmount(finalAdjusted);
+    }
+
+    private float applyMobAugmentsIfPresent(Ref<EntityStore> targetRef,
+            Store<EntityStore> store,
+            Ref<EntityStore> attackerRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            EntityStatMap targetStats,
+            float incomingDamage) {
+        if (targetRef == null
+                || targetStats == null
+                || incomingDamage <= 0f
+                || mobAugmentExecutor == null
+                || mobLevelingManager == null) {
+            return incomingDamage;
+        }
+
+        List<String> augmentIds = mobLevelingManager.getMobOverrideAugmentIds(targetRef, store, commandBuffer);
+        if (augmentIds.isEmpty()) {
+            return incomingDamage;
+        }
+
+        UUID mobUuid = resolveEntityUuid(targetRef, store, commandBuffer);
+        if (mobUuid == null) {
+            return incomingDamage;
+        }
+
+        if (!mobAugmentExecutor.hasMobAugments(mobUuid)) {
+            EndlessLeveling plugin = EndlessLeveling.getInstance();
+            if (plugin != null && plugin.getAugmentManager() != null && plugin.getAugmentRuntimeManager() != null) {
+                mobAugmentExecutor.registerMobAugments(mobUuid,
+                        augmentIds,
+                        plugin.getAugmentManager(),
+                        plugin.getAugmentRuntimeManager());
+                LOGGER.atInfo().log("[MOB_OVERRIDE_AUGMENTS] target=%d uuid=%s augments=%s",
+                        targetRef.getIndex(), mobUuid, augmentIds);
+            }
+        }
+
+        float afterDamageTaken = mobAugmentExecutor.applyOnDamageTaken(
+                mobUuid,
+                targetRef,
+                attackerRef,
+                commandBuffer,
+                targetStats,
+                incomingDamage);
+        float finalDamage = mobAugmentExecutor.applyOnLowHp(
+                mobUuid,
+                targetRef,
+                attackerRef,
+                commandBuffer,
+                targetStats,
+                afterDamageTaken);
+
+        if (finalDamage != incomingDamage) {
+            LOGGER.atInfo().log("MobAugments target=%d damage %.3f -> %.3f augments=%s",
+                    targetRef.getIndex(), incomingDamage, finalDamage, augmentIds);
+        }
+        return Math.max(0.0f, finalDamage);
+    }
+
+    private UUID resolveEntityUuid(Ref<EntityStore> ref,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (ref == null) {
+            return null;
+        }
+
+        UUIDComponent uuidComponent = commandBuffer != null
+                ? commandBuffer.getComponent(ref, UUIDComponent.getComponentType())
+                : null;
+        if (uuidComponent == null && store != null) {
+            uuidComponent = store.getComponent(ref, UUIDComponent.getComponentType());
+        }
+        if (uuidComponent == null) {
+            return null;
+        }
+
+        try {
+            return uuidComponent.getUuid();
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     public static Damage createAugmentDotDamage(Ref<EntityStore> sourceRef, float amount) {

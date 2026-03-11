@@ -9,6 +9,7 @@ import com.airijko.endlessleveling.commands.classes.ClassCommand;
 import com.airijko.endlessleveling.commands.profile.ProfileCommand;
 import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.augments.AugmentManager;
+import com.airijko.endlessleveling.augments.MobAugmentExecutor;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager;
 import com.airijko.endlessleveling.augments.AugmentUnlockManager;
 import com.airijko.endlessleveling.compatibility.NameplateBuilderCompatibility;
@@ -69,6 +70,7 @@ public class EndlessLeveling extends JavaPlugin {
     private AugmentRuntimeManager augmentRuntimeManager;
     private AugmentUnlockManager augmentUnlockManager;
     private AugmentExecutor augmentExecutor;
+    private MobAugmentExecutor mobAugmentExecutor;
 
     // Getter for SkillManager
     public SkillManager getSkillManager() {
@@ -140,6 +142,10 @@ public class EndlessLeveling extends JavaPlugin {
         return augmentExecutor;
     }
 
+    public MobAugmentExecutor getMobAugmentExecutor() {
+        return mobAugmentExecutor;
+    }
+
     public AugmentManager getAugmentManager() {
         return augmentManager;
     }
@@ -183,6 +189,7 @@ public class EndlessLeveling extends JavaPlugin {
         eventHookManager = new EventHookManager(new ConfigManager(filesManager, filesManager.getEventsFile()));
         augmentManager = new AugmentManager(filesManager.getAugmentsFolder().toPath(), filesManager, configManager);
         augmentRuntimeManager = new AugmentRuntimeManager();
+        mobAugmentExecutor = new MobAugmentExecutor();
         skillManager = new SkillManager(filesManager, playerAttributeManager, archetypePassiveManager, passiveManager,
                 augmentRuntimeManager);
         augmentExecutor = new AugmentExecutor(augmentManager, augmentRuntimeManager, skillManager);
@@ -238,7 +245,8 @@ public class EndlessLeveling extends JavaPlugin {
                         mobLevelingManager, archetypePassiveManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerCombatListener(playerDataManager, skillManager, passiveManager,
-                        archetypePassiveManager, classManager, augmentExecutor, mobLevelingManager));
+                        archetypePassiveManager, classManager, augmentExecutor, mobAugmentExecutor,
+                        mobLevelingManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerCombatPostApplyProbeSystem(mobLevelingManager));
         this.getEntityStoreRegistry()
@@ -247,7 +255,7 @@ public class EndlessLeveling extends JavaPlugin {
         this.getEntityStoreRegistry().registerSystem(new MobDamageScalingSystem(mobLevelingManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerDefenseListener(playerDataManager, skillManager, passiveManager,
-                        archetypePassiveManager, augmentExecutor));
+                        archetypePassiveManager, augmentExecutor, mobAugmentExecutor, mobLevelingManager));
         this.getEntityStoreRegistry()
                 .registerSystem(new PassiveRegenSystem(playerDataManager, passiveManager, archetypePassiveManager,
                         skillManager, augmentRuntimeManager, augmentExecutor));

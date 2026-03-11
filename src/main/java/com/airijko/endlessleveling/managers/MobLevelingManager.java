@@ -753,6 +753,22 @@ public class MobLevelingManager {
         return resolveWorldMobOverrideFromWorldNode(defaultRaw, normalizedMobType);
     }
 
+    public List<String> getMobOverrideAugmentIds(Ref<EntityStore> ref,
+            CommandBuffer<EntityStore> commandBuffer) {
+        Store<EntityStore> store = ref != null ? ref.getStore() : null;
+        return getMobOverrideAugmentIds(ref, store, commandBuffer);
+    }
+
+    public List<String> getMobOverrideAugmentIds(Ref<EntityStore> ref,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        WorldMobOverride override = resolveWorldMobOverride(ref, store, commandBuffer);
+        if (override == null || override.augmentIds() == null || override.augmentIds().isEmpty()) {
+            return List.of();
+        }
+        return override.augmentIds();
+    }
+
     private WorldMobOverride resolveWorldMobOverrideFromWorldNode(Object worldNode, String normalizedMobType) {
         if (!(worldNode instanceof Map<?, ?> worldMap) || normalizedMobType == null || normalizedMobType.isBlank()) {
             return null;
@@ -877,6 +893,7 @@ public class MobLevelingManager {
         MobOverrideLinearScaling healthScaling = null;
         MobOverrideLinearScaling damageScaling = null;
         MobOverrideDefenseScaling defenseScaling = null;
+        List<String> augmentIds = List.of();
         MobOverrideAugmentModifiers augmentModifiers = null;
 
         if (rawValue instanceof Map<?, ?> mapValue) {
@@ -904,7 +921,8 @@ public class MobLevelingManager {
                 defenseScaling = parseMobOverrideDefenseScaling(resolveCaseInsensitive(scalingMap, "Defense"));
             }
 
-            augmentModifiers = parseMobOverrideAugmentModifiers(mapValue);
+            augmentIds = parseMobOverrideAugmentIds(mapValue);
+            augmentModifiers = parseMobOverrideAugmentModifiers(augmentIds);
         }
 
         boolean hasStatModifier = healthMultiplier != null
@@ -913,6 +931,7 @@ public class MobLevelingManager {
                 || healthScaling != null
                 || damageScaling != null
                 || defenseScaling != null
+                || !augmentIds.isEmpty()
                 || augmentModifiers != null;
         if (level == null && !hasStatModifier) {
             return null;
@@ -926,20 +945,35 @@ public class MobLevelingManager {
                 healthScaling,
                 damageScaling,
                 defenseScaling,
+                augmentIds,
                 augmentModifiers);
     }
 
-    private MobOverrideAugmentModifiers parseMobOverrideAugmentModifiers(Map<?, ?> mapValue) {
-        if (mapValue == null) {
-            return null;
-        }
-
+    private List<String> parseMobOverrideAugmentIds(Map<?, ?> mapValue) {
         Set<String> augmentIds = new LinkedHashSet<>();
         appendMobOverrideRulesFromRaw(resolveCaseInsensitive(mapValue, "Augments"), augmentIds);
         appendMobOverrideRulesFromRaw(resolveCaseInsensitive(mapValue, "Augment_Ids"), augmentIds);
         appendMobOverrideRulesFromRaw(resolveCaseInsensitive(mapValue, "AugmentIds"), augmentIds);
         appendMobOverrideRulesFromRaw(resolveCaseInsensitive(mapValue, "Augment_IDs"), augmentIds);
         if (augmentIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> normalized = new ArrayList<>(augmentIds.size());
+        for (String augmentId : augmentIds) {
+            if (augmentId == null) {
+                continue;
+            }
+            String cleaned = augmentId.trim();
+            if (!cleaned.isEmpty()) {
+                normalized.add(cleaned);
+            }
+        }
+        return normalized.isEmpty() ? List.of() : List.copyOf(normalized);
+    }
+
+    private MobOverrideAugmentModifiers parseMobOverrideAugmentModifiers(List<String> augmentIds) {
+        if (augmentIds == null || augmentIds.isEmpty()) {
             return null;
         }
 
@@ -4155,6 +4189,7 @@ public class MobLevelingManager {
             MobOverrideLinearScaling healthScaling,
             MobOverrideLinearScaling damageScaling,
             MobOverrideDefenseScaling defenseScaling,
+            List<String> augmentIds,
             MobOverrideAugmentModifiers augmentModifiers) {
     }
 

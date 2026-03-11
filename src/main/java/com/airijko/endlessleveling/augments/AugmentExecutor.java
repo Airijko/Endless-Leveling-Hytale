@@ -147,8 +147,11 @@ public final class AugmentExecutor {
             float incomingDamage) {
         List<Augment> augments = resolve(defender);
         if (augments.isEmpty()) {
+            LOGGER.atFine().log("[AUGMENT] No augments for defender %s", defender.getUuid());
             return incomingDamage;
         }
+        LOGGER.atFine().log("[AUGMENT] Player %s taking %.3f damage with %d augments",
+                defender.getUuid(), incomingDamage, augments.size());
         var runtime = runtimeManager.getRuntimeState(defender.getUuid());
         notifyCooldowns(defender, runtime, commandBuffer, defenderRef, augments);
         DamageTakenContext context = new DamageTakenContext(defender, runtime, skillManager, defenderRef, attackerRef,
@@ -166,10 +169,13 @@ public final class AugmentExecutor {
         }
 
         for (Augment augment : resolveLowHpTriggerOrder(augments)) {
+            LOGGER.atFine().log("[AUGMENT] Checking low HP trigger for: %s", augment.getId());
             OnLowHpAugment lowHp = (OnLowHpAugment) augment;
             damage = lowHp.onLowHp(context);
             context.setIncomingDamage(damage);
             if (damage <= 0f) {
+                LOGGER.atInfo().log("[AUGMENT] %s ACTIVATED for player %s and blocked damage!", augment.getId(),
+                        defender.getUuid());
                 return 0f;
             }
         }
@@ -438,6 +444,8 @@ public final class AugmentExecutor {
             Augment augment = augmentManager.createAugment(id);
             if (augment != null) {
                 augments.add(augment);
+            } else {
+                LOGGER.atWarning().log("[AUGMENT] Failed to create augment: %s", id);
             }
         }
         return augments;
