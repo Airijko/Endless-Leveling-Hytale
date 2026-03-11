@@ -1,6 +1,9 @@
 package com.airijko.endlessleveling.managers;
 
 import com.airijko.endlessleveling.EndlessLeveling;
+import com.airijko.endlessleveling.augments.AugmentDefinition;
+import com.airijko.endlessleveling.augments.AugmentManager;
+import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Component;
@@ -874,6 +877,7 @@ public class MobLevelingManager {
         MobOverrideLinearScaling healthScaling = null;
         MobOverrideLinearScaling damageScaling = null;
         MobOverrideDefenseScaling defenseScaling = null;
+        MobOverrideAugmentModifiers augmentModifiers = null;
 
         if (rawValue instanceof Map<?, ?> mapValue) {
             healthMultiplier = parseMobOverrideMultiplier(
@@ -899,6 +903,8 @@ public class MobLevelingManager {
                 damageScaling = parseMobOverrideLinearScaling(damageScalingRaw);
                 defenseScaling = parseMobOverrideDefenseScaling(resolveCaseInsensitive(scalingMap, "Defense"));
             }
+
+            augmentModifiers = parseMobOverrideAugmentModifiers(mapValue);
         }
 
         boolean hasStatModifier = healthMultiplier != null
@@ -906,7 +912,8 @@ public class MobLevelingManager {
                 || defenseReduction != null
                 || healthScaling != null
                 || damageScaling != null
-                || defenseScaling != null;
+                || defenseScaling != null
+                || augmentModifiers != null;
         if (level == null && !hasStatModifier) {
             return null;
         }
@@ -918,7 +925,93 @@ public class MobLevelingManager {
                 defenseReduction,
                 healthScaling,
                 damageScaling,
-                defenseScaling);
+                defenseScaling,
+                augmentModifiers);
+    }
+
+    private MobOverrideAugmentModifiers parseMobOverrideAugmentModifiers(Map<?, ?> mapValue) {
+        if (mapValue == null) {
+            return null;
+        }
+
+        Set<String> augmentIds = new LinkedHashSet<>();
+        appendMobOverrideRulesFromRaw(resolveCaseInsensitive(mapValue, "Augments"), augmentIds);
+        appendMobOverrideRulesFromRaw(resolveCaseInsensitive(mapValue, "Augment_Ids"), augmentIds);
+        appendMobOverrideRulesFromRaw(resolveCaseInsensitive(mapValue, "AugmentIds"), augmentIds);
+        appendMobOverrideRulesFromRaw(resolveCaseInsensitive(mapValue, "Augment_IDs"), augmentIds);
+        if (augmentIds.isEmpty()) {
+            return null;
+        }
+
+        AugmentManager augmentManager = resolveAugmentManager();
+        if (augmentManager == null) {
+            return null;
+        }
+
+        int appliedAugments = 0;
+        double healthPercentBonus = 0.0D;
+        double damagePercentBonus = 0.0D;
+
+        for (String rawId : augmentIds) {
+            if (rawId == null || rawId.isBlank()) {
+                continue;
+            }
+
+            AugmentDefinition definition = augmentManager.getAugment(rawId.trim());
+            if (definition == null) {
+                continue;
+            }
+
+            Map<String, Object> passives = definition.getPassives();
+            if (passives.isEmpty()) {
+                continue;
+            }
+
+            double healthBonus = AugmentValueReader.getNestedDouble(passives, 0.0D, "buffs", "max_health_percent",
+                    "value");
+
+            double damageBonus = 0.0D;
+            damageBonus += AugmentValueReader.getNestedDouble(passives, 0.0D, "buffs", "bonus_damage", "value");
+            damageBonus += AugmentValueReader.getNestedDouble(passives, 0.0D, "bonus_damage_on_hit", "value");
+            damageBonus += AugmentValueReader.getNestedDouble(passives, 0.0D, "healthy_state", "bonus_damage",
+                    "value");
+            damageBonus += AugmentValueReader.getNestedDouble(passives, 0.0D, "max_stack_bonus", "bonus_true_damage",
+                    "true_damage_percent");
+
+            double strengthMultiplier = AugmentValueReader.getNestedDouble(passives, 1.0D, "brute_force",
+                    "strength_multiplier");
+            double sorceryMultiplier = AugmentValueReader.getNestedDouble(passives, 1.0D, "brute_force",
+                    "sorcery_multiplier");
+            if (strengthMultiplier > 1.0D || sorceryMultiplier > 1.0D) {
+                double blended = ((Math.max(1.0D, strengthMultiplier) - 1.0D)
+                        + (Math.max(1.0D, sorceryMultiplier) - 1.0D)) / 2.0D;
+                damageBonus += blended;
+            }
+
+            healthPercentBonus += healthBonus;
+            damagePercentBonus += damageBonus;
+            appliedAugments++;
+        }
+
+        if (appliedAugments <= 0) {
+            return null;
+        }
+
+        double healthMultiplier = Math.max(0.0001D, 1.0D + healthPercentBonus);
+        double damageMultiplier = Math.max(0.0001D, 1.0D + damagePercentBonus);
+        if (Math.abs(healthMultiplier - 1.0D) < 1e-9 && Math.abs(damageMultiplier - 1.0D) < 1e-9) {
+            return null;
+        }
+
+        return new MobOverrideAugmentModifiers(healthMultiplier, damageMultiplier);
+    }
+
+    private AugmentManager resolveAugmentManager() {
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null) {
+            return null;
+        }
+        return plugin.getAugmentManager();
     }
 
     private MobOverrideLinearScaling parseMobOverrideLinearScaling(Object rawValue) {
@@ -2704,25 +2797,31 @@ public class MobLevelingManager {
             CommandBuffer<EntityStore> commandBuffer,
             int level) {
         double baseMultiplier = getMobHealthMultiplierForLevel(level, store);
+        double resolvedMultiplier = baseMultiplier;
         WorldMobOverride override = resolveWorldMobOverride(ref, store, commandBuffer);
         if (override != null) {
             if (override.healthMultiplier() != null) {
-                return Math.max(0.0001D, override.healthMultiplier());
+                resolvedMultiplier = override.healthMultiplier();
+            } else {
+                Double scaledOverride = resolveMobOverrideLinearScaling(
+                        override.healthScaling(),
+                        level,
+                        "Mob_Leveling.Scaling.Health.Base_Multiplier",
+                        1.0D,
+                        "Mob_Leveling.Scaling.Health.Per_Level",
+                        0.05D,
+                        store);
+                if (scaledOverride != null) {
+                    resolvedMultiplier = scaledOverride;
+                }
             }
 
-            Double scaledOverride = resolveMobOverrideLinearScaling(
-                    override.healthScaling(),
-                    level,
-                    "Mob_Leveling.Scaling.Health.Base_Multiplier",
-                    1.0D,
-                    "Mob_Leveling.Scaling.Health.Per_Level",
-                    0.05D,
-                    store);
-            if (scaledOverride != null) {
-                return Math.max(0.0001D, scaledOverride);
+            MobOverrideAugmentModifiers augmentModifiers = override.augmentModifiers();
+            if (augmentModifiers != null) {
+                resolvedMultiplier *= augmentModifiers.healthMultiplier();
             }
         }
-        return baseMultiplier;
+        return Math.max(0.0001D, resolvedMultiplier);
     }
 
     /**
@@ -2800,25 +2899,31 @@ public class MobLevelingManager {
             int level) {
         Store<EntityStore> store = ref != null ? ref.getStore() : null;
         double baseMultiplier = getMobDamageMultiplierForLevel(level, store);
+        double resolvedMultiplier = baseMultiplier;
         WorldMobOverride override = resolveWorldMobOverride(ref, store, commandBuffer);
         if (override != null) {
             if (override.damageMultiplier() != null) {
-                return Math.max(0.0001D, override.damageMultiplier());
+                resolvedMultiplier = override.damageMultiplier();
+            } else {
+                Double scaledOverride = resolveMobOverrideLinearScaling(
+                        override.damageScaling(),
+                        level,
+                        "Mob_Leveling.Scaling.Damage.Base_Multiplier",
+                        1.0D,
+                        "Mob_Leveling.Scaling.Damage.Per_Level",
+                        0.03D,
+                        store);
+                if (scaledOverride != null) {
+                    resolvedMultiplier = scaledOverride;
+                }
             }
 
-            Double scaledOverride = resolveMobOverrideLinearScaling(
-                    override.damageScaling(),
-                    level,
-                    "Mob_Leveling.Scaling.Damage.Base_Multiplier",
-                    1.0D,
-                    "Mob_Leveling.Scaling.Damage.Per_Level",
-                    0.03D,
-                    store);
-            if (scaledOverride != null) {
-                return Math.max(0.0001D, scaledOverride);
+            MobOverrideAugmentModifiers augmentModifiers = override.augmentModifiers();
+            if (augmentModifiers != null) {
+                resolvedMultiplier *= augmentModifiers.damageMultiplier();
             }
         }
-        return baseMultiplier;
+        return Math.max(0.0001D, resolvedMultiplier);
     }
 
     /**
@@ -4049,7 +4154,12 @@ public class MobLevelingManager {
             Double defenseReduction,
             MobOverrideLinearScaling healthScaling,
             MobOverrideLinearScaling damageScaling,
-            MobOverrideDefenseScaling defenseScaling) {
+            MobOverrideDefenseScaling defenseScaling,
+            MobOverrideAugmentModifiers augmentModifiers) {
+    }
+
+    private record MobOverrideAugmentModifiers(double healthMultiplier,
+            double damageMultiplier) {
     }
 
     private record MobOverrideLinearScaling(boolean enabled,

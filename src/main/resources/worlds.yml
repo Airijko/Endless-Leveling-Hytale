@@ -197,6 +197,7 @@ World_Overrides:
     Mob_Overrides:
       Azaroth:
         Level: 40
+        Augments: [rebirth, frozen_domain, conqueror, executioner]
         Scaling:
           Health:
             Base_Multiplier: 1.0
@@ -239,6 +240,7 @@ World_Overrides:
     Mob_Overrides:
       Katherina:
         Level: 60
+        Augments: [undying_rage, bloodthirster, vampirism]
         Scaling:
           Health:
             Base_Multiplier: 1.0
@@ -295,6 +297,8 @@ World_Overrides:
     Mob_Overrides:
       Baron:
         Level: 80
+        Augments:
+          [nesting_doll, blood_surge, bloodthirster, blood_frenzy, vampirism]
         Scaling:
           Health:
             Base_Multiplier: 1.0
@@ -324,6 +328,7 @@ World_Overrides:
       Cult_Knight_Werewolf_MiniBoss_Group:
         Names: [Cult_Knight_MiniBoss, Cult_Werewolf_MiniBoss]
         Level: 75
+        Augments: [blood_surge, blood_frenzy, vampirism]
         Scaling:
           Health:
             Base_Multiplier: 1.0
@@ -369,6 +374,7 @@ World_Overrides:
     Mob_Overrides:
       Endgame_Dragon_Frost:
         Level: 30
+        Augments: [nesting_doll, conqueror]
         Scaling:
           Health:
             Base_Multiplier: 2.0
@@ -411,6 +417,7 @@ World_Overrides:
     Mob_Overrides:
       Endgame_Hedera:
         Level: 50
+        Augments: [rebirth, conqueror]
         Scaling:
           Health:
             Base_Multiplier: 2.0
