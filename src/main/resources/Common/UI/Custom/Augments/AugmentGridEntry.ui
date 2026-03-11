@@ -1,0 +1,35 @@
+$C = "../Common.ui";
+
+// Single augment tile used by the searchable grid.
+
+Button {
+    Anchor: (Width: 131, Bottom: 10, Right: 10);
+    Padding: (Full: 12);
+    Background: (Color: #1a1a1a(0.6));
+    LayoutMode: Top;
+    Style: (
+        Hovered: (
+            Background: #2a2a2a(0.8)
+        ),
+        Pressed: (
+            Background: #3a3a3a(0.9)
+        )
+    );
+    TextTooltipStyle: $C.@DefaultTextTooltipStyle;
+
+    ItemIcon #ItemIcon {
+        Anchor: (Width: 64, Height: 64, Bottom: 5);
+        Visible: true;
+    }
+
+    Label #ItemName {
+        Style: (
+            FontSize: 14,
+            RenderBold: true,
+            TextColor: #ffffff,
+            Wrap: true,
+            HorizontalAlignment: Center
+        );
+        Anchor: (Bottom: 5);
+    }
+}

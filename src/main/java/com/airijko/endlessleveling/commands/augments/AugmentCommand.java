@@ -5,12 +5,13 @@ import com.airijko.endlessleveling.commands.subcommands.AugmentRefreshCommand;
 import com.airijko.endlessleveling.commands.subcommands.AugmentRerollCommand;
 import com.airijko.endlessleveling.commands.subcommands.ResetAugmentsCommand;
 import com.airijko.endlessleveling.ui.AugmentsChoosePage;
+import com.airijko.endlessleveling.ui.AugmentsUIPage;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -41,10 +42,10 @@ public class AugmentCommand extends AbstractPlayerCommand {
             @Nonnull Ref<EntityStore> ref,
             @Nonnull PlayerRef senderRef,
             @Nonnull World world) {
-        senderRef.sendMessage(Message.raw("Usage: /el augments choose").color("#4fd7f7"));
-        senderRef.sendMessage(Message.raw("Usage: /el augments refresh [player]").color("#4fd7f7"));
-        senderRef.sendMessage(Message.raw("Usage: /el augments reset [player]").color("#4fd7f7"));
-        senderRef.sendMessage(Message.raw("Usage: /el augments reroll <augment_id>").color("#4fd7f7"));
-        senderRef.sendMessage(Message.raw("Usage: /el augments reroll <tier> <augment_id>").color("#4fd7f7"));
+        Player player = store.getComponent(ref, Player.getComponentType());
+        if (player != null) {
+            player.getPageManager().openCustomPage(ref, store,
+                    new AugmentsUIPage(senderRef, CustomPageLifetime.CanDismiss));
+        }
     }
 }
