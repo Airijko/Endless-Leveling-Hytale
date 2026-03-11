@@ -12,6 +12,8 @@ import com.airijko.endlessleveling.managers.PartyManager;
 import com.hypixel.hytale.builtin.mounts.NPCMountComponent;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.server.core.asset.type.entityeffect.config.EntityEffect;
+import com.hypixel.hytale.server.core.asset.type.entityeffect.config.OverlapBehavior;
 import com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
@@ -30,6 +32,8 @@ import java.util.UUID;
 
 public final class BurnAugment extends YamlAugment implements AugmentHooks.PassiveStatAugment {
     public static final String ID = "burn";
+    private static final String[] BURN_EFFECT_IDS = new String[] { "burning", "Burning", "Burn" };
+    private static final float BURN_EFFECT_DURATION_SECONDS = 1.25F;
 
     private final double basePercentPerSecond;
     private final double bonusScalingPer100Health;
@@ -103,6 +107,7 @@ public final class BurnAugment extends YamlAugment implements AugmentHooks.Passi
 
         burnState.setLastProc(now);
         double ratioThisTick = percentPerSecond;
+        EntityEffect burnEffect = resolveBurnEffect();
         UUID sourceUuid = resolveSourceUuid(context, sourceRef, commandBuffer);
         PartyManager partyManager = resolvePartyManager();
         UUID sourcePartyLeader = resolvePartyLeader(partyManager, sourceUuid);
@@ -144,7 +149,46 @@ public final class BurnAugment extends YamlAugment implements AugmentHooks.Passi
 
             Damage burnTickDamage = PlayerCombatListener.createAugmentDotDamage(sourceRef, (float) burnDamage);
             DamageSystems.executeDamage(targetRef, commandBuffer, burnTickDamage);
+            applyBurnEffect(targetRef, commandBuffer, burnEffect);
         }
+    }
+
+    private static void applyBurnEffect(Ref<EntityStore> targetRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            EntityEffect burnEffect) {
+        if (targetRef == null || commandBuffer == null || burnEffect == null) {
+            return;
+        }
+
+        EffectControllerComponent controller = commandBuffer.getComponent(targetRef,
+                EffectControllerComponent.getComponentType());
+        if (controller == null) {
+            return;
+        }
+
+        controller.addEffect(targetRef,
+                burnEffect,
+                BURN_EFFECT_DURATION_SECONDS,
+                OverlapBehavior.OVERWRITE,
+                commandBuffer);
+    }
+
+    private static EntityEffect resolveBurnEffect() {
+        for (String candidate : BURN_EFFECT_IDS) {
+            EntityEffect effect = EntityEffect.getAssetMap().getAsset(candidate);
+            if (effect != null) {
+                return effect;
+            }
+            effect = EntityEffect.getAssetMap().getAsset(candidate.toLowerCase());
+            if (effect != null) {
+                return effect;
+            }
+            effect = EntityEffect.getAssetMap().getAsset(candidate.toUpperCase());
+            if (effect != null) {
+                return effect;
+            }
+        }
+        return null;
     }
 
     private double resolveRadius(double attackerMaxHealth) {

@@ -10,7 +10,7 @@ passives:
     stolen_slow_ratio: 0.20 # 20% of applied slow is gained as movement speed per affected target
     radius: 5 # base radius in blocks
     radius_health_scaling:
-      health_per_block: 200 # gain +1 block radius per 200 max HP
+      health_per_block: 500 # gain +1 block radius per 500 max HP
 
   buffs:
     life_force:

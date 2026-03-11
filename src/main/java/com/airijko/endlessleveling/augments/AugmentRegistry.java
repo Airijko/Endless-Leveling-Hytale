@@ -25,6 +25,7 @@ public final class AugmentRegistry {
             Map.entry(BloodthirsterAugment.ID, BloodthirsterAugment::new),
             Map.entry(BurnAugment.ID, BurnAugment::new),
             Map.entry(ConquerorAugment.ID, ConquerorAugment::new),
+            Map.entry(CrippleAugment.ID, CrippleAugment::new),
             Map.entry(CriticalGuardAugment.ID, CriticalGuardAugment::new),
             Map.entry(CutdownAugment.ID, CutdownAugment::new),
             Map.entry(DrainAugment.ID, DrainAugment::new),

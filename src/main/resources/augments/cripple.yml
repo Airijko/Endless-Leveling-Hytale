@@ -1,0 +1,15 @@
+id: cripple
+name: "Cripple"
+tier: ELITE
+description: "On hit, stun enemies for 2 seconds on cooldown and gain a large health bonus."
+category: ON_HIT
+
+passives:
+  on_hit:
+    stun:
+      duration: 2 # seconds
+      cooldown: 20 # seconds
+
+  buffs:
+    life_force:
+      value: 100 # flat life_force bonus

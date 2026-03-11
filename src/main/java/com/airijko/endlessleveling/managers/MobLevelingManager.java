@@ -3280,15 +3280,64 @@ public class MobLevelingManager {
         LevelRange baseRange = getTierBaseLevelRange(store);
         int tierOffset = resolveTierLevelOffset(store, entityId, mobPosition);
 
-        int minLevel = clampToConfiguredRange(baseRange.min() + tierOffset, store);
-        int maxLevel = clampToConfiguredRange(baseRange.max() + tierOffset, store);
-        if (minLevel > maxLevel) {
-            int tmp = minLevel;
-            minLevel = maxLevel;
-            maxLevel = tmp;
+        long rawMin = (long) baseRange.min() + (long) tierOffset;
+        long rawMax = (long) baseRange.max() + (long) tierOffset;
+        if (rawMin > rawMax) {
+            long tmp = rawMin;
+            rawMin = rawMax;
+            rawMax = tmp;
         }
 
-        return new LevelRange(minLevel, maxLevel);
+        // When Level_Range.Max is "ENDLESS" the tier window is fully uncapped — only
+        // the configured minimum is respected.
+        if (isEndlessLevelRange(store)) {
+            int configuredMin = getConfigInt("Mob_Leveling.Level_Range.Min", 1, store);
+            long adjustedMin = Math.max((long) configuredMin, rawMin);
+            long adjustedMax = Math.max(adjustedMin, rawMax);
+            return new LevelRange(
+                    (int) Math.min(adjustedMin, Integer.MAX_VALUE),
+                    (int) Math.min(adjustedMax, Integer.MAX_VALUE));
+        }
+
+        int configuredMin = getConfigInt("Mob_Leveling.Level_Range.Min", 1, store);
+        int configuredMax = getConfigInt("Mob_Leveling.Level_Range.Max", 200, store);
+        if (configuredMin > configuredMax) {
+            int tmp = configuredMin;
+            configuredMin = configuredMax;
+            configuredMax = tmp;
+        }
+
+        long availableSpan = Math.max(0L, (long) configuredMax - (long) configuredMin);
+        long desiredSpan = Math.max(0L, rawMax - rawMin);
+
+        // Keep tier width whenever possible instead of collapsing to a single value at
+        // bounds.
+        if (desiredSpan >= availableSpan) {
+            return new LevelRange(configuredMin, configuredMax);
+        }
+
+        long adjustedMin = rawMin;
+        long adjustedMax = rawMax;
+
+        if (adjustedMin < configuredMin) {
+            long shift = configuredMin - adjustedMin;
+            adjustedMin += shift;
+            adjustedMax += shift;
+        }
+        if (adjustedMax > configuredMax) {
+            long shift = adjustedMax - configuredMax;
+            adjustedMin -= shift;
+            adjustedMax -= shift;
+        }
+
+        adjustedMin = Math.max((long) configuredMin, adjustedMin);
+        adjustedMax = Math.min((long) configuredMax, adjustedMax);
+        if (adjustedMin > adjustedMax) {
+            int clamped = clampToConfiguredRange(baseRange.max() + tierOffset, store);
+            return new LevelRange(clamped, clamped);
+        }
+
+        return new LevelRange((int) adjustedMin, (int) adjustedMax);
     }
 
     private int resolveTierLevelOffset(Store<EntityStore> store, Integer entityId, Vector3d mobPosition) {
@@ -3560,6 +3609,9 @@ public class MobLevelingManager {
 
     private int clampToConfiguredRange(int level, Store<EntityStore> store) {
         int min = getConfigInt("Mob_Leveling.Level_Range.Min", 1, store);
+        if (isEndlessLevelRange(store)) {
+            return Math.max(min, level);
+        }
         int max = getConfigInt("Mob_Leveling.Level_Range.Max", 200, store);
         if (min > max) {
             int tmp = min;
@@ -3567,6 +3619,16 @@ public class MobLevelingManager {
             max = tmp;
         }
         return Math.max(min, Math.min(max, level));
+    }
+
+    /**
+     * Returns true when {@code Mob_Leveling.Level_Range.Max} is set to
+     * {@code "ENDLESS"} for the given world/store context, meaning mob levels are
+     * not capped by an upper bound.
+     */
+    private boolean isEndlessLevelRange(Store<EntityStore> store) {
+        Object raw = getMobLevelingValue("Mob_Leveling.Level_Range.Max", null, store, null);
+        return raw != null && "ENDLESS".equalsIgnoreCase(raw.toString().trim());
     }
 
     /** Inclusive mob level range. */
