@@ -1,4 +1,5 @@
 race_name: "Human Knight"
+icon: "Ingredient_Life_Essence"
 description: "A battle-forged warleader who amplifies critical devastation through strength or sorcery mastery."
 model_scale: 1.0
 enabled: true

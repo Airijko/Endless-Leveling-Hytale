@@ -1,4 +1,5 @@
 race_name: "Yordle Menace"
+icon: "Ingredient_Life_Essence"
 description: "An apex prankster of destruction, blending impossible speed with brutal crit bursts."
 model: "Kweebec_Sapling"
 model_scale: 1.0

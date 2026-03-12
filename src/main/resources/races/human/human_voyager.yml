@@ -1,4 +1,5 @@
 race_name: "Human Voyager"
+icon: "Ingredient_Life_Essence"
 description: "A master adventurer whose discipline and speed let them outlast any campaign and outmaneuver any threat."
 model_scale: 1.0
 enabled: true

@@ -1,4 +1,5 @@
 race_name: "Wraith Reaver"
+icon: "Ingredient_Life_Essence"
 description: "An apex killer spirit that amplifies critical devastation through ruthless martial or arcane mastery."
 model: "Wraith"
 model_scale: 1.0

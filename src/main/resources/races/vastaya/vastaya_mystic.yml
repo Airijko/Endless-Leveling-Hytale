@@ -1,4 +1,5 @@
 race_name: "Vastaya Mystic"
+icon: "Ingredient_Life_Essence"
 description: "A spirit-tuned Vastaya who blends uncanny speed with precise nature sorcery."
 model: "Feran"
 model_scale: 1.0

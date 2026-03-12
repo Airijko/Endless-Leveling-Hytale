@@ -1,4 +1,5 @@
 race_name: "Wraith"
+icon: "Ingredient_Life_Essence"
 description: "Cursed spirits tethered to the mortal plane, Wraiths excel at swift, lethal strikes and evasion."
 model: "Wraith"
 model_scale: 1.0

@@ -1,4 +1,5 @@
 race_name: "Dragon Guardian"
+icon: "Ingredient_Life_Essence"
 description: "A Dragonborn who channels their draconic resilience into an unbreakable fortress of scales and vitality."
 model_scale: 1.0
 enabled: true

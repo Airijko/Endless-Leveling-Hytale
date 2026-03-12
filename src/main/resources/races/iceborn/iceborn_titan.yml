@@ -1,4 +1,5 @@
 race_name: "Iceborn Titan"
+icon: "Ingredient_Life_Essence"
 description: "An unstoppable mountain of ice and wrath, advancing through battle with inexhaustible endurance."
 model: "Outlander"
 model_scale: 1.0

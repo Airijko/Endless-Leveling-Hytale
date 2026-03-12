@@ -848,6 +848,7 @@ public class RaceManager {
         String raceId = deriveRaceId(file, yamlData);
         String displayName = safeString(yamlData.getOrDefault("race_name", raceId));
         String description = safeString(yamlData.get("description"));
+        String iconItemId = safeString(yamlData.get("icon"));
         String modelId = safeString(yamlData.get("model"));
         double modelScale = parseDouble(yamlData.getOrDefault("model_scale", 1.0));
         boolean enabled = parseBoolean(yamlData.getOrDefault("enabled", Boolean.TRUE), true);
@@ -869,6 +870,7 @@ public class RaceManager {
         return new RaceDefinition(raceId,
                 displayName,
                 description,
+                iconItemId,
                 modelId,
                 modelScale,
                 enabled,

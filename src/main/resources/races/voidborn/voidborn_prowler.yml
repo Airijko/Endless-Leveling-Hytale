@@ -1,4 +1,5 @@
 race_name: "Void Prowler"
+icon: "Ingredient_Life_Essence"
 description: "A predatory void stalker that turns ferocity and dark power into lethal crit-heavy assaults."
 model: "Spawn_Void"
 model_scale: 1.0

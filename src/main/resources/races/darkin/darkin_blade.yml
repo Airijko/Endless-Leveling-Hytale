@@ -1,4 +1,5 @@
 race_name: "Darkin Blade"
+icon: "Ingredient_Life_Essence"
 description: "A Darkin who sharpened their carnage into direct martial supremacy."
 model_scale: 1.0
 enabled: true

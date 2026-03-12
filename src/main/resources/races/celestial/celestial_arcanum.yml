@@ -1,4 +1,5 @@
 race_name: "Celestial Arcanum"
+icon: "Ingredient_Life_Essence"
 description: "A Celestial who weaponizes cosmic precision into devastating critical bursts, turning every spell into a potential killing blow."
 model: "Shadow_Knight"
 model_scale: 1.0

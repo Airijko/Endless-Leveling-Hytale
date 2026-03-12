@@ -12,9 +12,12 @@ import java.util.Objects;
 
 public class RaceDefinition {
 
+    public static final String DEFAULT_ICON_ITEM_ID = "Ingredient_Life_Essence";
+
     private final String id;
     private final String displayName;
     private final String description;
+    private final String icon;
     private final String modelId;
     private final double modelScale;
     private final boolean enabled;
@@ -26,6 +29,7 @@ public class RaceDefinition {
     public RaceDefinition(String id,
             String displayName,
             String description,
+            String icon,
             String modelId,
             double modelScale,
             boolean enabled,
@@ -36,6 +40,7 @@ public class RaceDefinition {
         this.id = Objects.requireNonNull(id, "Race id cannot be null");
         this.displayName = displayName == null ? id : displayName;
         this.description = description == null ? "" : description;
+        this.icon = (icon == null || icon.isBlank()) ? DEFAULT_ICON_ITEM_ID : icon;
         this.modelId = modelId;
         this.modelScale = modelScale;
         this.enabled = enabled;
@@ -73,6 +78,10 @@ public class RaceDefinition {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getIcon() {
+        return icon;
     }
 
     public String getModelId() {

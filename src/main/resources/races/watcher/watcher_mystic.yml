@@ -1,4 +1,5 @@
 race_name: "Watcher Mystic"
+icon: "Ingredient_Life_Essence"
 description: "A void-channeling assassin-scholar who sharpens sorcery into catastrophic critical bursts."
 model: "Hedera"
 model_scale: 1.0

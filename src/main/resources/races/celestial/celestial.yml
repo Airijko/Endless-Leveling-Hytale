@@ -1,4 +1,5 @@
 race_name: "Celestial"
+icon: "Ingredient_Life_Essence"
 description: "Ancient cosmic entities born of starlight, Celestials wield immense magical power and unparalleled resilience."
 model: "Shadow_Knight"
 model_scale: 1.0

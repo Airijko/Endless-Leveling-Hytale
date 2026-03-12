@@ -1,4 +1,5 @@
 race_name: "Ascended Magus"
+icon: "Ingredient_Life_Essence"
 description: "An Ascended adept who channels divine radiance through disciplined sorcery."
 model: "Feran_Windwalker"
 model_scale: 1.0

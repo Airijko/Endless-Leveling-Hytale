@@ -1,4 +1,5 @@
 race_name: "Human Emporer"
+icon: "Ingredient_Life_Essence"
 description: "The ultimate human sovereign, uniting expedition mastery with conquering might into absolute dominance."
 model_scale: 1.0
 enabled: true

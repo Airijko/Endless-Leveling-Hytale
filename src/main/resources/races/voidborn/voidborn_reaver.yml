@@ -1,4 +1,5 @@
 race_name: "Void Reaver"
+icon: "Ingredient_Life_Essence"
 description: "An apex hunter of the abyss, blending brutal crit pressure with martial or arcane void mastery."
 model: "Spawn_Void"
 model_scale: 1.0

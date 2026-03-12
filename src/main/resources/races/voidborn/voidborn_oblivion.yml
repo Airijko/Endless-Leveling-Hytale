@@ -1,4 +1,5 @@
 race_name: "Void Oblivion"
+icon: "Ingredient_Life_Essence"
 description: "The ultimate void incarnation, where indestructible defense and predatory destruction collapse into one form."
 model: "Spawn_Void"
 model_scale: 1.0

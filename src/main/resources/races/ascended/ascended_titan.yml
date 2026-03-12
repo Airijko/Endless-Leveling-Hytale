@@ -1,4 +1,5 @@
 race_name: "Ascended Titan"
+icon: "Ingredient_Life_Essence"
 description: "A towering paragon of divine force whose body and will crush mortal resistance."
 model: "Feran_Windwalker"
 model_scale: 1.0

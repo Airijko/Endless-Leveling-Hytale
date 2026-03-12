@@ -1,4 +1,5 @@
 race_name: "Drake Marauder"
+icon: "Ingredient_Life_Essence"
 description: "A Dragonborn who sharpens their draconic ferocity into relentless critical devastation, striking with the force of a predator."
 model_scale: 1.0
 enabled: true

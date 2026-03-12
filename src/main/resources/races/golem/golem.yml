@@ -1,4 +1,5 @@
 race_name: "Golem"
+icon: "Ingredient_Life_Essence"
 description: "Artificial beings of immense durability, Golems are slow but nearly indestructible."
 model: "Golem_Crystal_Earth"
 model_scale: 1.0

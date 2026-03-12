@@ -1,4 +1,5 @@
 race_name: "Iceborn"
+icon: "Ingredient_Life_Essence"
 description: "Empowered by eternal frost, Iceborn warriors are durable, relentless, and resistant to harm."
 model: "Outlander"
 model_scale: 1.0

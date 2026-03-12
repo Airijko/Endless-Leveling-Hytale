@@ -1,4 +1,5 @@
 race_name: "Wraith Fang"
+icon: "Ingredient_Life_Essence"
 description: "A predatory spirit form that turns critical violence into rapid executions."
 model: "Wraith"
 model_scale: 1.0

@@ -1,4 +1,5 @@
 race_name: "Darkin"
+icon: "Ingredient_Life_Essence"
 description: "Twisted Ascended bound to cursed weapons, Darkin thrive on carnage and devastating critical strikes."
 model_scale: 1.0
 enabled: true

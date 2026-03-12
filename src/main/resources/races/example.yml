@@ -77,6 +77,7 @@
 # ============================================================================
 
 race_name: "Example"
+icon: "Ingredient_Life_Essence"
 description: "PEEPEE POOPOO"
 model_scale: 1.0
 enabled: false

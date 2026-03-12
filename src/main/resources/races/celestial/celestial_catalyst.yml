@@ -1,4 +1,5 @@
 race_name: "Celestial Catalyst"
+icon: "Ingredient_Life_Essence"
 description: "A Celestial Adept who has mastered the art of infinite cosmic flow, converting mana into a boundless engine of arcane destruction."
 model: "Shadow_Knight"
 model_scale: 1.0

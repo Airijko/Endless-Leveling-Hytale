@@ -1,4 +1,5 @@
 race_name: "Golem Sentinel"
+icon: "Ingredient_Life_Essence"
 description: "A fortified golem form focused on absolute mitigation and unshakable front-line control."
 model: "Golem_Crystal_Earth"
 model_scale: 1.0

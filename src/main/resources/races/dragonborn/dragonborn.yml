@@ -1,4 +1,5 @@
 race_name: "Dragonborn"
+icon: "Ingredient_Life_Essence"
 description: "Born of draconic blood, Dragonborn possess immense strength, resilience, and overwhelming presence in battle."
 model_scale: 1.0
 enabled: true

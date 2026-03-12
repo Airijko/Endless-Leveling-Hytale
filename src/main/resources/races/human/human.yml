@@ -1,4 +1,5 @@
 race_name: "Human"
+icon: "Ingredient_Life_Essence"
 description: "Versatile and ambitious, humans are known for their adaptability and determination."
 model_scale: 1.0
 enabled: true

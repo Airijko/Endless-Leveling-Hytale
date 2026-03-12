@@ -1,4 +1,5 @@
 race_name: "Yordle Trickster"
+icon: "Ingredient_Life_Essence"
 description: "A chaotic damage dealer who weaponizes speed and critical force to dismantle enemies before they react."
 model: "Kweebec_Sapling"
 model_scale: 1.0

@@ -1,4 +1,5 @@
 race_name: "Voidborn"
+icon: "Ingredient_Life_Essence"
 description: "Twisted by the Void, Voidborn adapt rapidly, gaining strength through chaos and corruption."
 model: "Spawn_Void"
 model_scale: 1.0

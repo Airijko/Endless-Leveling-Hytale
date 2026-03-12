@@ -1,4 +1,5 @@
 race_name: "Void Protector"
+icon: "Ingredient_Life_Essence"
 description: "A Voidborn who hardens corruptive flesh into a living bulwark of abyssal endurance."
 model: "Spawn_Void"
 model_scale: 1.0
