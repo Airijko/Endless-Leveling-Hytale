@@ -7,6 +7,7 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -476,6 +477,22 @@ public class PlayerData {
         getActiveProfile().setRaceId(raceId);
     }
 
+    public List<String> getCompletedRaceFormsSnapshot() {
+        return getActiveProfile().getCompletedRaceFormsSnapshot();
+    }
+
+    public void setCompletedRaceForms(List<String> forms) {
+        getActiveProfile().setCompletedRaceForms(forms);
+    }
+
+    public void addCompletedRaceForm(String raceFormId) {
+        getActiveProfile().addCompletedRaceForm(raceFormId);
+    }
+
+    public boolean hasCompletedRaceForm(String raceFormId) {
+        return getActiveProfile().hasCompletedRaceForm(raceFormId);
+    }
+
     public long getLastRaceChangeEpochSeconds() {
         return getActiveProfile().getLastRaceChangeEpochSeconds();
     }
@@ -653,6 +670,7 @@ public class PlayerData {
         private final Map<String, Map<String, Double>> augmentValueRolls;
         private final Map<String, Integer> augmentRerollsUsed;
         private String raceId;
+        private final LinkedHashSet<String> completedRaceForms;
         private long lastRaceChangeEpochSeconds;
         private int remainingRaceSwitches;
         private String primaryClassId;
@@ -682,6 +700,7 @@ public class PlayerData {
             this.augmentValueRolls = new LinkedHashMap<>();
             this.augmentRerollsUsed = new LinkedHashMap<>();
             this.raceId = null;
+            this.completedRaceForms = new LinkedHashSet<>();
             this.lastRaceChangeEpochSeconds = 0L;
             this.remainingRaceSwitches = 0;
             this.primaryClassId = null;
@@ -966,6 +985,41 @@ public class PlayerData {
                 return;
             }
             this.raceId = raceId.trim();
+        }
+
+        public List<String> getCompletedRaceFormsSnapshot() {
+            return List.copyOf(completedRaceForms);
+        }
+
+        public void setCompletedRaceForms(List<String> forms) {
+            completedRaceForms.clear();
+            if (forms == null || forms.isEmpty()) {
+                return;
+            }
+            forms.forEach(this::addCompletedRaceForm);
+        }
+
+        public void addCompletedRaceForm(String raceFormId) {
+            String normalized = normalizeRaceFormId(raceFormId);
+            if (normalized != null) {
+                completedRaceForms.add(normalized);
+            }
+        }
+
+        public boolean hasCompletedRaceForm(String raceFormId) {
+            String normalized = normalizeRaceFormId(raceFormId);
+            return normalized != null && completedRaceForms.contains(normalized);
+        }
+
+        private String normalizeRaceFormId(String raceFormId) {
+            if (raceFormId == null) {
+                return null;
+            }
+            String trimmed = raceFormId.trim();
+            if (trimmed.isEmpty()) {
+                return null;
+            }
+            return trimmed.toLowerCase(Locale.ROOT);
         }
 
         public long getLastRaceChangeEpochSeconds() {

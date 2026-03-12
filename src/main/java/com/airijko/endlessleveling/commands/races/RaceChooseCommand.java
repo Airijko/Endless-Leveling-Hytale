@@ -4,6 +4,7 @@ import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
+import com.airijko.endlessleveling.races.RaceAscensionEligibility;
 import com.airijko.endlessleveling.races.RaceDefinition;
 import com.airijko.endlessleveling.util.OperatorHelper;
 import com.hypixel.hytale.component.Ref;
@@ -19,6 +20,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * /races choose <race> : lets a player pick a race subject to cooldowns.
@@ -86,6 +88,24 @@ public class RaceChooseCommand extends AbstractPlayerCommand {
         }
 
         if (!OperatorHelper.isOperator(senderRef)) {
+            RaceAscensionEligibility eligibility = raceManager.evaluateAscensionEligibility(data, desiredRace.getId());
+            if (!eligibility.isEligible()) {
+                List<String> blockers = eligibility.getBlockers();
+                if (!blockers.isEmpty()) {
+                    senderRef.sendMessage(Message.raw("Cannot switch race yet:").color("#ff6666"));
+                    for (String blocker : blockers) {
+                        senderRef.sendMessage(Message.join(
+                                Message.raw(" - ").color("#ff6666"),
+                                Message.raw(blocker).color("#ffc300")));
+                    }
+                } else {
+                    senderRef.sendMessage(Message.raw("Cannot switch race yet.").color("#ff6666"));
+                }
+                return;
+            }
+        }
+
+        if (!OperatorHelper.isOperator(senderRef)) {
             if (!raceManager.hasRaceSwitchesRemaining(data)) {
                 senderRef.sendMessage(Message.raw("No race changes remaining.").color("#ff6666"));
                 return;
@@ -107,7 +127,12 @@ public class RaceChooseCommand extends AbstractPlayerCommand {
             }
         }
 
+        if (currentRace != null) {
+            data.addCompletedRaceForm(raceManager.resolveAscensionPathId(currentRace.getId()));
+        }
+
         data.setRaceId(desiredRace.getId());
+        data.addCompletedRaceForm(raceManager.resolveAscensionPathId(desiredRace.getId()));
         raceManager.markRaceChange(data);
         playerDataManager.save(data);
 

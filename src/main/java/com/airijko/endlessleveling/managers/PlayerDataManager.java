@@ -547,6 +547,15 @@ public class PlayerDataManager {
 
         Object raceNode = source.get("race");
         profile.setRaceId(parseRaceId(raceNode));
+        Map<String, Object> raceMap = castToStringObjectMap(raceNode);
+        List<String> completedRaceForms = parseStringList(raceMap != null
+                ? raceMap.get("completedForms")
+                : source.get("completedRaceForms"));
+        profile.setCompletedRaceForms(completedRaceForms);
+        String resolvedPathId = resolveRacePathId(profile.getRaceId());
+        if (resolvedPathId != null) {
+            profile.addCompletedRaceForm(resolvedPathId);
+        }
         profile.setLastRaceChangeEpochSeconds(parseRaceLastChanged(raceNode));
         int maxRaceSwitches = raceManager != null ? raceManager.getMaxRaceSwitches() : -1;
         ParsedSwitchValue parsedRaceRemaining = parseRaceRemainingSwitches(raceNode, source, maxRaceSwitches);
@@ -983,6 +992,16 @@ public class PlayerDataManager {
         return definition != null ? definition.getDisplayName() : raceId;
     }
 
+    private String resolveRacePathId(String raceId) {
+        if (raceId == null || raceId.isBlank()) {
+            return null;
+        }
+        if (raceManager == null) {
+            return raceId.trim().toLowerCase();
+        }
+        return raceManager.resolveAscensionPathId(raceId);
+    }
+
     /**
      * Minimal loader used for leaderboards when a player has never joined
      * this server run. Reads name/level/xp/skillPoints from the YAML file.
@@ -1081,6 +1100,9 @@ public class PlayerDataManager {
                     }
                     raceSection.put("lastChangedEpochSeconds", profile.getLastRaceChangeEpochSeconds());
                     raceSection.put("remainingSwitchCount", profile.getRemainingRaceSwitches());
+                    if (!profile.getCompletedRaceFormsSnapshot().isEmpty()) {
+                        raceSection.put("completedForms", profile.getCompletedRaceFormsSnapshot());
+                    }
                     profileMap.put("race", raceSection);
 
                     Map<String, Object> classesSection = new LinkedHashMap<>();

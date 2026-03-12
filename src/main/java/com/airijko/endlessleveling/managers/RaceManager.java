@@ -1,6 +1,10 @@
 package com.airijko.endlessleveling.managers;
 
 import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.races.RaceAscensionDefinition;
+import com.airijko.endlessleveling.races.RaceAscensionEligibility;
+import com.airijko.endlessleveling.races.RaceAscensionPathLink;
+import com.airijko.endlessleveling.races.RaceAscensionRequirements;
 import com.airijko.endlessleveling.races.RaceDefinition;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.passives.util.PassiveDefinitionParser;
@@ -30,11 +34,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -54,6 +61,8 @@ public class RaceManager {
     private final boolean racesEnabled;
     private final boolean forceBuiltinRaces;
     private final Map<String, RaceDefinition> racesByKey = new HashMap<>();
+    private final Map<String, RaceDefinition> racesByAscensionId = new HashMap<>();
+    private final Map<String, List<String>> ascensionParentsByChild = new HashMap<>();
     private final Yaml yaml = new Yaml();
     private final RaceModelDefaultMode raceModelDefaultMode;
     private final int maxRaceSwitches;
@@ -122,6 +131,8 @@ public class RaceManager {
 
         reloadDefaultsFromConfig();
         racesByKey.clear();
+        racesByAscensionId.clear();
+        ascensionParentsByChild.clear();
         syncBuiltinRacesIfNeeded();
         loadRaces();
     }
@@ -361,6 +372,186 @@ public class RaceManager {
         return Collections.unmodifiableCollection(racesByKey.values());
     }
 
+    public String resolveAscensionPathId(String raceInput) {
+        if (raceInput == null || raceInput.isBlank()) {
+            return null;
+        }
+        RaceDefinition race = findRaceByUserInput(raceInput);
+        if (race == null) {
+            race = getRace(raceInput);
+        }
+        if (race != null) {
+            return race.getAscension().getId();
+        }
+        return normalizeKey(raceInput);
+    }
+
+    public RaceAscensionDefinition getAscensionDefinition(String raceInput) {
+        if (raceInput == null || raceInput.isBlank()) {
+            return null;
+        }
+        RaceDefinition race = findRaceByUserInput(raceInput);
+        if (race == null) {
+            race = getRace(raceInput);
+        }
+        return race != null ? race.getAscension() : null;
+    }
+
+    public List<RaceDefinition> getNextAscensionRaces(String raceInput) {
+        RaceDefinition sourceRace = findRaceByUserInput(raceInput);
+        if (sourceRace == null) {
+            sourceRace = getRace(raceInput);
+        }
+        if (sourceRace == null) {
+            return Collections.emptyList();
+        }
+        List<RaceDefinition> results = new ArrayList<>();
+        for (RaceAscensionPathLink link : sourceRace.getAscension().getNextPaths()) {
+            RaceDefinition child = getRaceByAscensionPathId(link.getId());
+            if (child != null) {
+                results.add(child);
+            }
+        }
+        return Collections.unmodifiableList(results);
+    }
+
+    public List<RaceDefinition> getEligibleNextAscensionRaces(PlayerData data) {
+        if (data == null) {
+            return Collections.emptyList();
+        }
+        RaceDefinition currentRace = getPlayerRace(data);
+        if (currentRace == null) {
+            return Collections.emptyList();
+        }
+        List<RaceDefinition> eligible = new ArrayList<>();
+        for (RaceDefinition candidate : getNextAscensionRaces(currentRace.getId())) {
+            RaceAscensionEligibility check = evaluateAscensionEligibility(data, currentRace.getId(),
+                    candidate.getId(), true);
+            if (check.isEligible()) {
+                eligible.add(candidate);
+            }
+        }
+        return Collections.unmodifiableList(eligible);
+    }
+
+    public RaceAscensionEligibility evaluateAscensionEligibility(PlayerData data, String targetRaceInput) {
+        String sourceRace = data != null ? data.getRaceId() : null;
+        return evaluateAscensionEligibility(data, sourceRace, targetRaceInput, true);
+    }
+
+    public RaceAscensionEligibility evaluateAscensionEligibility(PlayerData data,
+            String sourceRaceInput,
+            String targetRaceInput,
+            boolean requireDirectPath) {
+        List<String> blockers = new ArrayList<>();
+        if (data == null) {
+            blockers.add("Player data is unavailable.");
+            return RaceAscensionEligibility.denied(blockers);
+        }
+
+        RaceDefinition targetRace = findRaceByUserInput(targetRaceInput);
+        if (targetRace == null) {
+            targetRace = getRace(targetRaceInput);
+        }
+        if (targetRace == null) {
+            blockers.add("Target race was not found.");
+            return RaceAscensionEligibility.denied(blockers);
+        }
+
+        RaceDefinition sourceRace = findRaceByUserInput(sourceRaceInput);
+        if (sourceRace == null) {
+            sourceRace = getRace(sourceRaceInput);
+        }
+
+        if (sourceRace != null && sourceRace.getId().equalsIgnoreCase(targetRace.getId())) {
+            blockers.add("You are already in that race form.");
+            return RaceAscensionEligibility.denied(blockers);
+        }
+
+        if (requireDirectPath && !isDirectAscensionTransition(sourceRace, targetRace)) {
+            blockers.add("Target race is not in your current ascension path options.");
+        }
+
+        RaceAscensionRequirements requirements = targetRace.getAscension().getRequirements();
+        if (data.getPrestigeLevel() < requirements.getRequiredPrestige()) {
+            blockers.add("Requires prestige " + requirements.getRequiredPrestige() + ".");
+        }
+
+        for (Map.Entry<SkillAttributeType, Integer> requirement : requirements.getMinSkillLevels().entrySet()) {
+            int current = data.getPlayerSkillAttributeLevel(requirement.getKey());
+            if (current < requirement.getValue()) {
+                blockers.add("Requires " + requirement.getKey().getConfigKey() + " >= " + requirement.getValue());
+            }
+        }
+
+        for (Map.Entry<SkillAttributeType, Integer> requirement : requirements.getMaxSkillLevels().entrySet()) {
+            int current = data.getPlayerSkillAttributeLevel(requirement.getKey());
+            if (current > requirement.getValue()) {
+                blockers.add("Requires " + requirement.getKey().getConfigKey() + " <= " + requirement.getValue());
+            }
+        }
+
+        if (!requirements.getMinAnySkillLevels().isEmpty()) {
+            boolean anySatisfied = false;
+            for (Map<SkillAttributeType, Integer> group : requirements.getMinAnySkillLevels()) {
+                if (group == null || group.isEmpty()) {
+                    continue;
+                }
+                boolean groupSatisfied = true;
+                for (Map.Entry<SkillAttributeType, Integer> requirement : group.entrySet()) {
+                    int current = data.getPlayerSkillAttributeLevel(requirement.getKey());
+                    if (current < requirement.getValue()) {
+                        groupSatisfied = false;
+                        break;
+                    }
+                }
+                if (groupSatisfied) {
+                    anySatisfied = true;
+                    break;
+                }
+            }
+            if (!anySatisfied) {
+                blockers.add("Requires at least one OR skill requirement set to be met.");
+            }
+        }
+
+        if (!requirements.getRequiredAugments().isEmpty()) {
+            Set<String> selectedAugments = new HashSet<>();
+            data.getSelectedAugmentsSnapshot().values().forEach(augment -> {
+                if (augment != null && !augment.isBlank()) {
+                    selectedAugments.add(normalizeKey(augment));
+                }
+            });
+            for (String augment : requirements.getRequiredAugments()) {
+                if (!selectedAugments.contains(normalizeKey(augment))) {
+                    blockers.add("Requires augment: " + augment);
+                }
+            }
+        }
+
+        if (!requirements.getRequiredForms().isEmpty()) {
+            Set<String> completed = new LinkedHashSet<>(data.getCompletedRaceFormsSnapshot());
+            if (sourceRace != null) {
+                completed.add(normalizeKey(sourceRace.getAscension().getId()));
+            }
+
+            for (String form : requirements.getRequiredForms()) {
+                if (!completed.contains(normalizeKey(form))) {
+                    blockers.add("Requires completed form: " + form);
+                }
+            }
+        }
+
+        if (blockers.isEmpty()) {
+            return RaceAscensionEligibility.allowed();
+        }
+        return RaceAscensionEligibility.denied(blockers);
+    }
+
+    public boolean canAscend(PlayerData data, String targetRaceInput) {
+        return evaluateAscensionEligibility(data, targetRaceInput).isEligible();
+    }
+
     /**
      * Resets the player's model to default if they are online.
      */
@@ -491,6 +682,8 @@ public class RaceManager {
         } catch (IOException e) {
             LOGGER.atSevere().log("Failed to walk races directory: %s", e.getMessage());
         }
+
+        rebuildAscensionIndexes();
 
         if (!racesByKey.containsKey(normalizeKey(defaultRaceId)) && !racesByKey.isEmpty()) {
             defaultRaceId = racesByKey.values().iterator().next().getId();
@@ -671,6 +864,7 @@ public class RaceManager {
 
         List<Map<String, Object>> passives = parsePassives(yamlData.get("passives"));
         List<RacePassiveDefinition> passiveDefinitions = buildPassiveDefinitions(raceId, passives);
+        RaceAscensionDefinition ascension = parseAscensionDefinition(raceId, yamlData.get("ascension"));
 
         return new RaceDefinition(raceId,
                 displayName,
@@ -680,7 +874,181 @@ public class RaceManager {
                 enabled,
                 attributes,
                 passives,
-                passiveDefinitions);
+                passiveDefinitions,
+                ascension);
+    }
+
+    private RaceAscensionDefinition parseAscensionDefinition(String raceId, Object node) {
+        Map<String, Object> ascensionNode = castToStringObjectMap(node);
+        if (ascensionNode == null) {
+            return RaceAscensionDefinition.baseFallback(normalizeKey(raceId));
+        }
+
+        String ascensionId = safeString(ascensionNode.get("id"));
+        if (ascensionId == null) {
+            ascensionId = normalizeKey(raceId);
+        }
+        String stage = safeString(ascensionNode.get("stage"));
+        String path = safeString(ascensionNode.get("path"));
+        boolean finalForm = parseBoolean(ascensionNode.get("final_form"), false);
+        RaceAscensionRequirements requirements = parseAscensionRequirements(ascensionNode.get("requirements"));
+        List<RaceAscensionPathLink> nextPaths = parseAscensionNextPaths(ascensionNode.get("next_paths"));
+
+        return new RaceAscensionDefinition(ascensionId, stage, path, finalForm, requirements, nextPaths);
+    }
+
+    private RaceAscensionRequirements parseAscensionRequirements(Object node) {
+        Map<String, Object> requirementsNode = castToStringObjectMap(node);
+        if (requirementsNode == null) {
+            return RaceAscensionRequirements.none();
+        }
+
+        int requiredPrestige = parseInt(requirementsNode.get("required_prestige"), 0);
+        Map<SkillAttributeType, Integer> minSkillLevels = parseSkillLevelRequirements(
+                requirementsNode.get("min_skill_levels"));
+        Map<SkillAttributeType, Integer> maxSkillLevels = parseSkillLevelRequirements(
+                requirementsNode.get("max_skill_levels"));
+        List<Map<SkillAttributeType, Integer>> minAnySkillLevels = parseMinAnySkillLevels(
+                requirementsNode.get("min_any_skill_levels"));
+        List<String> requiredAugments = parseStringList(requirementsNode.get("required_augments"));
+        List<String> requiredForms = parseStringList(requirementsNode.get("required_forms"));
+
+        return new RaceAscensionRequirements(
+                requiredPrestige,
+                minSkillLevels,
+                maxSkillLevels,
+                minAnySkillLevels,
+                requiredAugments,
+                requiredForms);
+    }
+
+    private Map<SkillAttributeType, Integer> parseSkillLevelRequirements(Object node) {
+        Map<SkillAttributeType, Integer> result = new EnumMap<>(SkillAttributeType.class);
+        Map<String, Object> map = castToStringObjectMap(node);
+        if (map == null) {
+            return result;
+        }
+
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            SkillAttributeType attributeType = SkillAttributeType.fromConfigKey(entry.getKey());
+            if (attributeType == null) {
+                continue;
+            }
+            int value = Math.max(0, parseInt(entry.getValue(), 0));
+            result.put(attributeType, value);
+        }
+        return result;
+    }
+
+    private List<Map<SkillAttributeType, Integer>> parseMinAnySkillLevels(Object node) {
+        List<Map<SkillAttributeType, Integer>> groups = new ArrayList<>();
+        if (!(node instanceof Iterable<?> iterable)) {
+            return groups;
+        }
+
+        for (Object entry : iterable) {
+            Map<String, Object> groupNode = castToStringObjectMap(entry);
+            if (groupNode == null || groupNode.isEmpty()) {
+                continue;
+            }
+            Map<SkillAttributeType, Integer> group = new EnumMap<>(SkillAttributeType.class);
+            for (Map.Entry<String, Object> requirement : groupNode.entrySet()) {
+                SkillAttributeType type = SkillAttributeType.fromConfigKey(requirement.getKey());
+                if (type == null) {
+                    continue;
+                }
+                group.put(type, Math.max(0, parseInt(requirement.getValue(), 0)));
+            }
+            if (!group.isEmpty()) {
+                groups.add(group);
+            }
+        }
+        return groups;
+    }
+
+    private List<RaceAscensionPathLink> parseAscensionNextPaths(Object node) {
+        List<RaceAscensionPathLink> nextPaths = new ArrayList<>();
+        if (!(node instanceof Iterable<?> iterable)) {
+            return nextPaths;
+        }
+
+        for (Object entry : iterable) {
+            Map<String, Object> linkMap = castToStringObjectMap(entry);
+            if (linkMap == null) {
+                continue;
+            }
+            String id = safeString(linkMap.get("id"));
+            if (id == null) {
+                continue;
+            }
+            String name = safeString(linkMap.get("name"));
+            nextPaths.add(new RaceAscensionPathLink(id, name));
+        }
+
+        return nextPaths;
+    }
+
+    private void rebuildAscensionIndexes() {
+        racesByAscensionId.clear();
+        ascensionParentsByChild.clear();
+
+        for (RaceDefinition race : racesByKey.values()) {
+            if (race == null || race.getAscension() == null) {
+                continue;
+            }
+            racesByAscensionId.put(normalizeKey(race.getAscension().getId()), race);
+        }
+
+        for (RaceDefinition race : racesByKey.values()) {
+            if (race == null || race.getAscension() == null) {
+                continue;
+            }
+            String parentPathId = normalizeKey(race.getAscension().getId());
+            for (RaceAscensionPathLink link : race.getAscension().getNextPaths()) {
+                if (link == null || link.getId() == null || link.getId().isBlank()) {
+                    continue;
+                }
+                String childPathId = normalizeKey(link.getId());
+                ascensionParentsByChild.computeIfAbsent(childPathId, key -> new ArrayList<>()).add(parentPathId);
+            }
+        }
+    }
+
+    private RaceDefinition getRaceByAscensionPathId(String ascensionPathId) {
+        if (ascensionPathId == null || ascensionPathId.isBlank()) {
+            return null;
+        }
+        RaceDefinition byAscensionId = racesByAscensionId.get(normalizeKey(ascensionPathId));
+        if (byAscensionId != null) {
+            return byAscensionId;
+        }
+        RaceDefinition byRaceId = getRace(ascensionPathId);
+        if (byRaceId != null) {
+            return byRaceId;
+        }
+        return findRaceByUserInput(ascensionPathId);
+    }
+
+    private boolean isDirectAscensionTransition(RaceDefinition sourceRace, RaceDefinition targetRace) {
+        if (targetRace == null || targetRace.getAscension() == null) {
+            return false;
+        }
+        String targetPathId = normalizeKey(targetRace.getAscension().getId());
+
+        if (sourceRace == null || sourceRace.getAscension() == null) {
+            List<String> parents = ascensionParentsByChild.get(targetPathId);
+            return parents == null || parents.isEmpty();
+        }
+
+        for (RaceAscensionPathLink nextPath : sourceRace.getAscension().getNextPaths()) {
+            if (nextPath == null) {
+                continue;
+            }
+            if (normalizeKey(nextPath.getId()).equals(targetPathId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private List<Map<String, Object>> parsePassives(Object node) {
@@ -1307,6 +1675,33 @@ public class RaceManager {
             }
         }
         return result;
+    }
+
+    private List<String> parseStringList(Object node) {
+        if (!(node instanceof Iterable<?> iterable)) {
+            return Collections.emptyList();
+        }
+        List<String> result = new ArrayList<>();
+        for (Object entry : iterable) {
+            String value = safeString(entry);
+            if (value != null) {
+                result.add(value);
+            }
+        }
+        return result;
+    }
+
+    private int parseInt(Object value, int defaultValue) {
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value instanceof String stringValue) {
+            try {
+                return Integer.parseInt(stringValue.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return defaultValue;
     }
 
     private double parseDouble(Object value) {

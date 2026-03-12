@@ -6,6 +6,7 @@ import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
+import com.airijko.endlessleveling.races.RaceAscensionEligibility;
 import com.airijko.endlessleveling.races.RaceDefinition;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.util.Lang;
@@ -869,6 +870,27 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             return;
         }
 
+        if (!operatorBypass && raceManager != null) {
+            RaceAscensionEligibility eligibility = raceManager.evaluateAscensionEligibility(playerData,
+                    desired.getId());
+            if (!eligibility.isEligible()) {
+                if (!eligibility.getBlockers().isEmpty()) {
+                    playerRef.sendMessage(Message.raw(tr("ui.races.error.cannot_ascend", "Cannot switch race yet:"))
+                            .color("#ff6666"));
+                    for (String blocker : eligibility.getBlockers()) {
+                        playerRef.sendMessage(Message.join(
+                                Message.raw(" - ").color("#ff6666"),
+                                Message.raw(blocker).color("#ffc300")));
+                    }
+                } else {
+                    playerRef.sendMessage(Message.raw(tr("ui.races.error.cannot_ascend_simple",
+                            "Cannot switch race yet."))
+                            .color("#ff6666"));
+                }
+                return;
+            }
+        }
+
         if (!operatorBypass && raceManager != null && !raceManager.hasRaceSwitchesRemaining(playerData)) {
             playerRef.sendMessage(Message.raw(tr("ui.races.error.no_changes_remaining", "No race changes remaining."))
                     .color("#ff6666"));
@@ -888,7 +910,14 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             }
         }
 
+        if (current != null && raceManager != null) {
+            playerData.addCompletedRaceForm(raceManager.resolveAscensionPathId(current.getId()));
+        }
+
         playerData.setRaceId(desired.getId());
+        if (raceManager != null) {
+            playerData.addCompletedRaceForm(raceManager.resolveAscensionPathId(desired.getId()));
+        }
         if (raceManager != null) {
             raceManager.markRaceChange(playerData);
         }
