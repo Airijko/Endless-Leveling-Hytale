@@ -1,0 +1,34 @@
+$C = "../../Common.ui";
+
+Group {
+    LayoutMode: Left;
+    Anchor: (Right: 8);
+
+    Group {
+        LayoutMode: Top;
+        Anchor: (Width: 180);
+
+        Label #TierLabel {
+            Text: "Tier";
+            Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true, HorizontalAlignment: Center, LetterSpacing: 1);
+            Anchor: (Height: 18, Bottom: 4);
+        }
+
+        Group #TierCards {
+            LayoutMode: Top;
+            Anchor: (Bottom: 4);
+        }
+    }
+
+    Group #TierConnector {
+        LayoutMode: Middle;
+        Anchor: (Width: 32);
+        Visible: false;
+
+        Label #TierConnectorText {
+            Text: "→";
+            Style: (FontSize: 20, TextColor: #7fa6cf, HorizontalAlignment: Center, RenderBold: true);
+            Anchor: (Width: 32);
+        }
+    }
+}

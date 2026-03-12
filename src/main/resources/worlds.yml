@@ -181,7 +181,7 @@ World_Overrides:
         Player_Adaptation:
           Enabled: true
           Allowance_Mode: "ABOVE"
-          Range_Allowance: 5
+          Range_Allowance: 10
     Scaling:
       Health:
         Base_Multiplier: 3.0
@@ -206,7 +206,7 @@ World_Overrides:
             Base_Multiplier: 1.0
             Per_Level: 0.07
           Defense:
-            At_Negative_Max_Difference: 0.45
+            At_Negative_Max_Difference: 0.35
             At_Positive_Max_Difference: 0.9
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.975
@@ -224,7 +224,7 @@ World_Overrides:
         Player_Adaptation:
           Enabled: true
           Allowance_Mode: "BELOW"
-          Range_Allowance: 5
+          Range_Allowance: 10
     Scaling:
       Health:
         Base_Multiplier: 3.0
@@ -249,7 +249,7 @@ World_Overrides:
             Base_Multiplier: 1.0
             Per_Level: 0.07
           Defense:
-            At_Negative_Max_Difference: 0.45
+            At_Negative_Max_Difference: 0.35
             At_Positive_Max_Difference: 0.9
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.975
@@ -263,7 +263,7 @@ World_Overrides:
             Base_Multiplier: 1.0
             Per_Level: 0.05
           Defense:
-            At_Negative_Max_Difference: 0.375
+            At_Negative_Max_Difference: 0.275
             At_Positive_Max_Difference: 0.9
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.95
@@ -281,7 +281,7 @@ World_Overrides:
         Player_Adaptation:
           Enabled: true
           Allowance_Mode: "ABOVE"
-          Range_Allowance: 5
+          Range_Allowance: 10
     Scaling:
       Health:
         Base_Multiplier: 3.0
@@ -307,7 +307,7 @@ World_Overrides:
             Base_Multiplier: 1.0
             Per_Level: 0.075
           Defense:
-            At_Negative_Max_Difference: 0.45
+            At_Negative_Max_Difference: 0.35
             At_Positive_Max_Difference: 0.9
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.975
@@ -321,7 +321,7 @@ World_Overrides:
             Base_Multiplier: 1.0
             Per_Level: 0.05
           Defense:
-            At_Negative_Max_Difference: 0.275
+            At_Negative_Max_Difference: 0.25
             At_Positive_Max_Difference: 0.8
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.9
@@ -337,7 +337,7 @@ World_Overrides:
             Base_Multiplier: 1.0
             Per_Level: 0.065
           Defense:
-            At_Negative_Max_Difference: 0.4
+            At_Negative_Max_Difference: 0.275
             At_Positive_Max_Difference: 0.9
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.9
@@ -358,7 +358,7 @@ World_Overrides:
         Player_Adaptation:
           Enabled: true
           Allowance_Mode: "ABOVE"
-          Range_Allowance: 5
+          Range_Allowance: 10
     Scaling:
       Health:
         Base_Multiplier: 3.0
@@ -383,7 +383,7 @@ World_Overrides:
             Base_Multiplier: 1.25
             Per_Level: 0.07
           Defense:
-            At_Negative_Max_Difference: 0.45
+            At_Negative_Max_Difference: 0.35
             At_Positive_Max_Difference: 0.9
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.975
@@ -401,7 +401,7 @@ World_Overrides:
         Player_Adaptation:
           Enabled: true
           Allowance_Mode: "ABOVE"
-          Range_Allowance: 5
+          Range_Allowance: 10
     Scaling:
       Health:
         Base_Multiplier: 3.0
@@ -426,7 +426,7 @@ World_Overrides:
             Base_Multiplier: 1.25
             Per_Level: 0.07
           Defense:
-            At_Negative_Max_Difference: 0.45
+            At_Negative_Max_Difference: 0.35
             At_Positive_Max_Difference: 0.9
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.975
@@ -447,7 +447,7 @@ World_Overrides:
         Player_Adaptation:
           Enabled: true
           Allowance_Mode: "ABOVE"
-          Range_Allowance: 5
+          Range_Allowance: 10
     Scaling:
       Health:
         Base_Multiplier: 4.0
@@ -472,7 +472,7 @@ World_Overrides:
             Base_Multiplier: 1.25
             Per_Level: 0.07
           Defense:
-            At_Negative_Max_Difference: 0.45
+            At_Negative_Max_Difference: 0.35
             At_Positive_Max_Difference: 0.9
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.975
@@ -490,7 +490,7 @@ World_Overrides:
         Player_Adaptation:
           Enabled: true
           Allowance_Mode: "ABOVE"
-          Range_Allowance: 5
+          Range_Allowance: 10
     Scaling:
       Health:
         Base_Multiplier: 4.0
@@ -516,7 +516,7 @@ World_Overrides:
             Base_Multiplier: 1.25
             Per_Level: 0.07
           Defense:
-            At_Negative_Max_Difference: 0.45
+            At_Negative_Max_Difference: 0.35
             At_Positive_Max_Difference: 0.9
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.975
@@ -532,7 +532,7 @@ World_Overrides:
             Base_Multiplier: 1.25
             Per_Level: 0.07
           Defense:
-            At_Negative_Max_Difference: 0.45
+            At_Negative_Max_Difference: 0.35
             At_Positive_Max_Difference: 0.9
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.975

@@ -1,0 +1,32 @@
+$C = "../../Common.ui";
+
+Button {
+    Anchor: (Width: 158, Height: 112, Bottom: 10);
+    Padding: (Full: 10);
+    Background: (Color: #131d2c(0.88));
+    LayoutMode: Top;
+    Style: (
+        Hovered: (
+            Background: #1c2b40(0.95)
+        ),
+        Pressed: (
+            Background: #263852(0.95)
+        )
+    );
+
+    ItemIcon #NodeIcon {
+        Anchor: (Width: 40, Height: 40, Bottom: 6);
+    }
+
+    Label #NodeName {
+        Text: "Path Node";
+        Style: (FontSize: 12, TextColor: #dbe7f5, RenderBold: true, Wrap: true, HorizontalAlignment: Center);
+        Anchor: (Height: 32);
+    }
+
+    Label #NodeStatus {
+        Text: "Unlocked";
+        Style: (FontSize: 10, TextColor: #7fa6cf);
+        Anchor: (Height: 14);
+    }
+}

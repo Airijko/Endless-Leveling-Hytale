@@ -17,15 +17,20 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * Placeholder page for race ascension paths.
  */
 public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
+
+    private static final String TIER_ROW_TEMPLATE = "Pages/Races/RacePathTierRow.ui";
+    private static final String NODE_CARD_TEMPLATE = "Pages/Races/RacePathNodeCard.ui";
+    private static final int MAX_NODES_PER_TIER_ROW = 3;
+    private static final int MAX_TIER_DEPTH = 12;
 
     private final RaceManager raceManager;
     private final PlayerDataManager playerDataManager;
@@ -46,32 +51,16 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
         NavUIHelper.applyNavVersion(ui, playerRef);
         NavUIHelper.bindNavEvents(events);
 
-        PathViewData viewData = buildPathViewData();
-        ui.set("#RacePathsTitleLabel.Text", viewData.titleRaceName + " Paths");
-        ui.set("#RacePathBaseName.Text", viewData.baseName);
-        ui.set("#RacePathBranchName1.Text", viewData.branch1Name);
-        ui.set("#RacePathBranchName2.Text", viewData.branch2Name);
-        ui.set("#RacePathTier2Name1.Text", viewData.tier2Name1);
-        ui.set("#RacePathTier2Name2.Text", viewData.tier2Name2);
-        ui.set("#RacePathFinalName.Text", viewData.finalName);
-        ui.set("#RacePathBaseIcon.ItemId", viewData.baseIconItemId);
-        ui.set("#RacePathBranchIcon1.ItemId", viewData.branch1IconItemId);
-        ui.set("#RacePathBranchIcon2.ItemId", viewData.branch2IconItemId);
-        ui.set("#RacePathTier2Icon1.ItemId", viewData.tier2IconItemId1);
-        ui.set("#RacePathTier2Icon2.ItemId", viewData.tier2IconItemId2);
-        ui.set("#RacePathFinalIcon.ItemId", viewData.finalIconItemId);
-        ui.set("#RacePathBranchSlot1.Visible", viewData.branch1Visible);
-        ui.set("#RacePathBranchSlot2.Visible", viewData.branch2Visible);
-        ui.set("#RacePathTier2Slot1.Visible", viewData.tier2Visible1);
-        ui.set("#RacePathTier2Slot2.Visible", viewData.tier2Visible2);
-        ui.set("#RacePathBranchIcon1.Visible", viewData.branch1Visible);
-        ui.set("#RacePathBranchIcon2.Visible", viewData.branch2Visible);
-        ui.set("#RacePathTier2Icon1.Visible", viewData.tier2Visible1);
-        ui.set("#RacePathTier2Icon2.Visible", viewData.tier2Visible2);
-        ui.set("#RacePathTopConnectorRow.Visible", viewData.hasAnyBranch);
-        ui.set("#RacePathBottomConnectorRow.Visible", viewData.hasAnyBranch);
-        ui.set("#RacePathTier2ToFinalConnectorRow.Visible", viewData.hasAnyTier2 && viewData.hasFinal);
-        ui.set("#RacePathFinalRow.Visible", viewData.hasFinal);
+        PlayerData data = loadPlayerData();
+        RaceDefinition currentRace = data != null && raceManager != null ? raceManager.getPlayerRace(data) : null;
+
+        String titleRace = currentRace != null ? resolveDisplayName(currentRace) : PlayerData.DEFAULT_RACE_ID;
+        ui.set("#RacePathsTitleLabel.Text", titleRace + " Paths");
+
+        ui.clear("#RacePathRows");
+
+        List<PathTierRow> rows = buildTierRows(currentRace);
+        renderTierRows(ui, rows);
     }
 
     @Override
@@ -85,178 +74,167 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
         }
     }
 
-    private PathViewData buildPathViewData() {
-        PathViewData viewData = new PathViewData();
-
-        PlayerData data = loadPlayerData();
-        RaceDefinition currentRace = data != null && raceManager != null
-                ? raceManager.getPlayerRace(data)
-                : null;
-
-        if (currentRace == null) {
-            viewData.titleRaceName = PlayerData.DEFAULT_RACE_ID;
-            viewData.baseName = "Base";
-            viewData.baseIconItemId = RaceDefinition.DEFAULT_ICON_ITEM_ID;
-            viewData.branch1Visible = false;
-            viewData.branch2Visible = false;
-            viewData.branch1Name = "";
-            viewData.branch2Name = "";
-            viewData.branch1IconItemId = RaceDefinition.DEFAULT_ICON_ITEM_ID;
-            viewData.branch2IconItemId = RaceDefinition.DEFAULT_ICON_ITEM_ID;
-            viewData.tier2Visible1 = false;
-            viewData.tier2Visible2 = false;
-            viewData.tier2Name1 = "";
-            viewData.tier2Name2 = "";
-            viewData.tier2IconItemId1 = RaceDefinition.DEFAULT_ICON_ITEM_ID;
-            viewData.tier2IconItemId2 = RaceDefinition.DEFAULT_ICON_ITEM_ID;
-            viewData.finalName = "Final";
-            viewData.finalIconItemId = RaceDefinition.DEFAULT_ICON_ITEM_ID;
-            viewData.hasAnyBranch = false;
-            viewData.hasAnyTier2 = false;
-            viewData.hasFinal = false;
-            return viewData;
+    private List<PathTierRow> buildTierRows(RaceDefinition rootRace) {
+        List<PathTierRow> rows = new ArrayList<>();
+        if (rootRace == null) {
+            rows.add(PathTierRow.base(List.of()));
+            return rows;
         }
 
-        viewData.titleRaceName = resolveDisplayName(currentRace);
-        viewData.baseName = resolveDisplayName(currentRace);
-        viewData.baseIconItemId = resolveIconItemId(currentRace);
+        rows.add(PathTierRow.base(List.of(rootRace)));
 
-        List<RaceDefinition> branchCandidates = new ArrayList<>(raceManager.getNextAscensionRaces(currentRace.getId()));
-        RaceDefinition branch1 = branchCandidates.size() > 0 ? branchCandidates.get(0) : null;
-        RaceDefinition branch2 = branchCandidates.size() > 1 ? branchCandidates.get(1) : null;
+        Set<String> seen = new LinkedHashSet<>();
+        seen.add(pathKey(rootRace));
 
-        if (branch1 != null) {
-            viewData.branch1Visible = true;
-            viewData.branch1Name = buildPathSlotLabel(branch1);
-            viewData.branch1IconItemId = resolveIconItemId(branch1);
-        } else {
-            viewData.branch1Visible = false;
-            viewData.branch1Name = "";
-            viewData.branch1IconItemId = RaceDefinition.DEFAULT_ICON_ITEM_ID;
+        List<RaceDefinition> frontier = collectUniqueChildren(List.of(rootRace), seen);
+        List<RaceDefinition> finalTier = new ArrayList<>();
+        Set<String> finalSeen = new LinkedHashSet<>();
+
+        int tierNumber = 1;
+        int depth = 0;
+        while (!frontier.isEmpty() && depth < MAX_TIER_DEPTH) {
+            depth++;
+
+            List<RaceDefinition> nonFinalTier = new ArrayList<>();
+            for (RaceDefinition candidate : frontier) {
+                if (candidate == null) {
+                    continue;
+                }
+                if (candidate.getAscension().isFinalForm()) {
+                    String key = pathKey(candidate);
+                    if (finalSeen.add(key)) {
+                        finalTier.add(candidate);
+                    }
+                } else {
+                    nonFinalTier.add(candidate);
+                }
+            }
+
+            if (!nonFinalTier.isEmpty()) {
+                rows.add(PathTierRow.tier(tierNumber, nonFinalTier));
+                tierNumber++;
+                frontier = collectUniqueChildren(nonFinalTier, seen);
+            } else {
+                frontier = List.of();
+            }
         }
 
-        if (branch2 != null) {
-            viewData.branch2Visible = true;
-            viewData.branch2Name = buildPathSlotLabel(branch2);
-            viewData.branch2IconItemId = resolveIconItemId(branch2);
-        } else {
-            viewData.branch2Visible = false;
-            viewData.branch2Name = "";
-            viewData.branch2IconItemId = RaceDefinition.DEFAULT_ICON_ITEM_ID;
-        }
-        viewData.hasAnyBranch = viewData.branch1Visible || viewData.branch2Visible;
-
-        RaceDefinition tier2A = resolvePrimaryNextRace(branch1);
-        if (tier2A != null) {
-            viewData.tier2Visible1 = true;
-            viewData.tier2Name1 = buildPathSlotLabel(tier2A);
-            viewData.tier2IconItemId1 = resolveIconItemId(tier2A);
-        } else {
-            viewData.tier2Visible1 = false;
-            viewData.tier2Name1 = "";
-            viewData.tier2IconItemId1 = RaceDefinition.DEFAULT_ICON_ITEM_ID;
+        if (!finalTier.isEmpty()) {
+            rows.add(PathTierRow.finalTier(finalTier));
         }
 
-        RaceDefinition tier2B = resolvePrimaryNextRace(branch2);
-        if (tier2B != null) {
-            viewData.tier2Visible2 = true;
-            viewData.tier2Name2 = buildPathSlotLabel(tier2B);
-            viewData.tier2IconItemId2 = resolveIconItemId(tier2B);
-        } else {
-            viewData.tier2Visible2 = false;
-            viewData.tier2Name2 = "";
-            viewData.tier2IconItemId2 = RaceDefinition.DEFAULT_ICON_ITEM_ID;
-        }
-        viewData.hasAnyTier2 = viewData.tier2Visible1 || viewData.tier2Visible2;
-
-        List<RaceDefinition> tier2Candidates = new ArrayList<>();
-        if (tier2A != null) {
-            tier2Candidates.add(tier2A);
-        }
-        if (tier2B != null && !tier2B.getId().equalsIgnoreCase(tier2A != null ? tier2A.getId() : "")) {
-            tier2Candidates.add(tier2B);
-        }
-
-        RaceDefinition finalRace = resolveConvergedFinalRace(currentRace, branchCandidates, tier2Candidates);
-        viewData.finalName = finalRace != null ? resolveDisplayName(finalRace) : "Final";
-        viewData.finalIconItemId = resolveIconItemId(finalRace);
-        viewData.hasFinal = finalRace != null;
-        return viewData;
+        return rows;
     }
 
-    private RaceDefinition resolvePrimaryNextRace(RaceDefinition sourceRace) {
-        if (raceManager == null || sourceRace == null) {
-            return null;
-        }
-        List<RaceDefinition> next = raceManager.getNextAscensionRaces(sourceRace.getId());
-        if (next == null || next.isEmpty()) {
-            return null;
-        }
-        return next.get(0);
-    }
-
-    private RaceDefinition resolveConvergedFinalRace(RaceDefinition currentRace,
-            List<RaceDefinition> branchCandidates,
-            List<RaceDefinition> tier2Candidates) {
-        if (raceManager == null || currentRace == null) {
-            return null;
+    private List<RaceDefinition> collectUniqueChildren(List<RaceDefinition> parents, Set<String> seen) {
+        if (raceManager == null || parents == null || parents.isEmpty()) {
+            return List.of();
         }
 
-        Map<String, Integer> candidateHits = new LinkedHashMap<>();
-        Map<String, RaceDefinition> byKey = new LinkedHashMap<>();
-        List<RaceDefinition> source = (tier2Candidates != null && !tier2Candidates.isEmpty())
-                ? tier2Candidates
-                : branchCandidates;
-
-        for (RaceDefinition node : source) {
-            if (node == null) {
+        List<RaceDefinition> result = new ArrayList<>();
+        for (RaceDefinition parent : parents) {
+            if (parent == null) {
                 continue;
             }
-            for (RaceDefinition branchNext : raceManager.getNextAscensionRaces(node.getId())) {
-                String key = branchNext.getId().toLowerCase(Locale.ROOT);
-                candidateHits.put(key, candidateHits.getOrDefault(key, 0) + 1);
-                byKey.putIfAbsent(key, branchNext);
+            for (RaceDefinition child : raceManager.getNextAscensionRaces(parent.getId())) {
+                if (child == null) {
+                    continue;
+                }
+                String key = pathKey(child);
+                if (seen.add(key)) {
+                    result.add(child);
+                }
             }
         }
+        return result;
+    }
 
-        if (!candidateHits.isEmpty()) {
-            return candidateHits.entrySet().stream()
-                    .sorted((a, b) -> {
-                        int byCount = Integer.compare(b.getValue(), a.getValue());
-                        if (byCount != 0) {
-                            return byCount;
-                        }
-                        RaceDefinition raceA = byKey.get(a.getKey());
-                        RaceDefinition raceB = byKey.get(b.getKey());
-                        boolean finalA = raceA != null && raceA.getAscension().isFinalForm();
-                        boolean finalB = raceB != null && raceB.getAscension().isFinalForm();
-                        int byFinalFlag = Boolean.compare(finalB, finalA);
-                        if (byFinalFlag != 0) {
-                            return byFinalFlag;
-                        }
-                        return resolveDisplayName(raceA).compareToIgnoreCase(resolveDisplayName(raceB));
-                    })
-                    .map(entry -> byKey.get(entry.getKey()))
-                    .filter(race -> race != null)
-                    .findFirst()
-                    .orElse(null);
+    private String pathKey(RaceDefinition race) {
+        if (race == null) {
+            return "";
+        }
+        RaceAscensionDefinition asc = race.getAscension();
+        String key = asc != null && asc.getId() != null && !asc.getId().isBlank() ? asc.getId() : race.getId();
+        return key == null ? "" : key.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private void renderTierRows(UICommandBuilder ui, List<PathTierRow> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return;
         }
 
-        List<RaceDefinition> directNext = raceManager.getNextAscensionRaces(currentRace.getId());
-        if (directNext.isEmpty()) {
-            return currentRace.getAscension().isFinalForm() ? currentRace : null;
+        for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
+            PathTierRow row = rows.get(rowIndex);
+            ui.append("#RacePathRows", TIER_ROW_TEMPLATE);
+            String rowBase = "#RacePathRows[" + rowIndex + "]";
+
+            ui.set(rowBase + " #TierLabel.Text", row.label());
+            ui.set(rowBase + " #TierLabel.Style.TextColor", row.finalTier() ? "#ffe59f" : "#9fb6d3");
+
+            renderTierCards(ui, rowBase + " #TierCards", row.nodes(), row.baseTier(), row.finalTier());
+
+            // Hide connectors in horizontal layout - the left-to-right flow is self-evident
+            ui.set(rowBase + " #TierConnector.Visible", false);
+        }
+    }
+
+    private void renderTierCards(UICommandBuilder ui,
+            String cardsSelector,
+            List<RaceDefinition> races,
+            boolean baseTier,
+            boolean finalTier) {
+        List<RaceDefinition> nodes = races == null ? List.of() : races;
+        if (nodes.isEmpty()) {
+            return;
         }
 
-        return directNext.stream()
-                .sorted((a, b) -> {
-                    int byFinalFlag = Boolean.compare(b.getAscension().isFinalForm(), a.getAscension().isFinalForm());
-                    if (byFinalFlag != 0) {
-                        return byFinalFlag;
-                    }
-                    return resolveDisplayName(a).compareToIgnoreCase(resolveDisplayName(b));
-                })
-                .findFirst()
-                .orElse(null);
+        PlayerData playerData = loadPlayerData();
+        RaceDefinition currentPlayerRace = playerData != null && raceManager != null
+                ? raceManager.getPlayerRace(playerData)
+                : null;
+
+        int rowIndex = 0;
+        int inRow = 0;
+        for (RaceDefinition race : nodes) {
+            if (inRow == 0) {
+                ui.appendInline(cardsSelector, "Group { LayoutMode: Middle; Anchor: (Bottom: 0); }");
+            }
+
+            ui.append(cardsSelector + "[" + rowIndex + "]", NODE_CARD_TEMPLATE);
+            String nodeBase = cardsSelector + "[" + rowIndex + "][" + inRow + "]";
+            ui.set(nodeBase + " #NodeName.Text", buildNodeLabel(race, !baseTier));
+            ui.set(nodeBase + " #NodeIcon.ItemId", resolveIconItemId(race));
+            ui.set(nodeBase + " #NodeName.Style.TextColor", finalTier ? "#ffe59f" : "#dbe7f5");
+
+            // Determine lock status: base tier is always unlocked, others depend on
+            // progression
+            boolean isUnlocked = baseTier || isRaceUnlocked(race, currentPlayerRace);
+            ui.set(nodeBase + " #NodeStatus.Text", isUnlocked ? "Unlocked" : "Locked");
+            String statusColor = isUnlocked ? "#7fa6cf" : "#a0522d";
+            ui.set(nodeBase + " #NodeStatus.Style.TextColor", statusColor);
+
+            inRow++;
+            if (inRow >= MAX_NODES_PER_TIER_ROW) {
+                inRow = 0;
+                rowIndex++;
+            }
+        }
+    }
+
+    private boolean isRaceUnlocked(RaceDefinition race, RaceDefinition currentPlayerRace) {
+        if (race == null) {
+            return false;
+        }
+        // A race is unlocked if the player has already reached it or beyond in their
+        // progression
+        if (currentPlayerRace == null) {
+            return false;
+        }
+        // For now, only the current race is "unlocked" (the one the player is on)
+        // This can be enhanced later to track all completed ascensions
+        String raceKey = pathKey(race);
+        String currentKey = pathKey(currentPlayerRace);
+        return raceKey.equals(currentKey);
     }
 
     private PlayerData loadPlayerData() {
@@ -271,12 +249,16 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
         return data;
     }
 
-    private String buildPathSlotLabel(RaceDefinition race) {
+    private String buildNodeLabel(RaceDefinition race, boolean includePathSuffix) {
         if (race == null) {
             return "";
         }
 
         String displayName = resolveDisplayName(race);
+        if (!includePathSuffix) {
+            return displayName;
+        }
+
         RaceAscensionDefinition ascension = race.getAscension();
         String prettyPath = prettifyPathName(ascension != null ? ascension.getPath() : null);
         if (prettyPath.isBlank()) {
@@ -334,26 +316,22 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
         return out.toString();
     }
 
-    private static final class PathViewData {
-        String titleRaceName;
-        String baseName;
-        String baseIconItemId;
-        boolean branch1Visible;
-        boolean branch2Visible;
-        boolean hasAnyBranch;
-        boolean tier2Visible1;
-        boolean tier2Visible2;
-        boolean hasAnyTier2;
-        boolean hasFinal;
-        String branch1Name;
-        String branch2Name;
-        String branch1IconItemId;
-        String branch2IconItemId;
-        String tier2Name1;
-        String tier2Name2;
-        String tier2IconItemId1;
-        String tier2IconItemId2;
-        String finalName;
-        String finalIconItemId;
+    private String connectorText(int upperCount, int lowerCount) {
+        // Horizontal layout uses simple directional arrow
+        return "→";
+    }
+
+    private record PathTierRow(String label, List<RaceDefinition> nodes, boolean baseTier, boolean finalTier) {
+        private static PathTierRow base(List<RaceDefinition> nodes) {
+            return new PathTierRow("Base Class", nodes == null ? List.of() : nodes, true, false);
+        }
+
+        private static PathTierRow tier(int tierNumber, List<RaceDefinition> nodes) {
+            return new PathTierRow("Tier " + tierNumber, nodes == null ? List.of() : nodes, false, false);
+        }
+
+        private static PathTierRow finalTier(List<RaceDefinition> nodes) {
+            return new PathTierRow("Final Tier", nodes == null ? List.of() : nodes, false, true);
+        }
     }
 }
