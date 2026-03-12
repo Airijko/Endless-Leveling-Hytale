@@ -240,7 +240,7 @@ World_Overrides:
     Mob_Overrides:
       Katherina:
         Level: 60
-        Augments: [undying_rage, bloodthirster, vampirism, executioner]
+        Augments: [bloodthirster, vampirism, executioner]
         Scaling:
           Health:
             Base_Multiplier: 1.0

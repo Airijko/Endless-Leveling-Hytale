@@ -78,8 +78,8 @@ public class PluginFilesManager {
         this.weaponsFile = initYamlFile(WEAPONS_FILE_NAME);
         this.partyDataFile = initPartyDataFile();
 
-        exportResourceDirectory("races", racesFolder, false);
-        exportResourceDirectory("classes", classesFolder, false);
+        seedResourceDirectoryIfEmpty("races", racesFolder);
+        seedResourceDirectoryIfEmpty("classes", classesFolder);
         exportResourceDirectory("augments", augmentsFolder, false);
         exportResourceDirectory("lang", langFolder, false);
     }
@@ -335,6 +335,30 @@ public class PluginFilesManager {
             }
         } catch (Exception e) {
             LOGGER.atWarning().log("Failed to export resource directory %s: %s", resourceRoot, e.getMessage());
+        }
+    }
+
+    private void seedResourceDirectoryIfEmpty(String resourceRoot, File destination) {
+        if (destination == null) {
+            return;
+        }
+        if (hasYamlFiles(destination.toPath())) {
+            return;
+        }
+        exportResourceDirectory(resourceRoot, destination, false);
+    }
+
+    private boolean hasYamlFiles(Path folder) {
+        if (folder == null || !Files.exists(folder)) {
+            return false;
+        }
+        try (Stream<Path> files = Files.walk(folder)) {
+            return files.filter(Files::isRegularFile)
+                    .map(path -> path.toString().toLowerCase())
+                    .anyMatch(path -> path.endsWith(".yml"));
+        } catch (IOException e) {
+            LOGGER.atWarning().log("Failed to inspect %s for YAML files: %s", folder, e.getMessage());
+            return false;
         }
     }
 
