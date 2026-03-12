@@ -3,11 +3,14 @@ package com.airijko.endlessleveling.commands;
 import com.airijko.endlessleveling.commands.races.RaceProfileCommand;
 import com.airijko.endlessleveling.commands.races.RaceChooseCommand;
 import com.airijko.endlessleveling.commands.races.ToggleRaceModelCommand;
+import com.airijko.endlessleveling.commands.subcommands.OpenPageSubCommand;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.races.RaceDefinition;
+import com.airijko.endlessleveling.ui.RacePathsUIPage;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
@@ -31,6 +34,10 @@ public class RaceCommand extends AbstractPlayerCommand {
         this.addSubCommand(new RaceProfileCommand(raceManager, playerDataManager));
         this.addSubCommand(new RaceChooseCommand(raceManager, playerDataManager));
         this.addSubCommand(new ToggleRaceModelCommand());
+        this.addSubCommand(new OpenPageSubCommand(
+                "paths",
+                "Open the EndlessLeveling Race Paths page",
+                playerRef -> new RacePathsUIPage(playerRef, CustomPageLifetime.CanDismiss)));
     }
 
     @Override

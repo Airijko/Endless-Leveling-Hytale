@@ -1,0 +1,48 @@
+$C = "../../Common.ui";
+$Nav = "../Nav/LeftNavPanel.ui";
+
+$C.@PageOverlay {
+    $C.@DecoratedContainer {
+        Anchor: (Width: 1000, Height: 700);
+        #Title {
+            Group {
+                $C.@Title {
+                    @Text = "ENDLESS LEVELING";
+                }
+            }
+        }
+
+        #Content {
+            LayoutMode: Left;
+            Padding: (Full: 0);
+
+            $Nav.@LeftNavPanel {}
+
+            Group #RightPanel {
+                FlexWeight: 1;
+                LayoutMode: Top;
+                Anchor: (Right: 7, Bottom: 7);
+                Padding: (Horizontal: 16, Vertical: 16);
+
+                Label #RacePathsTitleLabel {
+                    Text: "Race Paths";
+                    Style: (FontSize: 26, TextColor: #ffffff, RenderBold: true, HorizontalAlignment: Center);
+                    Anchor: (Height: 36);
+                }
+
+                Group { Anchor: (Height: 1); Background: #2b3542; }
+                Group { Anchor: (Height: 20); }
+
+                Group {
+                    LayoutMode: Middle;
+                    FlexWeight: 1;
+
+                    Label #RacePathsPlaceholderLabel {
+                        Text: "Placeholder page. Path tree UI coming soon.";
+                        Style: (FontSize: 14, TextColor: #9fb6d3, HorizontalAlignment: Center);
+                    }
+                }
+            }
+        }
+    }
+}
