@@ -103,8 +103,8 @@ language:
 
 # Bundled content sync / customization
 # Set these to false if you want to keep custom files instead of bundled updates.
-force_builtin_config: false # If true, overwrite config.yml with bundled defaults; if false, migrate existing config values into new template structure
-force_builtin_leveling: false # If true, overwrite leveling.yml with bundled defaults; if false, migrate existing leveling values into new template structure
+force_builtin_config: true # If true, overwrite config.yml with bundled defaults; if false, migrate existing config values into new template structure
+force_builtin_leveling: true # If true, overwrite leveling.yml with bundled defaults; if false, migrate existing leveling values into new template structure
 force_builtin_events: false # If true, overwrite events.yml with bundled defaults; if false, migrate existing event-hook values into new template structure
 force_builtin_races: true # If true, replace races with bundled defaults during sync; if false, custom races are preserved and bundled races are only seeded when the folder has no race .yml files
 force_builtin_classes: true # If true, replace classes with bundled defaults during sync; if false, custom classes are preserved and bundled classes are only seeded when the folder has no class .yml files

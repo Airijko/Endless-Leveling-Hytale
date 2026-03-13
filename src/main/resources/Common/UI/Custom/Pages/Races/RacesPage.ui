@@ -2,345 +2,385 @@ $C = "../../Common.ui";
 $Nav = "../Nav/LeftNavPanel.ui";
 
 $C.@PageOverlay {
-    $C.@DecoratedContainer {
-        Anchor: (Width: 1000, Height: 700);
-        #Title {
-            Group {
-                $C.@Title {
-                    @Text = "ENDLESS LEVELING";
-                }
-            }
-        }
+    Group {
+        LayoutMode: Middle;
 
-        #Content {
+        Group {
             LayoutMode: Left;
-            Padding: (Full: 0);
+            Anchor: (Width: 1680, Height: 700);
 
-            // ---------------- LEFT NAV ----------------
-            $Nav.@LeftNavPanel {}
-
-            // ---------------- RIGHT PANEL ----------------
-            Group #RightPanel {
-                FlexWeight: 1;
+            Group {
                 LayoutMode: Top;
-                Anchor: (Right: 7, Bottom: 7);
+                Anchor: (Width: 1680, Height: 700);
 
-                Group #Header {
-                    LayoutMode: Left;
-                    Anchor: (Height: 60);
-                    Padding: (Horizontal: 16, Vertical: 10);
+                Group {
+                    LayoutMode: Middle;
+                    Anchor: (Width: 1680);
 
-                    Label #RacesTitleLabel {
-                        Text: "Race Archive";
-                        Anchor: (Height: 60);
-                        Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
-                    }
-
-                    Group { FlexWeight: 1; }
-
-                    Group #RaceSwapCooldownCard {
+                    Group {
                         LayoutMode: Left;
-                        Anchor: (Width: 280);
-                        Background: #0b141f(0.92);
-                        Padding: (Full: 8);
 
-                        Group {
-                            LayoutMode: Top;
-                            Anchor: (Height: 26);
+                        $C.@DecoratedContainer {
+                            Anchor: (Width: 300, Height: 700);
 
-                            Label #RaceSwapCooldownCardTitle {
-                                Text: "Race Swap Cooldown";
-                                Style: (FontSize: 12, TextColor: #8aa1bf, RenderBold: true, LetterSpacing: 1);
-                                Anchor: (Height: 14);
+                            #Title {
+                                Group {
+                                    $C.@Title #RacesListPanel { @Text = "RACES"; }
+                                }
                             }
 
-                            Group { FlexWeight: 1; }
+                            #Content {
+                                LayoutMode: Top;
+                                Padding: (Horizontal: 12, Bottom: 12);
 
-                            Label #RaceSwapCooldownHint {
-                                Text: "Swapping again becomes available once the timer hits zero.";
-                                Style: (FontSize: 11, TextColor: #9fb6d3);
-                                Anchor: (Height: 28);
-                            }
-                        }
+                                Group #RaceListColumn {
+                                    FlexWeight: 1;
+                                    LayoutMode: Top;
 
-                        Group { Anchor: (Height: 4); }
-                        Group { FlexWeight: 1; }
+                                    Group #RaceListHeader {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 32);
+                                        Padding: (Vertical: 4);
 
-                        Label #RaceSwapCooldownValue {
-                            Text: "--";
-                            Style: (FontSize: 20, TextColor: #6fe3ff, RenderBold: true);
-                            Anchor: (Height: 24);
-                        }
-                    }
-                }
+                                        Label #RaceListTitle {
+                                            Text: "Available Races";
+                                            Style: (FontSize: 16, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
+                                        }
 
-                Group { Anchor: (Height: 1); Background: #2b3542; }
+                                        Group { FlexWeight: 1; }
 
-                Group #RaceContent {
-                    LayoutMode: Left;
-                    FlexWeight: 1;
-                    Padding: (Full: 16);
+                                        Label #RaceCountLabel {
+                                            Text: "0 unlocked";
+                                            Style: (FontSize: 12, TextColor: #9fb6d3, VerticalAlignment: Center);
+                                            Anchor: (Height: 18);
+                                        }
+                                    }
 
-                    Group #RaceListColumn {
-                        FlexWeight: 1;
-                        LayoutMode: Top;
+                                    Group { Anchor: (Height: 10); }
 
-                        Group #RaceListHeader {
-                            LayoutMode: Left;
-                            Anchor: (Height: 32);
+                                    Group #RaceListScroll {
+                                        FlexWeight: 1;
+                                        LayoutMode: TopScrolling;
+                                        ScrollbarStyle: $C.@DefaultScrollbarStyle;
 
-                            Label #RaceListTitle {
-                                Text: "Available Races";
-                                Style: (FontSize: 16, TextColor: #ffffff, RenderBold: true);
-                            }
-
-                            Group { FlexWeight: 1; }
-
-                            Label #RaceCountLabel {
-                                Text: "0 unlocked";
-                                Style: (FontSize: 12, TextColor: #9fb6d3);
-                                Anchor: (Height: 18);
+                                        Group #RaceRows {
+                                            LayoutMode: Top;
+                                        }
+                                    }
+                                }
                             }
                         }
 
-                        Group #RaceStatusCard {
-                            LayoutMode: Top;
-                            Background: #0b141f(0.92);
-                            Padding: (Full: 10);
+                        Group { Anchor: (Width: 40); }
 
-                            Label #RaceCurrentTitle {
-                                Text: "Current Race";
-                                Style: (FontSize: 12, TextColor: #8aa1bf, RenderBold: true, LetterSpacing: 1);
-                                Anchor: (Height: 12);
+                        $C.@DecoratedContainer {
+                            Anchor: (Width: 1000, Height: 700);
+                            #Title {
+                                Group {
+                                    $C.@Title {
+                                        @Text = "ENDLESS LEVELING";
+                                    }
+                                }
                             }
 
-                            Group { Anchor: (Height: 8); }
-
-                            Group {
+                            #Content {
                                 LayoutMode: Left;
-                                Anchor: (Height: 20);
-                                Label #RaceCurrentBadge {
-                                    Text: "Active";
-                                    Style: (FontSize: 11, TextColor: #6fe3ff, RenderBold: true);
-                                }
-                                Group { Anchor: (Width: 8); }
-                                Label #CurrentRaceValue {
-                                    Text: "--";
-                                    Style: (FontSize: 13, TextColor: #ffffff, RenderBold: true);
+                                Padding: (Full: 0);
+
+                                // ---------------- LEFT NAV ----------------
+                                $Nav.@LeftNavPanel {}
+
+                                // ---------------- RIGHT PANEL ----------------
+                                Group #RightPanel {
                                     FlexWeight: 1;
-                                }
-                            }
-
-                            Group { Anchor: (Height: 6); }
-                            Label #RaceCurrentHint {
-                                Text: "Your active race sets identity and innate bonuses.";
-                                Style: (FontSize: 11, TextColor: #9fb6d3);
-                                Anchor: (Height: 14);
-                            }
-                        }
-
-                        Group { Anchor: (Height: 10); }
-
-                        Group #RaceListScroll {
-                            FlexWeight: 1;
-                            LayoutMode: TopScrolling;
-                            ScrollbarStyle: $C.@DefaultScrollbarStyle;
-
-                            Group #RaceRows {
-                                LayoutMode: Top;
-                            }
-                        }
-                    }
-
-                    Group { Anchor: (Width: 16); }
-
-                    Group #RaceDetailPanel {
-                        LayoutMode: Top;
-                        Anchor: (Width: 430);
-                        Background: #050910(0.85);
-                        Padding: (Left: 18, Right: 18, Top: 18, Bottom: 18);
-
-                        Label #SelectedRaceLabel {
-                            Text: "Select a Race";
-                            Style: (FontSize: 20, TextColor: #ffffff, RenderBold: true);
-                            Anchor: (Height: 24);
-                        }
-
-                        Label #SelectedRaceSubtitle {
-                            Text: "Choose a race on the left to preview identity, stats, and passives.";
-                            Style: (FontSize: 13, TextColor: #8aa1bf);
-                            Anchor: (Height: 18);
-                        }
-
-                        Group { Anchor: (Height: 14); }
-                        Group { Anchor: (Height: 1); Background: #ffffff(0.08); }
-                        Group { Anchor: (Height: 14); }
-
-                        Group { Anchor: (Height: 16); }
-
-                        Group #RaceDetailScrollArea {
-                            FlexWeight: 1;
-                            LayoutMode: TopScrolling;
-                            ScrollbarStyle: $C.@DefaultScrollbarStyle;
-
-                            Group #RaceDetailScrollContent {
-                                LayoutMode: Top;
-
-                                Label #RaceLoreTitle {
-                                    Text: "Lore Preview";
-                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
-                                    Anchor: (Height: 20);
-                                }
-
-                                Label #RaceLoreText {
-                                    Text: "Dive into the mythos behind this race.";
-                                    Style: (FontSize: 12, TextColor: #9fb6d3, Wrap: true);
-                                    Anchor: (Height: 48);
-                                    FlexWeight: 1;
-                                }
-
-                                Group { Anchor: (Height: 16); }
-
-                                Label #RaceStatsTitle {
-                                    Text: "Race Stats";
-                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
-                                    Anchor: (Height: 20);
-                                }
-
-                                Group #RaceAttributeList {
                                     LayoutMode: Top;
-                                    Background: #0b141f(0.7);
-                                    Padding: (Left: 14, Right: 14, Top: 10, Bottom: 10);
+                                    Anchor: (Right: 7, Bottom: 7);
 
-                                    Group {
+                                    Group #RaceContent {
                                         LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #RaceAttributeLifeForceLabel { Text: "Life Force"; Style: (FontSize: 12, TextColor: #7be0ff); }
-                                        Group { FlexWeight: 1; }
-                                        Label #RaceAttributeLifeForceValue { Text: "--"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #RaceAttributeLifeForceNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #RaceAttributeStrengthLabel { Text: "Strength"; Style: (FontSize: 12, TextColor: #ffb347); }
-                                        Group { FlexWeight: 1; }
-                                        Label #RaceAttributeStrengthValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffdf8f, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #RaceAttributeStrengthNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #RaceAttributeSorceryLabel { Text: "Sorcery"; Style: (FontSize: 12, TextColor: #d7baff); }
-                                        Group { FlexWeight: 1; }
-                                        Label #RaceAttributeSorceryValue { Text: "--"; Style: (FontSize: 12, TextColor: #e8d5ff, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #RaceAttributeSorceryNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #RaceAttributeDefenseLabel { Text: "Defense"; Style: (FontSize: 12, TextColor: #8be0b2); }
-                                        Group { FlexWeight: 1; }
-                                        Label #RaceAttributeDefenseValue { Text: "--"; Style: (FontSize: 12, TextColor: #6ee7b7, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #RaceAttributeDefenseNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #RaceAttributeHasteLabel { Text: "Haste"; Style: (FontSize: 12, TextColor: #f2a2e8); }
-                                        Group { FlexWeight: 1; }
-                                        Label #RaceAttributeHasteValue { Text: "--"; Style: (FontSize: 12, TextColor: #f78bd9, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #RaceAttributeHasteNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #RaceAttributePrecisionLabel { Text: "Precision"; Style: (FontSize: 12, TextColor: #9ad4ff); }
-                                        Group { FlexWeight: 1; }
-                                        Label #RaceAttributePrecisionValue { Text: "--"; Style: (FontSize: 12, TextColor: #7cb8ff, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #RaceAttributePrecisionNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #RaceAttributeFerocityLabel { Text: "Ferocity"; Style: (FontSize: 12, TextColor: #ff7b7b); }
-                                        Group { FlexWeight: 1; }
-                                        Label #RaceAttributeFerocityValue { Text: "--"; Style: (FontSize: 12, TextColor: #ff5555, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #RaceAttributeFerocityNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #RaceAttributeStaminaLabel { Text: "Stamina"; Style: (FontSize: 12, TextColor: #ffc56f); }
-                                        Group { FlexWeight: 1; }
-                                        Label #RaceAttributeStaminaValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffad42, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #RaceAttributeStaminaNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #RaceAttributeFlowLabel { Text: "Flow"; Style: (FontSize: 12, TextColor: #9be3ff); }
-                                        Group { FlexWeight: 1; }
-                                        Label #RaceAttributeFlowValue { Text: "--"; Style: (FontSize: 12, TextColor: #7dd6ff, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #RaceAttributeFlowNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #RaceAttributeDisciplineLabel { Text: "Discipline"; Style: (FontSize: 12, TextColor: #d5dfff); }
-                                        Group { FlexWeight: 1; }
-                                        Label #RaceAttributeDisciplineValue { Text: "--"; Style: (FontSize: 12, TextColor: #9fe0ff, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #RaceAttributeDisciplineNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
-                                    }
-                                }
+                                        FlexWeight: 1;
+                                        Padding: (Full: 16);
 
-                                Group { Anchor: (Height: 16); }
+                                        Group { Anchor: (Width: 16); }
 
-                                Label #RacePassivesTitle {
-                                    Text: "Passives";
-                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
-                                    Anchor: (Height: 20);
-                                }
+                                        Group #RaceDetailPanel {
+                                            LayoutMode: Top;
+                                            Anchor: (Width: 430);
+                                            Background: #050910(0.85);
+                                            Padding: (Left: 18, Right: 18, Top: 18, Bottom: 18);
 
-                                Label #RacePassiveSummary {
-                                    Text: "Inspect a race to preview its passive bonuses.";
-                                    Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
-                                    Anchor: (Height: 18);
-                                }
+                                            Label #SelectedRaceLabel {
+                                                Text: "Select a Race";
+                                                Style: (FontSize: 20, TextColor: #ffffff, RenderBold: true);
+                                                Anchor: (Height: 24);
+                                            }
 
-                                Group #RacePassiveEntries {
-                                    LayoutMode: Top;
+                                            Label #SelectedRaceSubtitle {
+                                                Text: "Choose a race on the left to preview identity, stats, and passives.";
+                                                Style: (FontSize: 13, TextColor: #8aa1bf);
+                                                Anchor: (Height: 18);
+                                            }
+
+                                            Group { Anchor: (Height: 14); }
+                                            Group { Anchor: (Height: 1); Background: #ffffff(0.08); }
+                                            Group { Anchor: (Height: 14); }
+
+                                            Group { Anchor: (Height: 16); }
+
+                                            Group #RaceDetailScrollArea {
+                                                FlexWeight: 1;
+                                                LayoutMode: TopScrolling;
+                                                ScrollbarStyle: $C.@DefaultScrollbarStyle;
+
+                                                Group #RaceDetailScrollContent {
+                                                    LayoutMode: Top;
+
+                                                    Label #RaceLoreTitle {
+                                                        Text: "Lore Preview";
+                                                        Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                                                        Anchor: (Height: 20);
+                                                    }
+
+                                                    Label #RaceLoreText {
+                                                        Text: "Dive into the mythos behind this race.";
+                                                        Style: (FontSize: 12, TextColor: #9fb6d3, Wrap: true);
+                                                        Anchor: (Height: 48);
+                                                        FlexWeight: 1;
+                                                    }
+
+                                                    Group { Anchor: (Height: 16); }
+
+                                                    Label #RaceStatsTitle {
+                                                        Text: "Race Stats";
+                                                        Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                                                        Anchor: (Height: 20);
+                                                    }
+
+                                                    Group #RaceAttributeList {
+                                                        LayoutMode: Top;
+                                                        Background: #0b141f(0.7);
+                                                        Padding: (Left: 14, Right: 14, Top: 10, Bottom: 10);
+
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #RaceAttributeLifeForceLabel { Text: "Life Force"; Style: (FontSize: 12, TextColor: #7be0ff); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #RaceAttributeLifeForceValue { Text: "--"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #RaceAttributeLifeForceNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #RaceAttributeStrengthLabel { Text: "Strength"; Style: (FontSize: 12, TextColor: #ffb347); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #RaceAttributeStrengthValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffdf8f, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #RaceAttributeStrengthNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #RaceAttributeSorceryLabel { Text: "Sorcery"; Style: (FontSize: 12, TextColor: #d7baff); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #RaceAttributeSorceryValue { Text: "--"; Style: (FontSize: 12, TextColor: #e8d5ff, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #RaceAttributeSorceryNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #RaceAttributeDefenseLabel { Text: "Defense"; Style: (FontSize: 12, TextColor: #8be0b2); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #RaceAttributeDefenseValue { Text: "--"; Style: (FontSize: 12, TextColor: #6ee7b7, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #RaceAttributeDefenseNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #RaceAttributeHasteLabel { Text: "Haste"; Style: (FontSize: 12, TextColor: #f2a2e8); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #RaceAttributeHasteValue { Text: "--"; Style: (FontSize: 12, TextColor: #f78bd9, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #RaceAttributeHasteNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #RaceAttributePrecisionLabel { Text: "Precision"; Style: (FontSize: 12, TextColor: #9ad4ff); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #RaceAttributePrecisionValue { Text: "--"; Style: (FontSize: 12, TextColor: #7cb8ff, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #RaceAttributePrecisionNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #RaceAttributeFerocityLabel { Text: "Ferocity"; Style: (FontSize: 12, TextColor: #ff7b7b); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #RaceAttributeFerocityValue { Text: "--"; Style: (FontSize: 12, TextColor: #ff5555, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #RaceAttributeFerocityNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #RaceAttributeStaminaLabel { Text: "Stamina"; Style: (FontSize: 12, TextColor: #ffc56f); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #RaceAttributeStaminaValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffad42, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #RaceAttributeStaminaNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #RaceAttributeFlowLabel { Text: "Flow"; Style: (FontSize: 12, TextColor: #9be3ff); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #RaceAttributeFlowValue { Text: "--"; Style: (FontSize: 12, TextColor: #7dd6ff, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #RaceAttributeFlowNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #RaceAttributeDisciplineLabel { Text: "Discipline"; Style: (FontSize: 12, TextColor: #d5dfff); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #RaceAttributeDisciplineValue { Text: "--"; Style: (FontSize: 12, TextColor: #9fe0ff, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #RaceAttributeDisciplineNote { Text: "--"; Style: (FontSize: 12, TextColor: #8aa1bf); }
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 16); }
+
+                                                    Label #RacePassivesTitle {
+                                                        Text: "Passives";
+                                                        Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                                                        Anchor: (Height: 20);
+                                                    }
+
+                                                    Label #RacePassiveSummary {
+                                                        Text: "Inspect a race to preview its passive bonuses.";
+                                                        Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
+                                                        Anchor: (Height: 18);
+                                                    }
+
+                                                    Group #RacePassiveEntries {
+                                                        LayoutMode: Top;
+                                                    }
+                                                }
+                                            }
+
+                                            Group { Anchor: (Height: 16); }
+
+                                            Group #RaceDetailActions {
+                                                LayoutMode: Left;
+                                                Anchor: (Height: 45);
+
+                                                Label #RaceDetailCooldownWarning {
+                                                    Text: "You will be locked for the remaining cooldown after swapping.";
+                                                    Style: (FontSize: 11, TextColor: #ffc300, RenderBold: true);
+                                                    FlexWeight: 1;
+                                                }
+
+                                                Group { Anchor: (Width: 10); }
+
+                                                $C.@TextButton #ConfirmRaceButton {
+                                                    Text: "SWAP";
+                                                    Anchor: (Height: 32, Width: 140);
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
 
-                        Group { Anchor: (Height: 16); }
+                        Group { Anchor: (Width: 40); }
 
-                        Group #RaceDetailActions {
-                            LayoutMode: Left;
-                            Anchor: (Height: 45);
+                        $C.@DecoratedContainer {
+                            Anchor: (Width: 300, Height: 700);
+                            Padding: (Full: 12);
 
-                            Label #RaceDetailCooldownWarning {
-                                Text: "You will be locked for the remaining cooldown after swapping.";
-                                Style: (FontSize: 11, TextColor: #ffc300, RenderBold: true);
-                                FlexWeight: 1;
+                            #Title {
+                                Group {
+                                    $C.@Title #RacesInfoPanel { @Text = "INFO"; }
+                                }
                             }
 
-                            Group { Anchor: (Width: 10); }
+                            #Content {
+                                LayoutMode: Top;
+                                Padding: (Horizontal: 12, Bottom: 12);
 
-                            $C.@TextButton #ConfirmRaceButton {
-                                Text: "SWAP";
-                                Anchor: (Height: 32, Width: 140);
+                                Group #RaceStatusCard {
+                                    LayoutMode: Top;
+                                    Background: #0b141f(0.92);
+                                    Padding: (Full: 10);
+
+                                    Label #RaceCurrentTitle {
+                                        Text: "Current Race";
+                                        Style: (FontSize: 12, TextColor: #8aa1bf, RenderBold: true, LetterSpacing: 1);
+                                        Anchor: (Height: 12);
+                                    }
+
+                                    Group { Anchor: (Height: 8); }
+
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 20);
+                                        Label #RaceCurrentBadge {
+                                            Text: "Active";
+                                            Style: (FontSize: 11, TextColor: #6fe3ff, RenderBold: true);
+                                        }
+                                        Group { Anchor: (Width: 8); }
+                                        Label #CurrentRaceValue {
+                                            Text: "--";
+                                            Style: (FontSize: 13, TextColor: #ffffff, RenderBold: true);
+                                            FlexWeight: 1;
+                                        }
+                                    }
+
+                                    Group { Anchor: (Height: 6); }
+
+                                    Label #RaceCurrentHint {
+                                        Text: "Your active race sets identity and innate bonuses.";
+                                        Style: (FontSize: 11, TextColor: #9fb6d3);
+                                        Anchor: (Height: 14);
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 6); }
+
+                                Group #RaceSwapCooldownCard {
+                                    LayoutMode: Top;
+                                    Background: #0b141f(0.92);
+                                    Padding: (Full: 8);
+
+                                    Group {
+                                        LayoutMode: Top;
+
+                                        Label #RaceSwapCooldownCardTitle {
+                                            Text: "Race Swap Cooldown";
+                                            Style: (FontSize: 12, TextColor: #8aa1bf, RenderBold: true, LetterSpacing: 1);
+                                        }
+
+                                        Group { FlexWeight: 1; }
+
+                                        Label #RaceSwapCooldownHint {
+                                            Text: "Swapping again becomes available once the timer hits zero.";
+                                            Style: (FontSize: 11, TextColor: #9fb6d3);
+                                        }
+
+                                        Group { Anchor: (Height: 4); }
+
+                                        Label #RaceSwapCooldownValue {
+                                            Text: "--";
+                                            Style: (FontSize: 20, TextColor: #6fe3ff, RenderBold: true);
+                                        }
+                                    }
+                                }                       
                             }
                         }
                     }

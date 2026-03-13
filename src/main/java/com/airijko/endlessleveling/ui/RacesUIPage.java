@@ -244,7 +244,6 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private void applyStaticLabels(@Nonnull UICommandBuilder ui) {
-        ui.set("#RacesTitleLabel.Text", tr("ui.races.page.title", "Race Archive"));
         ui.set("#RaceSwapCooldownCardTitle.Text", tr("ui.races.cooldown.card_title", "Race Swap Cooldown"));
         ui.set("#RaceSwapCooldownHint.Text",
                 tr("ui.races.cooldown.card_hint", "Swapping again becomes available once the timer hits zero."));

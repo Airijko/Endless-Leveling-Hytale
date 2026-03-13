@@ -6,7 +6,7 @@ Group {
     Group {
         LayoutMode: Left;
         Background: #0b141f(0.8);
-        Padding: (Full: 14);
+        Padding: (Full: 10);
 
         Group {
             Anchor: (Width: 4);
@@ -15,45 +15,47 @@ Group {
 
         Group {
             LayoutMode: Top;
-            Padding: (Horizontal: 12);
+            Padding: (Horizontal: 8);
             FlexWeight: 1;
 
             Group {
                 LayoutMode: Left;
 
                 Label #RaceName {
-                    Style: (FontSize: 18, TextColor: #ffffff, RenderBold: true);
+                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
                     Text: "Race Name";
                     FlexWeight: 1;
                 }
 
                 Label #RaceSelectionStatus {
-                    Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true);
+                    Style: (FontSize: 10, TextColor: #4fd7f7, RenderBold: true);
                     Text: "CURRENT";
-                    Anchor: (Height: 18);
+                    Anchor: (Height: 14);
                     Visible: false;
                 }
             }
 
-            Group { Anchor: (Height: 5); }
+            Group { Anchor: (Height: 3); }
 
             Group {
                 LayoutMode: Left;
 
                 $C.@TextButton #ViewRaceButton {
                     Text: "VIEW";
-                    Anchor: (Height: 34, Width: 125);
+                    Anchor: (Height: 28, Width: 96);
+                    Padding: (Horizontal: 10, Vertical: 4);
                 }
 
-                Group { Anchor: (Width: 8); }
+                Group { Anchor: (Width: 6); }
 
                 $C.@TextButton #ChooseRaceButton {
                     Text: "CHOOSE";
-                    Anchor: (Height: 34, Width: 125);
+                    Anchor: (Height: 28, Width: 96);
+                    Padding: (Horizontal: 10, Vertical: 4);
                 }
             }
         }
     }
 
-    Group { Anchor: (Height: 8); }
+    Group { Anchor: (Height: 6); }
 }

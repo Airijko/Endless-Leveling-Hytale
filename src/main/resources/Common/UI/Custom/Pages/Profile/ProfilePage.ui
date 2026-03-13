@@ -3,7 +3,7 @@ $Nav = "../Nav/LeftNavPanel.ui";
 
 $C.@PageOverlay {
     Group {
-    LayoutMode: Middle;
+        LayoutMode: Middle;
 
         Group {
             LayoutMode: Left;
