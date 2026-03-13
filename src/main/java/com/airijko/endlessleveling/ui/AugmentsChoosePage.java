@@ -69,7 +69,7 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
             @Nonnull UICommandBuilder ui,
             @Nonnull UIEventBuilder events,
             @Nonnull Store<EntityStore> store) {
-        ui.append("Augments/AugmentsCards.ui");
+        ui.append("Pages/Augments/AugmentsCards.ui");
 
         PlayerData playerData = playerDataManager != null ? playerDataManager.get(playerRef.getUuid()) : null;
         List<AugmentDefinition> augments = pickPlayerAugments(playerData);

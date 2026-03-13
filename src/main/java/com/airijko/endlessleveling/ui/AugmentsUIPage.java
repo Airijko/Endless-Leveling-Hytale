@@ -83,9 +83,11 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull UICommandBuilder ui,
             @Nonnull UIEventBuilder events,
             @Nonnull Store<EntityStore> store) {
-        ui.append("Augments/AugmentsPage.ui");
+        ui.append("Pages/Augments/AugmentsPage.ui");
+        NavUIHelper.applyNavVersion(ui, playerRef);
         ui.set("#SearchInput.Value", this.searchQuery);
         ui.set("#OpenAugmentsChooseButton.Text", "CHOOSE AUGMENTS");
+        NavUIHelper.bindNavEvents(events);
         events.addEventBinding(ValueChanged, "#SearchInput", of("@SearchQuery", "#SearchInput.Value"), false);
         events.addEventBinding(Activating, "#OpenAugmentsChooseButton", of("Action", "augment:open_choose"),
                 false);
@@ -99,6 +101,12 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull Store<EntityStore> store,
             @Nonnull SkillsUIPage.Data data) {
         super.handleDataEvent(ref, store, data);
+
+        if (data.action != null && !data.action.isBlank()) {
+            if (NavUIHelper.handleNavAction(data.action, ref, store, playerRef)) {
+                return;
+            }
+        }
 
         if (data.action != null && !data.action.isBlank()) {
             String action = data.action.trim();
@@ -958,7 +966,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ui.appendInline(cardsSelector, "Group { LayoutMode: Left; Anchor: (Bottom: 0); }");
             }
 
-            ui.append(cardsSelector + "[" + rowIndex + "]", "Augments/AugmentGridEntry.ui");
+            ui.append(cardsSelector + "[" + rowIndex + "]", "Pages/Augments/AugmentGridEntry.ui");
             String base = cardsSelector + "[" + rowIndex + "][" + cardsInCurrentRow + "]";
 
             ui.set(base + " #ItemIcon.ItemId", resolveIconItemId(def));
@@ -1045,7 +1053,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 firstRowInGroup = false;
             }
 
-            ui.append(cardsSelector + "[" + rowIndex + "]", "Augments/AugmentGridEntry.ui");
+            ui.append(cardsSelector + "[" + rowIndex + "]", "Pages/Augments/AugmentGridEntry.ui");
             String base = cardsSelector + "[" + rowIndex + "][" + cardsInCurrentRow + "]";
 
             ui.set(base + " #ItemIcon.ItemId", card.iconItemId());
