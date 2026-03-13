@@ -7,9 +7,10 @@ icon: "Weapon_Daggers_Mithril"
 
 weapons:
   - type: STAFF
-    damage: 0.84
+    damage: 1.05
   - type: DAGGER
-    damage: 0.735
+    damage: 1.05
+
 
 passives:
   - type: MANA_REGEN

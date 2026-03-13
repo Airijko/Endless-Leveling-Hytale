@@ -7,11 +7,12 @@ icon: "Weapon_Staff_Onyxium"
 
 weapons:
   - type: STAFF
-    damage: 0.875
+    damage: 1.05
   - type: SWORD
-    damage: 0.805
+    damage: 1.05
   - type: DAGGER
-    damage: 0.77
+    damage: 1.05
+
 
 passives:
   - type: HEALTH_REGEN

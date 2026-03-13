@@ -7,13 +7,14 @@ icon: "Weapon_Battleaxe_Mithril"
 
 weapons:
   - type: MACE
-    damage: 0.91
+    damage: 1.05
   - type: AXE
-    damage: 0.84
+    damage: 1.05
   - type: SWORD
-    damage: 0.77
+    damage: 1.05
   - type: SPEAR
-    damage: 0.735
+    damage: 1.05
+
 
 passives:
   - type: SECOND_WIND

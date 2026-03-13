@@ -7,11 +7,12 @@ icon: "Weapon_Shortbow_Combat"
 
 weapons:
   - type: BOW
-    damage: 0.945
+    damage: 1.05
   - type: CROSSBOW
-    damage: 0.945
+    damage: 1.05
   - type: DAGGER
-    damage: 0.735
+    damage: 1.05
+
 
 passives:
   - type: FIRST_STRIKE

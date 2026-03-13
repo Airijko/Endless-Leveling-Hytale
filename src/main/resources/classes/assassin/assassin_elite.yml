@@ -9,9 +9,10 @@ weapons:
   - type: DAGGER
     damage: 1.062
   - type: SWORD
-    damage: 0.935
+    damage: 1.05
   - type: BOW
-    damage: 0.892
+    damage: 1.05
+
 
 passives:
   - type: FIRST_STRIKE

@@ -11,7 +11,8 @@ weapons:
   - type: CROSSBOW
     damage: 1.147
   - type: DAGGER
-    damage: 0.892
+    damage: 1.05
+
 
 passives:
   - type: FIRST_STRIKE

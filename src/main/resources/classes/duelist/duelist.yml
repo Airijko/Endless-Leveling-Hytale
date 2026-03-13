@@ -7,11 +7,12 @@ icon: "Weapon_Spear_Tribal"
 
 weapons:
   - type: SWORD
-    damage: 0.945
+    damage: 1.05
   - type: SPEAR
-    damage: 0.945
+    damage: 1.05
   - type: DAGGER
-    damage: 0.735
+    damage: 1.05
+
 
 passives:
   - type: SWIFTNESS

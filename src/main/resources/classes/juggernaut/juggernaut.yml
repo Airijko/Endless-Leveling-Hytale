@@ -7,11 +7,12 @@ icon: "Weapon_Shield_Orbis_Knight"
 
 weapons:
   - type: AXE
-    damage: 0.91
+    damage: 1.05
   - type: MACE
-    damage: 0.84
+    damage: 1.05
   - type: SWORD
-    damage: 0.735
+    damage: 1.05
+
 
 passives:
   - type: RETALIATION

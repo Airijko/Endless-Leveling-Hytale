@@ -7,13 +7,14 @@ icon: "Ingredient_Life_Essence"
 
 weapons:
   - type: SWORD
-    damage: 0.77
+    damage: 1.05
   - type: BOW
-    damage: 0.77
+    damage: 1.05
   - type: STAFF
-    damage: 0.77
+    damage: 1.05
   - type: DAGGER
-    damage: 0.77
+    damage: 1.05
+
 
 passives:
   - type: XP_BONUS

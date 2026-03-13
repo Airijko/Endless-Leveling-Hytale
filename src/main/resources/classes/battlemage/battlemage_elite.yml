@@ -9,9 +9,10 @@ weapons:
   - type: STAFF
     damage: 1.062
   - type: SWORD
-    damage: 0.977
+    damage: 1.05
   - type: DAGGER
-    damage: 0.935
+    damage: 1.05
+
 
 passives:
   - type: HEALTH_REGEN

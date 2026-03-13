@@ -32,7 +32,6 @@ passives:
     attribute: stamina
     value: 0.91
 
-
 ascension:
   id: class_adventurer_exalted
   stage: exalted

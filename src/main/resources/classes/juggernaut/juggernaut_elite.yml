@@ -9,9 +9,10 @@ weapons:
   - type: AXE
     damage: 1.105
   - type: MACE
-    damage: 1.02
+    damage: 1.05
   - type: SWORD
-    damage: 0.892
+    damage: 1.05
+
 
 passives:
   - type: RETALIATION

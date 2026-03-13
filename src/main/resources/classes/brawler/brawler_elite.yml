@@ -9,7 +9,8 @@ weapons:
   - type: GAUNTLET
     damage: 1.062
   - type: DAGGER
-    damage: 0.892
+    damage: 1.05
+
 
 passives:
   - type: RETALIATION

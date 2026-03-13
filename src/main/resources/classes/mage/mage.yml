@@ -7,9 +7,10 @@ icon: "Weapon_Spellbook_Grimoire_Brown"
 
 weapons:
   - type: STAFF
-    damage: 0.91
+    damage: 1.05
   - type: DAGGER
-    damage: 0.735
+    damage: 1.05
+
 
 passives:
   - type: MANA_REGEN

@@ -7,9 +7,9 @@ icon: "Weapon_Staff_Bronze"
 
 weapons:
   - type: STAFF
-    damage: 0.945
+    damage: 1.05
   - type: DAGGER
-    damage: 0.735
+    damage: 1.05
 
 passives:
   - type: MANA_REGEN
@@ -25,7 +25,6 @@ passives:
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: sorcery
     value: 0.98
-
 
 ascension:
   id: class_arcanist_base
