@@ -9,12 +9,11 @@ $C.@PageOverlay {
 
         Group {
             LayoutMode: Left;
-            Anchor: (Width: 1680, Height: 724);
+            Anchor: (Width: 1680, Height: 700);
 
             Group {
                 LayoutMode: Top;
-                Anchor: (Width: 1680, Height: 724);
-                Padding: (Full: 12);
+                Anchor: (Width: 1680, Height: 700);
 
                 Group {
                     LayoutMode: Middle;

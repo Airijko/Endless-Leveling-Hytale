@@ -5,14 +5,14 @@ $C = "../../Common.ui";
 Button {
     Anchor: (Width: 136, Bottom: 10, Right: 10);
     Padding: (Full: 12);
-    Background: (Color: #1a1a1a(0.6));
+    Background: (Color: #050b16(0.85));
     LayoutMode: Top;
     Style: (
         Hovered: (
-            Background: #2a2a2a(0.8)
+            Background: #1a2d47(0.9)
         ),
         Pressed: (
-            Background: #3a3a3a(0.9)
+            Background: #142338(0.9)
         )
     );
     TextTooltipStyle: $C.@DefaultTextTooltipStyle;

@@ -8,8 +8,6 @@ $C.@PageOverlay {
         Group {
             LayoutMode: Top;
             Anchor: (Width: 1480);
-            Padding: (Full: 12);
-
 
             Group {
                 LayoutMode: Middle;

@@ -27,6 +27,7 @@ public class AugmentCommand extends AbstractPlayerCommand {
         this.addSubCommand(new AugmentRefreshCommand("refresh", "Reroll stored augment offers for a player"));
         this.addSubCommand(new ResetAugmentsCommand("reset",
                 "Reset selected augments and reroll all eligible offers"));
+        this.addSubCommand(new ResetAugmentsAllPlayersCommand());
         this.addSubCommand(new OpenPageSubCommand("choose", "Open the augments choose page",
                 playerRef -> new AugmentsChoosePage(playerRef, CustomPageLifetime.CanDismiss)));
     }

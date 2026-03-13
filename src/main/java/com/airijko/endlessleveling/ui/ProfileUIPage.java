@@ -11,11 +11,15 @@ import java.util.Locale;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentManager;
+import com.airijko.endlessleveling.classes.CharacterClassDefinition;
+import com.airijko.endlessleveling.classes.WeaponConfig;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.data.PlayerData.PlayerProfile;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
+import com.airijko.endlessleveling.managers.ClassManager;
+import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.PlayerAttributeManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.PartyManager;
@@ -60,6 +64,8 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private final PlayerRaceStatSystem playerRaceStatSystem;
     private final PartyManager partyManager;
     private final AugmentManager augmentManager;
+    private final ClassManager classManager;
+    private final LevelingManager levelingManager;
     private Integer pendingDeleteSlot;
 
     public ProfileUIPage(@Nonnull com.hypixel.hytale.server.core.universe.PlayerRef playerRef,
@@ -75,6 +81,8 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         this.playerRaceStatSystem = plugin != null ? plugin.getPlayerRaceStatSystem() : null;
         this.partyManager = plugin != null ? plugin.getPartyManager() : null;
         this.augmentManager = plugin != null ? plugin.getAugmentManager() : null;
+        this.classManager = plugin != null ? plugin.getClassManager() : null;
+        this.levelingManager = plugin != null ? plugin.getLevelingManager() : null;
         this.pendingDeleteSlot = null;
     }
 
@@ -125,9 +133,6 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private void applyStaticLabels(@Nonnull UICommandBuilder ui) {
-        ui.set("#DetailTitleLabel.Text", tr("ui.profile.detail.title", "Selected Profile"));
-        ui.set("#DetailSubtitleLabel.Text", tr("ui.profile.detail.subtitle.default", "Select a profile to view stats"));
-
         ui.set("#AttributeLifeForceLabel.Text", tr("ui.skills.label.life_force", "Life Force"));
         ui.set("#AttributeStrengthLabel.Text", tr("ui.skills.label.strength", "Strength"));
         ui.set("#AttributeSorceryLabel.Text", tr("ui.skills.label.sorcery", "Sorcery"));
@@ -199,18 +204,13 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull PlayerData data,
             EntityStatMap statMap) {
         PlayerProfile profile = resolveActiveProfile(data);
-        if (profile == null) {
-            clearDetailPanel(ui, tr("ui.profile.detail.subtitle.default", "Select a profile to view stats"));
-            return;
-        }
-
-        int slot = data.getActiveProfileIndex();
-        ui.set("#DetailTitleLabel.Text", profile.getName());
-        ui.set("#DetailSubtitleLabel.Text", tr("ui.profile.list.slot", "Slot {0}", slot));
         ui.set("#DetailLevelValue.Text", String.valueOf(profile.getLevel()));
         ui.set("#DetailPrestigeValue.Text", String.valueOf(profile.getPrestigeLevel()));
         ui.set("#DetailXpValue.Text", tr("ui.profile.list.xp", "{0} XP", formatNumber(profile.getXp())));
         ui.set("#DetailRaceValue.Text", getRaceDisplay(profile));
+        ui.set("#DetailPrimaryClassValue.Text", getPrimaryClassDisplay(profile));
+        ui.set("#DetailSecondaryClassValue.Text", getSecondaryClassDisplay(profile));
+        ui.set("#DetailProgressBar.Value", resolveXpProgress(data, profile));
 
         applyAttributeDisplay(ui, "#AttributeLifeForceValue", "#AttributeLifeForceLevel",
                 getAttributeDisplay(data, profile, SkillAttributeType.LIFE_FORCE, statMap));
@@ -250,45 +250,82 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 passiveSections.innateAttributeSummary(),
                 passiveSections.innateAttributeEntries());
 
+        renderPassiveSection(ui,
+                "#PrimaryWeaponSummary",
+                "#PrimaryWeaponEntries",
+                tr("ui.profile.classes.primary_weapon_none", "No primary class weapon bonuses"),
+                buildPrimaryWeaponEntries(profile));
         renderAugmentSection(ui, buildAugmentEntries(data));
     }
 
     private PlayerProfile resolveActiveProfile(@Nonnull PlayerData data) {
         Map<Integer, PlayerProfile> profiles = data.getProfiles();
-        if (profiles.isEmpty()) {
-            return null;
-        }
         PlayerProfile profile = profiles.get(data.getActiveProfileIndex());
         if (profile != null) {
             return profile;
         }
-        return profiles.values().stream().findFirst().orElse(null);
+        return profiles.values().iterator().next();
     }
 
-    private void clearDetailPanel(@Nonnull UICommandBuilder ui, @Nonnull String subtitle) {
-        ui.set("#DetailTitleLabel.Text", tr("ui.profile.detail.title", "Selected Profile"));
-        ui.set("#DetailSubtitleLabel.Text", subtitle);
-        ui.set("#DetailLevelValue.Text", tr("hud.common.unavailable", "--"));
-        ui.set("#DetailPrestigeValue.Text", tr("hud.common.unavailable", "--"));
-        ui.set("#DetailXpValue.Text", tr("hud.common.unavailable", "--"));
-        ui.set("#DetailRaceValue.Text", tr("hud.common.unavailable", "--"));
-        applyAttributeDisplay(ui, "#AttributeLifeForceValue", "#AttributeLifeForceLevel", emptyAttributeDisplay());
-        applyAttributeDisplay(ui, "#AttributeStrengthValue", "#AttributeStrengthLevel", emptyAttributeDisplay());
-        applyAttributeDisplay(ui, "#AttributeSorceryValue", "#AttributeSorceryLevel", emptyAttributeDisplay());
-        applyAttributeDisplay(ui, "#AttributePrecisionValue", "#AttributePrecisionLevel", emptyAttributeDisplay());
-        applyAttributeDisplay(ui, "#AttributeFerocityValue", "#AttributeFerocityLevel", emptyAttributeDisplay());
-        applyAttributeDisplay(ui, "#AttributeStaminaValue", "#AttributeStaminaLevel", emptyAttributeDisplay());
-        applyAttributeDisplay(ui, "#AttributeFlowValue", "#AttributeFlowLevel", emptyAttributeDisplay());
-        applyAttributeDisplay(ui, "#AttributeDisciplineValue", "#AttributeDisciplineLevel",
-                emptyAttributeDisplay());
-        ui.set("#PassiveSummary.Text",
-                tr("ui.profile.passives.select_prompt", "Select a profile to view passive bonuses"));
-        ui.set("#PassiveSummary.Visible", true);
-        ui.set("#InnatePassiveSummary.Text",
-                tr("ui.profile.passives.select_innate_prompt", "Select a profile to view innate bonuses"));
-        ui.set("#InnatePassiveSummary.Visible", true);
-        ui.clear("#PassiveEntries");
-        ui.clear("#InnatePassiveEntries");
+    private String getPrimaryClassDisplay(@Nonnull PlayerProfile profile) {
+        CharacterClassDefinition primary = getClassDefinition(profile.getPrimaryClassId());
+        if (primary != null) {
+            return primary.getDisplayName();
+        }
+        String classId = profile.getPrimaryClassId();
+        return classId == null || classId.isBlank() ? tr("ui.profile.classes.none", "None") : classId;
+    }
+
+    private String getSecondaryClassDisplay(@Nonnull PlayerProfile profile) {
+        CharacterClassDefinition secondary = getClassDefinition(profile.getSecondaryClassId());
+        if (secondary != null) {
+            return secondary.getDisplayName();
+        }
+        String classId = profile.getSecondaryClassId();
+        return classId == null || classId.isBlank() ? tr("ui.profile.classes.none", "None") : classId;
+    }
+
+    private CharacterClassDefinition getClassDefinition(String classId) {
+        if (classManager == null || classId == null || classId.isBlank()) {
+            return null;
+        }
+        return classManager.getClass(classId);
+    }
+
+    private List<PassiveEntry> buildPrimaryWeaponEntries(@Nonnull PlayerProfile profile) {
+        CharacterClassDefinition primary = getClassDefinition(profile.getPrimaryClassId());
+        if (primary == null || primary.getWeaponMultipliers().isEmpty()) {
+            return List.of();
+        }
+
+        List<Map.Entry<String, Double>> weaponEntries = new ArrayList<>(primary.getWeaponMultipliers().entrySet());
+        weaponEntries.sort(Comparator.comparing(entry -> localizeWeaponType(entry.getKey())));
+
+        List<PassiveEntry> entries = new ArrayList<>();
+        for (Map.Entry<String, Double> entry : weaponEntries) {
+            entries.add(new PassiveEntry(localizeWeaponType(entry.getKey()), formatWeaponMultiplier(entry.getValue())));
+        }
+        return List.copyOf(entries);
+    }
+
+    private double resolveXpProgress(@Nonnull PlayerData data, @Nonnull PlayerProfile profile) {
+        if (levelingManager == null) {
+            return 0.0D;
+        }
+
+        int effectiveCap = levelingManager.getLevelCap(data);
+        if (profile.getLevel() >= effectiveCap) {
+            return 1.0D;
+        }
+
+        double xpNeeded = levelingManager.getXpForNextLevel(data, profile.getLevel());
+        if (!Double.isFinite(xpNeeded) || xpNeeded <= 0.0D) {
+            return 0.0D;
+        }
+
+        double currentXp = Math.max(0.0D, profile.getXp());
+        double ratio = currentXp / xpNeeded;
+        return Math.max(0.0D, Math.min(1.0D, ratio));
     }
 
     private AttributeDisplay getAttributeDisplay(@Nonnull PlayerData data,
@@ -621,6 +658,25 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull AttributeDisplay display) {
         ui.set(valueSelector + ".Text", display.value());
         ui.set(levelSelector + ".Text", display.level());
+    }
+
+    private String formatWeaponMultiplier(double multiplier) {
+        double delta = (multiplier - 1.0D) * 100.0D;
+        if (Math.abs(delta) < 0.0001D) {
+            return tr("ui.classes.value.weapon_damage", "+{0}% dmg", 0);
+        }
+        if (delta > 0) {
+            return tr("ui.classes.value.weapon_damage", "+{0}% dmg", formatNumber(delta));
+        }
+        return tr("ui.classes.value.weapon_damage_negative", "-{0}% dmg", formatNumber(Math.abs(delta)));
+    }
+
+    private String localizeWeaponType(String typeKey) {
+        String normalized = WeaponConfig.normalizeCategoryKey(typeKey);
+        if (normalized == null) {
+            return tr("hud.class.none", "None");
+        }
+        return tr("ui.classes.weapon." + normalized, toDisplay(normalized));
     }
 
     private AttributeDisplay emptyAttributeDisplay() {

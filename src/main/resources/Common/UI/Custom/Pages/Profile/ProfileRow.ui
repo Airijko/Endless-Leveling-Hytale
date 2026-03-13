@@ -5,7 +5,7 @@ Group {
 
     Group {
         LayoutMode: Left;
-        Anchor: (Height: 95);
+        FlexWeight: 1;
         Background: #040405(0.85);
         Padding: (Left: 12, Right: 12, Top: 10, Bottom: 10);
 
@@ -86,53 +86,61 @@ Group {
 
                 Group { Anchor: (Width: 16); }
             }
-        }
+            
+            Group {
+                LayoutMode: Left;
+                FlexWeight: 1;
+                Padding: (Top: 6);
 
-        Group {
-            LayoutMode: Top;
-            Anchor: (Width: 140);
-            Background: #0f1d2d(0.65);
+                Group { Anchor: (Height: 5); }
 
-            Group { Anchor: (Height: 5); }
+                Group #ActionButtons {
+                    LayoutMode: Left;
 
-            Group #ActionButtons {
-                LayoutMode: Top;
+                    $C.@TextButton #SelectButton {
+                        Text: "SELECT";
+                        Anchor: (Height: 28, Width: 108);
+                        Padding: (Horizontal: 2, Vertical: 1);
+                    }
 
-                $C.@TextButton #SelectButton {
-                    Text: "SELECT";
-                    Anchor: (Height: 30, Width: 130);
+                    Group { Anchor: (Width: 6); }
+
+                    $C.@CancelTextButton #DeleteButton {
+                        Text: "DELETE";
+                        Anchor: (Height: 28, Width: 108);
+                        Padding: (Horizontal: 2, Vertical: 1);
+                    }
                 }
 
-                Group { Anchor: (Height: 6); }
+                Group #ConfirmButtons {
+                    LayoutMode: Top;
+                    Visible: false;
 
-                $C.@CancelTextButton #DeleteButton {
-                    Text: "DELETE";
-                    Anchor: (Height: 30, Width: 130);
-                }
-            }
+                    Label #ConfirmDeleteLabel {
+                        Text: "Confirm delete?";
+                        Style: (FontSize: 11, TextColor: #ff9b73, RenderBold: true);
+                        Anchor: (Height: 16);
+                    }
 
-            Group #ConfirmButtons {
-                LayoutMode: Top;
-                Visible: false;
+                    Group { Anchor: (Height: 4); }
 
-                Label #ConfirmDeleteLabel {
-                    Text: "Confirm delete?";
-                    Style: (FontSize: 11, TextColor: #ff9b73, RenderBold: true);
-                    Anchor: (Height: 16);
-                }
+                    Group {
+                        LayoutMode: Left;
 
-                Group { Anchor: (Height: 4); }
+                        $C.@CancelTextButton #ConfirmDeleteButton {
+                            Text: "CONFIRM";
+                            Anchor: (Height: 28, Width: 108);
+                            Padding: (Horizontal: 2, Vertical: 1);
+                        }
 
-                $C.@CancelTextButton #ConfirmDeleteButton {
-                    Text: "CONFIRM";
-                    Anchor: (Height: 28, Width: 130);
-                }
+                        Group { Anchor: (Width: 6); }
 
-                Group { Anchor: (Height: 4); }
-
-                $C.@TextButton #CancelDeleteButton {
-                    Text: "CANCEL";
-                    Anchor: (Height: 28, Width: 130);
+                        $C.@TextButton #CancelDeleteButton {
+                            Text: "CANCEL";
+                            Anchor: (Height: 28, Width: 108);
+                            Padding: (Horizontal: 2, Vertical: 1);
+                        }
+                    }
                 }
             }
         }
