@@ -4,6 +4,7 @@ import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
+import com.airijko.endlessleveling.enums.themes.AttributeTheme;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.races.RaceAscensionEligibility;
@@ -260,16 +261,12 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                         "You will be locked for the remaining cooldown after swapping."));
         ui.set("#ConfirmRaceButton.Text", tr("ui.races.actions.swap", "SWAP"));
 
-        ui.set("#RaceAttributeLifeForceLabel.Text", tr("ui.skills.label.life_force", "Life Force"));
-        ui.set("#RaceAttributeStrengthLabel.Text", tr("ui.skills.label.strength", "Strength"));
-        ui.set("#RaceAttributeSorceryLabel.Text", tr("ui.skills.label.sorcery", "Sorcery"));
-        ui.set("#RaceAttributeDefenseLabel.Text", tr("ui.skills.label.defense", "Defense"));
-        ui.set("#RaceAttributeHasteLabel.Text", tr("ui.skills.label.haste", "Haste"));
-        ui.set("#RaceAttributePrecisionLabel.Text", tr("ui.skills.label.precision", "Precision"));
-        ui.set("#RaceAttributeFerocityLabel.Text", tr("ui.skills.label.ferocity", "Ferocity"));
-        ui.set("#RaceAttributeStaminaLabel.Text", tr("ui.skills.label.stamina", "Stamina"));
-        ui.set("#RaceAttributeFlowLabel.Text", tr("ui.skills.label.flow", "Flow"));
-        ui.set("#RaceAttributeDisciplineLabel.Text", tr("ui.skills.label.discipline", "Discipline"));
+        for (AttributeTheme theme : AttributeTheme.values()) {
+            ui.set(theme.raceLabelSelector() + ".Text", tr(theme.labelKey(), theme.labelFallback()));
+            ui.set(theme.raceLabelSelector() + ".Style.TextColor", theme.labelColor());
+            ui.set(theme.raceValueSelector() + ".Style.TextColor", theme.valueColor());
+            ui.set(theme.raceNoteSelector() + ".Style.TextColor", theme.raceNoteColor());
+        }
     }
 
     private void updateRaceDetailPanel(@Nonnull UICommandBuilder ui,

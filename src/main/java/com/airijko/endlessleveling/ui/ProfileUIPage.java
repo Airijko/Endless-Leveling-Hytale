@@ -21,6 +21,7 @@ import com.airijko.endlessleveling.data.PlayerData.PlayerProfile;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
+import com.airijko.endlessleveling.enums.themes.AttributeTheme;
 import com.airijko.endlessleveling.managers.ClassManager;
 import com.airijko.endlessleveling.managers.LevelingManager;
 import com.airijko.endlessleveling.managers.PlayerAttributeManager;
@@ -138,16 +139,12 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private void applyStaticLabels(@Nonnull UICommandBuilder ui) {
-        ui.set("#AttributeLifeForceLabel.Text", tr("ui.skills.label.life_force", "Life Force"));
-        ui.set("#AttributeStrengthLabel.Text", tr("ui.skills.label.strength", "Strength"));
-        ui.set("#AttributeSorceryLabel.Text", tr("ui.skills.label.sorcery", "Sorcery"));
-        ui.set("#AttributeDefenseLabel.Text", tr("ui.skills.label.defense", "Defense"));
-        ui.set("#AttributeHasteLabel.Text", tr("ui.skills.label.haste", "Haste"));
-        ui.set("#AttributePrecisionLabel.Text", tr("ui.skills.label.precision", "Precision"));
-        ui.set("#AttributeFerocityLabel.Text", tr("ui.skills.label.ferocity", "Ferocity"));
-        ui.set("#AttributeStaminaLabel.Text", tr("ui.skills.label.stamina", "Stamina"));
-        ui.set("#AttributeFlowLabel.Text", tr("ui.skills.label.flow", "Flow"));
-        ui.set("#AttributeDisciplineLabel.Text", tr("ui.skills.label.discipline", "Discipline"));
+        for (AttributeTheme theme : AttributeTheme.values()) {
+            ui.set(theme.profileLabelSelector() + ".Text", tr(theme.labelKey(), theme.labelFallback()));
+            ui.set(theme.profileLabelSelector() + ".Style.TextColor", theme.labelColor());
+            ui.set(theme.profileValueSelector() + ".Style.TextColor", theme.valueColor());
+            ui.set(theme.profileLevelSelector() + ".Style.TextColor", theme.profileLevelColor());
+        }
     }
 
     private void buildProfileList(@Nonnull UICommandBuilder ui,
