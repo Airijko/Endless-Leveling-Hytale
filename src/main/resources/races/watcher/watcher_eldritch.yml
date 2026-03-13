@@ -13,8 +13,8 @@ ascension:
   requirements:
     required_prestige: 5
     min_skill_levels:
-      sorcery: 200
-      ferocity: 200
+      sorcery: 300
+      ferocity: 300
     max_skill_levels: {}
     required_augments: []
   next_paths:

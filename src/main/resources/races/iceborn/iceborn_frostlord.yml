@@ -13,10 +13,10 @@ ascension:
   requirements:
     required_prestige: 10
     min_skill_levels:
-      life_force: 300
-      stamina: 300
-      precision: 300
-      ferocity: 300
+      life_force: 600
+      stamina: 600
+      precision: 600
+      ferocity: 600
     max_skill_levels: {}
     required_augments: []
     required_forms:

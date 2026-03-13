@@ -13,8 +13,8 @@ ascension:
   requirements:
     required_prestige: 5
     min_skill_levels:
-      life_force: 200
-      stamina: 200
+      life_force: 300
+      stamina: 300
     max_skill_levels: {}
     required_augments: []
   next_paths:

@@ -14,7 +14,7 @@ ascension:
     required_prestige: 2
     min_skill_levels:
       life_force: 150
-      defense: 125
+      defense: 150
     max_skill_levels: {}
     required_augments: []
   next_paths:

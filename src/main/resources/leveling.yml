@@ -17,10 +17,10 @@ player_level_cap: 75
 augments:
   unlocks:
     - tier: COMMON
-      levels: [5, 10, 20, 40, 60]
+      levels: [5, 15, 40, 55, 65]
     - tier: COMMON
-      required_player_level: 25
-      level_interval: 25
+      required_player_level: 10
+      level_interval: 20
       max_unlocks: -1
     - tier: ELITE
       levels: [15]
