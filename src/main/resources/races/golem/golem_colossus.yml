@@ -1,5 +1,5 @@
 race_name: "Golem Colossus"
-icon: "Ingredient_Life_Essence"
+icon: "Ingredient_Water_Essence"
 description: "A towering bastion of living stone that converts every blow into inevitable counterforce."
 model: "Golem_Crystal_Earth"
 model_scale: 1.0

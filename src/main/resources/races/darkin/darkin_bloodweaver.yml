@@ -1,6 +1,7 @@
 race_name: "Darkin Bloodweaver"
-icon: "Ingredient_Life_Essence"
+icon: "Ingredient_Ice_Essence"
 description: "A blood-mage Darkin who bends life essence into cursed sorcery."
+model: "Skeleton_Incandescent_Footman"
 model_scale: 1.0
 enabled: true
 

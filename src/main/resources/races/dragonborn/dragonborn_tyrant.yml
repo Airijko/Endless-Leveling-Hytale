@@ -1,6 +1,7 @@
 race_name: "Dragon Tyrant"
-icon: "Ingredient_Life_Essence"
+icon: "Ingredient_Water_Essence"
 description: "A Drake Marauder who has ascended into apex predator status, critical strikes triggering with terrifying frequency and devastation."
+model: "Saurian_Hunter"
 model_scale: 1.0
 enabled: true
 

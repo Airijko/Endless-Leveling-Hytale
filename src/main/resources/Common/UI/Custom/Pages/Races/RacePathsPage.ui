@@ -2,52 +2,146 @@ $C = "../../Common.ui";
 $Nav = "../Nav/LeftNavPanel.ui";
 
 $C.@PageOverlay {
-    $C.@DecoratedContainer {
-        Anchor: (Width: 1000, Height: 700);
-        #Title {
+    Group {
+    LayoutMode: Middle;
+
+        Group {
+            LayoutMode: Top;
+            Anchor: (Width: 1480);
+            Padding: (Full: 12);
+
+
             Group {
-                $C.@Title {
-                    @Text = "ENDLESS LEVELING";
-                }
-            }
-        }
+                LayoutMode: Middle;
+                Anchor: (Width: 1480);
 
-        #Content {
-            LayoutMode: Left;
-            Padding: (Full: 0);
+                Group {
+                    LayoutMode: Left;
 
-            $Nav.@LeftNavPanel {}
+                    Group { Anchor: (Width: 240); }
 
-            Group #RightPanel {
-                FlexWeight: 1;
-                LayoutMode: Top;
-                Anchor: (Right: 7, Bottom: 7);
-                Padding: (Horizontal: 16, Vertical: 16);
+                    $C.@DecoratedContainer {
+                        Anchor: (Width: 1000, Height: 700);
+                        #Title {
+                            Group {
+                                $C.@Title {
+                                    @Text = "ENDLESS LEVELING";
+                                }
+                            }
+                        }
 
-                Label #RacePathsTitleLabel {
-                    Text: "Race Paths";
-                    Style: (FontSize: 26, TextColor: #ffffff, RenderBold: true, HorizontalAlignment: Center);
-                    Anchor: (Height: 36);
-                }
+                        #Content {
+                            LayoutMode: Left;
+                            Padding: (Full: 0);
 
-                Group { Anchor: (Height: 1); Background: #2b3542; }
-                Group { Anchor: (Height: 14); }
+                            $Nav.@LeftNavPanel {}
 
-                Label #RacePathsSubtitleLabel {
-                    Text: "Progress through tiers from your base class and converge into final forms.";
-                    Style: (FontSize: 13, TextColor: #9fb6d3, HorizontalAlignment: Center);
-                    Anchor: (Height: 20, Bottom: 6);
-                }
+                            Group #RightPanel {
+                                FlexWeight: 1;
+                                LayoutMode: Left;
+                                Anchor: (Right: 7, Bottom: 7);
+                                Padding: (Horizontal: 16, Vertical: 16);
 
-                Group #RacePathScrollArea {
-                    FlexWeight: 1;
-                    LayoutMode: LeftScrolling;
-                    ScrollbarStyle: $C.@DefaultScrollbarStyle;
+                                Group #RacePathMainPanel {
+                                    FlexWeight: 1;
+                                    LayoutMode: Top;
 
-                    Group #RacePathRows {
-                        LayoutMode: Left;
-                        Padding: (Horizontal: 12, Vertical: 24);
-                        Group { Anchor: (Width: 20); }
+                                    Label #RacePathsTitleLabel {
+                                        Text: "Race Paths";
+                                        Style: (FontSize: 26, TextColor: #ffffff, RenderBold: true, HorizontalAlignment: Center);
+                                        Anchor: (Height: 36);
+                                    }
+
+                                    Group { Anchor: (Height: 1); Background: #2b3542; }
+                                    Group { Anchor: (Height: 14); }
+
+                                    Label #RacePathsSubtitleLabel {
+                                        Text: "Progress through tiers from your base class and converge into final forms.";
+                                        Style: (FontSize: 13, TextColor: #9fb6d3, HorizontalAlignment: Center);
+                                        Anchor: (Height: 20, Bottom: 6);
+                                    }
+
+                                    Group #RacePathScrollArea {
+                                        FlexWeight: 1;
+                                        LayoutMode: LeftScrolling;
+                                        ScrollbarStyle: $C.@DefaultScrollbarStyle;
+
+                                        Group #RacePathRows {
+                                            LayoutMode: Left;
+                                            Padding: (Horizontal: 12, Vertical: 24);
+                                            Group { Anchor: (Width: 20); }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Group { Anchor: (Width: 40); }
+
+                    $C.@DecoratedContainer {
+                        Anchor: (Width: 240, Height: 700);
+
+                        #Title {
+                            Group {
+                                $C.@Title {
+                                    @Text = "PATH INFO";
+                                }
+                            }
+                        }
+
+                        #Content {
+                            LayoutMode: Top;
+                            Padding: (Horizontal: 12, Vertical: 12);
+
+                            Label {
+                                Text: "STATUS LEGEND";
+                                Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true, HorizontalAlignment: Center);
+                                Anchor: (Height: 18, Bottom: 6);
+                            }
+
+                            Group { Anchor: (Height: 1, Bottom: 8); Background: #ffffff(0.08); }
+
+                            Label {
+                                Text: "Unlocked: You have this form.";
+                                Style: (FontSize: 12, TextColor: #7fa6cf, Wrap: true);
+                                Anchor: (Bottom: 6);
+                            }
+
+                            Label {
+                                Text: "Available: Requirements met.";
+                                Style: (FontSize: 12, TextColor: #9adf86, Wrap: true);
+                                Anchor: (Bottom: 6);
+                            }
+
+                            Label {
+                                Text: "Locked: Requirements not met.";
+                                Style: (FontSize: 12, TextColor: #a0522d, Wrap: true);
+                                Anchor: (Bottom: 10);
+                            }
+
+                            Group { Anchor: (Height: 1, Bottom: 10); Background: #ffffff(0.08); }
+
+                            Label {
+                                Text: "TIP";
+                                Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true, HorizontalAlignment: Center);
+                                Anchor: (Height: 18, Bottom: 6);
+                            }
+
+                            Label {
+                                Text: "Scroll horizontally to view higher tiers and alternate branches.";
+                                Style: (FontSize: 12, TextColor: #c5d4e8, Wrap: true);
+                                Anchor: (Bottom: 8);
+                            }
+
+                            Group { FlexWeight: 1; }
+
+                            Label {
+                                Text: "Path details panel";
+                                Style: (FontSize: 11, TextColor: #5a7a9a, HorizontalAlignment: Center);
+                                Anchor: (Height: 18);
+                            }
+                        }
                     }
                 }
             }

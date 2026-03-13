@@ -1,6 +1,7 @@
 race_name: "Alpha Dragon"
-icon: "Ingredient_Life_Essence"
+icon: "Ingredient_Void_Essence"
 description: "The pinnacle of draconic evolution — an Alpha Dragon who commands both the unbreakable resilience of a sentinel and the devastating ferocity of a tyrant."
+model: "Saurian_Hunter"
 model_scale: 1.0
 enabled: true
 

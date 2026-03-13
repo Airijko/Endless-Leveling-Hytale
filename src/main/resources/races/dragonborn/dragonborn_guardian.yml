@@ -1,6 +1,7 @@
 race_name: "Dragon Guardian"
-icon: "Ingredient_Life_Essence"
+icon: "Ingredient_Ice_Essence"
 description: "A Dragonborn who channels their draconic resilience into an unbreakable fortress of scales and vitality."
+model: "Saurian_Hunter"
 model_scale: 1.0
 enabled: true
 

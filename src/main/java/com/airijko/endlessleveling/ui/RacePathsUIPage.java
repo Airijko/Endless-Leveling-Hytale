@@ -5,6 +5,7 @@ import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.races.RaceAscensionDefinition;
+import com.airijko.endlessleveling.races.RaceAscensionEligibility;
 import com.airijko.endlessleveling.races.RaceDefinition;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -206,12 +207,9 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
             ui.set(nodeBase + " #NodeIcon.ItemId", resolveIconItemId(race));
             ui.set(nodeBase + " #NodeName.Style.TextColor", finalTier ? "#ffe59f" : "#dbe7f5");
 
-            // Determine lock status: base tier is always unlocked, others depend on
-            // progression
-            boolean isUnlocked = baseTier || isRaceUnlocked(race, currentPlayerRace);
-            ui.set(nodeBase + " #NodeStatus.Text", isUnlocked ? "Unlocked" : "Locked");
-            String statusColor = isUnlocked ? "#7fa6cf" : "#a0522d";
-            ui.set(nodeBase + " #NodeStatus.Style.TextColor", statusColor);
+            NodeStatus status = resolveNodeStatus(race, baseTier, playerData, currentPlayerRace);
+            ui.set(nodeBase + " #NodeStatus.Text", status.label());
+            ui.set(nodeBase + " #NodeStatus.Style.TextColor", status.color());
 
             inRow++;
             if (inRow >= MAX_NODES_PER_TIER_ROW) {
@@ -221,20 +219,64 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
         }
     }
 
-    private boolean isRaceUnlocked(RaceDefinition race, RaceDefinition currentPlayerRace) {
+    private NodeStatus resolveNodeStatus(RaceDefinition race,
+            boolean baseTier,
+            PlayerData playerData,
+            RaceDefinition currentPlayerRace) {
+        if (baseTier || isRaceUnlocked(race, currentPlayerRace, playerData)) {
+            return NodeStatus.unlocked();
+        }
+        if (isRaceAvailable(race, playerData)) {
+            return NodeStatus.available();
+        }
+        return NodeStatus.locked();
+    }
+
+    private boolean isRaceUnlocked(RaceDefinition race, RaceDefinition currentPlayerRace, PlayerData playerData) {
         if (race == null) {
             return false;
         }
-        // A race is unlocked if the player has already reached it or beyond in their
-        // progression
-        if (currentPlayerRace == null) {
+        String raceKey = pathKey(race);
+
+        if (currentPlayerRace != null) {
+            String currentKey = pathKey(currentPlayerRace);
+            if (raceKey.equals(currentKey)) {
+                return true;
+            }
+        }
+
+        if (playerData == null || raceManager == null) {
             return false;
         }
-        // For now, only the current race is "unlocked" (the one the player is on)
-        // This can be enhanced later to track all completed ascensions
-        String raceKey = pathKey(race);
-        String currentKey = pathKey(currentPlayerRace);
-        return raceKey.equals(currentKey);
+
+        String pathId = raceManager.resolveAscensionPathId(race.getId());
+        if (pathId != null && playerData.hasCompletedRaceForm(pathId)) {
+            return true;
+        }
+
+        return playerData.hasCompletedRaceForm(race.getId());
+    }
+
+    private boolean isRaceAvailable(RaceDefinition race, PlayerData playerData) {
+        if (race == null || playerData == null || raceManager == null) {
+            return false;
+        }
+        RaceAscensionEligibility eligibility = raceManager.evaluateAscensionEligibility(playerData, race.getId());
+        return eligibility != null && eligibility.isEligible();
+    }
+
+    private record NodeStatus(String label, String color) {
+        private static NodeStatus unlocked() {
+            return new NodeStatus("Unlocked", "#7fa6cf");
+        }
+
+        private static NodeStatus available() {
+            return new NodeStatus("Available", "#9adf86");
+        }
+
+        private static NodeStatus locked() {
+            return new NodeStatus("Locked", "#a0522d");
+        }
     }
 
     private PlayerData loadPlayerData() {
@@ -298,7 +340,7 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
             return "";
         }
 
-        String[] pieces = trimmed.split("[_\\\\-\\\\s]+");
+        String[] pieces = trimmed.split("[_\\-\\s]+");
         StringBuilder out = new StringBuilder();
         for (String piece : pieces) {
             if (piece == null || piece.isBlank()) {

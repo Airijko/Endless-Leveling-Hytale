@@ -1,5 +1,5 @@
 race_name: "Void Juggernaut"
-icon: "Ingredient_Life_Essence"
+icon: "Ingredient_Water_Essence"
 description: "A monstrous void fortress that crushes opposition through impossible resilience and retaliatory force."
 model: "Spawn_Void"
 model_scale: 1.0

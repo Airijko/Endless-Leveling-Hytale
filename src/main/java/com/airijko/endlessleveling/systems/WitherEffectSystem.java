@@ -28,6 +28,7 @@ public final class WitherEffectSystem extends TickingSystem<EntityStore> {
         elapsed = 0f;
 
         long now = System.currentTimeMillis();
+        WitherAugment.purgeExpiredStates(now);
         store.forEachChunk(QUERY, (ArchetypeChunk<EntityStore> chunk, CommandBuffer<EntityStore> commandBuffer) -> {
             for (int i = 0; i < chunk.size(); i++) {
                 Ref<EntityStore> ref = chunk.getReferenceTo(i);

@@ -1,7 +1,7 @@
 race_name: "Iceborn Ragnarok"
-icon: "Ingredient_Life_Essence"
+icon: "Ingredient_Water_Essence"
 description: "A cataclysmic Iceborn warform where each critical strike echoes like a shattering avalanche."
-model: "Outlander"
+model: "Outlander_Brute"
 model_scale: 1.0
 enabled: true
 

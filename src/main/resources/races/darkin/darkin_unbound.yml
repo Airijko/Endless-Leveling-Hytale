@@ -1,6 +1,7 @@
 race_name: "Darkin Unbound"
-icon: "Ingredient_Life_Essence"
+icon: "Ingredient_Void_Essence"
 description: "A transcendent Darkin who fuses warlord brutality with blood sorcery mastery."
+model: "Skeleton_Incandescent_Footman"
 model_scale: 1.0
 enabled: true
 

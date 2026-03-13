@@ -1,6 +1,7 @@
 race_name: "Darkin Warlord"
-icon: "Ingredient_Life_Essence"
+icon: "Ingredient_Water_Essence"
 description: "A supreme war tyrant whose blood-fueled power dominates the battlefield."
+model: "Skeleton_Incandescent_Footman"
 model_scale: 1.0
 enabled: true
 

@@ -92,6 +92,7 @@ public final class WitherAugment extends YamlAugment implements AugmentHooks.OnH
     private static final class ActiveWither {
         long expiresAt;
         long nextTickAt;
+        int targetStoreIdentity;
         double percentPerSecond;
         double movementSpeedSlowPercent;
         double durationSeconds;
@@ -105,6 +106,7 @@ public final class WitherAugment extends YamlAugment implements AugmentHooks.OnH
         boolean loggedMissingEffectController;
         boolean loggedMissingSlowEffectAsset;
         boolean loggedEffectApplyFailure;
+        boolean loggedSourceStoreMismatch;
     }
 
     public WitherAugment(AugmentDefinition definition) {
@@ -156,7 +158,9 @@ public final class WitherAugment extends YamlAugment implements AugmentHooks.OnH
         state.percentPerSecond = percentPerSecond;
         state.movementSpeedSlowPercent = movementSpeedSlowPercent;
         state.durationSeconds = durationSeconds;
+        state.targetStoreIdentity = storeIdentityFor(targetRef);
         state.sourceRef = context.getAttackerRef();
+        state.loggedSourceStoreMismatch = false;
 
         LOGGER.atFine().log("Wither applied: key=%s target=%s durationMs=%d slowPct=%.4f dpsPct=%.4f",
                 key,
@@ -181,6 +185,22 @@ public final class WitherAugment extends YamlAugment implements AugmentHooks.OnH
         ActiveWither state = ACTIVE_WITHER.get(key);
         if (state == null) {
             return;
+        }
+
+        int targetStoreIdentity = storeIdentityFor(ref);
+        if (state.targetStoreIdentity != 0 && targetStoreIdentity != 0
+                && state.targetStoreIdentity != targetStoreIdentity) {
+            ACTIVE_WITHER.remove(key);
+            LOGGER.atFine().log(
+                    "Wither removed due to store change: key=%s target=%s oldStore=%d newStore=%d",
+                    key,
+                    ref,
+                    state.targetStoreIdentity,
+                    targetStoreIdentity);
+            return;
+        }
+        if (state.targetStoreIdentity == 0) {
+            state.targetStoreIdentity = targetStoreIdentity;
         }
 
         if (now >= state.expiresAt) {
@@ -210,9 +230,17 @@ public final class WitherAugment extends YamlAugment implements AugmentHooks.OnH
             return;
         }
 
-        Damage witherTickDamage = PlayerCombatListener.createAugmentDotDamage(state.sourceRef, (float) damage);
+        Ref<EntityStore> sourceRef = sanitizeSourceRefForTarget(state, ref);
+        Damage witherTickDamage = PlayerCombatListener.createAugmentDotDamage(sourceRef, (float) damage);
         DamageSystems.executeDamage(ref, commandBuffer, witherTickDamage);
         state.nextTickAt = now + TICK_INTERVAL_MILLIS;
+    }
+
+    public static void purgeExpiredStates(long now) {
+        ACTIVE_WITHER.entrySet().removeIf(entry -> {
+            ActiveWither state = entry.getValue();
+            return state == null || now >= state.expiresAt;
+        });
     }
 
     private static String keyFor(Ref<EntityStore> ref, CommandBuffer<EntityStore> commandBuffer) {
@@ -223,6 +251,34 @@ public final class WitherAugment extends YamlAugment implements AugmentHooks.OnH
             }
         }
         return ref.toString();
+    }
+
+    private static int storeIdentityFor(Ref<EntityStore> ref) {
+        if (ref == null || ref.getStore() == null) {
+            return 0;
+        }
+        return System.identityHashCode(ref.getStore());
+    }
+
+    private static Ref<EntityStore> sanitizeSourceRefForTarget(ActiveWither state, Ref<EntityStore> targetRef) {
+        Ref<EntityStore> sourceRef = state == null ? null : state.sourceRef;
+        if (sourceRef == null || targetRef == null) {
+            return null;
+        }
+        if (!sourceRef.isValid() || !targetRef.isValid()) {
+            return null;
+        }
+        if (sourceRef.getStore() != targetRef.getStore()) {
+            if (state != null && !state.loggedSourceStoreMismatch) {
+                LOGGER.atWarning().log(
+                        "Wither source store mismatch; falling back to NULL_SOURCE target=%s source=%s",
+                        targetRef,
+                        sourceRef);
+                state.loggedSourceStoreMismatch = true;
+            }
+            return null;
+        }
+        return sourceRef;
     }
 
     private static void applySlowIfPossible(ActiveWither state,

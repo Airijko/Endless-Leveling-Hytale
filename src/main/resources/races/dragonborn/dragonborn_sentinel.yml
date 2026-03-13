@@ -1,6 +1,7 @@
 race_name: "Dragon Sentinel"
-icon: "Ingredient_Life_Essence"
+icon: "Ingredient_Water_Essence"
 description: "A Dragon Guardian who has mastered the art of draconic endurance, becoming an immovable wall of scales and regenerative power."
+model: "Saurian_Hunter"
 model_scale: 1.0
 enabled: true
 

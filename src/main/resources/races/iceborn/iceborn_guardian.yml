@@ -1,7 +1,7 @@
 race_name: "Iceborn Guardian"
-icon: "Ingredient_Life_Essence"
+icon: "Ingredient_Ice_Essence"
 description: "A glacial bulwark who endures impossible punishment through frozen vitality and steadfast stamina."
-model: "Outlander"
+model: "Outlander_Brute"
 model_scale: 1.0
 enabled: true
 

@@ -1,7 +1,7 @@
 race_name: "Iceborn Berzerker"
-icon: "Ingredient_Life_Essence"
+icon: "Ingredient_Ice_Essence"
 description: "A frenzied Iceborn executioner who turns precision and ferocity into brutal critical slaughter."
-model: "Outlander"
+model: "Outlander_Brute"
 model_scale: 1.0
 enabled: true
 
