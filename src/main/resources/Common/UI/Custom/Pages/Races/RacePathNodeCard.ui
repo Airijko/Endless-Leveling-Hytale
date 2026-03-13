@@ -157,33 +157,25 @@ Button {
 
     Group #NodeSelectedOutlineOverlay {
         Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
-        LayoutMode: Top;
         Visible: false;
 
         Group {
-            Anchor: (Height: 2);
+            Anchor: (Top: 0, Left: 0, Right: 0, Height: 2);
             Background: #f0cf78;
         }
 
         Group {
-            FlexWeight: 1;
-            LayoutMode: Left;
-
-            Group {
-                Anchor: (Width: 2);
-                Background: #f0cf78;
-            }
-
-            Group { FlexWeight: 1; }
-
-            Group {
-                Anchor: (Width: 2);
-                Background: #f0cf78;
-            }
+            Anchor: (Top: 0, Bottom: 0, Left: 0, Width: 2);
+            Background: #f0cf78;
         }
 
         Group {
-            Anchor: (Height: 2);
+            Anchor: (Top: 0, Bottom: 0, Right: 0, Width: 2);
+            Background: #f0cf78;
+        }
+
+        Group {
+            Anchor: (Bottom: 0, Left: 0, Right: 0, Height: 2);
             Background: #f0cf78;
         }
     }

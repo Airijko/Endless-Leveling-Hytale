@@ -47,6 +47,8 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
     private static final String ACTION_HOVER_PREFIX = "racepath:hover:";
     private static final String ACTION_HOVER_END = "racepath:hoverend";
     private static final String ACTION_PATH_BUTTON = "racepath:action";
+    private static final String NODE_OUTLINE_DEFAULT_COLOR = "#25384b";
+    private static final String NODE_OUTLINE_SELECTED_COLOR = "#f0cf78";
 
     private final RaceManager raceManager;
     private final PlayerDataManager playerDataManager;
@@ -474,7 +476,8 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
             applyNodeNameVariant(ui, nodeBase, nodeLabel, status, selected, finalTier);
             applyNodeStatusVariant(ui, nodeBase, status);
             applyNodeBackgroundVariant(ui, nodeBase, status);
-            ui.set(nodeBase + " #NodeSelectedOutlineOverlay.Visible", selected);
+            applyNodeOutlineVariant(ui, nodeBase, selected);
+            ui.set(nodeBase + " #NodeSelectedOutlineOverlay.Visible", false);
 
             events.addEventBinding(Activating, nodeBase, of("Action", ACTION_SELECT_PREFIX + key), false);
             events.addEventBinding(MouseEntered, nodeBase, of("Action", ACTION_HOVER_PREFIX + key), false);
@@ -542,6 +545,14 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
         ui.set(nodeBase + " #NodeBackgroundUnlocked.Visible", status.isUnlocked());
         ui.set(nodeBase + " #NodeBackgroundAvailable.Visible", status.isAvailable());
         ui.set(nodeBase + " #NodeBackgroundLocked.Visible", status.isLocked());
+    }
+
+    private void applyNodeOutlineVariant(UICommandBuilder ui, String nodeBase, boolean selected) {
+        String outlineColor = selected ? NODE_OUTLINE_SELECTED_COLOR : NODE_OUTLINE_DEFAULT_COLOR;
+        ui.set(nodeBase + " #NodeOutlineTop.Background", outlineColor);
+        ui.set(nodeBase + " #NodeOutlineLeft.Background", outlineColor);
+        ui.set(nodeBase + " #NodeOutlineRight.Background", outlineColor);
+        ui.set(nodeBase + " #NodeOutlineBottom.Background", outlineColor);
     }
 
     private void applyPathInfoPanel(UICommandBuilder ui, PlayerData playerData, RaceDefinition currentPlayerRace) {
