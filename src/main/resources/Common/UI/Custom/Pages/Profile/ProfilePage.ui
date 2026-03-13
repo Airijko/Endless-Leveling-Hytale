@@ -2,368 +2,411 @@ $C = "../../Common.ui";
 $Nav = "../Nav/LeftNavPanel.ui";
 
 $C.@PageOverlay {
-    $C.@DecoratedContainer {
-        Anchor: (Width: 1000, Height: 700);
-        #Title {
-            Group {
-                $C.@Title {
-                    @Text = "ENDLESS LEVELING";
-                }
-            }
-        }
+        Group {
+        LayoutMode: Middle;
 
-        #Content {
+        Group {
             LayoutMode: Left;
-            Padding: (Full: 0);
+            Anchor: (Width: 1680, Height: 724);
 
-            // ---------------- LEFT NAV ----------------
-            $Nav.@LeftNavPanel {}
-
-            // ---------------- RIGHT PANEL ----------------
-            Group #RightPanel {
-                FlexWeight: 1;
+            Group {
                 LayoutMode: Top;
-                Anchor: (Right: 7, Bottom: 7);
+                Anchor: (Width: 1680, Height: 724);
+                Padding: (Full: 12);
 
                 Group {
-                    LayoutMode: Left;
-                    Anchor: (Height: 60);
-                    Padding: (Horizontal: 16, Vertical: 10);
+                    LayoutMode: Middle;
+                    Anchor: (Width: 1680);
 
-                    Label #ProfileTitleLabel {
-                        FlexWeight: 1;
-                        Text: "Profiles 0/5";
-                        Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
-                    }
+                    Group {
+                        LayoutMode: Left;
 
-                    $C.@TextButton #NewProfileButton {
-                        Text: "NEW PROFILE";
-                        Anchor: (Height: 32, Width: 170);
-                    }
-                }
+                        Group { Anchor: (Width: 300); }
 
-                Group { Anchor: (Height: 1); Background: #2b3542; }
+                        $C.@DecoratedContainer {
+                            Anchor: (Width: 1000, Height: 700);
+                            #Title {
+                                Group {
+                                    $C.@Title {
+                                        @Text = "ENDLESS LEVELING";
+                                    }
+                                }
+                            }
 
-                Group #ProfileContent {
-                    LayoutMode: Left;
-                    FlexWeight: 1;
-                    Padding: (Full: 16);
+                            #Content {
+                                LayoutMode: Left;
+                                Padding: (Full: 0);
 
-                    Group #ProfileListColumn {
-                        FlexWeight: 1;
-                        LayoutMode: Top;
+                                // ---------------- LEFT NAV ----------------
+                                $Nav.@LeftNavPanel {}
 
-                        Group #ProfileListSection {
-                            LayoutMode: Top;
-                            FlexWeight: 1;
-
-                            Group #ProfileRows {
-                                FlexWeight: 1;
-
-                                Group #ProfileCards {
+                                // ---------------- MAIN PANEL ----------------
+                                Group #RightPanel {
+                                    FlexWeight: 1;
                                     LayoutMode: Top;
+                                    Anchor: (Right: 7, Bottom: 7);
+
+                                    Group {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 60);
+                                        Padding: (Horizontal: 16, Vertical: 10);
+
+                                        Label #ProfileTitleLabel {
+                                            FlexWeight: 1;
+                                            Text: "Profiles 0/5";
+                                            Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
+                                        }
+
+                                        $C.@TextButton #NewProfileButton {
+                                            Text: "NEW PROFILE";
+                                            Anchor: (Height: 32, Width: 170);
+                                        }
+                                    }
+
+                                    Group { Anchor: (Height: 1); Background: #2b3542; }
+
+                                    Group #ProfileContent {
+                                        LayoutMode: Left;
+                                        FlexWeight: 1;
+                                        Padding: (Full: 16);
+
+                                        Group { Anchor: (Width: 16); }
+
+                                        Group #ProfileDetailPanel {
+                                            LayoutMode: Top;
+                                            Anchor: (Width: 425);
+                                            Background: #050910(0.85);
+                                            Padding: (Left: 18, Right: 18, Top: 18, Bottom: 18);
+
+                                            Label #DetailTitleLabel {
+                                                Text: "Selected Profile";
+                                                Style: (FontSize: 18, TextColor: #ffffff, RenderBold: true);
+                                                Anchor: (Height: 26);
+                                            }
+
+                                            Label #DetailSubtitleLabel {
+                                                Text: "Select a profile to view stats";
+                                                Style: (FontSize: 13, TextColor: #8aa1bf);
+                                                Anchor: (Height: 18);
+                                            }
+
+                                            Group { Anchor: (Height: 10); }
+                                            Group { Anchor: (Height: 1); Background: #ffffff(0.08); }
+                                            Group { Anchor: (Height: 14); }
+
+                                            Group #DetailSummary {
+                                                LayoutMode: Left;
+                                                Anchor: (Height: 48);
+
+                                                Group {
+                                                    LayoutMode: Top;
+                                                    Anchor: (Width: 110);
+
+                                                    Label {
+                                                        Text: "LEVEL";
+                                                        Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
+                                                        Anchor: (Height: 10);
+                                                    }
+
+                                                    Label #DetailLevelValue {
+                                                        Text: "--";
+                                                        Style: (FontSize: 16, TextColor: #ffffff);
+                                                        Anchor: (Height: 18);
+                                                    }
+                                                }
+
+                                                Group { Anchor: (Width: 16); }
+
+                                                Group {
+                                                    LayoutMode: Top;
+                                                    Anchor: (Width: 140);
+
+                                                    Label {
+                                                        Text: "TOTAL XP";
+                                                        Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
+                                                        Anchor: (Height: 10);
+                                                    }
+
+                                                    Label #DetailXpValue {
+                                                        Text: "--";
+                                                        Style: (FontSize: 16, TextColor: #ffffff);
+                                                        Anchor: (Height: 18);
+                                                    }
+                                                }
+
+                                                Group { Anchor: (Width: 16); }
+
+                                                Group {
+                                                    LayoutMode: Top;
+                                                    Anchor: (Width: 140);
+
+                                                    Label {
+                                                        Text: "RACE";
+                                                        Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
+                                                        Anchor: (Height: 10);
+                                                    }
+
+                                                    Label #DetailRaceValue {
+                                                        Text: "--";
+                                                        Style: (FontSize: 16, TextColor: #ffffff);
+                                                        Anchor: (Height: 18);
+                                                    }
+                                                }
+                                            }
+
+                                            Group {
+                                                LayoutMode: Left;
+                                                Anchor: (Height: 34);
+
+                                                Group {
+                                                    LayoutMode: Top;
+                                                    Anchor: (Width: 110);
+
+                                                    Label {
+                                                        Text: "PRESTIGE";
+                                                        Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
+                                                        Anchor: (Height: 10);
+                                                    }
+
+                                                    Label #DetailPrestigeValue {
+                                                        Text: "--";
+                                                        Style: (FontSize: 16, TextColor: #ffffff);
+                                                        Anchor: (Height: 18);
+                                                    }
+                                                }
+                                            }
+
+                                            Group { Anchor: (Height: 14); }
+
+                                            Group #DetailScrollArea {
+                                                FlexWeight: 1;
+                                                LayoutMode: TopScrolling;
+                                                ScrollbarStyle: $C.@DefaultScrollbarStyle;
+                                                Group #DetailScrollContent {
+                                                    LayoutMode: Top;
+
+                                                    Label {
+                                                        Text: "Total Attributes";
+                                                        Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                                                        Anchor: (Height: 20);
+                                                    }
+
+                                                    Group #AttributeList {
+                                                        LayoutMode: Top;
+                                                        Background: #0b141f(0.7);
+                                                        Padding: (Left: 14, Right: 14, Top: 10, Bottom: 10);
+
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #AttributeLifeForceLabel { Text: "Life Force"; Style: (FontSize: 12, TextColor: #7be0ff); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #AttributeLifeForceValue { Text: "--"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #AttributeLifeForceLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #AttributeStrengthLabel { Text: "Strength"; Style: (FontSize: 12, TextColor: #ffb347); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #AttributeStrengthValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffdf8f, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #AttributeStrengthLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #ffdf8f, RenderBold: true); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #AttributeSorceryLabel { Text: "Sorcery"; Style: (FontSize: 12, TextColor: #d7baff); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #AttributeSorceryValue { Text: "--"; Style: (FontSize: 12, TextColor: #e8d5ff, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #AttributeSorceryLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #e8d5ff, RenderBold: true); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #AttributeDefenseLabel { Text: "Defense"; Style: (FontSize: 12, TextColor: #8be0b2); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #AttributeDefenseValue { Text: "--"; Style: (FontSize: 12, TextColor: #6ee7b7, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #AttributeDefenseLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #6ee7b7, RenderBold: true); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #AttributeHasteLabel { Text: "Haste"; Style: (FontSize: 12, TextColor: #f2a2e8); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #AttributeHasteValue { Text: "--"; Style: (FontSize: 12, TextColor: #f78bd9, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #AttributeHasteLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #f78bd9, RenderBold: true); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #AttributePrecisionLabel { Text: "Precision"; Style: (FontSize: 12, TextColor: #9ad4ff); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #AttributePrecisionValue { Text: "--"; Style: (FontSize: 12, TextColor: #7cb8ff, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #AttributePrecisionLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #7cb8ff, RenderBold: true); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #AttributeFerocityLabel { Text: "Ferocity"; Style: (FontSize: 12, TextColor: #ff7b7b); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #AttributeFerocityValue { Text: "--"; Style: (FontSize: 12, TextColor: #ff5555, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #AttributeFerocityLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #ff5555, RenderBold: true); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #AttributeStaminaLabel { Text: "Stamina"; Style: (FontSize: 12, TextColor: #ffc56f); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #AttributeStaminaValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffad42, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #AttributeStaminaLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #ffad42, RenderBold: true); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #AttributeFlowLabel { Text: "Flow"; Style: (FontSize: 12, TextColor: #9be3ff); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #AttributeFlowValue { Text: "--"; Style: (FontSize: 12, TextColor: #7dd6ff, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #AttributeFlowLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #7dd6ff, RenderBold: true); }
+                                                        }
+                                                        Group {
+                                                            LayoutMode: Left;
+                                                            Anchor: (Height: 20);
+                                                            Label #AttributeDisciplineLabel { Text: "Discipline"; Style: (FontSize: 12, TextColor: #d5dfff); }
+                                                            Group { FlexWeight: 1; }
+                                                            Label #AttributeDisciplineValue { Text: "--"; Style: (FontSize: 12, TextColor: #9fe0ff, RenderBold: true); }
+                                                            Group { Anchor: (Width: 8); }
+                                                            Label #AttributeDisciplineLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #d5dfff, RenderBold: true); }
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 16); }
+
+                                                    Label {
+                                                        Text: "Passives";
+                                                        Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                                                        Anchor: (Height: 20);
+                                                    }
+
+                                                    Group #PassiveList {
+                                                        LayoutMode: Top;
+
+                                                        Label #PassiveSummary {
+                                                            Text: "Select a profile to view passive bonuses";
+                                                            Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
+                                                            Anchor: (Height: 18);
+                                                        }
+
+                                                        Group #PassiveEntries {
+                                                            LayoutMode: Top;
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 8); }
+
+                                                    Group #InnatePassiveList {
+                                                        LayoutMode: Top;
+
+                                                        Label #InnatePassiveSummary {
+                                                            Text: "No innate passives active";
+                                                            Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
+                                                            Anchor: (Height: 18);
+                                                        }
+
+                                                        Group #InnatePassiveEntries {
+                                                            LayoutMode: Top;
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 16); }
+
+                                                    Label {
+                                                        Text: "Innate Bonuses";
+                                                        Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                                                        Anchor: (Height: 20);
+                                                    }
+
+                                                    Group #InnateAttributeList {
+                                                        LayoutMode: Top;
+
+                                                        Label #InnateAttributeSummary {
+                                                            Text: "No innate attribute bonuses";
+                                                            Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
+                                                            Anchor: (Height: 18);
+                                                        }
+
+                                                        Group #InnateAttributeEntries {
+                                                            LayoutMode: Top;
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 16); }
+
+                                                    Label {
+                                                        Text: "Augments";
+                                                        Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                                                        Anchor: (Height: 20);
+                                                    }
+
+                                                    Group #AugmentList {
+                                                        LayoutMode: Top;
+
+                                                        Label #AugmentSummary {
+                                                            Text: "No augments active";
+                                                            Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
+                                                            Anchor: (Height: 18);
+                                                        }
+
+                                                        Group #AugmentEntries {
+                                                            LayoutMode: Top;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Group { Anchor: (Width: 16); }
+                        Group { Anchor: (Width: 40); }
 
-                    Group #ProfileDetailPanel {
-                        LayoutMode: Top;
-                        Anchor: (Width: 425);
-                        Background: #050910(0.85);
-                        Padding: (Left: 18, Right: 18, Top: 18, Bottom: 18);
+                        $C.@DecoratedContainer {
+                            Anchor: (Width: 300, Height: 700);
 
-                        Label #DetailTitleLabel {
-                            Text: "Selected Profile";
-                            Style: (FontSize: 18, TextColor: #ffffff, RenderBold: true);
-                            Anchor: (Height: 26);
-                        }
-
-                        Label #DetailSubtitleLabel {
-                            Text: "Select a profile to view stats";
-                            Style: (FontSize: 13, TextColor: #8aa1bf);
-                            Anchor: (Height: 18);
-                        }
-
-                        Group { Anchor: (Height: 10); }
-                        Group { Anchor: (Height: 1); Background: #ffffff(0.08); }
-                        Group { Anchor: (Height: 14); }
-
-                        Group #DetailSummary {
-                            LayoutMode: Left;
-                            Anchor: (Height: 48);
-
-                            Group {
-                                LayoutMode: Top;
-                                Anchor: (Width: 110);
-
-                                Label {
-                                    Text: "LEVEL";
-                                    Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
-                                    Anchor: (Height: 10);
-                                }
-
-                                Label #DetailLevelValue {
-                                    Text: "--";
-                                    Style: (FontSize: 16, TextColor: #ffffff);
-                                    Anchor: (Height: 18);
+                            #Title {
+                                Group {
+                                    $C.@Title #AugmentInfoPanel { @Text = "AUGMENT INFO"; }
                                 }
                             }
 
-                            Group { Anchor: (Width: 16); }
-
-                            Group {
+                            #Content {
                                 LayoutMode: Top;
-                                Anchor: (Width: 140);
+                                Padding: (Full: 12);
 
-                                Label {
-                                    Text: "TOTAL XP";
-                                    Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
-                                    Anchor: (Height: 10);
-                                }
-
-                                Label #DetailXpValue {
-                                    Text: "--";
-                                    Style: (FontSize: 16, TextColor: #ffffff);
-                                    Anchor: (Height: 18);
-                                }
-                            }
-
-                            Group { Anchor: (Width: 16); }
-
-                            Group {
-                                LayoutMode: Top;
-                                Anchor: (Width: 140);
-
-                                Label {
-                                    Text: "RACE";
-                                    Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
-                                    Anchor: (Height: 10);
-                                }
-
-                                Label #DetailRaceValue {
-                                    Text: "--";
-                                    Style: (FontSize: 16, TextColor: #ffffff);
-                                    Anchor: (Height: 18);
-                                }
-                            }
-                        }
-
-                        Group {
-                            LayoutMode: Left;
-                            Anchor: (Height: 34);
-
-                            Group {
-                                LayoutMode: Top;
-                                Anchor: (Width: 110);
-
-                                Label {
-                                    Text: "PRESTIGE";
-                                    Style: (FontSize: 11, TextColor: #6e7f98, RenderBold: true);
-                                    Anchor: (Height: 10);
-                                }
-
-                                Label #DetailPrestigeValue {
-                                    Text: "--";
-                                    Style: (FontSize: 16, TextColor: #ffffff);
-                                    Anchor: (Height: 18);
-                                }
-                            }
-                        }
-
-                        Group { Anchor: (Height: 14); }
-
-                        Group #DetailScrollArea {
-                            FlexWeight: 1;
-                            LayoutMode: TopScrolling;
-                            ScrollbarStyle: $C.@DefaultScrollbarStyle;
-                            Group #DetailScrollContent {
-                                LayoutMode: Top;
-
-                                Label {
-                                    Text: "Total Attributes";
-                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
-                                    Anchor: (Height: 20);
-                                }
-
-                                Group #AttributeList {
+                                Group #ProfileListColumn {
+                                    FlexWeight: 1;
                                     LayoutMode: Top;
-                                    Background: #0b141f(0.7);
-                                    Padding: (Left: 14, Right: 14, Top: 10, Bottom: 10);
 
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #AttributeLifeForceLabel { Text: "Life Force"; Style: (FontSize: 12, TextColor: #7be0ff); }
-                                        Group { FlexWeight: 1; }
-                                        Label #AttributeLifeForceValue { Text: "--"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #AttributeLifeForceLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #AttributeStrengthLabel { Text: "Strength"; Style: (FontSize: 12, TextColor: #ffb347); }
-                                        Group { FlexWeight: 1; }
-                                        Label #AttributeStrengthValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffdf8f, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #AttributeStrengthLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #ffdf8f, RenderBold: true); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #AttributeSorceryLabel { Text: "Sorcery"; Style: (FontSize: 12, TextColor: #d7baff); }
-                                        Group { FlexWeight: 1; }
-                                        Label #AttributeSorceryValue { Text: "--"; Style: (FontSize: 12, TextColor: #e8d5ff, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #AttributeSorceryLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #e8d5ff, RenderBold: true); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #AttributeDefenseLabel { Text: "Defense"; Style: (FontSize: 12, TextColor: #8be0b2); }
-                                        Group { FlexWeight: 1; }
-                                        Label #AttributeDefenseValue { Text: "--"; Style: (FontSize: 12, TextColor: #6ee7b7, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #AttributeDefenseLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #6ee7b7, RenderBold: true); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #AttributeHasteLabel { Text: "Haste"; Style: (FontSize: 12, TextColor: #f2a2e8); }
-                                        Group { FlexWeight: 1; }
-                                        Label #AttributeHasteValue { Text: "--"; Style: (FontSize: 12, TextColor: #f78bd9, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #AttributeHasteLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #f78bd9, RenderBold: true); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #AttributePrecisionLabel { Text: "Precision"; Style: (FontSize: 12, TextColor: #9ad4ff); }
-                                        Group { FlexWeight: 1; }
-                                        Label #AttributePrecisionValue { Text: "--"; Style: (FontSize: 12, TextColor: #7cb8ff, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #AttributePrecisionLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #7cb8ff, RenderBold: true); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #AttributeFerocityLabel { Text: "Ferocity"; Style: (FontSize: 12, TextColor: #ff7b7b); }
-                                        Group { FlexWeight: 1; }
-                                        Label #AttributeFerocityValue { Text: "--"; Style: (FontSize: 12, TextColor: #ff5555, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #AttributeFerocityLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #ff5555, RenderBold: true); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #AttributeStaminaLabel { Text: "Stamina"; Style: (FontSize: 12, TextColor: #ffc56f); }
-                                        Group { FlexWeight: 1; }
-                                        Label #AttributeStaminaValue { Text: "--"; Style: (FontSize: 12, TextColor: #ffad42, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #AttributeStaminaLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #ffad42, RenderBold: true); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #AttributeFlowLabel { Text: "Flow"; Style: (FontSize: 12, TextColor: #9be3ff); }
-                                        Group { FlexWeight: 1; }
-                                        Label #AttributeFlowValue { Text: "--"; Style: (FontSize: 12, TextColor: #7dd6ff, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #AttributeFlowLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #7dd6ff, RenderBold: true); }
-                                    }
-                                    Group {
-                                        LayoutMode: Left;
-                                        Anchor: (Height: 20);
-                                        Label #AttributeDisciplineLabel { Text: "Discipline"; Style: (FontSize: 12, TextColor: #d5dfff); }
-                                        Group { FlexWeight: 1; }
-                                        Label #AttributeDisciplineValue { Text: "--"; Style: (FontSize: 12, TextColor: #9fe0ff, RenderBold: true); }
-                                        Group { Anchor: (Width: 8); }
-                                        Label #AttributeDisciplineLevel { Text: "Lv --"; Style: (FontSize: 12, TextColor: #d5dfff, RenderBold: true); }
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 16); }
-
-                                Label {
-                                    Text: "Passives";
-                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
-                                    Anchor: (Height: 20);
-                                }
-
-                                Group #PassiveList {
-                                    LayoutMode: Top;
-
-                                    Label #PassiveSummary {
-                                        Text: "Select a profile to view passive bonuses";
-                                        Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
-                                        Anchor: (Height: 18);
-                                    }
-
-                                    Group #PassiveEntries {
+                                    Group #ProfileListSection {
                                         LayoutMode: Top;
-                                    }
-                                }
+                                        FlexWeight: 1;
 
-                                Group { Anchor: (Height: 8); }
+                                        Group #ProfileRows {
+                                            FlexWeight: 1;
 
-                                Group #InnatePassiveList {
-                                    LayoutMode: Top;
-
-                                    Label #InnatePassiveSummary {
-                                        Text: "No innate passives active";
-                                        Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
-                                        Anchor: (Height: 18);
-                                    }
-
-                                    Group #InnatePassiveEntries {
-                                        LayoutMode: Top;
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 16); }
-
-                                Label {
-                                    Text: "Innate Bonuses";
-                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
-                                    Anchor: (Height: 20);
-                                }
-
-                                Group #InnateAttributeList {
-                                    LayoutMode: Top;
-
-                                    Label #InnateAttributeSummary {
-                                        Text: "No innate attribute bonuses";
-                                        Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
-                                        Anchor: (Height: 18);
-                                    }
-
-                                    Group #InnateAttributeEntries {
-                                        LayoutMode: Top;
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 16); }
-
-                                Label {
-                                    Text: "Augments";
-                                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
-                                    Anchor: (Height: 20);
-                                }
-
-                                Group #AugmentList {
-                                    LayoutMode: Top;
-
-                                    Label #AugmentSummary {
-                                        Text: "No augments active";
-                                        Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true);
-                                        Anchor: (Height: 18);
-                                    }
-
-                                    Group #AugmentEntries {
-                                        LayoutMode: Top;
+                                            Group #ProfileCards {
+                                                LayoutMode: Top;
+                                            }
+                                        }
                                     }
                                 }
                             }
