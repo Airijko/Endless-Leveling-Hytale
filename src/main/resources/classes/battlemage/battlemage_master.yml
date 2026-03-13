@@ -1,4 +1,4 @@
-class_name: "BattleMage Master"
+class_name: "Master BattleMage"
 id: "battlemage_master"
 description: "A relentless arcane warrior who draws devastating power from the brink of death, blending melee combat with volatile sorcery."
 role: "Mage"

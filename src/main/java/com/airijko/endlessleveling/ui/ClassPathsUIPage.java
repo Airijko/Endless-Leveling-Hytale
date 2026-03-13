@@ -473,7 +473,7 @@ public class ClassPathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data>
             NodeStatus status = resolveNodeStatus(clazz, baseTier, playerData, currentPlayerClass);
             String key = pathKey(clazz);
             boolean selected = selectedPathKey != null && selectedPathKey.equals(key);
-            String nodeLabel = buildNodeLabel(clazz, !baseTier);
+            String nodeLabel = buildNodeLabel(clazz);
 
             ui.set(nodeBase + " #NodeIcon.ItemId", resolveIconItemId(clazz));
             applyNodeNameVariant(ui, nodeBase, nodeLabel, status, selected, finalTier);
@@ -900,22 +900,12 @@ public class ClassPathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data>
         return data;
     }
 
-    private String buildNodeLabel(CharacterClassDefinition clazz, boolean includePathSuffix) {
+    private String buildNodeLabel(CharacterClassDefinition clazz) {
         if (clazz == null) {
             return "";
         }
 
-        String displayName = resolveDisplayName(clazz);
-        if (!includePathSuffix) {
-            return displayName;
-        }
-
-        RaceAscensionDefinition ascension = clazz.getAscension();
-        String prettyPath = prettifyPathName(ascension != null ? ascension.getPath() : null);
-        if (prettyPath.isBlank()) {
-            return displayName;
-        }
-        return displayName + " (" + prettyPath + ")";
+        return resolveDisplayName(clazz);
     }
 
     private String resolveDisplayName(CharacterClassDefinition clazz) {

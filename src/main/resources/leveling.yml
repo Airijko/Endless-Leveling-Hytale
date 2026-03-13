@@ -18,7 +18,7 @@ augments:
   unlocks:
     - tier: COMMON
       required_player_level: 10
-      level_interval: 25
+      level_interval: 20
       max_unlocks: -1
     - tier: ELITE
       levels: [15]

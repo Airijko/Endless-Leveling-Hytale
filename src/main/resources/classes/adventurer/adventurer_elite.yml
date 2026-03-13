@@ -1,4 +1,4 @@
-class_name: "Adventurer Elite"
+class_name: "Elite Adventurer"
 id: "adventurer_elite"
 description: "A flexible pathfinder who blends martial training with survival instincts."
 role: "Vanguard"

@@ -1,4 +1,4 @@
-class_name: "Adventurer Legendary"
+class_name: "Legendary Adventurer"
 id: "adventurer_legendary"
 description: "A flexible pathfinder who blends martial training with survival instincts."
 role: "Vanguard"

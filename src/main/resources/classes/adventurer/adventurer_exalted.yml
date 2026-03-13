@@ -1,4 +1,4 @@
-class_name: "Adventurer Exalted"
+class_name: "Exalted Adventurer"
 id: "adventurer_exalted"
 description: "A flexible pathfinder who blends martial training with survival instincts."
 role: "Vanguard"

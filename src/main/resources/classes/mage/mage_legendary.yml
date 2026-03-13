@@ -1,4 +1,4 @@
-class_name: "Mage Legendary"
+class_name: "Legendary Mage"
 id: "mage_legendary"
 description: "A spellcasting prodigy who channels pure arcane force through staves."
 role: "Mage"

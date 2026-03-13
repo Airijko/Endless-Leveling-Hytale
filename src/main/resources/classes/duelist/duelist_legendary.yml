@@ -1,4 +1,4 @@
-class_name: "Duelist Legendary"
+class_name: "Legendary Duelist"
 id: "duelist_legendary"
 description: "A mobile duelist who dances between sword and spear strikes."
 role: "Duelist"

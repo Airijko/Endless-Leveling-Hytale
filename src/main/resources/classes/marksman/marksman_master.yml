@@ -1,4 +1,4 @@
-class_name: "Marksman Master"
+class_name: "Master Marksman"
 id: "marksman_master"
 description: "An eagle-eyed sharpshooter who controls the fight from afar."
 role: "Marksman"
