@@ -84,9 +84,9 @@ public enum AttributeTheme {
             "Discipline",
             "ui.skills.label.discipline",
             "Discipline",
-            "#9fe0ff",
-            "#9fe0ff",
-            "#9fe0ff",
+            "#d59fff",
+            "#d59fff",
+            "#d59fff",
             "#8aa1bf");
 
     private static final EnumMap<SkillAttributeType, AttributeTheme> BY_TYPE = new EnumMap<>(SkillAttributeType.class);
