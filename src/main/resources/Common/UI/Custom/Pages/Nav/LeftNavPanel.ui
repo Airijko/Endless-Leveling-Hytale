@@ -82,6 +82,12 @@
       Text: "SKILLS";
     }
 
+    @LeftNavButton #NavAugments {
+      Text: "AUGMENTS";
+    }
+
+    Group { Anchor: (Height: 24); }
+
     @LeftNavButton #NavRaces {
       Text: "RACES";
     }
@@ -91,10 +97,6 @@
     }
 
     Group { Anchor: (Height: 24); }
-
-    @LeftNavButton #NavAugments {
-      Text: "AUGMENTS";
-    }
 
     @LeftNavButton #NavLeaderboards {
       Text: "LEADERBOARDS";

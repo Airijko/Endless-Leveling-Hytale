@@ -280,8 +280,7 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
             ui.set(nodeBase + " #NodeIcon.ItemId", resolveIconItemId(race));
             applyNodeNameVariant(ui, nodeBase, nodeLabel, status, selected, finalTier);
             applyNodeStatusVariant(ui, nodeBase, status);
-            ui.set(nodeBase + " #NodeActiveBrightOverlay.Visible", status.isActive());
-            ui.set(nodeBase + " #NodeLockedDimOverlay.Visible", status.isLocked());
+            applyNodeBackgroundVariant(ui, nodeBase, status);
             ui.set(nodeBase + " #NodeSelectedOutlineOverlay.Visible", selected);
 
             events.addEventBinding(Activating, nodeBase, of("Action", ACTION_SELECT_PREFIX + key), false);
@@ -345,6 +344,13 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
         ui.set(nodeBase + " #NodeStatusLocked.Visible", status.isLocked());
     }
 
+    private void applyNodeBackgroundVariant(UICommandBuilder ui, String nodeBase, NodeStatus status) {
+        ui.set(nodeBase + " #NodeBackgroundActive.Visible", status.isActive());
+        ui.set(nodeBase + " #NodeBackgroundUnlocked.Visible", status.isUnlocked());
+        ui.set(nodeBase + " #NodeBackgroundAvailable.Visible", status.isAvailable());
+        ui.set(nodeBase + " #NodeBackgroundLocked.Visible", status.isLocked());
+    }
+
     private void applyPathInfoPanel(UICommandBuilder ui, PlayerData playerData, RaceDefinition currentPlayerRace) {
         RaceDefinition focused = resolveFocusedRace(currentPlayerRace);
         if (focused == null) {
@@ -357,6 +363,7 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
             ui.set("#PathInfoStage.Text", "Stage: -");
             ui.set("#PathInfoSource.Text", "Source: -");
             ui.set("#PathInfoRequirements.Text", "Hover or select a race path to inspect requirements.");
+            ui.set("#ChooseRacePathButton.Text", "SELECT PATH");
             return;
         }
 
@@ -397,6 +404,26 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
         ui.set("#PathInfoStage.Text", "Stage: " + stageLabel);
         ui.set("#PathInfoSource.Text", resolveSourceLabel(focused));
         ui.set("#PathInfoRequirements.Text", buildRequirementsText(status, baseTier, eligibility));
+        ui.set("#ChooseRacePathButton.Text", resolvePathActionButtonText(status));
+    }
+
+    private String resolvePathActionButtonText(NodeStatus status) {
+        if (status == null) {
+            return "SELECT PATH";
+        }
+        if (status.isActive()) {
+            return "CURRENT";
+        }
+        if (status.isAvailable()) {
+            return "EVOLVE";
+        }
+        if (status.isUnlocked()) {
+            return "CHOOSE";
+        }
+        if (status.isLocked()) {
+            return "LOCKED";
+        }
+        return "SELECT PATH";
     }
 
     private RaceDefinition resolveFocusedRace(RaceDefinition currentPlayerRace) {

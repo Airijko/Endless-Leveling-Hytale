@@ -191,6 +191,13 @@ $C.@PageOverlay {
                                 Style: (FontSize: 11, TextColor: #c5d4e8, Wrap: true);
                                 Anchor: (Height: 116, Bottom: 6);
                             }
+
+                            Group { FlexWeight: 1; }
+
+                            $C.@TextButton #ChooseRacePathButton {
+                                Text: "SELECT PATH";
+                                Anchor: (Height: 32, Width: 160);
+                            }
                         }
                     }
                 }
