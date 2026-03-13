@@ -2,31 +2,174 @@ $C = "../../Common.ui";
 
 Button {
     Anchor: (Width: 158, Height: 112, Bottom: 10);
-    Padding: (Full: 10);
-    Background: (Color: #131d2c(0.88));
+    Padding: (Full: 0);
+    Background: #0c121a(0);
     LayoutMode: Top;
     Style: (
         Hovered: (
-            Background: #1c2b40(0.95)
+            Background: #1c2b40(0.22)
         ),
         Pressed: (
-            Background: #263852(0.95)
+            Background: #263852(0.28)
         )
     );
 
-    ItemIcon #NodeIcon {
-        Anchor: (Width: 40, Height: 40, Bottom: 6);
+    Group #NodeOutlineTop {
+        Anchor: (Height: 2);
+        Background: #25384b;
     }
 
-    Label #NodeName {
-        Text: "Path Node";
-        Style: (FontSize: 12, TextColor: #dbe7f5, RenderBold: true, Wrap: true, HorizontalAlignment: Center);
-        Anchor: (Height: 32);
+    Group {
+        FlexWeight: 1;
+        LayoutMode: Left;
+
+        Group #NodeOutlineLeft {
+            Anchor: (Width: 2);
+            Background: #25384b;
+        }
+
+        Group #NodeCardSurface {
+            FlexWeight: 1;
+            LayoutMode: Top;
+            Padding: (Full: 10);
+            Background: #131d2c(0.88);
+
+            ItemIcon #NodeIcon {
+                Anchor: (Width: 40, Height: 40, Bottom: 6);
+            }
+
+            Group #NodeNameSlot {
+                Anchor: (Height: 32);
+
+                Label #NodeNameDefault {
+                    Text: "Path Node";
+                    Style: (FontSize: 12, TextColor: #dbe7f5, RenderBold: true, Wrap: true, HorizontalAlignment: Center);
+                    Anchor: (Height: 32);
+                    Visible: true;
+                }
+
+                Label #NodeNameSelected {
+                    Text: "Path Node";
+                    Style: (FontSize: 12, TextColor: #f2f7ff, RenderBold: true, Wrap: true, HorizontalAlignment: Center);
+                    Anchor: (Height: 32);
+                    Visible: false;
+                }
+
+                Label #NodeNameFinal {
+                    Text: "Path Node";
+                    Style: (FontSize: 12, TextColor: #ffe59f, RenderBold: true, Wrap: true, HorizontalAlignment: Center);
+                    Anchor: (Height: 32);
+                    Visible: false;
+                }
+
+                Label #NodeNameFinalSelected {
+                    Text: "Path Node";
+                    Style: (FontSize: 12, TextColor: #fff0b8, RenderBold: true, Wrap: true, HorizontalAlignment: Center);
+                    Anchor: (Height: 32);
+                    Visible: false;
+                }
+
+                Label #NodeNameLocked {
+                    Text: "Path Node";
+                    Style: (FontSize: 12, TextColor: #7f8ca1, RenderBold: true, Wrap: true, HorizontalAlignment: Center);
+                    Anchor: (Height: 32);
+                    Visible: false;
+                }
+
+                Label #NodeNameActive {
+                    Text: "Path Node";
+                    Style: (FontSize: 12, TextColor: #f2f8ff, RenderBold: true, Wrap: true, HorizontalAlignment: Center);
+                    Anchor: (Height: 32);
+                    Visible: false;
+                }
+            }
+
+            Group #NodeStatusSlot {
+                Anchor: (Height: 14);
+
+                Label #NodeStatusUnlocked {
+                    Text: "Unlocked";
+                    Style: (FontSize: 10, TextColor: #7fa6cf);
+                    Anchor: (Height: 14);
+                    Visible: true;
+                }
+
+                Label #NodeStatusAvailable {
+                    Text: "Available";
+                    Style: (FontSize: 10, TextColor: #9adf86);
+                    Anchor: (Height: 14);
+                    Visible: false;
+                }
+
+                Label #NodeStatusLocked {
+                    Text: "Locked";
+                    Style: (FontSize: 10, TextColor: #a0522d);
+                    Anchor: (Height: 14);
+                    Visible: false;
+                }
+
+                Label #NodeStatusActive {
+                    Text: "Active";
+                    Style: (FontSize: 10, TextColor: #9cd8ff);
+                    Anchor: (Height: 14);
+                    Visible: false;
+                }
+            }
+        }
+
+        Group #NodeOutlineRight {
+            Anchor: (Width: 2);
+            Background: #25384b;
+        }
     }
 
-    Label #NodeStatus {
-        Text: "Unlocked";
-        Style: (FontSize: 10, TextColor: #7fa6cf);
-        Anchor: (Height: 14);
+    Group #NodeOutlineBottom {
+        Anchor: (Height: 2);
+        Background: #25384b;
+    }
+
+    Group #NodeActiveBrightOverlay {
+        Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+        Background: #2ea4d3(0.42);
+        Visible: false;
+    }
+
+    Group #NodeLockedDimOverlay {
+        Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+        Background: #060b12(0.62);
+        Visible: false;
+    }
+
+    Group #NodeSelectedOutlineOverlay {
+        Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+        LayoutMode: Top;
+        Visible: false;
+
+        Group {
+            Anchor: (Height: 2);
+            Background: #f0cf78;
+        }
+
+        Group {
+            FlexWeight: 1;
+            LayoutMode: Left;
+
+            Group {
+                Anchor: (Width: 2);
+                Background: #f0cf78;
+            }
+
+            Group { FlexWeight: 1; }
+
+            Group {
+                Anchor: (Width: 2);
+                Background: #f0cf78;
+            }
+        }
+
+        Group {
+            Anchor: (Height: 2);
+            Background: #f0cf78;
+        }
     }
 }
