@@ -6,8 +6,8 @@ import com.airijko.endlessleveling.augments.AugmentManager;
 import com.airijko.endlessleveling.augments.AugmentUnlockManager;
 import com.airijko.endlessleveling.augments.types.CommonAugment;
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.enums.PassiveCategory;
 import com.airijko.endlessleveling.enums.PassiveTier;
+import com.airijko.endlessleveling.enums.themes.AugmentTheme;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.util.Lang;
 import com.hypixel.hytale.component.Ref;
@@ -45,25 +45,15 @@ import static com.hypixel.hytale.server.core.ui.builder.EventData.of;
 public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
     private static final int GRID_ITEMS_PER_ROW = 5;
-    private static final String COLOR_MYTHIC_OWNED = "#b084e0";
-    private static final String COLOR_ELITE_OWNED = "#7ec8f5";
-    private static final String COLOR_COMMON_OWNED = "#b8bec9";
-    private static final String COLOR_UNOWNED = "#d4d9df";
-    private static final String COLOR_CHOOSE_AVAILABLE = "#8adf9e";
-    private static final String COLOR_CHOOSE_UNAVAILABLE = "#ff9f9f";
 
     private static final Map<String, String> BUFF_NAME_OVERRIDES = createBuffNameOverrides();
-
-    private static final Map<PassiveTier, Integer> TIER_ORDER = Map.of(
-            PassiveTier.MYTHIC, 0,
-            PassiveTier.ELITE, 1,
-            PassiveTier.COMMON, 2);
 
     private final AugmentManager augmentManager;
     private final AugmentUnlockManager augmentUnlockManager;
     private final PlayerDataManager playerDataManager;
     private final PlayerRef playerRef;
     private final AugmentValueFormatter valueFormatter;
+    private final AugmentPresentationMapper augmentPresentationMapper;
 
     private String searchQuery = "";
     private String selectedAugmentId = null;
@@ -76,6 +66,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
         this.playerRef = playerRef;
         this.valueFormatter = new AugmentValueFormatter(this::tr);
+        this.augmentPresentationMapper = new AugmentPresentationMapper(this::tr);
     }
 
     @Override
@@ -164,7 +155,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (augmentManager == null) {
             ui.set("#AugmentsResultLabel.Text", "Results: 0");
             ui.set("#AugmentsChooseAvailabilityLabel.Text", "No augments available to choose.");
-            ui.set("#AugmentsChooseAvailabilityLabel.Style.TextColor", COLOR_CHOOSE_UNAVAILABLE);
+            ui.set("#AugmentsChooseAvailabilityLabel.Style.TextColor", AugmentTheme.chooseAvailabilityColor(false));
             ui.set("#UnlockedSection.Visible", false);
             ui.set("#MythicSection.Visible", false);
             ui.set("#EliteSection.Visible", false);
@@ -236,7 +227,6 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         AugmentDefinition def = (augmentId != null && augmentManager != null)
                 ? augmentManager.getAugment(augmentId)
                 : null;
-        CommonAugment.CommonStatOffer commonStatOffer = CommonAugment.parseStatOfferId(augmentId);
 
         if (def == null) {
             ui.set("#AugmentInfoIcon.Visible", false);
@@ -245,23 +235,17 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             ui.set("#AugmentInfoTier.Visible", false);
             ui.set("#AugmentInfoDivider.Visible", false);
             ui.set("#AugmentInfoDescription.Visible", false);
-            ui.set("#AugmentInfoDivider2.Visible", false);
-            ui.set("#AugmentInfoValues.Visible", false);
+            applyInfoValues(ui, null, null, null, null);
             return;
         }
 
-        String iconId = resolveIconItemId(def);
-        if (commonStatOffer != null && CommonAugment.ID.equalsIgnoreCase(def.getId())) {
-            iconId = SkillAttributeIconResolver.resolveByConfigKey(commonStatOffer.attributeKey(), iconId);
-        }
-        ui.set("#AugmentInfoIcon.ItemId", iconId);
+        AugmentPresentationMapper.AugmentPresentationData presentation = augmentPresentationMapper.map(def, augmentId);
+        CommonAugment.CommonStatOffer commonStatOffer = presentation.commonStatOffer();
+
+        ui.set("#AugmentInfoIcon.ItemId", presentation.iconItemId());
         ui.set("#AugmentInfoIcon.Visible", true);
-        String displayName = def.getName();
-        if (commonStatOffer != null && CommonAugment.ID.equalsIgnoreCase(def.getId())) {
-            displayName = tr("ui.augments.common_stat.card_name", "{0}",
-                    formatCommonStatDisplayName(commonStatOffer.attributeKey()));
-        }
-        ui.set("#AugmentInfoName.Text", displayName);
+
+        ui.set("#AugmentInfoName.Text", presentation.displayName());
         ui.set("#AugmentInfoName.Style.TextColor", tierColor(def.getTier()));
 
         String tierName = def.getTier() != null ? def.getTier().name() : "";
@@ -276,52 +260,108 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set("#AugmentInfoDescription.Text", hasDesc ? desc : "");
         ui.set("#AugmentInfoDescription.Visible", hasDesc);
 
-        String valuesText;
         if (commonStatOffer != null && CommonAugment.ID.equalsIgnoreCase(def.getId())) {
             String singleValue = valueFormatter.formatSingleValueLine(commonStatOffer.attributeKey(),
                     commonStatOffer.rolledValue(),
                     commonStatOffer.attributeKey());
-            valuesText = tr("ui.augments.section.buffs", "Buffs:") + "\n" + singleValue;
+            applyInfoValues(ui, singleValue, null, null, null);
         } else {
-            valuesText = buildValuesText(def);
+            Map<String, Object> passives = def.getPassives();
+            String buffs = formatBuffs(passives);
+            String debuffs = formatDebuffs(passives);
+            String duration = formatDuration(passives);
+            String cooldown = formatCooldown(passives);
+            applyInfoValues(ui, buffs, debuffs, duration, cooldown);
         }
-        boolean hasValues = !valuesText.isBlank();
-        ui.set("#AugmentInfoDivider2.Visible", hasValues);
-        ui.set("#AugmentInfoValues.Text", valuesText);
-        ui.set("#AugmentInfoValues.Visible", hasValues);
     }
 
-    private String buildValuesText(AugmentDefinition def) {
-        Map<String, Object> passives = def.getPassives();
-        if (passives == null || passives.isEmpty()) {
+    private void applyInfoValues(@Nonnull UICommandBuilder ui,
+            String buffs,
+            String debuffs,
+            String duration,
+            String cooldown) {
+        String buffsBody = normalizeMultilineText(buffs);
+        BuffRuleSplit split = splitOutSpecialRules(buffsBody);
+        buffsBody = split.buffs();
+        String ruleText = split.rules();
+        String debuffsBody = normalizeMultilineText(debuffs);
+        String durationText = normalizeMultilineText(duration);
+        String cooldownText = normalizeMultilineText(cooldown);
+
+        String buffsText = buffsBody.isBlank() ? "" : buffsBody;
+        String debuffsText = debuffsBody.isBlank() ? "" : debuffsBody;
+
+        boolean hasBuffs = !buffsText.isBlank();
+        boolean hasDebuffs = !debuffsText.isBlank();
+        boolean hasRule = !ruleText.isBlank();
+        boolean hasDuration = !durationText.isBlank();
+        boolean hasCooldown = !cooldownText.isBlank();
+        boolean hasAny = hasBuffs || hasDebuffs || hasRule || hasDuration || hasCooldown;
+
+        ui.set("#AugmentInfoDivider2.Visible", hasAny);
+        ui.set("#AugmentInfoValues.Visible", hasAny);
+
+        ui.set("#AugmentInfoBuffs.Text", buffsText);
+        ui.set("#AugmentInfoBuffs.Visible", hasBuffs);
+
+        ui.set("#AugmentInfoDebuffs.Text", debuffsText);
+        ui.set("#AugmentInfoDebuffs.Visible", hasDebuffs);
+
+        ui.set("#AugmentInfoRule.Text", ruleText);
+        ui.set("#AugmentInfoRule.Visible", hasRule);
+
+        ui.set("#AugmentInfoDuration.Text", durationText);
+        ui.set("#AugmentInfoDuration.Visible", hasDuration);
+
+        ui.set("#AugmentInfoCooldown.Text", cooldownText);
+        ui.set("#AugmentInfoCooldown.Visible", hasCooldown);
+    }
+
+    private String normalizeMultilineText(String text) {
+        if (text == null || text.isBlank()) {
             return "";
         }
 
         List<String> lines = new ArrayList<>();
-
-        String cooldown = formatCooldown(passives);
-        if (cooldown != null && !cooldown.isBlank()) {
-            lines.add(cooldown);
+        for (String line : text.split("\\n")) {
+            String trimmed = line == null ? "" : line.trim();
+            if (!trimmed.isBlank()) {
+                lines.add(trimmed);
+            }
         }
-
-        String duration = formatDuration(passives);
-        if (duration != null && !duration.isBlank()) {
-            lines.add(duration);
-        }
-
-        String buffs = formatBuffs(passives);
-        if (buffs != null && !buffs.isBlank()) {
-            lines.add(tr("ui.augments.section.buffs", "Buffs:"));
-            lines.addAll(List.of(buffs.split("\\n")));
-        }
-
-        String debuffs = formatDebuffs(passives);
-        if (debuffs != null && !debuffs.isBlank()) {
-            lines.add(tr("ui.augments.section.debuffs", "Debuffs:"));
-            lines.addAll(List.of(debuffs.split("\\n")));
-        }
-
         return String.join("\n", lines);
+    }
+
+    private BuffRuleSplit splitOutSpecialRules(String buffsText) {
+        if (buffsText == null || buffsText.isBlank()) {
+            return new BuffRuleSplit("", "");
+        }
+
+        String localizedUnderRagePrefix = tr("ui.augments.effect.rule.under_rage_prefix", "Under Rage:")
+                .trim()
+                .toLowerCase(Locale.ROOT);
+
+        List<String> buffLines = new ArrayList<>();
+        List<String> ruleLines = new ArrayList<>();
+
+        for (String line : buffsText.split("\\n")) {
+            String trimmed = line == null ? "" : line.trim();
+            if (trimmed.isBlank()) {
+                continue;
+            }
+
+            String normalized = trimmed.toLowerCase(Locale.ROOT);
+            if (normalized.startsWith(localizedUnderRagePrefix) || normalized.startsWith("under rage:")) {
+                ruleLines.add(trimmed);
+            } else {
+                buffLines.add(trimmed);
+            }
+        }
+
+        return new BuffRuleSplit(String.join("\n", buffLines), String.join("\n", ruleLines));
+    }
+
+    private record BuffRuleSplit(String buffs, String rules) {
     }
 
     private String formatCooldown(Map<String, Object> passives) {
@@ -877,12 +917,12 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         boolean available = hasPendingAugmentChoices(playerData);
         if (available) {
             ui.set("#AugmentsChooseAvailabilityLabel.Text", "Augments available to choose.");
-            ui.set("#AugmentsChooseAvailabilityLabel.Style.TextColor", COLOR_CHOOSE_AVAILABLE);
+            ui.set("#AugmentsChooseAvailabilityLabel.Style.TextColor", AugmentTheme.chooseAvailabilityColor(true));
             return;
         }
 
         ui.set("#AugmentsChooseAvailabilityLabel.Text", "No augments available to choose.");
-        ui.set("#AugmentsChooseAvailabilityLabel.Style.TextColor", COLOR_CHOOSE_UNAVAILABLE);
+        ui.set("#AugmentsChooseAvailabilityLabel.Style.TextColor", AugmentTheme.chooseAvailabilityColor(false));
     }
 
     private boolean hasPendingAugmentChoices(PlayerData playerData) {
@@ -904,8 +944,8 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         Collection<AugmentDefinition> allDefs = augmentManager != null ? augmentManager.getAugments().values()
                 : List.of();
 
-        ui.set("#AugmentStatCommon.Style.TextColor", COLOR_COMMON_OWNED);
-        ui.set("#AugmentRerollCommon.Style.TextColor", COLOR_COMMON_OWNED);
+        ui.set("#AugmentStatCommon.Style.TextColor", AugmentTheme.gridOwnedColor(PassiveTier.COMMON));
+        ui.set("#AugmentRerollCommon.Style.TextColor", AugmentTheme.gridOwnedColor(PassiveTier.COMMON));
 
         long totalMythic = allDefs.stream().filter(d -> d.getTier() == PassiveTier.MYTHIC).count();
         long totalElite = allDefs.stream().filter(d -> d.getTier() == PassiveTier.ELITE).count();
@@ -966,11 +1006,14 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ui.appendInline(cardsSelector, "Group { LayoutMode: Left; Anchor: (Bottom: 0); }");
             }
 
+            AugmentPresentationMapper.AugmentPresentationData presentation = augmentPresentationMapper.map(def,
+                    def.getId());
+
             ui.append(cardsSelector + "[" + rowIndex + "]", "Pages/Augments/AugmentGridEntry.ui");
             String base = cardsSelector + "[" + rowIndex + "][" + cardsInCurrentRow + "]";
 
-            ui.set(base + " #ItemIcon.ItemId", resolveIconItemId(def));
-            ui.set(base + " #ItemName.Text", def.getName());
+            ui.set(base + " #ItemIcon.ItemId", presentation.iconItemId());
+            ui.set(base + " #ItemName.Text", presentation.displayName());
             ui.set(base + " #ItemName.Style.TextColor", tierColor(def.getTier()));
 
             events.addEventBinding(Activating, base, of("Action", "augment:select:" + def.getId()), false);
@@ -1061,7 +1104,7 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
             AugmentDefinition definition = augmentManager != null ? augmentManager.getAugment(card.id()) : null;
             ui.set(base + " #ItemName.Style.TextColor",
-                    definition != null ? tierColor(definition.getTier()) : COLOR_UNOWNED);
+                    definition != null ? tierColor(definition.getTier()) : AugmentTheme.gridUnownedColor());
 
             events.addEventBinding(Activating, base, of("Action", "augment:select:" + card.id()), false);
             events.addEventBinding(MouseEntered, base, of("Action", "augment:hover:" + card.id()), false);
@@ -1112,16 +1155,16 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     continue;
                 }
 
-                String displayName = definition.getName();
-                String icon = resolveIconItemId(definition);
+                AugmentPresentationMapper.AugmentPresentationData presentation = augmentPresentationMapper.map(
+                        definition,
+                        rawId);
+                String displayName = presentation.displayName();
+                String icon = presentation.iconItemId();
                 String groupKey;
 
-                CommonAugment.CommonStatOffer offer = CommonAugment.parseStatOfferId(rawId);
+                CommonAugment.CommonStatOffer offer = presentation.commonStatOffer();
                 if (offer != null && CommonAugment.ID.equalsIgnoreCase(definition.getId())) {
                     String attributeKey = offer.attributeKey() == null ? "" : offer.attributeKey().trim();
-                    displayName = tr("ui.augments.common_stat.card_name", "{0}",
-                            formatCommonStatDisplayName(attributeKey));
-                    icon = SkillAttributeIconResolver.resolveByConfigKey(attributeKey, icon);
                     groupKey = "common_stat:" + attributeKey.toLowerCase(Locale.ROOT);
                     totalCommonValueByGroup.merge(groupKey, offer.rolledValue(), Double::sum);
                 } else {
@@ -1193,28 +1236,6 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return ids;
     }
 
-    private String formatCommonStatDisplayName(String attributeKey) {
-        if (attributeKey == null || attributeKey.isBlank()) {
-            return tr("ui.augments.effect.label.common", "Common Stat");
-        }
-        String normalized = attributeKey.trim().toLowerCase(Locale.ROOT).replace(' ', '_');
-        String[] parts = normalized.split("_");
-        StringBuilder builder = new StringBuilder();
-        for (String part : parts) {
-            if (part == null || part.isBlank()) {
-                continue;
-            }
-            if (builder.length() > 0) {
-                builder.append(' ');
-            }
-            builder.append(part.substring(0, 1).toUpperCase(Locale.ROOT));
-            if (part.length() > 1) {
-                builder.append(part.substring(1));
-            }
-        }
-        return builder.toString();
-    }
-
     private record OwnedAugmentCard(String id, String displayName, String iconItemId) {
     }
 
@@ -1223,19 +1244,10 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         Comparator<AugmentDefinition> comparator = Comparator
                 .<AugmentDefinition, Integer>comparing(d -> ownedIds.contains(d.getId()) ? 0 : 1)
-                .thenComparingInt(d -> TIER_ORDER.getOrDefault(d.getTier(), 3))
+                .thenComparingInt(d -> AugmentTheme.tierSortOrder(d.getTier()))
                 .thenComparing(AugmentDefinition::getName);
 
         return all.stream().sorted(comparator).collect(Collectors.toList());
-    }
-
-    private String resolveIconItemId(AugmentDefinition def) {
-        PassiveCategory category = def != null ? def.getCategory() : PassiveCategory.PASSIVE_STAT;
-        if (category == null) {
-            category = PassiveCategory.PASSIVE_STAT;
-        }
-        String id = category.getIconItemId();
-        return id == null || id.isBlank() ? "Ingredient_Ice_Essence" : id;
     }
 
     private String tr(String key, String fallback, Object... args) {
@@ -1243,13 +1255,6 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private String tierColor(PassiveTier tier) {
-        if (tier == null) {
-            return COLOR_COMMON_OWNED;
-        }
-        return switch (tier) {
-            case MYTHIC -> COLOR_MYTHIC_OWNED;
-            case ELITE -> COLOR_ELITE_OWNED;
-            default -> COLOR_COMMON_OWNED;
-        };
+        return AugmentTheme.gridOwnedColor(tier);
     }
 }

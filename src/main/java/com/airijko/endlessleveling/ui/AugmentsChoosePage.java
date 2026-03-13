@@ -6,7 +6,6 @@ import com.airijko.endlessleveling.augments.AugmentManager;
 import com.airijko.endlessleveling.augments.AugmentUnlockManager;
 import com.airijko.endlessleveling.augments.types.CommonAugment;
 import com.airijko.endlessleveling.data.PlayerData;
-import com.airijko.endlessleveling.enums.PassiveCategory;
 import com.airijko.endlessleveling.enums.PassiveTier;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.util.Lang;
@@ -53,6 +52,7 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
     private final PlayerDataManager playerDataManager;
     private final PlayerRef playerRef;
     private final AugmentValueFormatter valueFormatter;
+    private final AugmentPresentationMapper augmentPresentationMapper;
 
     public AugmentsChoosePage(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime) {
         super(playerRef, lifetime, SkillsUIPage.Data.CODEC);
@@ -62,6 +62,7 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
         this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
         this.playerRef = playerRef;
         this.valueFormatter = new AugmentValueFormatter(this::tr);
+        this.augmentPresentationMapper = new AugmentPresentationMapper(this::tr);
     }
 
     @Override
@@ -281,11 +282,13 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
         String neutralSelector = "#AugmentCard" + slotIndex + "Neutral";
         String notesSelector = "#AugmentCard" + slotIndex + "Notes";
 
-        CommonAugment.CommonStatOffer commonOffer = CommonAugment.parseStatOfferId(offerId);
-        String iconItemId = resolveIconItemId(augment);
-        if (augment != null && commonOffer != null && CommonAugment.ID.equalsIgnoreCase(augment.getId())) {
-            iconItemId = SkillAttributeIconResolver.resolveByConfigKey(commonOffer.attributeKey(), iconItemId);
-        }
+        AugmentPresentationMapper.AugmentPresentationData presentation = augment != null
+                ? augmentPresentationMapper.map(augment, offerId)
+                : null;
+        CommonAugment.CommonStatOffer commonOffer = presentation != null ? presentation.commonStatOffer() : null;
+        String iconItemId = presentation != null
+                ? presentation.iconItemId()
+                : augmentPresentationMapper.resolveIconItemId(null);
         ui.set(iconSelector + ".ItemId", iconItemId);
         ui.set(iconSelector + ".Visible", true);
 
@@ -310,11 +313,10 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
 
         ui.set(chooseSelector + ".Visible", true);
 
-        ui.set(titleSelector + ".Text", augment.getName().toUpperCase(Locale.ROOT));
+        String title = presentation != null ? presentation.displayName() : augment.getName();
+        ui.set(titleSelector + ".Text", title.toUpperCase(Locale.ROOT));
 
         if (commonOffer != null && CommonAugment.ID.equalsIgnoreCase(augment.getId())) {
-            ui.set(titleSelector + ".Text",
-                    formatCommonStatDisplayName(commonOffer.attributeKey()).toUpperCase(Locale.ROOT));
             String description = augment.getDescription();
             if (description == null || description.isBlank()) {
                 description = tr("ui.augments.no_description", "No description provided.");
@@ -581,37 +583,6 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
 
     private String tr(String key, String fallback, Object... args) {
         return Lang.tr(playerRef.getUuid(), key, fallback, args);
-    }
-
-    private String resolveIconItemId(AugmentDefinition augment) {
-        PassiveCategory category = augment != null ? augment.getCategory() : PassiveCategory.PASSIVE_STAT;
-        if (category == null) {
-            category = PassiveCategory.PASSIVE_STAT;
-        }
-        String iconItemId = category.getIconItemId();
-        return iconItemId == null || iconItemId.isBlank() ? "Ingredient_Ice_Essence" : iconItemId;
-    }
-
-    private String formatCommonStatDisplayName(String attributeKey) {
-        if (attributeKey == null || attributeKey.isBlank()) {
-            return tr("ui.augments.effect.label.common", "Common Stat");
-        }
-        String normalized = attributeKey.trim().toLowerCase(Locale.ROOT).replace(' ', '_');
-        String[] parts = normalized.split("_");
-        StringBuilder builder = new StringBuilder();
-        for (String part : parts) {
-            if (part == null || part.isBlank()) {
-                continue;
-            }
-            if (builder.length() > 0) {
-                builder.append(' ');
-            }
-            builder.append(part.substring(0, 1).toUpperCase(Locale.ROOT));
-            if (part.length() > 1) {
-                builder.append(part.substring(1));
-            }
-        }
-        return builder.toString();
     }
 
     private static Map<String, String> createBuffNameOverrides() {

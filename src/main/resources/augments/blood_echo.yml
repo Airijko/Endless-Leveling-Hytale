@@ -9,4 +9,4 @@ passives:
     lifesteal:
       value: 0.05 # 5% lifesteal
     healing_to_damage:
-      value: 0.20 # 20% of healing is added as bonus damage (includes excess healing)
+      value: 0.15 # 15% of applied healing is added as bonus damage

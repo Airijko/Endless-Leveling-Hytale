@@ -15,6 +15,7 @@ public final class BloodSurgeAugment extends YamlAugment implements AugmentHooks
 
     private final double maxLifeStealPercent;
     private final double maxMissingPercent;
+    private final double healingToDamageRatio;
 
     private static double normalizePercentValue(double value) {
         if (!Double.isFinite(value)) {
@@ -40,6 +41,8 @@ public final class BloodSurgeAugment extends YamlAugment implements AugmentHooks
         Map<String, Object> lifeStealScaling = AugmentValueReader.getMap(passives, "life_steal_scaling");
         this.maxLifeStealPercent = normalizePercentValue(
                 AugmentValueReader.getDouble(lifeStealScaling, "max_value", 0.0D));
+        this.healingToDamageRatio = normalizeRatioValue(
+                AugmentValueReader.getDouble(lifeStealScaling, "healing_to_damage", 0.25D));
         double fullAtHealthPercent = AugmentValueReader.getDouble(lifeStealScaling,
                 "full_value_at_health_percent",
                 -1.0D);
@@ -54,7 +57,14 @@ public final class BloodSurgeAugment extends YamlAugment implements AugmentHooks
 
     @Override
     public float onHit(AugmentHooks.HitContext context) {
-        float damage = context.getDamage();
+        if (context == null) {
+            return 0f;
+        }
+
+        float damage = Math.max(0f, context.getDamage());
+        if (damage <= 0f) {
+            return context.getDamage();
+        }
 
         var attackerStats = context.getAttackerStats();
         EntityStatValue hp = attackerStats == null ? null
@@ -66,8 +76,19 @@ public final class BloodSurgeAugment extends YamlAugment implements AugmentHooks
         double lifeStealPercent = maxLifeStealPercent
                 * (maxMissingPercent <= 0.0D ? 0.0D : missingRatio / maxMissingPercent);
         lifeStealPercent = Math.max(0.0D, Math.min(maxLifeStealPercent, lifeStealPercent));
-        if (lifeStealPercent > 0.0D) {
-            AugmentUtils.applyLifeSteal(attackerStats, damage, lifeStealPercent);
+        if (lifeStealPercent <= 0.0D) {
+            return damage;
+        }
+
+        double healAmount = damage * (lifeStealPercent / 100.0D);
+        float appliedHealAmount = 0f;
+        if (healAmount > 0.0D) {
+            appliedHealAmount = AugmentUtils.heal(attackerStats, healAmount);
+        }
+
+        double bonusDamage = appliedHealAmount * healingToDamageRatio;
+        if (bonusDamage > 0.0D) {
+            return damage + (float) bonusDamage;
         }
 
         return damage;

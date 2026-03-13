@@ -36,13 +36,18 @@ public final class BloodEchoAugment extends YamlAugment implements AugmentHooks.
         }
 
         EntityStatMap attackerStats = context.getAttackerStats();
-        double healAttempt = damage * (lifeStealPercent / 100.0D);
-        if (healAttempt > 0.0D) {
-            AugmentUtils.heal(attackerStats, healAttempt);
+        double healAmount = damage * (lifeStealPercent / 100.0D);
+        float appliedHealAmount = 0f;
+        if (healAmount > 0.0D) {
+            appliedHealAmount = AugmentUtils.heal(attackerStats, healAmount);
         }
 
-        double bonusDamage = healAttempt * healToDamageRatio;
-        return (float) (damage + Math.max(0.0D, bonusDamage));
+        double bonusDamage = appliedHealAmount * healToDamageRatio;
+        if (bonusDamage > 0.0D) {
+            return damage + (float) bonusDamage;
+        }
+
+        return damage;
     }
 
     private static double normalizePercent(double value) {

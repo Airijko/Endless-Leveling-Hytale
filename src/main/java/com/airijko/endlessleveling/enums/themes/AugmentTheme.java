@@ -1,5 +1,7 @@
 package com.airijko.endlessleveling.enums.themes;
 
+import com.airijko.endlessleveling.enums.PassiveTier;
+
 /**
  * Shared color presets for augment-related sections.
  */
@@ -22,5 +24,35 @@ public enum AugmentTheme {
 
     public String color() {
         return color;
+    }
+
+    public static String gridOwnedColor(PassiveTier tier) {
+        if (tier == null) {
+            return GRID_COMMON_OWNED.color();
+        }
+        return switch (tier) {
+            case MYTHIC -> GRID_MYTHIC_OWNED.color();
+            case ELITE -> GRID_ELITE_OWNED.color();
+            case COMMON -> GRID_COMMON_OWNED.color();
+        };
+    }
+
+    public static int tierSortOrder(PassiveTier tier) {
+        if (tier == null) {
+            return Integer.MAX_VALUE;
+        }
+        return switch (tier) {
+            case MYTHIC -> 0;
+            case ELITE -> 1;
+            case COMMON -> 2;
+        };
+    }
+
+    public static String gridUnownedColor() {
+        return GRID_UNOWNED.color();
+    }
+
+    public static String chooseAvailabilityColor(boolean available) {
+        return available ? CHOOSE_AVAILABLE.color() : CHOOSE_UNAVAILABLE.color();
     }
 }

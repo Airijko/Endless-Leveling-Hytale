@@ -198,17 +198,18 @@ public final class AugmentValueFormatter {
 
         String normalizedKey = key == null ? "" : key.toLowerCase(Locale.ROOT);
         String thresholdSuffix = resolveThresholdSuffix(parentPassive);
+        String effectSuffix = suppressThresholdSuffixForEffect(normalizedKey) ? null : thresholdSuffix;
 
         Double scalar = toDouble(val);
         if (scalar != null) {
             if (normalizedKey.startsWith("max_")) {
                 if ((positives && scalar > 0) || (!positives && scalar < 0)) {
-                    parts.add(formatRangeEntry(normalizedKey, 0.0D, scalar, fallbackLabel, thresholdSuffix));
+                    parts.add(formatRangeEntry(normalizedKey, 0.0D, scalar, fallbackLabel, effectSuffix));
                 }
                 return;
             }
             if ((positives && scalar > 0) || (!positives && scalar < 0)) {
-                parts.add(formatBuffEntry(key, scalar, null, fallbackLabel, thresholdSuffix));
+                parts.add(formatBuffEntry(key, scalar, null, fallbackLabel, effectSuffix));
             }
             return;
         }
@@ -220,33 +221,59 @@ public final class AugmentValueFormatter {
 
         String nestedThresholdSuffix = resolveThresholdSuffix(nested);
         if (nestedThresholdSuffix == null || nestedThresholdSuffix.isBlank()) {
-            nestedThresholdSuffix = thresholdSuffix;
+            nestedThresholdSuffix = effectSuffix;
+        }
+        if (suppressThresholdSuffixForEffect(normalizedKey)) {
+            nestedThresholdSuffix = null;
         }
 
         Double minValue = toDouble(nested.get("min_value"));
         Double maxValue = toDouble(nested.get("max_value"));
+        boolean renderedPrimary = false;
         if (minValue != null && maxValue != null) {
             if ((positives && maxValue > 0) || (!positives && minValue < 0)) {
                 parts.add(formatRangeEntry(key, minValue, maxValue, fallbackLabel, nestedThresholdSuffix));
             }
-            return;
+            renderedPrimary = true;
         }
 
-        Double baseValue = toDouble(nested.get("value"));
-        if (maxValue != null && (baseValue == null || Math.abs(baseValue) < 0.0001D)) {
-            if ((positives && maxValue > 0) || (!positives && maxValue < 0)) {
-                parts.add(formatRangeEntry(key, 0.0D, maxValue, fallbackLabel, nestedThresholdSuffix));
+        if (!renderedPrimary) {
+            Double baseValue = toDouble(nested.get("value"));
+            if (maxValue != null && (baseValue == null || Math.abs(baseValue) < 0.0001D)) {
+                if ((positives && maxValue > 0) || (!positives && maxValue < 0)) {
+                    parts.add(formatRangeEntry(key, 0.0D, maxValue, fallbackLabel, nestedThresholdSuffix));
+                }
+                renderedPrimary = true;
             }
-            return;
         }
 
-        Double chosen = firstNumber(nested, "value", "max_value", "value_per_stack", key);
-        if (chosen == null) {
-            return;
+        if (!renderedPrimary) {
+            Double chosen = firstNumber(nested, "value", "max_value", "value_per_stack", key);
+            if (chosen != null) {
+                if ((positives && chosen > 0) || (!positives && chosen < 0)) {
+                    parts.add(formatBuffEntry(key, chosen, null, fallbackLabel, nestedThresholdSuffix));
+                }
+                renderedPrimary = true;
+            }
         }
 
-        if ((positives && chosen > 0) || (!positives && chosen < 0)) {
-            parts.add(formatBuffEntry(key, chosen, null, fallbackLabel, nestedThresholdSuffix));
+        for (Map.Entry<String, Object> nestedEntry : nested.entrySet()) {
+            String nestedKey = nestedEntry.getKey();
+            if (nestedKey == null) {
+                continue;
+            }
+            String nestedLower = nestedKey.toLowerCase(Locale.ROOT);
+            if (nestedLower.equals("min_value")
+                    || nestedLower.equals("max_value")
+                    || nestedLower.equals("value")
+                    || nestedLower.equals("value_per_stack")
+                    || nestedLower.equals("max_stacks")) {
+                continue;
+            }
+            if (isTimingKey(nestedLower) || isMetadataOnlyKey(nestedLower)) {
+                continue;
+            }
+            collectEffect(parts, nestedKey, nestedEntry.getValue(), positives, nestedKey, nested);
         }
     }
 
@@ -255,10 +282,29 @@ public final class AugmentValueFormatter {
             return null;
         }
 
+        String scalingStat = asString(context.get("scaling_stat"));
+        boolean missingHealthScaling = scalingStat != null
+                && scalingStat.toLowerCase(Locale.ROOT).contains("missing_health");
+        if (!missingHealthScaling) {
+            boolean hasFullAtHealthThreshold = context.containsKey("full_value_at_health_percent");
+            boolean hasLifeStealStyleRange = context.containsKey("max_value")
+                    && (context.containsKey("healing_to_damage") || context.containsKey("max_missing_health_percent"));
+            missingHealthScaling = hasFullAtHealthThreshold && hasLifeStealStyleRange;
+        }
+
         Double fullValueAtHealth = toDouble(context.get("full_value_at_health_percent"));
         if (fullValueAtHealth != null) {
+            if (missingHealthScaling) {
+                return tr("ui.augments.effect.note.missing_health_max",
+                        " (scales with missing health; max at or below {0}% health)",
+                        formatNumber(fullValueAtHealth * 100.0D));
+            }
             return tr("ui.augments.effect.note.full_at_health", " (full at <= {0}% health)",
                     formatNumber(fullValueAtHealth * 100.0D));
+        }
+
+        if (missingHealthScaling) {
+            return tr("ui.augments.effect.note.missing_health", " (scales with missing health)");
         }
 
         Double maxRatio = toDouble(context.get("max_ratio"));
@@ -366,6 +412,16 @@ public final class AugmentValueFormatter {
             semanticKeyForUnit = normalizedFallbackKey;
         }
 
+        if ("min_health_hp".equals(canonicalKey)) {
+            String rendered = tr("ui.augments.effect.rule.min_health_hp",
+                    "Under Rage: You can't drop below {0} health",
+                    formatNumber(value));
+            if (suffixNote != null && !suffixNote.isBlank()) {
+                rendered += suffixNote;
+            }
+            return rendered;
+        }
+
         String suffix = forcedSuffix;
         double displayValue = value;
 
@@ -401,13 +457,16 @@ public final class AugmentValueFormatter {
 
     private double toDisplayPercent(String normalizedKey, double value) {
         if (normalizedKey != null && DIRECT_PERCENT_KEYS.contains(normalizedKey)) {
-            return value;
+            return Math.abs(value) <= 1.0D ? value * 100.0D : value;
         }
         return Math.abs(value) >= 10.0D ? value : value * 100.0D;
     }
 
     private String inferSuffix(String normalizedKey, double value) {
         if (normalizedKey == null) {
+            return "";
+        }
+        if (isFlatHealthKey(normalizedKey)) {
             return "";
         }
         if (normalizedKey.contains("ratio")) {
@@ -419,7 +478,7 @@ public final class AugmentValueFormatter {
                 || normalizedKey.contains("crit")
                 || normalizedKey.contains("ferocity")
                 || normalizedKey.contains("life_steal")
-                || normalizedKey.contains("heal")
+                || isHealingKey(normalizedKey)
                 || normalizedKey.contains("damage")
                 || normalizedKey.contains("strength")
                 || normalizedKey.contains("sorcery")
@@ -431,6 +490,36 @@ public final class AugmentValueFormatter {
             return "%";
         }
         return "";
+    }
+
+    private boolean isFlatHealthKey(String normalizedKey) {
+        if (normalizedKey == null || normalizedKey.isBlank()) {
+            return false;
+        }
+        return normalizedKey.endsWith("_hp")
+                || normalizedKey.equals("flat_health")
+                || normalizedKey.equals("flat_health_per_stack")
+                || normalizedKey.equals("health_flat");
+    }
+
+    private boolean suppressThresholdSuffixForEffect(String normalizedKey) {
+        if (normalizedKey == null || normalizedKey.isBlank()) {
+            return false;
+        }
+        return normalizedKey.equals("bonus_ferocity")
+                || normalizedKey.equals("healing_to_damage")
+                || normalizedKey.equals("heal_to_damage");
+    }
+
+    private boolean isHealingKey(String normalizedKey) {
+        if (normalizedKey == null || normalizedKey.isBlank()) {
+            return false;
+        }
+        return normalizedKey.equals("heal")
+                || normalizedKey.startsWith("heal_")
+                || normalizedKey.endsWith("_heal")
+                || normalizedKey.contains("_heal_")
+                || normalizedKey.contains("healing");
     }
 
     private String translateEffectLabel(String key, String fallback) {
@@ -472,7 +561,6 @@ public final class AugmentValueFormatter {
                 || lower.equals("trigger_cooldown")
                 || lower.equals("cooldown_per_target")
                 || lower.equals("target_debuff")
-                || lower.equals("heal_to_damage")
                 || lower.equals("break_conditions")
                 || lower.equals("on_miss")
                 || lower.equals("on_damage_taken");
@@ -510,6 +598,14 @@ public final class AugmentValueFormatter {
         } catch (NumberFormatException ex) {
             return null;
         }
+    }
+
+    private String asString(Object val) {
+        if (val == null) {
+            return null;
+        }
+        String str = val.toString();
+        return str.isBlank() ? null : str;
     }
 
     private Integer toInteger(Object val) {
@@ -578,9 +674,11 @@ public final class AugmentValueFormatter {
         map.put("heal_on_kill", "Heal on Kill");
         map.put("heal_over_time", "Deferred Damage");
         map.put("heal_to_damage", "Heal to Damage");
+        map.put("healing_to_damage", "Heal to Damage");
         map.put("bonus_damage_on_hit", "Bonus Damage");
         map.put("bonus_damage", "Bonus Damage");
         map.put("max_bonus_damage", "Bonus Damage");
+        map.put("bonus_ferocity", "Ferocity");
         map.put("max_bonus_ferocity", "Ferocity");
         map.put("strength_from_max_health", "Strength");
         map.put("sorcery_from_max_health", "Sorcery");

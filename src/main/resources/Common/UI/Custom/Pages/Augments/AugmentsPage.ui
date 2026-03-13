@@ -326,12 +326,44 @@ $C.@PageOverlay {
                                 }
 
                                 // Values
-                                Label #AugmentInfoValues {
-                                    Text: "";
-                                    Style: (FontSize: 12, TextColor: #9fb6d3, Wrap: true);
+                                Group #AugmentInfoValues {
+                                    LayoutMode: Top;
                                     Padding: (Horizontal: 12);
                                     Visible: false;
-                                    
+
+                                    Label #AugmentInfoBuffs {
+                                        Text: "";
+                                        Style: (FontSize: 12, TextColor: #8adf9e, Wrap: true);
+                                        Anchor: (Bottom: 6);
+                                        Visible: false;
+                                    }
+
+                                    Label #AugmentInfoDebuffs {
+                                        Text: "";
+                                        Style: (FontSize: 12, TextColor: #ff9a9a, Wrap: true);
+                                        Anchor: (Bottom: 6);
+                                        Visible: false;
+                                    }
+
+                                    Label #AugmentInfoRule {
+                                        Text: "";
+                                        Style: (FontSize: 12, TextColor: #ffb86b, Wrap: true);
+                                        Anchor: (Bottom: 6);
+                                        Visible: false;
+                                    }
+
+                                    Label #AugmentInfoDuration {
+                                        Text: "";
+                                        Style: (FontSize: 12, TextColor: #9ecbff, Wrap: true);
+                                        Anchor: (Bottom: 4);
+                                        Visible: false;
+                                    }
+
+                                    Label #AugmentInfoCooldown {
+                                        Text: "";
+                                        Style: (FontSize: 12, TextColor: #ffd56b, Wrap: true);
+                                        Visible: false;
+                                    }
                                 }
                             }
                         }
