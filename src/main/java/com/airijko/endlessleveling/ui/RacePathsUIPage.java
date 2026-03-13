@@ -7,14 +7,18 @@ import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.races.RaceAscensionDefinition;
 import com.airijko.endlessleveling.races.RaceAscensionEligibility;
 import com.airijko.endlessleveling.races.RaceDefinition;
+import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.airijko.endlessleveling.enums.SkillAttributeType;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -22,6 +26,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import static com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType.Activating;
@@ -41,6 +46,7 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
     private static final String ACTION_SELECT_PREFIX = "racepath:select:";
     private static final String ACTION_HOVER_PREFIX = "racepath:hover:";
     private static final String ACTION_HOVER_END = "racepath:hoverend";
+    private static final String ACTION_PATH_BUTTON = "racepath:action";
 
     private final RaceManager raceManager;
     private final PlayerDataManager playerDataManager;
@@ -77,9 +83,11 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
 
         ui.clear("#RacePathRows");
 
-        List<PathTierRow> rows = buildTierRows(currentRace);
+        RaceDefinition pathTreeRoot = resolvePathTreeRoot(currentRace);
+        List<PathTierRow> rows = buildTierRows(pathTreeRoot);
         renderTierRows(ui, events, rows, data, currentRace);
         applyPathInfoPanel(ui, data, currentRace);
+        events.addEventBinding(Activating, "#ChooseRacePathButton", of("Action", ACTION_PATH_BUTTON), false);
     }
 
     @Override
@@ -96,6 +104,11 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
             String action = data.action.trim();
             boolean selectionChanged = false;
             boolean infoPanelChanged = false;
+
+            if (ACTION_PATH_BUTTON.equals(action)) {
+                handlePathAction(ref, store);
+                return;
+            }
 
             if (action.startsWith(ACTION_SELECT_PREFIX)) {
                 String key = normalizePathKey(action.substring(ACTION_SELECT_PREFIX.length()));
@@ -125,7 +138,8 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
 
                 if (selectionChanged) {
                     ui.clear("#RacePathRows");
-                    List<PathTierRow> rows = buildTierRows(currentRace);
+                    RaceDefinition pathTreeRoot = resolvePathTreeRoot(currentRace);
+                    List<PathTierRow> rows = buildTierRows(pathTreeRoot);
                     renderTierRows(ui, eventBuilder, rows, playerData, currentRace);
                 }
 
@@ -133,6 +147,112 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
                 sendUpdate(ui, eventBuilder, false);
             }
         }
+    }
+
+    private void handlePathAction(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
+        PlayerData playerData = loadPlayerData();
+        if (playerData == null) {
+            playerRef.sendMessage(Message.raw("Unable to load your race info right now.").color("#ff6666"));
+            return;
+        }
+
+        if (raceManager == null || !raceManager.isEnabled()) {
+            playerRef.sendMessage(Message.raw("Races are disabled.").color("#ff6666"));
+            return;
+        }
+
+        RaceDefinition currentRace = raceManager.getPlayerRace(playerData);
+        RaceDefinition focusedRace = resolveFocusedRace(currentRace);
+        if (focusedRace == null) {
+            playerRef.sendMessage(Message.raw("Select a race path first.").color("#ff9900"));
+            return;
+        }
+
+        boolean baseTier = currentRace != null && pathKey(currentRace).equals(pathKey(focusedRace));
+        NodeStatus status = resolveNodeStatus(focusedRace, baseTier, playerData, currentRace);
+
+        if (status.isActive()) {
+            playerRef.sendMessage(Message.raw("That race form is already active.").color("#ff9900"));
+            return;
+        }
+
+        if (status.isLocked()) {
+            RaceAscensionEligibility eligibility = raceManager.evaluateAscensionEligibility(playerData,
+                    focusedRace.getId());
+            if (eligibility != null && !eligibility.getBlockers().isEmpty()) {
+                playerRef.sendMessage(Message.raw("Cannot evolve yet:").color("#ff6666"));
+                for (String blocker : eligibility.getBlockers()) {
+                    playerRef.sendMessage(Message.join(
+                            Message.raw(" - ").color("#ff6666"),
+                            Message.raw(blocker).color("#ffc300")));
+                }
+            } else {
+                playerRef.sendMessage(Message.raw("That race path is currently locked.").color("#ff6666"));
+            }
+            return;
+        }
+
+        if (status.isAvailable()) {
+            RaceAscensionEligibility eligibility = raceManager.evaluateAscensionEligibility(playerData,
+                    focusedRace.getId());
+            if (eligibility == null || !eligibility.isEligible()) {
+                playerRef.sendMessage(Message.raw("Cannot evolve yet.").color("#ff6666"));
+                if (eligibility != null) {
+                    for (String blocker : eligibility.getBlockers()) {
+                        playerRef.sendMessage(Message.join(
+                                Message.raw(" - ").color("#ff6666"),
+                                Message.raw(blocker).color("#ffc300")));
+                    }
+                }
+                return;
+            }
+        }
+
+        RaceDefinition previousRace = currentRace;
+        if (previousRace != null) {
+            playerData.addCompletedRaceForm(raceManager.resolveAscensionPathId(previousRace.getId()));
+        }
+
+        playerData.setRaceId(focusedRace.getId());
+        playerData.addCompletedRaceForm(raceManager.resolveAscensionPathId(focusedRace.getId()));
+
+        if (playerDataManager != null) {
+            playerDataManager.save(playerData);
+        }
+
+        var skillManager = EndlessLeveling.getInstance().getSkillManager();
+        boolean applied = false;
+        if (skillManager != null) {
+            applied = skillManager.applyAllSkillModifiers(ref, store, playerData);
+        }
+        if (!applied) {
+            var retrySystem = EndlessLeveling.getInstance().getPlayerRaceStatSystem();
+            if (retrySystem != null) {
+                retrySystem.scheduleRetry(playerData.getUuid());
+            }
+        }
+
+        raceManager.applyRaceModelIfEnabled(playerData);
+
+        var partyManager = EndlessLeveling.getInstance().getPartyManager();
+        if (partyManager != null) {
+            partyManager.updatePartyHudCustomText(playerData);
+        }
+
+        var player = Universe.get().getPlayer(playerRef.getUuid());
+        if (player != null) {
+            String display = focusedRace.getDisplayName() == null ? focusedRace.getId() : focusedRace.getDisplayName();
+            String verb = status.isAvailable() ? "evolved into" : "switched to";
+            player.sendMessage(Message.join(
+                    Message.raw("[Races] ").color("#4fd7f7"),
+                    Message.raw("You " + verb + " ").color("#ffffff"),
+                    Message.raw(display).color("#ffc300"),
+                    Message.raw("!").color("#ffffff")));
+        }
+
+        selectedPathKey = pathKey(focusedRace);
+        hoveredPathKey = null;
+        rebuild();
     }
 
     private List<PathTierRow> buildTierRows(RaceDefinition rootRace) {
@@ -185,6 +305,79 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
         }
 
         return rows;
+    }
+
+    private RaceDefinition resolvePathTreeRoot(RaceDefinition currentRace) {
+        if (currentRace == null || raceManager == null) {
+            return currentRace;
+        }
+
+        RaceDefinition baseRace = resolveAscensionBaseRace(currentRace);
+        if (baseRace == null || baseRace.getAscension() == null) {
+            return currentRace;
+        }
+
+        if (baseRace.getAscension().isSingleRouteOnly()) {
+            return currentRace;
+        }
+
+        return baseRace;
+    }
+
+    private RaceDefinition resolveAscensionBaseRace(RaceDefinition race) {
+        if (race == null || raceManager == null) {
+            return race;
+        }
+
+        RaceDefinition current = race;
+        Set<String> visited = new LinkedHashSet<>();
+        int depth = 0;
+        while (current != null && depth < MAX_TIER_DEPTH) {
+            String currentKey = pathKey(current);
+            if (!visited.add(currentKey)) {
+                break;
+            }
+
+            RaceDefinition parent = findAscensionParent(current);
+            if (parent == null) {
+                return current;
+            }
+
+            current = parent;
+            depth++;
+        }
+
+        return race;
+    }
+
+    private RaceDefinition findAscensionParent(RaceDefinition childRace) {
+        if (childRace == null || raceManager == null) {
+            return null;
+        }
+
+        String childKey = pathKey(childRace);
+        RaceDefinition bestParent = null;
+        for (RaceDefinition candidate : raceManager.getLoadedRaces()) {
+            if (candidate == null) {
+                continue;
+            }
+
+            for (RaceDefinition child : raceManager.getNextAscensionRaces(candidate.getId())) {
+                if (child == null) {
+                    continue;
+                }
+                if (!childKey.equals(pathKey(child))) {
+                    continue;
+                }
+
+                if (bestParent == null || candidate.getId().compareToIgnoreCase(bestParent.getId()) < 0) {
+                    bestParent = candidate;
+                }
+                break;
+            }
+        }
+
+        return bestParent;
     }
 
     private List<RaceDefinition> collectUniqueChildren(List<RaceDefinition> parents, Set<String> seen) {
@@ -356,12 +549,13 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
         if (focused == null) {
             ui.set("#PathInfoIcon.ItemId", RaceDefinition.DEFAULT_ICON_ITEM_ID);
             ui.set("#PathInfoName.Text", "Select a path");
-            ui.set("#PathInfoSubtitle.Text", "Hover or click a node to inspect it.");
             ui.set("#PathInfoStatus.Text", "Waiting for selection");
             ui.set("#PathInfoStatus.Style.TextColor", "#9fb6d3");
             ui.set("#PathInfoPath.Text", "Path: -");
             ui.set("#PathInfoStage.Text", "Stage: -");
             ui.set("#PathInfoSource.Text", "Source: -");
+            ui.set("#PathInfoAttributes.Text", "Select a path to view attribute stats.");
+            ui.set("#PathInfoPassives.Text", "Select a path to view passives.");
             ui.set("#PathInfoRequirements.Text", "Hover or select a race path to inspect requirements.");
             ui.set("#ChooseRacePathButton.Text", "SELECT PATH");
             return;
@@ -391,20 +585,66 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
             stageLabel += " (Final)";
         }
 
-        String subtitle = focusFromHover
-                ? "Hover preview"
-                : (focusFromSelection ? "Selected path" : "Current path");
-
         ui.set("#PathInfoIcon.ItemId", resolveIconItemId(focused));
         ui.set("#PathInfoName.Text", resolveDisplayName(focused));
-        ui.set("#PathInfoSubtitle.Text", subtitle);
         ui.set("#PathInfoStatus.Text", status.label());
         ui.set("#PathInfoStatus.Style.TextColor", status.color());
         ui.set("#PathInfoPath.Text", "Path: " + pathLabel);
         ui.set("#PathInfoStage.Text", "Stage: " + stageLabel);
         ui.set("#PathInfoSource.Text", resolveSourceLabel(focused));
+        ui.set("#PathInfoAttributes.Text", buildAttributesText(focused));
+        ui.set("#PathInfoPassives.Text", buildPassivesText(focused));
         ui.set("#PathInfoRequirements.Text", buildRequirementsText(status, baseTier, eligibility));
         ui.set("#ChooseRacePathButton.Text", resolvePathActionButtonText(status));
+    }
+
+    private String buildAttributesText(RaceDefinition race) {
+        if (race == null) {
+            return "No attribute stats listed.";
+        }
+
+        Map<SkillAttributeType, Double> attributes = race.getBaseAttributes();
+        if (attributes == null || attributes.isEmpty()) {
+            return "No attribute stats listed.";
+        }
+
+        List<String> parts = new ArrayList<>();
+        for (SkillAttributeType type : SkillAttributeType.values()) {
+            if (!attributes.containsKey(type)) {
+                continue;
+            }
+            double value = attributes.get(type);
+            parts.add(prettifyPathName(type.getConfigKey()) + ": " + formatNumber(value));
+        }
+
+        if (parts.isEmpty()) {
+            return "No attribute stats listed.";
+        }
+        return String.join("\n", parts);
+    }
+
+    private String buildPassivesText(RaceDefinition race) {
+        if (race == null || race.getPassiveDefinitions() == null || race.getPassiveDefinitions().isEmpty()) {
+            return "No passives listed.";
+        }
+
+        List<String> labels = new ArrayList<>();
+        for (RacePassiveDefinition passive : race.getPassiveDefinitions()) {
+            if (passive == null || passive.type() == null) {
+                continue;
+            }
+
+            String label = prettifyPathName(passive.type().name());
+            if (passive.attributeType() != null) {
+                label += " (" + prettifyPathName(passive.attributeType().getConfigKey()) + ")";
+            }
+            labels.add("- " + label);
+        }
+
+        if (labels.isEmpty()) {
+            return "No passives listed.";
+        }
+        return String.join("\n", labels);
     }
 
     private String resolvePathActionButtonText(NodeStatus status) {
@@ -705,6 +945,14 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
             }
         }
         return out.toString();
+    }
+
+    private String formatNumber(double value) {
+        String formatted = String.format(Locale.US, "%.2f", value);
+        if (formatted.contains(".")) {
+            formatted = formatted.replaceAll("0+$", "").replaceAll("\\.$", "");
+        }
+        return formatted;
     }
 
     private String connectorText(int upperCount, int lowerCount) {

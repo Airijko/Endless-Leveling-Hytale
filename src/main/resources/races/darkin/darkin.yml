@@ -10,6 +10,7 @@ ascension:
   stage: "base"
   path: "origin"
   final_form: false
+  single_route_only: false
   requirements:
     required_prestige: 0
     min_skill_levels: {}

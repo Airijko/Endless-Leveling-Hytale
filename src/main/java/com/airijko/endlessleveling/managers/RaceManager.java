@@ -893,10 +893,20 @@ public class RaceManager {
         String stage = safeString(ascensionNode.get("stage"));
         String path = safeString(ascensionNode.get("path"));
         boolean finalForm = parseBoolean(ascensionNode.get("final_form"), false);
+        boolean singleRouteOnly = parseBoolean(ascensionNode.get("single_route_only"), true);
+        if (ascensionNode.containsKey("allow_all_routes")) {
+            singleRouteOnly = !parseBoolean(ascensionNode.get("allow_all_routes"), false);
+        }
         RaceAscensionRequirements requirements = parseAscensionRequirements(ascensionNode.get("requirements"));
         List<RaceAscensionPathLink> nextPaths = parseAscensionNextPaths(ascensionNode.get("next_paths"));
 
-        return new RaceAscensionDefinition(ascensionId, stage, path, finalForm, requirements, nextPaths);
+        return new RaceAscensionDefinition(ascensionId,
+                stage,
+                path,
+                finalForm,
+                singleRouteOnly,
+                requirements,
+                nextPaths);
     }
 
     private RaceAscensionRequirements parseAscensionRequirements(Object node) {

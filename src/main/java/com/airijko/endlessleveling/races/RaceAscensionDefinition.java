@@ -11,6 +11,7 @@ public final class RaceAscensionDefinition {
     private final String stage;
     private final String path;
     private final boolean finalForm;
+    private final boolean singleRouteOnly;
     private final RaceAscensionRequirements requirements;
     private final List<RaceAscensionPathLink> nextPaths;
 
@@ -18,12 +19,14 @@ public final class RaceAscensionDefinition {
             String stage,
             String path,
             boolean finalForm,
+            boolean singleRouteOnly,
             RaceAscensionRequirements requirements,
             List<RaceAscensionPathLink> nextPaths) {
         this.id = Objects.requireNonNull(id, "Ascension id cannot be null");
         this.stage = stage == null || stage.isBlank() ? "base" : stage;
         this.path = path == null || path.isBlank() ? "none" : path;
         this.finalForm = finalForm;
+        this.singleRouteOnly = singleRouteOnly;
         this.requirements = requirements == null ? RaceAscensionRequirements.none() : requirements;
         List<RaceAscensionPathLink> links = nextPaths == null ? new ArrayList<>() : new ArrayList<>(nextPaths);
         this.nextPaths = Collections.unmodifiableList(links);
@@ -34,6 +37,7 @@ public final class RaceAscensionDefinition {
                 "base",
                 "none",
                 false,
+                true,
                 RaceAscensionRequirements.none(),
                 Collections.emptyList());
     }
@@ -52,6 +56,10 @@ public final class RaceAscensionDefinition {
 
     public boolean isFinalForm() {
         return finalForm;
+    }
+
+    public boolean isSingleRouteOnly() {
+        return singleRouteOnly;
     }
 
     public RaceAscensionRequirements getRequirements() {
