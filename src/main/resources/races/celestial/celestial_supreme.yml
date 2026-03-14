@@ -15,8 +15,7 @@ ascension:
     min_skill_levels:
       sorcery: 350
       flow: 250
-      precision: 150
-      ferocity: 250
+      ferocity: 400
     max_skill_levels: {}
     required_augments: []
     required_forms:
