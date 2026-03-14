@@ -12,7 +12,7 @@ public enum LocalizationKey {
     NOTIFY_SKILLS_COMMAND("notify.skills.command", FixedValue.ROOT_COMMAND.value()),
 
     NOTIFY_AUGMENTS_AVAILABLE_HEADER("notify.augments.available.header",
-            FixedValue.CHAT_PREFIX.value() + "You have augments available to choose from:"),
+            "You have augments available to choose from:"),
     NOTIFY_AUGMENTS_AVAILABLE_FOOTER("notify.augments.available.footer",
             "Use " + FixedValue.ROOT_COMMAND.value() + " augments to choose."),
 
@@ -44,7 +44,7 @@ public enum LocalizationKey {
     HUD_LEVEL_PROGRESS("hud.level.progress", "LVL {0}   XP: {1} / {2}"),
 
     UI_AUGMENTS_REMAINING_HEADER("ui.augments.remaining.header",
-            FixedValue.CHAT_PREFIX.value() + "You still have more augments to choose from:"),
+            "You still have more augments to choose from:"),
     UI_AUGMENTS_REMAINING_FOOTER("ui.augments.remaining.footer", "Choose again now.");
 
     private final String key;

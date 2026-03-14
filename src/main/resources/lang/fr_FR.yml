@@ -13,7 +13,7 @@ notify:
       end: ' to spend them.'
   augments:
     available:
-      header: '[EndlessLeveling] You have augments available to choose from:'
+      header: 'You have augments available to choose from:'
       footer: Use /lvl augments to choose.
     cooldown:
       ready: '{0} is ready again!'
@@ -174,7 +174,7 @@ ui:
       next_unlock: You have claimed all currently unlocked augments. Next unlock at level {0}.
       done: You have already claimed all configured augment unlocks.
     remaining:
-      header: '[EndlessLeveling] You still have more augments to choose from:'
+      header: 'You still have more augments to choose from:'
       footer: Choose again now.
     error:
       title: AUGMENT ERROR
