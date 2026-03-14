@@ -13,8 +13,8 @@ ascension:
   requirements:
     required_prestige: 5
     min_skill_levels:
-      sorcery: 300
-      flow: 300
+      sorcery: 250
+      flow: 250
     max_skill_levels: {}
     required_augments: []
   next_paths:

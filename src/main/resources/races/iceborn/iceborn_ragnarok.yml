@@ -13,8 +13,7 @@ ascension:
   requirements:
     required_prestige: 5
     min_skill_levels:
-      precision: 300
-      ferocity: 300
+      ferocity: 500
     max_skill_levels: {}
     required_augments: []
   next_paths:

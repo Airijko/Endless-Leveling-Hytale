@@ -13,8 +13,7 @@ ascension:
   requirements:
     required_prestige: 10
     min_skill_levels:
-      life_force: 500
-      defense: 150
+      life_force: 650
       stamina: 150
     min_any_skill_levels:
       - strength: 200

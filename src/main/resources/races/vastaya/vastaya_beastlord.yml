@@ -13,8 +13,8 @@ ascension:
   requirements:
     required_prestige: 5
     min_skill_levels:
-      strength: 300
-      haste: 300
+      strength: 250
+      haste: 250
     max_skill_levels: {}
     required_augments: []
   next_paths:
