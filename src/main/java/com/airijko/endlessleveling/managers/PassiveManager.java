@@ -8,6 +8,7 @@ import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.systems.PassiveRegenSystem;
+import com.airijko.endlessleveling.util.PlayerChatNotifier;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -188,12 +189,11 @@ public class PassiveManager {
             }
             String formattedValue = type.formatValue(snapshot.value());
             Message message = Message.join(
-                    Message.raw("[Passive] ").color("#4fd7f7"),
                     Message.raw(type.getDisplayName()).color("#ffc300"),
                     Message.raw(" is now Level ").color("#ffffff"),
                     Message.raw(String.valueOf(snapshot.level())).color("#4fd7f7"),
                     Message.raw(" (" + formattedValue + ")").color("#9be7ff"));
-            ref.sendMessage(message);
+            PlayerChatNotifier.send(ref, message);
 
         }
     }
@@ -216,11 +216,10 @@ public class PassiveManager {
         int totalAmount = safeBase + bonusAmount;
 
         Message chatMessage = Message.join(
-                Message.raw("[Luck] ").color("#4fd7f7"),
                 Message.raw("Double drop! ").color("#ffffff"),
                 Message.raw(dropName).color("#ffc300"),
                 Message.raw(" +" + bonusAmount + " (total x" + totalAmount + ")").color("#9be7ff"));
-        ref.sendMessage(chatMessage);
+        PlayerChatNotifier.send(ref, chatMessage);
 
         LOGGER.atFine().log("Luck double-drop triggered for %s: %s +%d",
                 playerData.getPlayerName(), dropName, bonusAmount);

@@ -36,9 +36,12 @@ import java.util.concurrent.CompletableFuture;
 
 public class EndlessLevelingCommand extends AbstractPlayerCommand {
 
-        public EndlessLevelingCommand(@Nonnull String name, @Nonnull String description) {
-                super(name, description);
-                this.addAliases("el", "endlessleveling", "skill", "eskills", "skills", "lvl", "level");
+        private static final String COMMAND_NAME = "lvl";
+        private static final String COMMAND_DESCRIPTION = "Endless Leveling Menu";
+
+        public EndlessLevelingCommand() {
+                super(COMMAND_NAME, COMMAND_DESCRIPTION);
+                this.addAliases("el", "endlessleveling", "skill", "skills", "eskills", "skills", "level");
                 this.addSubCommand(new SetLevelCommand());
                 this.addSubCommand(new SetPrestigeCommand());
                 this.addSubCommand(new ResetLevelCommand());

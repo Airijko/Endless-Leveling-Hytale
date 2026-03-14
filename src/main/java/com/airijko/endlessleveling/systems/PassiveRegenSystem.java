@@ -16,6 +16,9 @@ import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.passives.settings.AdrenalineSettings;
+import com.airijko.endlessleveling.util.ChatMessageTemplate;
+import com.airijko.endlessleveling.util.ChatMessageStrings;
+import com.airijko.endlessleveling.util.PlayerChatNotifier;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
@@ -164,7 +167,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         if (playerRef == null || !playerRef.isValid()) {
             return;
         }
-        playerRef.sendMessage(Message.raw("Swiftness has faded.").color("#4fd7f7"));
+        PlayerChatNotifier.send(playerRef, ChatMessageTemplate.SWIFTNESS_FADED);
     }
 
     private void notifyAugmentCooldowns(PlayerRef playerRef, PlayerData playerData) {
@@ -181,7 +184,10 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
                 continue;
             }
             if (now >= cooldown.getExpiresAt()) {
-                sendCooldownNotification(playerRef, formatAugmentReady(cooldown));
+                String readyText = PlayerChatNotifier.text(playerRef,
+                        ChatMessageTemplate.AUGMENT_READY_AGAIN,
+                        formatAugmentReady(cooldown));
+                sendCooldownNotification(playerRef, readyText);
                 cooldown.setReadyNotified(true);
             }
         }
@@ -195,7 +201,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         if (label == null) {
             label = "Augment";
         }
-        return capitalizeFirst(label) + " is ready again!";
+        return capitalizeFirst(label);
     }
 
     private String capitalizeFirst(String text) {
@@ -694,35 +700,45 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         if (!runtimeState.isSecondWindReadyNotified()
                 && runtimeState.getSecondWindCooldownExpiresAt() > 0
                 && now >= runtimeState.getSecondWindCooldownExpiresAt()) {
-            sendCooldownNotification(playerRef, "Second Wind is ready again!");
+            sendCooldownNotification(playerRef,
+                    PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENT_READY_AGAIN,
+                            ChatMessageStrings.Name.SECOND_WIND));
             runtimeState.setSecondWindReadyNotified(true);
         }
 
         if (!runtimeState.isFirstStrikeReadyNotified()
                 && runtimeState.getFirstStrikeCooldownExpiresAt() > 0
                 && now >= runtimeState.getFirstStrikeCooldownExpiresAt()) {
-            sendCooldownNotification(playerRef, "First Strike is ready again!");
+            sendCooldownNotification(playerRef,
+                    PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENT_READY_AGAIN,
+                            ChatMessageStrings.Name.FIRST_STRIKE));
             runtimeState.setFirstStrikeReadyNotified(true);
         }
 
         if (!runtimeState.isAdrenalineReadyNotified()
                 && runtimeState.getAdrenalineCooldownExpiresAt() > 0
                 && now >= runtimeState.getAdrenalineCooldownExpiresAt()) {
-            sendCooldownNotification(playerRef, "Adrenaline is ready again!");
+            sendCooldownNotification(playerRef,
+                    PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENT_READY_AGAIN,
+                            ChatMessageStrings.Name.ADRENALINE));
             runtimeState.setAdrenalineReadyNotified(true);
         }
 
         if (!runtimeState.isExecutionerReadyNotified()
                 && runtimeState.getExecutionerCooldownExpiresAt() > 0
                 && now >= runtimeState.getExecutionerCooldownExpiresAt()) {
-            sendCooldownNotification(playerRef, "Executioner is ready again!");
+            sendCooldownNotification(playerRef,
+                    PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENT_READY_AGAIN,
+                            ChatMessageStrings.Name.EXECUTIONER));
             runtimeState.setExecutionerReadyNotified(true);
         }
 
         if (!runtimeState.isRetaliationReadyNotified()
                 && runtimeState.getRetaliationCooldownExpiresAt() > 0
                 && now >= runtimeState.getRetaliationCooldownExpiresAt()) {
-            sendCooldownNotification(playerRef, "Retaliation is ready again!");
+            sendCooldownNotification(playerRef,
+                    PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENT_READY_AGAIN,
+                            ChatMessageStrings.Name.RETALIATION));
             runtimeState.setRetaliationReadyNotified(true);
         }
     }
@@ -739,7 +755,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             return;
         }
 
-        playerRef.sendMessage(Message.raw(text).color("#4fd7f7"));
+        PlayerChatNotifier.send(playerRef, ChatMessageTemplate.PASSIVE_GENERIC, text);
     }
 
     private void clearAdrenalineState(@Nonnull PassiveRuntimeState runtimeState) {
@@ -755,10 +771,8 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             return;
         }
         double percentDisplay = Math.max(0.0D, restorePercent) * 100.0D;
-        playerRef.sendMessage(Message.raw(
-                String.format("Adrenaline triggered! Restoring %.0f%% stamina over %.0fs",
-                        percentDisplay,
-                        Math.max(0.0D, durationSeconds)))
-                .color("#4fd7f7"));
+        PlayerChatNotifier.send(playerRef, ChatMessageTemplate.ADRENALINE_TRIGGERED,
+                Math.round(percentDisplay),
+                Math.round(Math.max(0.0D, durationSeconds)));
     }
 }

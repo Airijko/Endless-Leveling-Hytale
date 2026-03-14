@@ -9,6 +9,7 @@ import com.airijko.endlessleveling.commands.classes.ClassCommand;
 import com.airijko.endlessleveling.commands.profile.ProfileCommand;
 import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.augments.AugmentManager;
+import com.airijko.endlessleveling.augments.AugmentSyncValidator;
 import com.airijko.endlessleveling.augments.MobAugmentExecutor;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager;
 import com.airijko.endlessleveling.augments.AugmentUnlockManager;
@@ -69,6 +70,7 @@ public class EndlessLeveling extends JavaPlugin {
     private AugmentManager augmentManager;
     private AugmentRuntimeManager augmentRuntimeManager;
     private AugmentUnlockManager augmentUnlockManager;
+    private AugmentSyncValidator augmentSyncValidator;
     private AugmentExecutor augmentExecutor;
     private MobAugmentExecutor mobAugmentExecutor;
 
@@ -154,6 +156,10 @@ public class EndlessLeveling extends JavaPlugin {
         return augmentUnlockManager;
     }
 
+    public AugmentSyncValidator getAugmentSyncValidator() {
+        return augmentSyncValidator;
+    }
+
     public ArchetypePassiveManager getArchetypePassiveManager() {
         return archetypePassiveManager;
     }
@@ -199,6 +205,7 @@ public class EndlessLeveling extends JavaPlugin {
         augmentUnlockManager = new AugmentUnlockManager(configManager, levelingConfigManager, augmentManager,
                 playerDataManager,
                 archetypePassiveManager);
+        augmentSyncValidator = new AugmentSyncValidator(playerDataManager, augmentUnlockManager);
         levelingManager = new LevelingManager(playerDataManager, filesManager, skillManager, archetypePassiveManager,
                 passiveManager, augmentUnlockManager, eventHookManager);
         mobLevelingManager = new MobLevelingManager(filesManager, playerDataManager);
@@ -270,7 +277,7 @@ public class EndlessLeveling extends JavaPlugin {
         this.getEntityStoreRegistry().registerSystem(new WitherEffectSystem());
 
         // Register commands
-        this.getCommandRegistry().registerCommand(new EndlessLevelingCommand("skills", "Skills menu"));
+        this.getCommandRegistry().registerCommand(new EndlessLevelingCommand());
         this.getCommandRegistry().registerCommand(new ProfileCommand());
         if (partyManager.isAvailable()) {
             this.getCommandRegistry().registerCommand(new PartyCommand());
@@ -280,6 +287,10 @@ public class EndlessLeveling extends JavaPlugin {
 
         if (augmentManager != null) {
             augmentManager.load();
+        }
+
+        if (augmentSyncValidator != null) {
+            augmentSyncValidator.auditAndNotify();
         }
 
         LOGGER.atInfo().log("Plugin initialized! Plugin folder: %s",

@@ -22,6 +22,8 @@ import com.airijko.endlessleveling.passives.settings.FirstStrikeSettings;
 import com.airijko.endlessleveling.passives.settings.RetaliationSettings;
 import com.airijko.endlessleveling.passives.util.PassiveContributionBlueprint;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
+import com.airijko.endlessleveling.util.ChatMessageTemplate;
+import com.airijko.endlessleveling.util.PlayerChatNotifier;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -777,7 +779,7 @@ public final class CombatHookProcessor {
         if (playerRef == null || !playerRef.isValid() || text == null || text.isBlank()) {
             return;
         }
-        playerRef.sendMessage(Message.raw(text).color("#4fd7f7"));
+        PlayerChatNotifier.send(playerRef, ChatMessageTemplate.PASSIVE_GENERIC, text);
     }
 
     private boolean hasSelectedAugment(PlayerData playerData, String augmentId) {

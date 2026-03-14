@@ -10,7 +10,9 @@ import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.ui.PlayerHud;
+import com.airijko.endlessleveling.util.ChatMessageTemplate;
 import com.airijko.endlessleveling.util.Lang;
+import com.airijko.endlessleveling.util.PlayerChatNotifier;
 import com.airijko.endlessleveling.util.WorldContextUtil;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
@@ -123,6 +125,16 @@ public class PlayerDataListener {
 
         if (augmentUnlockManager != null) {
             augmentUnlockManager.ensureUnlocks(playerData);
+
+            // Audit after ensureUnlocks so that routine TOO_FEW cases (missing
+            // offers that ensureUnlocks just filled) don't trigger false alerts.
+            // Only real anomalies (TOO_MANY, or TOO_FEW when the pool was empty)
+            // will reach online operators.
+            var plugin = EndlessLeveling.getInstance();
+            if (plugin != null && plugin.getAugmentSyncValidator() != null) {
+                plugin.getAugmentSyncValidator().auditOnLogin(playerData);
+            }
+
             notifyAvailableAugments(playerRef, playerData);
         }
 
@@ -189,16 +201,16 @@ public class PlayerDataListener {
         NotificationUtil.sendNotification(packetHandler, primaryMessage, secondaryMessage, icon);
 
         var chatMessage = Message.join(
-                Message.raw(Lang.tr(playerRef.getUuid(), "notify.prefix", "[EndlessLeveling] ")).color("#4fd7f7"),
-                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.chat.have", "You still have "))
-                        .color("#ffc300"),
+                Message.raw(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.SKILLS_CHAT_HAVE))
+                        .color(ChatMessageTemplate.SKILLS_CHAT_HAVE.colorHex()),
                 Message.raw(String.valueOf(skillPoints)).color("#4fd7f7"),
-                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.chat.use", " skill points. Use "))
-                        .color("#ffc300"),
-                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.command", "/el")).color("#4fd7f7"),
-                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.chat.end", " to spend them."))
-                        .color("#ffc300"));
-        playerRef.sendMessage(chatMessage);
+                Message.raw(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.SKILLS_CHAT_USE))
+                        .color(ChatMessageTemplate.SKILLS_CHAT_USE.colorHex()),
+                Message.raw(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.SKILLS_COMMAND))
+                        .color(ChatMessageTemplate.SKILLS_COMMAND.colorHex()),
+                Message.raw(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.SKILLS_CHAT_END))
+                        .color(ChatMessageTemplate.SKILLS_CHAT_END.colorHex()));
+        PlayerChatNotifier.send(playerRef, chatMessage);
     }
 
     private void notifyAvailableAugments(PlayerRef playerRef, PlayerData playerData) {
@@ -211,13 +223,12 @@ public class PlayerDataListener {
         }
 
         StringBuilder builder = new StringBuilder();
-        builder.append(Lang.tr(playerRef.getUuid(), "notify.augments.available.header",
-                "[EndlessLeveling] You have augments available to choose from:"))
+        builder.append(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENTS_AVAILABLE_HEADER))
                 .append("\n");
         for (PassiveTier tier : tiers) {
             builder.append("- ").append(tier.name()).append("\n");
         }
-        builder.append(Lang.tr(playerRef.getUuid(), "notify.augments.available.footer", "Use /el augments to choose."));
-        playerRef.sendMessage(Message.raw(builder.toString()).color("#4fd7f7"));
+        builder.append(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENTS_AVAILABLE_FOOTER));
+        PlayerChatNotifier.send(playerRef, Message.raw(builder.toString()).color("#4fd7f7"));
     }
 }

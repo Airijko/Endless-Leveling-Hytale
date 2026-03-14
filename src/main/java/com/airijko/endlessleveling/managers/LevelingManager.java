@@ -10,6 +10,8 @@ import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.ui.PlayerHud;
 import com.airijko.endlessleveling.systems.PlayerRaceStatSystem;
+import com.airijko.endlessleveling.util.ChatMessageTemplate;
+import com.airijko.endlessleveling.util.PlayerChatNotifier;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
@@ -281,14 +283,13 @@ public class LevelingManager {
         }
 
         StringBuilder builder = new StringBuilder();
-        builder.append(Lang.tr(playerRef.getUuid(), "notify.augments.available.header",
-                "[EndlessLeveling] You have augments available to choose from:")).append("\n");
+        builder.append(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENTS_AVAILABLE_HEADER))
+                .append("\n");
         for (PassiveTier tier : tiers) {
             builder.append("- ").append(tier.name()).append("\n");
         }
-        builder.append(Lang.tr(playerRef.getUuid(), "notify.augments.available.footer",
-                "Use /el augments choose."));
-        playerRef.sendMessage(Message.raw(builder.toString()).color("#4fd7f7"));
+        builder.append(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENTS_AVAILABLE_FOOTER));
+        PlayerChatNotifier.send(playerRef, Message.raw(builder.toString()).color("#4fd7f7"));
     }
 
     private void notifyXpGain(PlayerData player, double xpAmount) {
@@ -546,7 +547,7 @@ public class LevelingManager {
                     "No XP awarded: {0} is too far above your level ({1}).",
                     mobLabel, player.getLevel());
         };
-        playerRef.sendMessage(Message.raw(messageText).color("#ff6666"));
+        PlayerChatNotifier.send(playerRef, Message.raw(messageText).color("#ff6666"));
     }
 
     private boolean getBoolean(String path, boolean defaultValue) {

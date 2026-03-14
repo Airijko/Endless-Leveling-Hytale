@@ -25,6 +25,9 @@ import com.airijko.endlessleveling.augments.types.BailoutAugment;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ClassWeaponType;
 import com.airijko.endlessleveling.managers.SkillManager;
+import com.airijko.endlessleveling.util.ChatMessageTemplate;
+import com.airijko.endlessleveling.util.ChatMessageStrings;
+import com.airijko.endlessleveling.util.PlayerChatNotifier;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -454,8 +457,10 @@ public final class AugmentExecutor {
             }
             if (cooldown.getExpiresAt() > 0L && now >= cooldown.getExpiresAt()) {
                 String display = names.getOrDefault(cooldown.getAugmentId(), cooldown.getDisplayName());
-                sendAugmentMessage(playerRef,
-                        String.format("%s is ready again!", display != null ? display : "Augment"));
+                String readyText = PlayerChatNotifier.text(playerRef,
+                        ChatMessageTemplate.AUGMENT_READY_AGAIN,
+                        display != null ? display : ChatMessageStrings.Name.AUGMENT);
+                sendAugmentMessage(playerRef, readyText);
                 if (FleetFootworkAugment.ID.equalsIgnoreCase(cooldown.getAugmentId())) {
                     LOGGER.atInfo().log("Fleet Footwork available for player=%s", playerData.getUuid());
                 }
@@ -468,7 +473,7 @@ public final class AugmentExecutor {
         if (playerRef == null || !playerRef.isValid() || text == null || text.isBlank()) {
             return;
         }
-        playerRef.sendMessage(Message.raw(text).color("#f7c74f"));
+        PlayerChatNotifier.send(playerRef, ChatMessageTemplate.AUGMENT_GENERIC, text);
     }
 
     private List<Augment> resolve(@Nonnull PlayerData playerData) {
