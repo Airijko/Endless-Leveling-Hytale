@@ -1,0 +1,251 @@
+$C = "../Common.ui";
+
+// 6 stacking augment icon slots, horizontally centered above the XP bar.
+// Each slot mirrors the same anatomy: background, gold max-stack outline,
+// ten category-icon variants (one shown at runtime), stack badge + count.
+// Positions (Left within 634px parent, 32px slots with 4px gaps, centered):
+//   Slot 0: 211  Slot 1: 247  Slot 2: 283  Slot 3: 319  Slot 4: 355  Slot 5: 391
+
+Group #StackingAugmentsHud {
+  Anchor: (Bottom: 159, Width: 634, Height: 32);
+
+  Group #StackingSlot0 {
+    Anchor: (Left: 211, Top: 0, Width: 32, Height: 32);
+    Visible: false;
+
+    Group #StackingSlot0Background {
+      Anchor: (Top: 0, Left: 0, Width: 32, Height: 32);
+      Background: #0f1824(0.82);
+    }
+
+    Group #StackingSlot0MaxOutline {
+      Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+      Visible: false;
+      Group { Anchor: (Top: 0, Left: 0, Right: 0, Height: 1); Background: #f0cf78; }
+      Group { Anchor: (Top: 0, Bottom: 0, Left: 0, Width: 1); Background: #f0cf78; }
+      Group { Anchor: (Top: 0, Bottom: 0, Right: 0, Width: 1); Background: #f0cf78; }
+      Group { Anchor: (Bottom: 0, Left: 0, Right: 0, Height: 1); Background: #f0cf78; }
+    }
+
+    ItemIcon #StackingSlot0IconCommonStat { ItemId: "Ingredient_Crystal_White"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot0IconPassiveStat { ItemId: "Ingredient_Life_Essence"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot0IconMagicStat { ItemId: "Weapon_Staff_Bronze"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot0IconOnHit { ItemId: "Weapon_Daggers_Fang_Doomed"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot0IconOnRangedHit { ItemId: "Weapon_Shortbow_Crude"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot0IconOnDamageTaken { ItemId: "Weapon_Shield_Orbis_Knight"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot0IconOnLowHp { ItemId: "Potion_Health_Lesser"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot0IconOnCrit { ItemId: "Weapon_Battleaxe_Mithril"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot0IconOnKill { ItemId: "Ingredient_Fire_Essence"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot0IconOnLifesteal { ItemId: "Potion_Health_Greater"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+
+    Group #StackingSlot0StackBadge {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Background: #000000(0.85);
+    }
+    Label #StackingSlot0StackCount {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Style: (FontSize: 12, Alignment: Center, TextColor: #ffffff, RenderBold: true);
+      Text: "1";
+    }
+  }
+
+  Group #StackingSlot1 {
+    Anchor: (Left: 247, Top: 0, Width: 32, Height: 32);
+    Visible: false;
+
+    Group #StackingSlot1Background {
+      Anchor: (Top: 0, Left: 0, Width: 32, Height: 32);
+      Background: #0f1824(0.82);
+    }
+
+    Group #StackingSlot1MaxOutline {
+      Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+      Visible: false;
+      Group { Anchor: (Top: 0, Left: 0, Right: 0, Height: 1); Background: #f0cf78; }
+      Group { Anchor: (Top: 0, Bottom: 0, Left: 0, Width: 1); Background: #f0cf78; }
+      Group { Anchor: (Top: 0, Bottom: 0, Right: 0, Width: 1); Background: #f0cf78; }
+      Group { Anchor: (Bottom: 0, Left: 0, Right: 0, Height: 1); Background: #f0cf78; }
+    }
+
+    ItemIcon #StackingSlot1IconCommonStat { ItemId: "Ingredient_Crystal_White"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot1IconPassiveStat { ItemId: "Ingredient_Life_Essence"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot1IconMagicStat { ItemId: "Weapon_Staff_Bronze"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot1IconOnHit { ItemId: "Weapon_Daggers_Fang_Doomed"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot1IconOnRangedHit { ItemId: "Weapon_Shortbow_Crude"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot1IconOnDamageTaken { ItemId: "Weapon_Shield_Orbis_Knight"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot1IconOnLowHp { ItemId: "Potion_Health_Lesser"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot1IconOnCrit { ItemId: "Weapon_Battleaxe_Mithril"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot1IconOnKill { ItemId: "Ingredient_Fire_Essence"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot1IconOnLifesteal { ItemId: "Potion_Health_Greater"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+
+    Group #StackingSlot1StackBadge {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Background: #000000(0.85);
+    }
+    Label #StackingSlot1StackCount {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Style: (FontSize: 12, Alignment: Center, TextColor: #ffffff, RenderBold: true);
+      Text: "1";
+    }
+  }
+
+  Group #StackingSlot2 {
+    Anchor: (Left: 283, Top: 0, Width: 32, Height: 32);
+    Visible: false;
+
+    Group #StackingSlot2Background {
+      Anchor: (Top: 0, Left: 0, Width: 32, Height: 32);
+      Background: #0f1824(0.82);
+    }
+
+    Group #StackingSlot2MaxOutline {
+      Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+      Visible: false;
+      Group { Anchor: (Top: 0, Left: 0, Right: 0, Height: 1); Background: #f0cf78; }
+      Group { Anchor: (Top: 0, Bottom: 0, Left: 0, Width: 1); Background: #f0cf78; }
+      Group { Anchor: (Top: 0, Bottom: 0, Right: 0, Width: 1); Background: #f0cf78; }
+      Group { Anchor: (Bottom: 0, Left: 0, Right: 0, Height: 1); Background: #f0cf78; }
+    }
+
+    ItemIcon #StackingSlot2IconCommonStat { ItemId: "Ingredient_Crystal_White"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot2IconPassiveStat { ItemId: "Ingredient_Life_Essence"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot2IconMagicStat { ItemId: "Weapon_Staff_Bronze"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot2IconOnHit { ItemId: "Weapon_Daggers_Fang_Doomed"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot2IconOnRangedHit { ItemId: "Weapon_Shortbow_Crude"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot2IconOnDamageTaken { ItemId: "Weapon_Shield_Orbis_Knight"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot2IconOnLowHp { ItemId: "Potion_Health_Lesser"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot2IconOnCrit { ItemId: "Weapon_Battleaxe_Mithril"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot2IconOnKill { ItemId: "Ingredient_Fire_Essence"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot2IconOnLifesteal { ItemId: "Potion_Health_Greater"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+
+    Group #StackingSlot2StackBadge {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Background: #000000(0.85);
+    }
+    Label #StackingSlot2StackCount {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Style: (FontSize: 12, Alignment: Center, TextColor: #ffffff, RenderBold: true);
+      Text: "1";
+    }
+  }
+
+  Group #StackingSlot3 {
+    Anchor: (Left: 319, Top: 0, Width: 32, Height: 32);
+    Visible: false;
+
+    Group #StackingSlot3Background {
+      Anchor: (Top: 0, Left: 0, Width: 32, Height: 32);
+      Background: #0f1824(0.82);
+    }
+
+    Group #StackingSlot3MaxOutline {
+      Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+      Visible: false;
+      Group { Anchor: (Top: 0, Left: 0, Right: 0, Height: 1); Background: #f0cf78; }
+      Group { Anchor: (Top: 0, Bottom: 0, Left: 0, Width: 1); Background: #f0cf78; }
+      Group { Anchor: (Top: 0, Bottom: 0, Right: 0, Width: 1); Background: #f0cf78; }
+      Group { Anchor: (Bottom: 0, Left: 0, Right: 0, Height: 1); Background: #f0cf78; }
+    }
+
+    ItemIcon #StackingSlot3IconCommonStat { ItemId: "Ingredient_Crystal_White"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot3IconPassiveStat { ItemId: "Ingredient_Life_Essence"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot3IconMagicStat { ItemId: "Weapon_Staff_Bronze"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot3IconOnHit { ItemId: "Weapon_Daggers_Fang_Doomed"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot3IconOnRangedHit { ItemId: "Weapon_Shortbow_Crude"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot3IconOnDamageTaken { ItemId: "Weapon_Shield_Orbis_Knight"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot3IconOnLowHp { ItemId: "Potion_Health_Lesser"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot3IconOnCrit { ItemId: "Weapon_Battleaxe_Mithril"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot3IconOnKill { ItemId: "Ingredient_Fire_Essence"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot3IconOnLifesteal { ItemId: "Potion_Health_Greater"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+
+    Group #StackingSlot3StackBadge {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Background: #000000(0.85);
+    }
+    Label #StackingSlot3StackCount {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Style: (FontSize: 12, Alignment: Center, TextColor: #ffffff, RenderBold: true);
+      Text: "1";
+    }
+  }
+
+  Group #StackingSlot4 {
+    Anchor: (Left: 355, Top: 0, Width: 32, Height: 32);
+    Visible: false;
+
+    Group #StackingSlot4Background {
+      Anchor: (Top: 0, Left: 0, Width: 32, Height: 32);
+      Background: #0f1824(0.82);
+    }
+
+    Group #StackingSlot4MaxOutline {
+      Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+      Visible: false;
+      Group { Anchor: (Top: 0, Left: 0, Right: 0, Height: 1); Background: #f0cf78; }
+      Group { Anchor: (Top: 0, Bottom: 0, Left: 0, Width: 1); Background: #f0cf78; }
+      Group { Anchor: (Top: 0, Bottom: 0, Right: 0, Width: 1); Background: #f0cf78; }
+      Group { Anchor: (Bottom: 0, Left: 0, Right: 0, Height: 1); Background: #f0cf78; }
+    }
+
+    ItemIcon #StackingSlot4IconCommonStat { ItemId: "Ingredient_Crystal_White"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot4IconPassiveStat { ItemId: "Ingredient_Life_Essence"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot4IconMagicStat { ItemId: "Weapon_Staff_Bronze"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot4IconOnHit { ItemId: "Weapon_Daggers_Fang_Doomed"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot4IconOnRangedHit { ItemId: "Weapon_Shortbow_Crude"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot4IconOnDamageTaken { ItemId: "Weapon_Shield_Orbis_Knight"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot4IconOnLowHp { ItemId: "Potion_Health_Lesser"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot4IconOnCrit { ItemId: "Weapon_Battleaxe_Mithril"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot4IconOnKill { ItemId: "Ingredient_Fire_Essence"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot4IconOnLifesteal { ItemId: "Potion_Health_Greater"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+
+    Group #StackingSlot4StackBadge {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Background: #000000(0.85);
+    }
+    Label #StackingSlot4StackCount {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Style: (FontSize: 12, Alignment: Center, TextColor: #ffffff, RenderBold: true);
+      Text: "1";
+    }
+  }
+
+  Group #StackingSlot5 {
+    Anchor: (Left: 391, Top: 0, Width: 32, Height: 32);
+    Visible: false;
+
+    Group #StackingSlot5Background {
+      Anchor: (Top: 0, Left: 0, Width: 32, Height: 32);
+      Background: #0f1824(0.82);
+    }
+
+    Group #StackingSlot5MaxOutline {
+      Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+      Visible: false;
+      Group { Anchor: (Top: 0, Left: 0, Right: 0, Height: 1); Background: #f0cf78; }
+      Group { Anchor: (Top: 0, Bottom: 0, Left: 0, Width: 1); Background: #f0cf78; }
+      Group { Anchor: (Top: 0, Bottom: 0, Right: 0, Width: 1); Background: #f0cf78; }
+      Group { Anchor: (Bottom: 0, Left: 0, Right: 0, Height: 1); Background: #f0cf78; }
+    }
+
+    ItemIcon #StackingSlot5IconCommonStat { ItemId: "Ingredient_Crystal_White"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot5IconPassiveStat { ItemId: "Ingredient_Life_Essence"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot5IconMagicStat { ItemId: "Weapon_Staff_Bronze"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot5IconOnHit { ItemId: "Weapon_Daggers_Fang_Doomed"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot5IconOnRangedHit { ItemId: "Weapon_Shortbow_Crude"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot5IconOnDamageTaken { ItemId: "Weapon_Shield_Orbis_Knight"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot5IconOnLowHp { ItemId: "Potion_Health_Lesser"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot5IconOnCrit { ItemId: "Weapon_Battleaxe_Mithril"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot5IconOnKill { ItemId: "Ingredient_Fire_Essence"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+    ItemIcon #StackingSlot5IconOnLifesteal { ItemId: "Potion_Health_Greater"; Anchor: (Width: 32, Height: 32, Left: 0, Top: 0); Visible: false; }
+
+    Group #StackingSlot5StackBadge {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Background: #000000(0.85);
+    }
+    Label #StackingSlot5StackCount {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Style: (FontSize: 12, Alignment: Center, TextColor: #ffffff, RenderBold: true);
+      Text: "1";
+    }
+  }
+}

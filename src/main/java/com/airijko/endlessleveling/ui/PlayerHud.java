@@ -24,6 +24,7 @@ import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,6 +56,7 @@ public class PlayerHud extends CustomUIHud {
             Map.entry("Weapon_Battleaxe_Mithril", "OnCrit"),
             Map.entry("Ingredient_Fire_Essence", "OnKill"),
             Map.entry("Potion_Health_Greater", "OnLifesteal"));
+    private static final int MAX_STACKING_SLOTS = 6;
     private static final Map<UUID, PlayerHud> ACTIVE_HUDS = new ConcurrentHashMap<>();
     private static final Map<String, String> DEFAULT_CLASS_ICONS = Map.ofEntries(
             Map.entry("*", "Weapon_Longsword_Adamantite_Saurian"),
@@ -112,6 +114,7 @@ public class PlayerHud extends CustomUIHud {
         }
 
         uiCommandBuilder.append("Hud/EndlessPlayerHud.ui");
+        uiCommandBuilder.append("Hud/EndlessStackingAugments.ui");
         // Avoid calling update() during build. The initial build packet should only
         // append
         // the UI, while dynamic values are pushed on the next refresh tick.
@@ -171,24 +174,34 @@ public class PlayerHud extends CustomUIHud {
                 "#ShieldStatusProgress",
                 overlayState.shieldBar());
 
-        uiCommandBuilder.set("#StackingAugmentIconPanel.Visible", overlayState.stackingActive());
-        uiCommandBuilder.set("#StackingAugmentStackBadge.Visible", overlayState.stackingActive());
-        uiCommandBuilder.set("#StackingAugmentStackCount.Visible", overlayState.stackingActive());
-        uiCommandBuilder.set("#StackingAugmentMaxOutline.Visible", overlayState.stackingAtMaxStacks());
-        uiCommandBuilder.set("#StackingAugmentStackCount.Text",
-                overlayState.stackingActive() ? Integer.toString(Math.max(0, overlayState.stackingStacks())) : "");
-
-        setStackingIconVariant(uiCommandBuilder,
-                overlayState.stackingActive() ? overlayState.stackingIconItemId() : null);
+        List<AugmentHudOverlayController.StackingHudState> stackingSlots = overlayState.stackingSlots();
+        for (int i = 0; i < MAX_STACKING_SLOTS; i++) {
+            AugmentHudOverlayController.StackingHudState slot = i < stackingSlots.size() ? stackingSlots.get(i) : null;
+            applyStackingSlot(uiCommandBuilder, i, slot);
+        }
     }
 
-    private void setStackingIconVariant(@Nonnull UICommandBuilder uiCommandBuilder, String iconItemId) {
+    private void applyStackingSlot(@Nonnull UICommandBuilder uiCommandBuilder, int slotIndex,
+            AugmentHudOverlayController.StackingHudState slot) {
+        boolean active = slot != null && slot.active();
+        String prefix = "#StackingSlot" + slotIndex;
+        uiCommandBuilder.set(prefix + ".Visible", active);
+        uiCommandBuilder.set(prefix + "StackBadge.Visible", active);
+        uiCommandBuilder.set(prefix + "StackCount.Visible", active);
+        uiCommandBuilder.set(prefix + "MaxOutline.Visible", active && slot.atMaxStacks());
+        uiCommandBuilder.set(prefix + "StackCount.Text",
+                active ? Integer.toString(Math.max(0, slot.stacks())) : "");
+        setStackingIconVariant(uiCommandBuilder, slotIndex, active ? slot.iconItemId() : null);
+    }
+
+    private void setStackingIconVariant(@Nonnull UICommandBuilder uiCommandBuilder, int slotIndex,
+            String iconItemId) {
         String chosenVariant = iconItemId == null
                 ? null
                 : STACKING_ICON_VARIANT_BY_ITEM_ID.getOrDefault(iconItemId, "PassiveStat");
-
+        String prefix = "#StackingSlot" + slotIndex + "Icon";
         for (String variant : STACKING_ICON_VARIANT_SUFFIXES) {
-            uiCommandBuilder.set("#StackingAugmentIcon" + variant + ".Visible", variant.equals(chosenVariant));
+            uiCommandBuilder.set(prefix + variant + ".Visible", variant.equals(chosenVariant));
         }
     }
 
