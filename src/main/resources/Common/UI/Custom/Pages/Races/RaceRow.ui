@@ -30,16 +30,9 @@ Group {
                 LayoutMode: Left;
 
                 Label #RaceName {
-                    Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+                    Style: (FontSize: 18, TextColor: #ffffff, RenderBold: true);
                     Text: "Race Name";
                     FlexWeight: 1;
-                }
-
-                Label #RaceSelectionStatus {
-                    Style: (FontSize: 10, TextColor: #4fd7f7, RenderBold: true);
-                    Text: "CURRENT";
-                    Anchor: (Height: 14);
-                    Visible: false;
                 }
             }
 
@@ -48,19 +41,19 @@ Group {
             Group {
                 LayoutMode: Left;
 
-                $C.@TextButton #ViewRaceButton {
-                    Text: "VIEW";
-                    Anchor: (Height: 28, Width: 96);
-                    Padding: (Horizontal: 10, Vertical: 4);
-                    Style: @CustomStyle;
+                Label #RaceSelectionStatus {
+                    Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true);
+                    Text: "PRIMARY";
+                    Anchor: (Height: 18);
+                    Visible: false;
                 }
 
-                Group { Anchor: (Width: 6); }
+                Group { FlexWeight: 1; }
 
-                $C.@TextButton #ChooseRaceButton {
-                    Text: "CHOOSE";
-                    Anchor: (Height: 28, Width: 96);
-                    Padding: (Horizontal: 10, Vertical: 4);
+                $C.@TextButton #ViewRaceButton {
+                    Text: "VIEW";
+                    Anchor: (Width: 70, Height: 32);
+                    Padding: (Horizontal: 3, Vertical: 2);
                     Style: @CustomStyle;
                 }
             }

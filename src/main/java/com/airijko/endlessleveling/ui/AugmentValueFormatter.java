@@ -913,7 +913,7 @@ public final class AugmentValueFormatter {
 
     private double toDisplayPercent(String normalizedKey, double value) {
         if (normalizedKey != null && DIRECT_PERCENT_KEYS.contains(normalizedKey)) {
-            return Math.abs(value) <= 1.0D ? value * 100.0D : value;
+            return value;
         }
         return Math.abs(value) >= 10.0D ? value : value * 100.0D;
     }

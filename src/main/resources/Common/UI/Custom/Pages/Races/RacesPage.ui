@@ -318,27 +318,33 @@ $C.@PageOverlay {
                                         LayoutMode: Top;
                                         Padding: (Full: 12);
 
-                                        Label #RaceDetailCooldownWarning {
-                                            Text: "You will be locked for the remaining cooldown after swapping.";
-                                            Style: (FontSize: 11, TextColor: #ffc300, RenderBold: true);
+                                        Group {
+                                            LayoutMode: Left;
+                                            
+                                            Group { FlexWeight: 1; }
+                                            
+                                            Label #RaceDetailCooldownWarning {
+                                                Text: "You will be locked for the remaining cooldown after swapping.";
+                                                Style: (FontSize: 11, TextColor: #ffc300, RenderBold: true);
+                                            }
                                         }
-
+                                    
                                         Group { Anchor: (Height: 8); }
 
                                         Group {
                                             LayoutMode: Left;
-
-                                            $C.@TextButton #ConfirmRaceButton {
-                                                Text: "SWAP";
-                                                Anchor: (Height: 32);
+               
+                                            $C.@TextButton #ViewRacePathsButton {
+                                                Text: "VIEW PATHS";
+                                                Anchor: (Height: 32, Width: 170);
                                                 Style: @CustomStyle;
                                             }
 
                                             Group { FlexWeight: 1; }
 
-                                            $C.@TextButton #ViewRacePathsButton {
-                                                Text: "VIEW PATHS";
-                                                Anchor: (Height: 32);
+                                            $C.@TextButton #ConfirmRaceButton {
+                                                Text: "SWAP";
+                                                Anchor: (Height: 32, Width: 170);
                                                 Style: @CustomStyle;
                                             }
                                         }
@@ -350,7 +356,7 @@ $C.@PageOverlay {
                         Group { Anchor: (Width: 40); }
 
                         $C.@DecoratedContainer {
-                            Anchor: (Width: 300, Height: 700);
+                            Anchor: (Width: 300);
 
                             #Title {
                                 Group {

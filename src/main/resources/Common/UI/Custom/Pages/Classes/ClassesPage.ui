@@ -1,21 +1,12 @@
 $C = "../../Common.ui";
 $Nav = "../Nav/LeftNavPanel.ui";
 
-@CustomLabelStyle = LabelStyle(
-  FontSize: 15,
-  TextColor: #bfcdd5,
-  RenderBold: true,
-  RenderUppercase: true,
-  HorizontalAlignment: Center,
-  VerticalAlignment: Center
-);
-
 @CustomStyle = TextButtonStyle(
-  Default: (Background: $C.@DefaultSquareButtonDefaultBackground, LabelStyle: @CustomLabelStyle),
-  Hovered: (Background: $C.@DefaultSquareButtonHoveredBackground, LabelStyle: @CustomLabelStyle),
-  Pressed: (Background: $C.@DefaultSquareButtonPressedBackground, LabelStyle: @CustomLabelStyle),
-  Disabled: (Background: $C.@DefaultSquareButtonDisabledBackground, LabelStyle: @CustomLabelStyle),
-  Sounds: $C.@ButtonSounds,
+    Default: (Background: $C.@DefaultSquareButtonDefaultBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Hovered: (Background: $C.@DefaultSquareButtonHoveredBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Pressed: (Background: $C.@DefaultSquareButtonPressedBackground, LabelStyle: $C.@DefaultButtonLabelStyle),
+    Disabled: (Background: $C.@DefaultSquareButtonDisabledBackground, LabelStyle: $C.@DefaultButtonDisabledLabelStyle),
+    Sounds: $C.@ButtonSounds,
 );
 
 $C.@PageOverlay {
@@ -303,7 +294,7 @@ $C.@PageOverlay {
                                                 Style: @CustomStyle;
                                             }
 
-                                            Group { Anchor: (Width: 8); }
+                                            Group { FlexWeight: 1; }
 
                                             $C.@TextButton #ConfirmPrimaryButton {
                                                 Text: "SET PRIMARY";
@@ -329,7 +320,7 @@ $C.@PageOverlay {
                         Group { Anchor: (Width: 40); }
 
                         $C.@DecoratedContainer {
-                            Anchor: (Width: 300, Height: 700);
+                            Anchor: (Width: 300);
 
                             #Title {
                                 Group {

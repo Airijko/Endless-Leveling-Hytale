@@ -50,6 +50,21 @@ Group {
                     Text: "Class Name";
                     FlexWeight: 1;
                 }
+            }
+
+            Group { FlexWeight: 1; }
+
+            Group {
+                LayoutMode: Left;
+
+                Label #ClassSelectionStatus {
+                    Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true);
+                    Text: "PRIMARY";
+                    Anchor: (Height: 18);
+                    Visible: false;
+                }
+                
+                Group { FlexWeight: 1; }
 
                 $C.@TextButton #ViewClassButton {
                     Text: "VIEW";
@@ -57,16 +72,6 @@ Group {
                     Padding: (Horizontal: 3, Vertical: 2);
                     Style: @CustomStyle;
                 }
-            }
-
-            Group { FlexWeight: 1; }
-
-
-            Label #ClassSelectionStatus {
-                Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true);
-                Text: "PRIMARY";
-                Anchor: (Height: 18);
-                Visible: false;
             }
         }
     }

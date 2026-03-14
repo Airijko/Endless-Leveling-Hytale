@@ -210,21 +210,11 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             ui.set(baseSelector + " #RaceSelectionStatus.Visible", hasStatus);
             ui.set(baseSelector + " #RaceSelectionStatus.Text", selectionStatus);
             ui.set(baseSelector + " #ViewRaceButton.Text", tr("ui.races.actions.view", "VIEW"));
-            ui.set(baseSelector + " #ChooseRaceButton.Text", tr("ui.races.actions.choose", "CHOOSE"));
 
             events.addEventBinding(Activating,
                     baseSelector + " #ViewRaceButton",
                     of("Action", "race:view:" + definition.getId()),
                     false);
-
-            if (!isCurrent) {
-                events.addEventBinding(Activating,
-                        baseSelector + " #ChooseRaceButton",
-                        of("Action", "race:choose:" + definition.getId()),
-                        false);
-            } else {
-                ui.set(baseSelector + " #ChooseRaceButton.Visible", false);
-            }
         }
     }
 
@@ -252,9 +242,6 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             ui.set(baseSelector + " #RaceSelectionStatus.Visible", hasStatus);
             ui.set(baseSelector + " #RaceSelectionStatus.Text", selectionStatus);
             ui.set(baseSelector + " #ViewRaceButton.Text", tr("ui.races.actions.view", "VIEW"));
-            ui.set(baseSelector + " #ChooseRaceButton.Text", tr("ui.races.actions.choose", "CHOOSE"));
-
-            ui.set(baseSelector + " #ChooseRaceButton.Visible", !isCurrent);
         }
     }
 
@@ -1424,11 +1411,6 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (data.action.equals("race:open_paths")) {
             openRacePathsPage(ref, store, raceManager == null ? null : raceManager.getPlayerRace(playerData));
             return;
-        }
-
-        if (data.action.startsWith("race:choose:")) {
-            String targetId = data.action.substring("race:choose:".length());
-            handleRaceChoose(targetId, playerData, ref, store, operatorBypass);
         }
     }
 
