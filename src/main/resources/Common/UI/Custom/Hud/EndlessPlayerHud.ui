@@ -58,6 +58,31 @@ Group #EndlessPlayerHud {
       Anchor: (Width: 28, Height: 28);
       Background: #0f1824(0.82);
     }
+
+    Group #ConquerorMaxOutline {
+      Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+      Visible: false;
+
+      Group {
+        Anchor: (Top: 0, Left: 0, Right: 0, Height: 1);
+        Background: #f0cf78;
+      }
+
+      Group {
+        Anchor: (Top: 0, Bottom: 0, Left: 0, Width: 1);
+        Background: #f0cf78;
+      }
+
+      Group {
+        Anchor: (Top: 0, Bottom: 0, Right: 0, Width: 1);
+        Background: #f0cf78;
+      }
+
+      Group {
+        Anchor: (Bottom: 0, Left: 0, Right: 0, Height: 1);
+        Background: #f0cf78;
+      }
+    }
     
     ItemIcon #ConquerorIcon {
       ItemId: "Weapon_Daggers_Fang_Doomed";

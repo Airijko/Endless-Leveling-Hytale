@@ -48,6 +48,7 @@ public final class AugmentHudOverlayController {
     private final AugmentRuntimeManager runtimeManager;
     private final Map<String, Long> durationCache = new ConcurrentHashMap<>();
     private final Map<String, Double> overhealShieldPercentCache = new ConcurrentHashMap<>();
+    private final Map<String, Integer> maxStacksCache = new ConcurrentHashMap<>();
 
     public AugmentHudOverlayController(AugmentManager augmentManager, AugmentRuntimeManager runtimeManager) {
         this.augmentManager = augmentManager;
@@ -68,11 +69,13 @@ public final class AugmentHudOverlayController {
         AugmentRuntimeManager.AugmentRuntimeState runtimeState = runtimeManager.getRuntimeState(uuid);
         EntityStatMap statMap = resolveStatMap(playerRef);
         int conquerorStacks = resolveConquerorStacks(runtimeState, now);
+        int conquerorMaxStacks = resolveConfiguredMaxStacks(ConquerorAugment.ID, 8);
 
         return new HudOverlayState(resolveDurationBar(runtimeState, now),
                 resolveShieldBar(runtimeState, statMap, now),
                 conquerorStacks > 0,
-                conquerorStacks);
+                conquerorStacks,
+                conquerorStacks > 0 && conquerorStacks >= conquerorMaxStacks);
     }
 
     private int resolveConquerorStacks(AugmentRuntimeManager.AugmentRuntimeState runtimeState, long now) {
@@ -403,6 +406,24 @@ public final class AugmentHudOverlayController {
         });
     }
 
+    private int resolveConfiguredMaxStacks(String augmentId, int fallback) {
+        if (augmentId == null || augmentId.isBlank()) {
+            return Math.max(1, fallback);
+        }
+
+        return maxStacksCache.computeIfAbsent(augmentId, id -> {
+            AugmentDefinition definition = augmentManager == null ? null : augmentManager.getAugment(id);
+            if (definition == null) {
+                return Math.max(1, fallback);
+            }
+
+            Map<String, Object> passives = definition.getPassives();
+            Map<String, Object> buffs = AugmentValueReader.getMap(passives, "buffs");
+            int configured = AugmentValueReader.getInt(buffs, "max_stacks", fallback);
+            return Math.max(1, configured);
+        });
+    }
+
     private String resolveDisplayName(String augmentId) {
         String definitionId = FleetFootworkAugment.BUFF_WINDOW_STATE_ID.equalsIgnoreCase(augmentId)
                 ? FleetFootworkAugment.ID
@@ -468,9 +489,10 @@ public final class AugmentHudOverlayController {
     public record HudOverlayState(BarState durationBar,
             BarState shieldBar,
             boolean conquerorActive,
-            int conquerorStacks) {
+            int conquerorStacks,
+            boolean conquerorAtMaxStacks) {
         public static HudOverlayState hidden() {
-            return new HudOverlayState(BarState.hidden(), BarState.hidden(), false, 0);
+            return new HudOverlayState(BarState.hidden(), BarState.hidden(), false, 0, false);
         }
     }
 
