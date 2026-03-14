@@ -19,7 +19,7 @@ ascension:
       - sorcery: 400
     max_skill_levels: {}
     required_augments: []
-    required_forms:
+    required_any_forms:
       - "ascended_titan"
       - "ascended_archon"
   next_paths: []

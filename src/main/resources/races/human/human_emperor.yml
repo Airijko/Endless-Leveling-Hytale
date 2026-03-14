@@ -20,7 +20,7 @@ ascension:
       - sorcery: 250
     max_skill_levels: {}
     required_augments: []
-    required_forms:
+    required_any_forms:
       - "human_voyager"
       - "human_conqueror"
   next_paths: []

@@ -21,7 +21,7 @@ ascension:
       - sorcery: 400
     max_skill_levels: {}
     required_augments: []
-    required_forms:
+    required_any_forms:
       - "vastaya_beastlord"
       - "vastaya_spiritbinder"
   next_paths: []

@@ -658,6 +658,16 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     .add(tr("ui.races.evolution.criteria.forms", "- Required forms: {0}", String.join(", ", forms)));
         }
 
+        if (!requirements.getRequiredAnyForms().isEmpty()) {
+            List<String> forms = new ArrayList<>();
+            for (String form : requirements.getRequiredAnyForms()) {
+                forms.add(resolveRaceDisplayName(form));
+            }
+            generalSections
+                    .add(tr("ui.races.evolution.criteria.any_forms", "- Any one form: {0}",
+                            String.join(" OR ", forms)));
+        }
+
         if (!requirements.getRequiredAugments().isEmpty()) {
             generalSections.add(tr("ui.races.evolution.criteria.augments",
                     "- Required augments: {0}", String.join(", ", requirements.getRequiredAugments())));

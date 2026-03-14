@@ -19,7 +19,7 @@ ascension:
       ferocity: 400
     max_skill_levels: {}
     required_augments: []
-    required_forms:
+    required_any_forms:
       - "yordle_enchanter"
       - "yordle_menace"
   next_paths: []

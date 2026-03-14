@@ -19,7 +19,7 @@ ascension:
       ferocity: 250
     max_skill_levels: {}
     required_augments: []
-    required_forms:
+    required_any_forms:
       - "watcher_oracle"
       - "watcher_eldritch"
   next_paths: []

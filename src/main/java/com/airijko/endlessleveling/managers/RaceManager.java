@@ -542,6 +542,29 @@ public class RaceManager {
             }
         }
 
+        if (!requirements.getRequiredAnyForms().isEmpty()) {
+            Set<String> completed = new LinkedHashSet<>(data.getCompletedRaceFormsSnapshot());
+            if (sourceRace != null) {
+                completed.add(normalizeKey(sourceRace.getAscension().getId()));
+            }
+
+            boolean anyFormMet = false;
+            for (String form : requirements.getRequiredAnyForms()) {
+                if (completed.contains(normalizeKey(form))) {
+                    anyFormMet = true;
+                    break;
+                }
+            }
+            if (!anyFormMet) {
+                List<String> formNames = new ArrayList<>();
+                for (String form : requirements.getRequiredAnyForms()) {
+                    RaceDefinition def = getRace(form);
+                    formNames.add(def != null ? def.getDisplayName() : form);
+                }
+                blockers.add("Requires at least one completed form: " + String.join(" OR ", formNames));
+            }
+        }
+
         if (blockers.isEmpty()) {
             return RaceAscensionEligibility.allowed();
         }
@@ -924,6 +947,7 @@ public class RaceManager {
                 requirementsNode.get("min_any_skill_levels"));
         List<String> requiredAugments = parseStringList(requirementsNode.get("required_augments"));
         List<String> requiredForms = parseStringList(requirementsNode.get("required_forms"));
+        List<String> requiredAnyForms = parseStringList(requirementsNode.get("required_any_forms"));
 
         return new RaceAscensionRequirements(
                 requiredPrestige,
@@ -931,7 +955,8 @@ public class RaceManager {
                 maxSkillLevels,
                 minAnySkillLevels,
                 requiredAugments,
-                requiredForms);
+                requiredForms,
+                requiredAnyForms);
     }
 
     private Map<SkillAttributeType, Integer> parseSkillLevelRequirements(Object node) {

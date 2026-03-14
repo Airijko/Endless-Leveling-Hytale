@@ -20,7 +20,7 @@ ascension:
       - sorcery: 300
     max_skill_levels: {}
     required_augments: []
-    required_forms:
+    required_any_forms:
       - "dragonborn_sentinel"
       - "dragonborn_tyrant"
   next_paths: []

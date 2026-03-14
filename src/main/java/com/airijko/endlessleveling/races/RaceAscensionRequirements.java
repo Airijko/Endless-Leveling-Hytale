@@ -16,25 +16,29 @@ public final class RaceAscensionRequirements {
     private final List<Map<SkillAttributeType, Integer>> minAnySkillLevels;
     private final List<String> requiredAugments;
     private final List<String> requiredForms;
+    private final List<String> requiredAnyForms;
 
     public RaceAscensionRequirements(int requiredPrestige,
             Map<SkillAttributeType, Integer> minSkillLevels,
             Map<SkillAttributeType, Integer> maxSkillLevels,
             List<Map<SkillAttributeType, Integer>> minAnySkillLevels,
             List<String> requiredAugments,
-            List<String> requiredForms) {
+            List<String> requiredForms,
+            List<String> requiredAnyForms) {
         this.requiredPrestige = Math.max(0, requiredPrestige);
         this.minSkillLevels = Collections.unmodifiableMap(copyLevels(minSkillLevels));
         this.maxSkillLevels = Collections.unmodifiableMap(copyLevels(maxSkillLevels));
         this.minAnySkillLevels = Collections.unmodifiableList(copyMinAny(minAnySkillLevels));
         this.requiredAugments = Collections.unmodifiableList(copyStrings(requiredAugments));
         this.requiredForms = Collections.unmodifiableList(copyStrings(requiredForms));
+        this.requiredAnyForms = Collections.unmodifiableList(copyStrings(requiredAnyForms));
     }
 
     public static RaceAscensionRequirements none() {
         return new RaceAscensionRequirements(0,
                 Collections.emptyMap(),
                 Collections.emptyMap(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList());
@@ -62,6 +66,10 @@ public final class RaceAscensionRequirements {
 
     public List<String> getRequiredForms() {
         return requiredForms;
+    }
+
+    public List<String> getRequiredAnyForms() {
+        return requiredAnyForms;
     }
 
     private Map<SkillAttributeType, Integer> copyLevels(Map<SkillAttributeType, Integer> source) {

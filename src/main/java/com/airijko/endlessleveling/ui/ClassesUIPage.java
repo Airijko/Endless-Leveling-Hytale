@@ -1606,6 +1606,15 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     "- Required forms: {0}", String.join(", ", forms)));
         }
 
+        if (!requirements.getRequiredAnyForms().isEmpty()) {
+            List<String> forms = new ArrayList<>();
+            for (String form : requirements.getRequiredAnyForms()) {
+                forms.add(resolveClassDisplayName(form));
+            }
+            generalSections.add(tr("ui.classes.evolution.criteria.any_forms",
+                    "- Any one form: {0}", String.join(" OR ", forms)));
+        }
+
         if (!requirements.getRequiredAugments().isEmpty()) {
             generalSections.add(tr("ui.classes.evolution.criteria.augments",
                     "- Required augments: {0}", String.join(", ", requirements.getRequiredAugments())));
