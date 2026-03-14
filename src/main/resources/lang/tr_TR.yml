@@ -1,803 +1,187 @@
 meta:
-  locale_name: "T\xFCrk\xE7e (TR)"
+  locale_name: Türkçe (TR)
+
 notify:
   skills:
     unspent:
-      primary: You have {0} unspent skill points!
+      primary: Harcanmamış {0} yetenek puanın var!
       secondary:
-        open: 'Open '
-        close: ' to invest them'
+        open: "Aç "
+        close: " ve onları harca"
     chat:
-      have: 'You still have '
-      use: ' skill points. Use '
-      end: ' to spend them.'
+      have: "Hâlâ "
+      use: " yetenek puanın var. Harcamak için "
+      end: " kullan."
   augments:
     available:
-      header: 'You have augments available to choose from:'
-      footer: Use /lvl augments to choose.
+      header: "Seçebileceğin augmentler var:"
+      footer: Seçmek için /lvl augments kullan.
     cooldown:
-      ready: '{0} is ready again!'
-    generic: '{0}'
+      ready: "{0} tekrar hazır!"
+    generic: "{0}"
     sync:
-      summary: '{0} player(s) have mismatched augment slot counts:'
-      entry: '- {0} [{1}: has {2}, should have {3}] -> /lvl augments reset {0}'
-      fixall: 'To fix all at once: /lvl augments resetallplayers'
+      summary: "{0} oyuncunun augment slot sayıları uyuşmuyor:"
+      entry: "- {0} [{1}: sahip olduğu {2}, olması gereken {3}] -> /lvl augments reset {0}"
+      fixall: "Hepsini aynı anda düzeltmek için: /lvl augments resetallplayers"
   passives:
     swiftness:
-      faded: Swiftness has faded.
+      faded: Çeviklik etkisi sona erdi.
     adrenaline:
-      triggered: Adrenaline triggered! Restoring {0}% stamina over {1}s
-    generic: '{0}'
+      triggered: Adrenalin tetiklendi! {1}s boyunca {0}% dayanıklılık yenileniyor
+    generic: "{0}"
   xp_suppressed:
-    mob_label: this mob
-    mob_label_level: this mob (level {0})
-    player_too_high: 'No XP awarded: your level ({0}) is too high for {1}.'
-    player_too_low: 'No XP awarded: {0} is too far above your level ({1}).'
+    mob_label: bu yaratık
+    mob_label_level: bu yaratık (seviye {0})
+    player_too_high: "XP verilmedi: seviyen ({0}) {1} için çok yüksek."
+    player_too_low: "XP verilmedi: {0}, seviyene ({1}) göre çok yüksek."
+
 augments:
   stacks:
-    max: '{0} at max stacks ({1}).'
-    update: '{0}: {1}/{2} stacks.'
-    expired: '{0} stacks expired.'
-    remaining: '{0}: {1}/{2} stacks remaining.'
+    max: "{0} maksimum yığına ulaştı ({1})."
+    update: "{0}: {1}/{2} yığın."
+    expired: "{0} yığınları sona erdi."
+    remaining: "{0}: {1}/{2} yığın kaldı."
   executioner:
-    triggered: '{0} triggered! +{1}% damage.'
+    triggered: "{0} tetiklendi! +{1}% hasar."
   fortress:
-    activated: '{0} activated! Shielded for {1}s, buffs for {2}s.'
-    buff_ended: '{0} buff ended.'
-    shield_ended: '{0} stasis shield ended.'
+    activated: "{0} etkinleşti! {1}s kalkan, {2}s güçlendirme."
+    buff_ended: "{0} güçlendirmesi sona erdi."
+    shield_ended: "{0} durağan kalkanı sona erdi."
   undying_rage:
-    active: '{0} is active for {1}s.'
-    ended: '{0} duration ended.'
+    active: "{0} {1}s boyunca aktif."
+    ended: "{0} süresi sona erdi."
   rebirth:
-    activated: '{0} activated! Restored {1}% of max health.'
+    activated: "{0} etkinleşti! Maksimum canın {1}% geri kazanıldı."
   first_strike:
-    triggered: '{0} triggered! +{1}% damage.'
-    lost: '{0} lost: you were hit before striking. Cooldown started.'
+    triggered: "{0} tetiklendi! +{1}% hasar."
+    lost: "{0} kaybedildi: vuramadan önce darbe aldın. Bekleme süresi başladı."
+
 hud:
   common:
     unavailable: --
   race:
-    none: No Race
-    prefix: 'Race: '
+    none: Irk Yok
+    prefix: "Irk: "
   class:
-    none: None
+    none: Yok
   mob:
     level:
-      single: Lv. {0}
-      single_compact: Lv {0}
-      range: Lv. {0}-{1}
-    prefix: 'Local mobs: '
+      single: Sv. {0}
+      single_compact: Sv {0}
+      range: Sv. {0}-{1}
+    prefix: "Yakındaki yaratıklar: "
   level:
-    no_data: 'LVL --   XP: 0 / --'
-    without_leveling: 'LVL {0}   XP: {1}'
-    max: LVL {0}   MAX LEVEL
-    progress: 'LVL {0}   XP: {1} / {2}'
+    no_data: "SV --   XP: 0 / --"
+    without_leveling: "SV {0}   XP: {1}"
+    max: SV {0}   MAKS SEVİYE
+    progress: "SV {0}   XP: {1} / {2}"
+
 ui:
   common:
     toggle:
-      true: 'ON'
-      false: 'OFF'
-      disabled: DISABLED
-      'on': 'ON'
-      'off': 'OFF'
+      true: "AÇIK"
+      false: "KAPALI"
+      disabled: DEVRE DIŞI
+      "on": "AÇIK"
+      "off": "KAPALI"
     state:
-      enabled: enabled
-      disabled: disabled
+      enabled: etkin
+      disabled: devre dışı
+
   settings:
     page:
-      title: Settings
-      subtitle: Manage personal HUD, notifications, and visual preferences.
-      toggle_button: TOGGLE
+      title: Ayarlar
+      subtitle: HUD, bildirimler ve görsel tercihlerini yönet.
+      toggle_button: DEĞİŞTİR
     description:
-      player_hud: Show or hide the Endless Leveling HUD overlay.
-      critical_notif: Toggle floating alerts for critical strike events.
-      xp_notif: Show notifications whenever you gain experience.
-      passive_levelup_notif: Display updates when passives rank up during play.
-      luck_double_notif: Toggle bonus drop proc notifications from luck effects.
-      health_regen_notif: Show notifications when health regeneration triggers.
-      race_model: Enable race-specific character visuals when available.
+      player_hud: Endless Leveling HUD katmanını göster veya gizle.
+      critical_notif: Kritik vuruşlar için bildirimleri aç/kapat.
+      xp_notif: Deneyim kazandığında bildirim göster.
+      passive_levelup_notif: Oyun sırasında pasifler seviye atladığında güncelleme göster.
+      luck_double_notif: Şans etkilerinden gelen bonus drop bildirimlerini aç/kapat.
+      health_regen_notif: Can yenilenmesi tetiklendiğinde bildirim göster.
+      race_model: Mevcutsa ırka özgü karakter görsellerini etkinleştir.
     player_hud:
-      label: Player HUD
-      toggled: Player HUD {0}
+      label: Oyuncu HUD
+      toggled: Oyuncu HUD {0}
     critical_notif:
-      label: Critical Hit Notifications
-      toggled: Critical hit notifications {0}
+      label: Kritik Vuruş Bildirimleri
+      toggled: Kritik vuruş bildirimleri {0}
     xp_notif:
-      label: XP Gain Notifications
-      toggled: XP gain notifications {0}
+      label: XP Kazanım Bildirimleri
+      toggled: XP kazanım bildirimleri {0}
     passive_levelup_notif:
-      label: Passive Level-Up Notifications
-      toggled: Passive level-up notifications {0}
+      label: Pasif Seviye Atlama Bildirimleri
+      toggled: Pasif seviye atlama bildirimleri {0}
     luck_double_notif:
-      label: Luck Double-Drop Notifications
-      toggled: Luck double-drop notifications {0}
+      label: Şans Çift Drop Bildirimleri
+      toggled: Şans çift drop bildirimleri {0}
     health_regen_notif:
-      label: Health Regen Notifications
-      toggled: Health regen notifications {0}
+      label: Can Yenilenme Bildirimleri
+      toggled: Can yenilenme bildirimleri {0}
     race_model:
-      label: Race Model Visuals
-      globally_disabled: Race model visuals are disabled by the server configuration.
-      enabled: Race model visuals enabled
-      disabled: Race model visuals disabled
+      label: Irk Model Görselleri
+      globally_disabled: Irk model görselleri sunucu yapılandırması tarafından devre dışı bırakıldı.
+      enabled: Irk model görselleri etkin
+      disabled: Irk model görselleri devre dışı
+
   leaderboards:
     page:
-      title: Leaderboards
-      subtitle: Top players ranked with live sort/filter controls. ({0} players)
+      title: Lider Tabloları
+      subtitle: Canlı sıralama ve filtre kontrolleriyle en iyi oyuncular. ({0} oyuncu)
     controls:
-      sort: Sort
-      filter: Filter
-      reset: RESET
-      sort_by_value: 'BY: {0}'
-      sort_order_value: 'ORDER: {0}'
-      race_value: 'RACE: {0}'
-      class_value: 'CLASS: {0}'
+      sort: Sırala
+      filter: Filtre
+      reset: SIFIRLA
+      sort_by_value: "GÖRE: {0}"
+      sort_order_value: "SIRA: {0}"
+      race_value: "IRK: {0}"
+      class_value: "SINIF: {0}"
     sort:
-      prestige: PRESTIGE
-      level: LEVEL
+      prestige: PRESTİJ
+      level: SEVİYE
       xp: XP
-      alphabetical: ALPHABETICAL
-      race: RACE
-      class: CLASS
+      alphabetical: ALFABETİK
+      race: IRK
+      class: SINIF
     order:
-      asc: ASC
-      desc: DESC
+      asc: ARTAN
+      desc: AZALAN
     filter:
-      all: ALL
+      all: TÜMÜ
     column:
-      rank: Rank
-      player: Player
-      race: Race
-      class: Class
-      prestige: Prestige
-      level: Level
+      rank: Sıra
+      player: Oyuncu
+      race: Irk
+      class: Sınıf
+      prestige: Prestij
+      level: Seviye
       xp: XP
-    summary: "Showing {0}/{1} players \u2022 Sort: {2} {3} \u2022 Filters: Race={4}, Class={5}"
-  augments:
-    tier:
-      default: AUGMENTS
-      common: COMMON
-    actions:
-      choose: Choose
-    selected: 'Selected augment: {0} ({1})'
-    no_description: No description provided.
-    no_augment:
-      title: NO AUGMENT
-      body: No augments are currently available.
-    no_augments_yet:
-      title: NO AUGMENTS YET
-      body: No augments available yet. Next unlock at level {0}.
-    no_augments:
-      title: NO AUGMENTS
-      body: No augment unlock milestones are configured.
-    all_claimed:
-      title: ALL CLAIMED
-      next_unlock: You have claimed all currently unlocked augments. Next unlock at level {0}.
-      done: You have already claimed all configured augment unlocks.
-    remaining:
-      header: 'You still have more augments to choose from:'
-      footer: Choose again now.
-    error:
-      title: AUGMENT ERROR
-      data_unavailable: Augment data unavailable.
-      tier_unresolved: Unable to resolve augment tier.
-      playerdata_unavailable: Unable to load your player data. Try reopening this page.
-      system_unavailable: Augment system is unavailable right now. Please contact an admin.
-      definitions_missing: No augment definitions are loaded. Check /mods/EndlessLeveling/augments.
-      offers_missing: Unlocked augments are missing from your offers. Ask an admin to run /el augment refresh <player>.
-      slot_empty: No augment in that slot.
-    effect:
-      cooldown: 'Cooldown: {0}'
-      duration_per_stack: 'Duration per stack: {0}'
-      duration: 'Duration: {0}'
-      max_stacks: 'Max stacks: {0}'
-      note:
-        full_at_health: ' (full at <= {0}% health)'
-        full_at_ratio: ' (full at {0}x ratio)'
-        range: ' (range {0}-{1})'
-        full_at_distance: ' (full at {0} distance)'
-        at_max_stacks: ' (at max stacks)'
-        max_value_at_health: ' (max value at {0}% health)'
-        missing_health: ' (scales with missing health)'
-        condition:
-          above: ' (above {0}% {1})'
-          below: ' (below {0}% {1})'
-        missing_health_line: Scales with missing health
-      label:
-        strength: Strength
-        sorcery: Sorcery
-        haste: Haste
-        haste_bonus: Haste
-        crit_damage: Critical Damage
-        crit_damage_bonus: Critical Damage
-        critical_damage: Critical Damage
-        crit_chance: Critical Chance
-        critical_chance: Critical Chance
-        life_steal: Life Steal
-        life_steal_scaling: Life Steal
-        heal_on_crit: Life Steal (Crit)
-        heal_on_kill: Heal on Kill
-        heal_over_time: Deferred Damage
-        heal_to_damage: Heal to Damage
-        bonus_damage_on_hit: Bonus Damage
-        bonus_damage: Bonus Damage
-        max_bonus_damage: Bonus Damage
-        max_bonus_ferocity: Ferocity
-        strength_from_max_health: Strength
-        sorcery_bonus_high: Sorcery
-        sorcery_penalty_low: Sorcery
-        crit_defense: Damage Reduction
-        taunt_radius: Taunt Radius
-        bonus_damage_by_distance: Bonus Damage
-        bonus_damage_vs_hp_ratio: Bonus Damage
-        execution_heal: Execute Heal
-        self_damage: Self Damage
-        percent_of_current_hp: Self Damage
-        movement_speed_bonus: Move Speed
-        movement_speed: Move Speed
-        resistance_bonus: Resistance
-        resistance: Resistance
-        precision: Critical Chance
-        defense: Defense
-        wither: Wither
-        slow_percent: Slow
-        mana: Mana
-        mana_from_sorcery: Mana
-        sorcery_from_mana: Sorcery
-        health_threshold: Health Threshold
-        trigger_threshold: Trigger Threshold
-        full_value_at_health_percent: Full Value Threshold
-        max_distance: Max distance (full bonus)
-        common: Common Stat
-      rule:
-        under_rage_prefix: 'Under Rage:'
-        mana_from_sorcery: 'Mana: +{0}% of Sorcery'
-        sorcery_from_mana: 'Sorcery: +{0}% of Mana'
-        wither_per_second: 'Wither: +{0}% max health damage per second'
-        immunity_window: 'Immunity Window: {0}'
-        min_health_hp: 'Under Rage: You can''t drop below {0} health'
-      section:
-        above_health:
-          generic: 'Above Health Threshold:'
-        below_health:
-          generic: 'Below Health Threshold:'
-      resource:
-        generic: Resource
-      duration_conqueror: 'Duration: {0} (refreshes cooldown when stacking)'
-    common_stat:
-      card_name: '{0}'
-    page:
-      brand: ENDLESS LEVELING
-      choose_button: CHOOSE AUGMENTS
-      left:
-        description: Augments are powerful passive enhancements that permanently strengthen your character. Earn them by reaching level milestones and through prestige.
-        collection_title: YOUR COLLECTION
-        rerolls_title: REROLLS USED
-        hover_hint: Hover over an augment to preview it.
-      title: AUGMENTS
-      search_placeholder: Search augments...
-      section:
-        unlocked: UNLOCKED
-        mythic: MYTHIC
-        elite: ELITE
-        common: COMMON
-      info_title: AUGMENT INFO
-      results: 'Results: {0}'
-      choose_unavailable: No augments available to choose.
-      info_select_prompt: Select an augment
-      choose_available: Augments available to choose.
-      stats:
-        total: 'Total: {0} / {1}'
-        mythic: 'Mythic: {0} / {1}'
-        elite: 'Elite: {0} / {1}'
-        common: 'Common: {0}'
-      rerolls:
-        mythic: 'Mythic: {0}'
-        elite: 'Elite: {0}'
-        common: 'Common: {0}'
-    unlocked:
-      count_suffix: '{0} x{1}'
-  races:
-    count: '{0} {1}'
-    count_none: 0 available
-    count_word:
-      singular: race
-      plural: races
-    current:
-      none: None selected
-    status:
-      current: CURRENT
-      viewing: VIEWING
-    page:
-      title: Race Archive
-      available: Available Races
-      current_title: Current Race
-      current_badge: Active
-      current_hint: Your active race sets identity and innate bonuses.
-      lore_title: Lore Preview
-      stats_title: Race Stats
-      passives_title: Passives
-      evolution_title: Evolution Paths
-    offline:
-      title: Races Offline
-      subtitle: Races are currently disabled in config.yml.
-      hint: Enable races to manage identities.
-    playerdata:
-      title: Player data unavailable
-      subtitle: Unable to load your race information right now.
-      hint: Try reopening this page in a few moments.
-    select:
-      title: Select a Race
-      subtitle: Choose a race on the left to preview its identity.
-    subtitle:
-      current: Currently active
-      preview: Preview only
-    lore:
-      unavailable: Lore unavailable.
-      missing: No lore provided for this race.
-    actions:
-      view: VIEW
-      choose: CHOOSE
-      swap: SWAP
-      view_paths: VIEW PATHS
-    passives:
-      none_selected: No race selected.
-      none_defined: This race does not define passive bonuses.
-    cooldown:
-      disabled: Disabled
-      card_title: Race Swap Cooldown
-      card_hint: Swapping again becomes available once the timer hits zero.
-      default_warning: You will be locked for the remaining cooldown after swapping.
-      bypassed: Bypassed
-      bypassed_hint: Operator bypass active.
-      bypassed_detail: Operator bypass active. Swapping is immediate.
-      in_cooldown: Swap in cooldown
-      ready: Ready
-      swap_triggers: Swapping will trigger a {0} cooldown.
-      unrestricted: Race swapping is unrestricted right now.
-      try_again_prefix: 'You can swap again in '
-      unlocks_in: Swap unlocks in {0}.
-      exhausted: No changes left
-    chat:
-      prefix: '[Races] '
-      changed_prefix: 'You are now a '
-    error:
-      playerdata: Unable to load your race info right now.
-      select_first: Select a race to swap into.
-      disabled: Races are disabled.
-      unknown: 'Unknown race: {0}'
-      already_selected: You already belong to that race.
-      no_changes_remaining: No race changes remaining.
-      cannot_ascend: 'Cannot switch race yet:'
-      cannot_ascend_simple: Cannot switch race yet.
-    attribute_tagline:
-      life_force: Base health
-      strength: Damage scaling
-      sorcery: Magic damage
-      defense: Damage reduction
-      haste: Movement speed
-      precision: Crit chance
-      ferocity: Crit damage
-      stamina: Base stamina
-      flow: Base flow (mana)
-      discipline: XP gain
-    passive:
-      default_name: Passive
-      label:
-        with_attribute: '{0} ({1})'
-      type:
-        xp_bonus: XP Bonus
-        health_regen: Health Regen
-        mana_regen: Mana Regen
-        mana_regen_flat: Mana Regen Flat
-        regeneration: Regeneration
-        healing_bonus: Healing Bonus
-        life_steal: Life Steal
-        special_charge_bonus: Special Charge Bonus
-        stamina_gain_bonus: Stamina Gain Bonus
-        luck: Luck
-        second_wind: Second Wind
-        first_strike: First Strike
-        innate_attribute_gain: Innate Attribute Gain
-        adrenaline: Adrenaline
-        berzerker: Berzerker
-        retaliation: Retaliation
-        executioner: Executioner
-        swiftness: Swiftness
-        wither: Wither
-        crit_defense: Critical Defense
-      scope:
-        hp: HP
-        stamina: stamina
-        target_hp: target HP
-      desc:
-        xp_bonus: '{0} XP gain'
-        health_regen: '{0} HP/5s'
-        mana_regen: '{0} mana/5s'
-        mana_regen_flat: '{0} mana/s'
-        regeneration: '{0} HP/s'
-        healing_bonus: '{0} healing'
-        life_steal: '{0} life steal'
-        charge_bonus: '{0} charge rate'
-        stamina_gain: '{0} stamina gain'
-        luck: '{0} luck'
-        second_wind: '{0} heal'
-        first_strike: '{0} opener'
-        adrenaline: '{0} stamina'
-        berzerker: '{0} damage'
-        retaliation: '{0} reflect'
-        executioner: '{0} finisher'
-        swiftness: '{0} speed'
-        wither: '{0} max HP/sec'
-        crit_defense: '{0} dmg reduction'
-        absorb: '{0} dmg reduction'
-      detail:
-        threshold: <{0}% {1}
-        slow: '{0} slow'
-        scales_with: scales with {0}
-        per_level: '{0} per level'
-        total_at_level: '{0} (Total {1} @ Lv {2})'
-        duration: '{0}s duration'
-        cooldown: '{0}s cd'
-        window: '{0}s window'
-        stacks: '{0} stacks'
-    evolution:
-      summary:
-        placeholder: Select a race to inspect evolution branches.
-        final: 'Stage: {0} - Final form reached.'
-        expanded: 'Stage: {0} - Path: {1} - Paths: {2} ({3})'
-      none_selected: No race selected.
-      stage:
-        base: Base
-      path:
-        none: None
-        adventure: Adventure
-        damage: Damage
-        sorcery: Sorcery
-        tank: Tank
-      none: No further evolutions
-      none_value: FINAL
-      none_meta: This race is at the end of its ascension branch.
-      none_criteria: No additional upgrade criteria.
-      progress:
-        active: Currently active form.
-        unlocked: Previously completed and unlocked.
-        unknown: Unable to evaluate current progress.
-        ready: All criteria met. Can evolve immediately.
-        ready_after: All criteria met. Reach this branch by progressing through earlier path nodes.
-        missing_generic: Missing requirements.
-        missing_header: 'Missing requirements:'
-        missing_any_skill_specific: 'Requires at least one skill option set to be met: {0}.'
-      status:
-        active: ACTIVE
-        unlocked: UNLOCKED
-        available: AVAILABLE
-        eligible: ELIGIBLE
-        locked: LOCKED
-      meta: 'Type: {0} | Stage: {1} | Tier: {2} | From: {3}'
-      criteria:
-        prestige: '- Prestige: >= {0}'
-        min_skills: '- Minimum skill levels: {0}'
-        max_skills: '- Skill caps: {0}'
-        any_skills: '- Any one set: {0}'
-        forms: '- Required forms: {0}'
-        augments: '- Required augments: {0}'
-        none: 'Requirements: none'
-        general:
-          none: 'Requirements: skill targets only'
-          prefix: 'Requirements:
+    summary: "Gösterilen {0}/{1} oyuncu • Sıralama: {2} {3} • Filtreler: Irk={4}, Sınıf={5}"
 
-            {0}'
-        skills:
-          prefix: 'Trainable Skill Targets:
-
-            {0}'
-  classes:
-    count: '{0} {1}'
-    count_none: 0 available
-    count_word:
-      singular: class
-      plural: classes
-    current:
-      primary_none: Unassigned
-    status:
-      primary: PRIMARY
-      secondary: SECONDARY
-      viewing: VIEWING
-    slot:
-      primary: primary
-      secondary: secondary
-    page:
-      title: Class Codex
-      cooldown_title: Class Swap Cooldown
-      available: Available Classes
-      assignments: Class Assignments
-      secondary_share_hint: Secondary classes share 50% of bonuses.
-      sorcery_label: Sorcery Bonus
-      lore_title: Lore Preview
-      weapons_title: Weapon Affinities
-      innate_title: Innate Attribute Gains
-      passives_title: Passives
-      evolution_title: Class Paths
-    none_selected: No class selected.
-    offline:
-      title: Classes Offline
-      subtitle: Classes are currently disabled in config.yml.
-      lore: Enable classes to browse archetypes.
-      hint: Enable classes to manage archetypes.
-      weapons: Weapon bonuses unavailable.
-      passives: Passive bonuses unavailable.
-    playerdata:
-      title: Player data unavailable
-      subtitle: Unable to load your class information right now.
-      lore: Try reopening this page in a few moments.
-      hint: Try reopening this page in a few moments.
-    select:
-      title: Select a Class
-      subtitle: Choose a class on the left to preview its role and passives.
-    role:
-      unspecified: 'Role: Unspecified'
-      value: 'Role: {0}'
-      empty: 'Role: --'
-    lore:
-      unavailable: Lore unavailable.
-      missing: No lore provided for this class.
-    subtitle:
-      primary: Currently your primary class
-      secondary: Currently your secondary class (50% effect)
-      preview: Preview only
-    weapons:
-      none_defined: This class does not define weapon bonuses.
-    weapon:
-      sword: Sword
-      axe: Axe
-      bow: Bow
-      staff: Staff
-      dagger: Dagger
-      gauntlet: Gauntlet
-      mace: Mace
-      spear: Spear
-      crossbow: Crossbow
-      wand: Wand
-      unarmed: Unarmed
-      generic: Generic
-    cooldown:
-      bypassed: Bypassed
-      bypassed_hint: Operator bypass active; cooldowns ignored.
-      bypassed_detail: Operator bypass active; swapping is immediate.
-      each_swap: Each swap triggers a {0} cooldown per slot.
-      unrestricted: Class swapping is unrestricted right now.
-      ready: Ready
-      exhausted: No changes left
-    actions:
-      view: VIEW
-      set_primary: SET PRIMARY
-      set_secondary: SET SECONDARY
-      view_paths: VIEW PATHS
-    detail:
-      select_prompt: Select a class to preview bonuses.
-      primary_slot: Primary
-      secondary_slot: Secondary
-      swap_triggers: Changing classes triggers a {0} cooldown.
-      primary_bonus: Primary classes grant 100% of bonuses.
-      secondary_bonus: Secondary classes grant 50% of weapon + passive effects.
-      secondary_disabled: Secondary classes are disabled in config.
-    passives:
-      none_defined: This class does not define passive bonuses.
-      none_innate: This class does not grant innate attribute bonuses.
-    secondary_cleared: Secondary class cleared.
-    info:
-      primary_set: Primary class set to {0}.
-      secondary_set: Secondary class set to {0}.
-    value:
-      weapon_damage: +{0}% dmg
-      weapon_damage_negative: -{0}% dmg
-    passive:
-      detail:
-        threshold: <{0}% {1}
-    error:
-      disabled: Classes are currently disabled.
-      playerdata: Unable to load your class info right now.
-      select_primary: Select a class to set as primary.
-      primary_already: That is already your primary class.
-      secondary_disabled: Secondary classes are currently disabled.
-      select_secondary: Select a class to set as secondary.
-      secondary_matches_primary: Your secondary class cannot match your primary.
-      secondary_already: That is already your secondary class.
-      secondary_set_failed: Unable to set that as your secondary class.
-      secondary_none: You do not have a secondary class assigned.
-      unknown: 'Unknown class: {0}'
-      cooldown_remaining: You can change your {0} class again in {1}.
-      no_changes_remaining: You have no class changes remaining.
-    evolution:
-      summary:
-        placeholder: Select a class to inspect ascension branches.
-        final: 'Stage: {0} - Final form reached.'
-        expanded: 'Stage: {0} - Path: {1} - Paths: {2} ({3})'
-      none_selected: No class selected.
-      stage:
-        base: Base
-      path:
-        none: None
-        damage: Damage
-        sorcery: Sorcery
-        tank: Tank
-        support: Support
-      none: No further class paths
-      none_value: FINAL
-      none_meta: This class is at the end of its ascension branch.
-      none_criteria: No additional upgrade criteria.
-      progress:
-        active: Currently active class form.
-        unlocked: Previously completed and unlocked.
-        unknown: Unable to evaluate current progress.
-        ready: All criteria met. Can switch immediately.
-        ready_after: All criteria met. Reach this branch by progressing through earlier path nodes.
-        missing_generic: Missing requirements.
-        missing_header: 'Missing requirements:'
-        missing_any_skill_specific: 'Requires at least one skill option set to be met: {0}.'
-      status:
-        active: ACTIVE
-        unlocked: UNLOCKED
-        available: AVAILABLE
-        eligible: ELIGIBLE
-        locked: LOCKED
-      meta: 'Type: {0} | Stage: {1} | Tier: {2} | From: {3}'
-      criteria:
-        prestige: '- Prestige: >= {0}'
-        min_skills: '- Minimum skill levels: {0}'
-        max_skills: '- Skill caps: {0}'
-        any_skills: '- Any one set: {0}'
-        forms: '- Required forms: {0}'
-        augments: '- Required augments: {0}'
-        none: 'Requirements: none'
-        general:
-          none: 'Requirements: skill targets only'
-          prefix: 'Requirements:
-
-            {0}'
-        skills:
-          prefix: 'Trainable Skill Targets:
-
-            {0}'
-  skills:
-    unknown: Unknown
-    points: 'SKILL POINTS: {0}'
-    page:
-      title: Skill Attributes
-      subtitle: Allocate points to shape your combat identity.
-      footer_hint: Undo to revert pending tweaks, apply to lock them in.
-      undo: UNDO
-      apply: APPLY
-    level_prefix: Lv.
-    label:
-      life_force: Life Force
-      strength: Strength
-      sorcery: Sorcery
-      defense: Defense
-      haste: Haste
-      precision: Precision
-      ferocity: Ferocity
-      stamina: Stamina
-      flow: Flow
-      discipline: Discipline
-    description:
-      life_force: Boosts your total health so you can tank more hits.
-      strength: Boosts physical damage for melee and ranged weapons.
-      sorcery: Boosts magic damage for staff weapons.
-      defense: Cuts down incoming damage through resistances.
-      haste: Increases movement speed
-      precision: Raises critical hit chance for every attack.
-      ferocity: Adds bonus damage to each critical strike.
-      stamina: Expands stamina for dodges, blocks, and bursts.
-      flow: Increases flow (mana) so spells and abilities stay online longer.
-      discipline: Increases XP gain rate from all sources.
-    value:
-      resource: '{0} {1}'
-      strength: +{0}% Damage
-      sorcery: +{0}% Magic Damage
-      defense: '{0}% Reduction'
-      haste: +{0}% Speed
-      precision: '{0}% Crit Chance'
-      ferocity: +{0}% Crit Damage
-      discipline: +{0}% XP Gain
-    message:
-      granted: You were granted skill points!
-      reset: Pending changes reset.
-      applied: Skills applied!
-      added: Added {0} point(s) to {1}
-      removed: Removed {0} point(s) from {1}
-      precision_capped: Precision crit chance capped at 100%; excess points not applied.
-    error:
-      precision_at_cap: Precision crit chance is already 100%; remove other bonuses first.
-      not_enough_points: Not enough skill points
-      precision_no_refund: Precision crit chance is already 100% or lower; no excess points to refund.
-      below_original: Cannot go below original level
-      invalid_attribute: 'Invalid attribute: {0}'
-      action_failed: Error handling skill action
-    resource:
-      health: Health
-      stamina: Stamina
-      flow: Flow
   time:
-    hours: '{0}h'
-    minutes: '{0}m'
-    seconds: '{0}s'
-  nav:
-    profile: PROFILE
-    skills: SKILLS
-    races: RACES
-    classes: CLASSES
-    leaderboards: LEADERBOARDS
-    settings: SETTINGS
-    augments: AUGMENTS
-  profile:
-    playerdata:
-      unavailable: Player data unavailable.
-    detail:
-      title: Selected Profile
-      subtitle:
-        default: Select a profile to view stats
-    level:
-      short: Lv {0}
-    list:
-      title: Profiles {0}/{1}
-      slot: Slot {0}
-      level: Level {0}
-      xp: '{0} XP'
-      select: SELECT
-      status:
-        active: ACTIVE
-      delete:
-        confirm: Delete {0}?
-    passives:
-      none: No passive bonuses active
-      innate_none: No innate passives active
-      innate_attr_none: No innate attribute bonuses
-      select_prompt: Select a profile to view passive bonuses
-      select_innate_prompt: Select a profile to view innate bonuses
-      level_label: '{0} (Lv {1})'
-    augments:
-      none: No augments active
-    error:
-      load: Unable to load your profiles right now.
-      generic: Something went wrong handling that request.
-      max_slots: All profile slots are already in use. Delete one first.
-      no_open_slot: Unable to find an open slot right now.
-      create_failed: Could not create that profile slot.
-      slot_range: Profile slot must be between 1 and {0}.
-      slot_missing: Profile slot {0} has not been created yet.
-      switch_failed: Unable to switch to that slot right now.
-      confirm_first: Please confirm the deletion of slot {0} first.
-      delete_failed: Could not delete that profile slot right now.
-      slot_empty: Profile slot {0} is already empty.
-      delete_active: Switch to a different profile before deleting slot {0}.
-      keep_one: You must keep at least one profile slot.
-    info:
-      created: Created and activated profile slot {0}.
-      already_active: Profile slot {0} is already active.
-      switched: Switched to profile slot {0} ({1}).
-      delete_prompt: Press CONFIRM to delete profile slot {0}.
-      deleted: Deleted profile slot {0}.
-      delete_canceled: Profile deletion canceled.
-    classes:
-      primary_weapon_none: No primary class weapon bonuses
-      none: None
+    hours: "{0}s"
+    minutes: "{0}d"
+    seconds: "{0}sn"
+
 command:
   language:
-    unavailable: Language manager is unavailable.
-    data_not_loaded: Your player data is not loaded yet.
-    current: 'Current language: {0}'
-    available: 'Available locales: {0}'
-    usage: 'Usage: /el language list | /el language set <locale>'
-    invalid: 'Unknown locale ''{0}''. Available locales: {1}'
-    updated: Language set to {0}.
+    unavailable: Dil yöneticisi kullanılamıyor.
+    data_not_loaded: Oyuncu verilerin henüz yüklenmedi.
+    current: "Mevcut dil: {0}"
+    available: "Mevcut yereller: {0}"
+    usage: "Kullanım: /el language list | /el language set <locale>"
+    invalid: "Bilinmeyen dil '{0}'. Mevcut diller: {1}"
+    updated: Dil {0} olarak ayarlandı.
+
   reset_cooldowns:
-    unavailable: Passive and augment managers are unavailable.
-    success: Reset passive cooldowns for {0} player runtime state(s) and cleared all augment cooldown runtime state.
+    unavailable: Pasif ve augment yöneticileri kullanılamıyor.
+    success: "{0} oyuncu için pasif bekleme süreleri sıfırlandı ve tüm augment bekleme süreleri temizlendi.""
+
   reset_skillpoints:
-    system_unavailable: Skill system is not initialised. Please contact an admin.
-    player_not_found: 'Player not found: {0}'
-    no_data: No saved data found. Try rejoining.
-    success_target: Reset skill points for {0}.
-    notify_target: An admin reset your skill points to the default layout.
-    success_self: Your skill points have been reset to the default layout.
+    system_unavailable: Yetenek sistemi başlatılmamış. Bir yöneticiyle iletişime geçin.
+    player_not_found: "Oyuncu bulunamadı: {0}"
+    no_data: Kayıtlı veri bulunamadı. Tekrar giriş yapmayı deneyin.
+    success_target: "{0} için yetenek puanları sıfırlandı."
+    notify_target: "Bir yönetici yetenek puanlarını varsayılan düzene sıfırladı."
+    success_self: "Yetenek puanların varsayılan düzene sıfırlandı."

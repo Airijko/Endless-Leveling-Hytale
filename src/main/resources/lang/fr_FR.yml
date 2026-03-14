@@ -1,803 +1,795 @@
 meta:
-  locale_name: "Fran\xE7ais (FR)"
+  locale_name: Français (France)
 notify:
   skills:
     unspent:
-      primary: You have {0} unspent skill points!
+      primary: "Vous avez {0} points de compétence non utilisés !"
       secondary:
-        open: 'Open '
-        close: ' to invest them'
+        open: "Ouvrez "
+        close: " pour les investir"
     chat:
-      have: 'You still have '
-      use: ' skill points. Use '
-      end: ' to spend them.'
+      have: "Il vous reste "
+      use: " points de compétence. Utilisez "
+      end: " pour les dépenser."
   augments:
     available:
-      header: 'You have augments available to choose from:'
-      footer: Use /lvl augments to choose.
+      header: "Vous avez des augmentations disponibles :"
+      footer: "Utilisez /lvl augments pour choisir."
     cooldown:
-      ready: '{0} is ready again!'
-    generic: '{0}'
-    sync:
-      summary: '{0} player(s) have mismatched augment slot counts:'
-      entry: '- {0} [{1}: has {2}, should have {3}] -> /lvl augments reset {0}'
-      fixall: 'To fix all at once: /lvl augments resetallplayers'
+      ready: "{0} est à nouveau prêt !"
+    generic: "{0}"
+  sync:
+    summary: "{0} joueurs ont des décalages de slots d'augmentation :"
+    entry: "- {0} [{1}: possède {2}, devrait avoir {3}] -> /lvl augments reset {0}"
+    fixall: "Pour tout corriger d'un coup : /lvl augments resetallplayers"
   passives:
     swiftness:
-      faded: Swiftness has faded.
+      faded: "Célérité s'est estompée."
     adrenaline:
-      triggered: Adrenaline triggered! Restoring {0}% stamina over {1}s
-    generic: '{0}'
+      triggered: "Adrénaline activée ! Récupération de {0}% d'endurance sur {1}s."
+    generic: "{0}"
   xp_suppressed:
-    mob_label: this mob
-    mob_label_level: this mob (level {0})
-    player_too_high: 'No XP awarded: your level ({0}) is too high for {1}.'
-    player_too_low: 'No XP awarded: {0} is too far above your level ({1}).'
+    mob_label: cette créature
+    mob_label_level: cette créature (Niveau {0})
+    player_too_high: "Pas d'EXP : Votre niveau ({0}) est trop élevé pour {1}."
+    player_too_low: "Pas d'EXP : {1} est bien trop puissant pour votre niveau ({0})."
 augments:
   stacks:
-    max: '{0} at max stacks ({1}).'
-    update: '{0}: {1}/{2} stacks.'
-    expired: '{0} stacks expired.'
-    remaining: '{0}: {1}/{2} stacks remaining.'
+    max: "{0} au maximum de cumuls ({1})."
+    update: "{0} : {1}/{2} cumuls."
+    expired: "Cumuls de {0} expirés."
+    remaining: "{0} : {1}/{2} cumuls restants."
   executioner:
-    triggered: '{0} triggered! +{1}% damage.'
+    triggered: "{0} activé ! +{1}% de dégâts."
   fortress:
-    activated: '{0} activated! Shielded for {1}s, buffs for {2}s.'
-    buff_ended: '{0} buff ended.'
-    shield_ended: '{0} stasis shield ended.'
+    activated: "{0} activé ! Protégé pendant {1}s, bonus pendant {2}s."
+    buff_ended: "Bonus de {0} terminé."
+    shield_ended: "Bouclier de stase de {0} terminé."
   undying_rage:
-    active: '{0} is active for {1}s.'
-    ended: '{0} duration ended.'
+    active: "{0} est actif pendant {1}s."
+    ended: "Durée de {0} terminée."
   rebirth:
-    activated: '{0} activated! Restored {1}% of max health.'
+    activated: "{0} activé ! {1}% de santé maximale restaurée."
   first_strike:
-    triggered: '{0} triggered! +{1}% damage.'
-    lost: '{0} lost: you were hit before striking. Cooldown started.'
+    triggered: "{0} activé ! +{1}% de dégâts."
+    lost: "{0} perdu : Vous avez été touché avant de frapper. Temps de recharge lancé."
 hud:
   common:
     unavailable: --
   race:
-    none: No Race
-    prefix: 'Race: '
+    none: Sans Race
+    prefix: "Race : "
   class:
-    none: None
+    none: Aucune
   mob:
     level:
-      single: Lv. {0}
-      single_compact: Lv {0}
-      range: Lv. {0}-{1}
-    prefix: 'Local mobs: '
+      single: Niveau {0}
+      single_compact: Niv. {0}
+      range: Niveau {0}-{1}
+    prefix: "Créatures locales : "
   level:
-    no_data: 'LVL --   XP: 0 / --'
-    without_leveling: 'LVL {0}   XP: {1}'
-    max: LVL {0}   MAX LEVEL
-    progress: 'LVL {0}   XP: {1} / {2}'
+    no_data: "NIVEAU --   EXP : 0 / --"
+    without_leveling: "NIVEAU {0}   EXP : {1}"
+    max: "NIVEAU {0}   NIVEAU MAX"
+    progress: "NIVEAU {0}   EXP : {1} / {2}"
 ui:
   common:
     toggle:
-      true: 'ON'
-      false: 'OFF'
-      disabled: DISABLED
-      'on': 'ON'
-      'off': 'OFF'
+      true: "OUI"
+      false: "NON"
+      disabled: DÉSACTIVÉ
+      "on": "ON"
+      "off": "OFF"
     state:
-      enabled: enabled
-      disabled: disabled
+      enabled: activé
+      disabled: désactivé
   settings:
     page:
-      title: Settings
-      subtitle: Manage personal HUD, notifications, and visual preferences.
-      toggle_button: TOGGLE
+      title: Paramètres
+      subtitle: Gérez le HUD, les notifications et vos préférences visuelles.
+      toggle_button: CHANGER
     description:
-      player_hud: Show or hide the Endless Leveling HUD overlay.
-      critical_notif: Toggle floating alerts for critical strike events.
-      xp_notif: Show notifications whenever you gain experience.
-      passive_levelup_notif: Display updates when passives rank up during play.
-      luck_double_notif: Toggle bonus drop proc notifications from luck effects.
-      health_regen_notif: Show notifications when health regeneration triggers.
-      race_model: Enable race-specific character visuals when available.
+      player_hud: Afficher ou masquer l'overlay Endless Leveling.
+      critical_notif: Activer les alertes flottantes pour les coups critiques.
+      xp_notif: Afficher les notifications lors du gain d'expérience.
+      passive_levelup_notif: Afficher les mises à jour de niveau des passifs en jeu.
+      luck_double_notif: Activer les notifications de butin bonus grâce à la chance.
+      health_regen_notif: Afficher les notifications de régénération de santé.
+      race_model: Activer les visuels de personnage spécifiques à chaque race.
     player_hud:
-      label: Player HUD
-      toggled: Player HUD {0}
+      label: HUD du Joueur
+      toggled: HUD du Joueur {0}
     critical_notif:
-      label: Critical Hit Notifications
-      toggled: Critical hit notifications {0}
+      label: Notifications Critiques
+      toggled: Notifications Critiques {0}
     xp_notif:
-      label: XP Gain Notifications
-      toggled: XP gain notifications {0}
+      label: Notifications d'EXP
+      toggled: Notifications d'EXP {0}
     passive_levelup_notif:
-      label: Passive Level-Up Notifications
-      toggled: Passive level-up notifications {0}
+      label: Notifications de Niveau Passif
+      toggled: Notifications de Niveau Passif {0}
     luck_double_notif:
-      label: Luck Double-Drop Notifications
-      toggled: Luck double-drop notifications {0}
+      label: Notifications de Butin Bonus
+      toggled: Notifications de Butin Bonus {0}
     health_regen_notif:
-      label: Health Regen Notifications
-      toggled: Health regen notifications {0}
+      label: Notifications de Régén. Santé
+      toggled: Notifications de Régén. Santé {0}
     race_model:
-      label: Race Model Visuals
-      globally_disabled: Race model visuals are disabled by the server configuration.
-      enabled: Race model visuals enabled
-      disabled: Race model visuals disabled
+      label: Modèle Visuel de Race
+      globally_disabled: Modèles de race désactivés par la configuration serveur.
+      enabled: Modèle visuel de race activé
+      disabled: Modèle visuel de race désactivé
   leaderboards:
     page:
-      title: Leaderboards
-      subtitle: Top players ranked with live sort/filter controls. ({0} players)
+      title: Classements
+      subtitle: Meilleurs joueurs avec tri et filtres en direct. ({0} joueurs)
     controls:
-      sort: Sort
-      filter: Filter
-      reset: RESET
-      sort_by_value: 'BY: {0}'
-      sort_order_value: 'ORDER: {0}'
-      race_value: 'RACE: {0}'
-      class_value: 'CLASS: {0}'
+      sort: Trier
+      filter: Filtrer
+      reset: RÉINITIALISER
+      sort_by_value: "PAR : {0}"
+      sort_order_value: "ORDRE : {0}"
+      race_value: "RACE : {0}"
+      class_value: "CLASSE : {0}"
     sort:
       prestige: PRESTIGE
-      level: LEVEL
-      xp: XP
-      alphabetical: ALPHABETICAL
+      level: NIVEAU
+      xp: EXP
+      alphabetical: ALPHABÉTIQUE
       race: RACE
-      class: CLASS
+      class: CLASSE
     order:
-      asc: ASC
-      desc: DESC
+      asc: ASCENDANT
+      desc: DESCENDANT
     filter:
-      all: ALL
+      all: TOUS
     column:
-      rank: Rank
-      player: Player
+      rank: Rang
+      player: Joueur
       race: Race
-      class: Class
+      class: Classe
       prestige: Prestige
-      level: Level
-      xp: XP
-    summary: "Showing {0}/{1} players \u2022 Sort: {2} {3} \u2022 Filters: Race={4}, Class={5}"
+      level: Niveau
+      xp: EXP
+    summary: "Affichage {0}/{1} joueurs • Tri : {2} {3} • Filtre : Race={4}, Classe={5}"
   augments:
     tier:
-      default: AUGMENTS
-      common: COMMON
+      default: AUGMENTATIONS
+      common: COMMUN
     actions:
-      choose: Choose
-    selected: 'Selected augment: {0} ({1})'
-    no_description: No description provided.
+      choose: Choisir
+    selected: "Augmentation choisie : {0} ({1})"
+    no_description: Aucune description disponible.
     no_augment:
-      title: NO AUGMENT
-      body: No augments are currently available.
+      title: AUCUNE AUGMENTATION
+      body: Aucune augmentation disponible actuellement.
     no_augments_yet:
-      title: NO AUGMENTS YET
-      body: No augments available yet. Next unlock at level {0}.
+      title: PAS ENCORE D'AUGMENTATIONS
+      body: Aucune augmentation disponible. Prochain déblocage au niveau {0}.
     no_augments:
-      title: NO AUGMENTS
-      body: No augment unlock milestones are configured.
+      title: AUCUNE AUGMENTATION
+      body: Aucun palier d'augmentation configuré.
     all_claimed:
-      title: ALL CLAIMED
-      next_unlock: You have claimed all currently unlocked augments. Next unlock at level {0}.
-      done: You have already claimed all configured augment unlocks.
+      title: TOUT RÉCUPÉRÉ
+      next_unlock: Vous avez récupéré toutes les augmentations disponibles. Prochain déblocage au niveau {0}.
+      done: Vous avez déjà récupéré toutes les augmentations configurées.
     remaining:
-      header: 'You still have more augments to choose from:'
-      footer: Choose again now.
+      header: "Il vous reste d'autres augmentations à choisir :"
+      footer: "Choisissez à nouveau maintenant."
     error:
-      title: AUGMENT ERROR
-      data_unavailable: Augment data unavailable.
-      tier_unresolved: Unable to resolve augment tier.
-      playerdata_unavailable: Unable to load your player data. Try reopening this page.
-      system_unavailable: Augment system is unavailable right now. Please contact an admin.
-      definitions_missing: No augment definitions are loaded. Check /mods/EndlessLeveling/augments.
-      offers_missing: Unlocked augments are missing from your offers. Ask an admin to run /el augment refresh <player>.
-      slot_empty: No augment in that slot.
+      title: ERREUR D'AUGMENTATION
+      data_unavailable: Données d'augmentation indisponibles.
+      tier_unresolved: Impossible de résoudre le palier de l'augmentation.
+      playerdata_unavailable: Impossible de charger les données du joueur.
+      system_unavailable: Système indisponible. Contactez un administrateur.
+      definitions_missing: Aucune définition chargée (/mods/EndlessLeveling/augments).
+      offers_missing: Les augmentations débloquées manquent dans vos offres.
+      slot_empty: Aucun slot d'augmentation vide.
     effect:
-      cooldown: 'Cooldown: {0}'
-      duration_per_stack: 'Duration per stack: {0}'
-      duration: 'Duration: {0}'
-      max_stacks: 'Max stacks: {0}'
+      cooldown: "Temps de recharge : {0}"
+      duration_per_stack: "Durée par cumul : {0}"
+      duration: "Durée : {0}"
+      max_stacks: "Cumuls max : {0}"
       note:
-        full_at_health: ' (full at <= {0}% health)'
-        full_at_ratio: ' (full at {0}x ratio)'
-        range: ' (range {0}-{1})'
-        full_at_distance: ' (full at {0} distance)'
-        at_max_stacks: ' (at max stacks)'
-        max_value_at_health: ' (max value at {0}% health)'
-        missing_health: ' (scales with missing health)'
+        full_at_health: " (maximum à <= {0}% de santé)"
+        full_at_ratio: " (maximum au ratio {0}x)"
+        range: " (Plage {0}-{1})"
+        full_at_distance: " (maximum à {0} de distance)"
+        at_max_stacks: " (au maximum de cumuls)"
+        max_value_at_health: " (valeur max à {0}% de santé)"
+        missing_health: " (évolue selon la santé manquante)"
         condition:
-          above: ' (above {0}% {1})'
-          below: ' (below {0}% {1})'
-        missing_health_line: Scales with missing health
+          above: " (au-dessus de {0}% {1})"
+          below: " (en-dessous de {0}% {1})"
+        missing_health_line: Évolue selon la santé manquante
       label:
-        strength: Strength
-        sorcery: Sorcery
-        haste: Haste
-        haste_bonus: Haste
-        crit_damage: Critical Damage
-        crit_damage_bonus: Critical Damage
-        critical_damage: Critical Damage
-        crit_chance: Critical Chance
-        critical_chance: Critical Chance
-        life_steal: Life Steal
-        life_steal_scaling: Life Steal
-        heal_on_crit: Life Steal (Crit)
-        heal_on_kill: Heal on Kill
-        heal_over_time: Deferred Damage
-        heal_to_damage: Heal to Damage
-        bonus_damage_on_hit: Bonus Damage
-        bonus_damage: Bonus Damage
-        max_bonus_damage: Bonus Damage
-        max_bonus_ferocity: Ferocity
-        strength_from_max_health: Strength
-        sorcery_bonus_high: Sorcery
-        sorcery_penalty_low: Sorcery
-        crit_defense: Damage Reduction
-        taunt_radius: Taunt Radius
-        bonus_damage_by_distance: Bonus Damage
-        bonus_damage_vs_hp_ratio: Bonus Damage
-        execution_heal: Execute Heal
-        self_damage: Self Damage
-        percent_of_current_hp: Self Damage
-        movement_speed_bonus: Move Speed
-        movement_speed: Move Speed
-        resistance_bonus: Resistance
-        resistance: Resistance
-        precision: Critical Chance
-        defense: Defense
-        wither: Wither
-        slow_percent: Slow
+        strength: Force
+        sorcery: Sorcellerie
+        haste: Hâte
+        haste_bonus: Hâte
+        crit_damage: Dégâts Critiques
+        crit_damage_bonus: Dégâts Critiques
+        critical_damage: Dégâts Critiques
+        crit_chance: Chance de Critique
+        critical_chance: Chance de Critique
+        life_steal: Vol de Vie
+        life_steal_scaling: Vol de Vie
+        heal_on_crit: Vol de Vie (Critique)
+        heal_on_kill: Soin par élimination
+        heal_over_time: Dégâts différés
+        heal_to_damage: Soin en Dégâts
+        bonus_damage_on_hit: Dégâts bonus
+        bonus_damage: Dégâts bonus
+        max_bonus_damage: Dégâts bonus
+        max_bonus_ferocity: Férocité
+        strength_from_max_health: Force
+        sorcery_bonus_high: Sorcellerie
+        sorcery_penalty_low: Sorcellerie
+        crit_defense: Réduction de Dégâts
+        taunt_radius: Rayon de Provocation
+        bonus_damage_by_distance: Dégâts bonus
+        bonus_damage_vs_hp_ratio: Dégâts bonus
+        execution_heal: Soin d'Exécution
+        self_damage: Auto-dégâts
+        percent_of_current_hp: Auto-dégâts
+        movement_speed_bonus: Vitesse de dépl.
+        movement_speed: Vitesse de dépl.
+        resistance_bonus: Résistance
+        resistance: Résistance
+        precision: Chance de Critique
+        defense: Défense
+        wither: Flétrissement
+        slow_percent: Ralentissement
         mana: Mana
         mana_from_sorcery: Mana
-        sorcery_from_mana: Sorcery
-        health_threshold: Health Threshold
-        trigger_threshold: Trigger Threshold
-        full_value_at_health_percent: Full Value Threshold
-        max_distance: Max distance (full bonus)
-        common: Common Stat
+        sorcery_from_mana: Sorcellerie
+        health_threshold: Seuil de Santé
+        trigger_threshold: Seuil de Déclenchement
+        full_value_at_health_percent: Seuil pour valeur max
+        max_distance: Distance Max (bonus max)
+        common: Valeur Commune
       rule:
-        under_rage_prefix: 'Under Rage:'
-        mana_from_sorcery: 'Mana: +{0}% of Sorcery'
-        sorcery_from_mana: 'Sorcery: +{0}% of Mana'
-        wither_per_second: 'Wither: +{0}% max health damage per second'
-        immunity_window: 'Immunity Window: {0}'
-        min_health_hp: 'Under Rage: You can''t drop below {0} health'
+        under_rage_prefix: "Sous Rage :"
+        mana_from_sorcery: "Mana : +{0}% de la Sorcellerie"
+        sorcery_from_mana: "Sorcellerie : +{0}% du Mana"
+        wither_per_second: "Flétrissement : +{0}% dégâts de santé max par seconde"
+        immunity_window: "Fenêtre d'immunité : {0}"
+        min_health_hp: "Sous Rage : Votre santé ne peut pas tomber sous {0}"
       section:
         above_health:
-          generic: 'Above Health Threshold:'
+          generic: "Au-dessus du seuil de santé :"
         below_health:
-          generic: 'Below Health Threshold:'
+          generic: "En-dessous du seuil de santé :"
       resource:
-        generic: Resource
-      duration_conqueror: 'Duration: {0} (refreshes cooldown when stacking)'
+        generic: Ressource
+      duration_conqueror: "Durée : {0} (réinitialise le temps de recharge au cumul)"
     common_stat:
-      card_name: '{0}'
+      card_name: "{0}"
     page:
       brand: ENDLESS LEVELING
-      choose_button: CHOOSE AUGMENTS
+      choose_button: CHOISIR AUGMENTATIONS
       left:
-        description: Augments are powerful passive enhancements that permanently strengthen your character. Earn them by reaching level milestones and through prestige.
-        collection_title: YOUR COLLECTION
-        rerolls_title: REROLLS USED
-        hover_hint: Hover over an augment to preview it.
-      title: AUGMENTS
-      search_placeholder: Search augments...
+        description: Les augmentations sont de puissants bonus passifs qui renforcent votre personnage. Obtenez-les via les paliers de niveau et de prestige.
+        collection_title: VOTRE COLLECTION
+        rerolls_title: REROLLS UTILISÉS
+        hover_hint: Survolez une augmentation pour un aperçu.
+      title: AUGMENTATIONS
+      search_placeholder: Chercher une augmentation...
       section:
-        unlocked: UNLOCKED
-        mythic: MYTHIC
-        elite: ELITE
-        common: COMMON
-      info_title: AUGMENT INFO
-      results: 'Results: {0}'
-      choose_unavailable: No augments available to choose.
-      info_select_prompt: Select an augment
-      choose_available: Augments available to choose.
+        unlocked: DÉBLOQUÉES
+        mythic: MYTHIQUE
+        elite: ÉLITE
+        common: COMMUN
+      info_title: INFOS AUGMENTATION
+      results: "Résultats : {0}"
+      choose_unavailable: Aucune augmentation disponible au choix.
+      info_select_prompt: Sélectionnez une augmentation
+      choose_available: Augmentations disponibles au choix.
       stats:
-        total: 'Total: {0} / {1}'
-        mythic: 'Mythic: {0} / {1}'
-        elite: 'Elite: {0} / {1}'
-        common: 'Common: {0}'
+        total: "Total : {0} / {1}"
+        mythic: "Mythique : {0} / {1}"
+        elite: "Élite : {0} / {1}"
+        common: "Commun : {0}"
       rerolls:
-        mythic: 'Mythic: {0}'
-        elite: 'Elite: {0}'
-        common: 'Common: {0}'
+        mythic: "Mythique : {0}"
+        elite: "Élite : {0}"
+        common: "Commun : {0}"
     unlocked:
-      count_suffix: '{0} x{1}'
+      count_suffix: "{0} x{1}"
   races:
-    count: '{0} {1}'
-    count_none: 0 available
+    count: "{0} {1}"
+    count_none: 0 disponible
     count_word:
-      singular: race
-      plural: races
+      singular: Race
+      plural: Races
     current:
-      none: None selected
+      none: Aucune sélectionnée
     status:
-      current: CURRENT
-      viewing: VIEWING
+      current: ACTUELLE
+      viewing: APERÇU
     page:
-      title: Race Archive
-      available: Available Races
-      current_title: Current Race
+      title: Archives des Races
+      available: Races Disponibles
+      current_title: Race Actuelle
       current_badge: Active
-      current_hint: Your active race sets identity and innate bonuses.
-      lore_title: Lore Preview
-      stats_title: Race Stats
-      passives_title: Passives
-      evolution_title: Evolution Paths
+      current_hint: Votre race active définit votre identité et vos bonus innés.
+      lore_title: Histoire
+      stats_title: Attributs de Race
+      passives_title: Capacités Passives
+      evolution_title: Voies d'Évolution
     offline:
-      title: Races Offline
-      subtitle: Races are currently disabled in config.yml.
-      hint: Enable races to manage identities.
+      title: Races Hors-ligne
+      subtitle: Les races sont actuellement désactivées dans la configuration.
+      hint: Activez les races pour gérer les identités.
     playerdata:
-      title: Player data unavailable
-      subtitle: Unable to load your race information right now.
-      hint: Try reopening this page in a few moments.
+      title: Données indisponibles
+      subtitle: Vos informations de race ne peuvent pas être chargées.
+      hint: Réessayez d'ouvrir cette page sous peu.
     select:
-      title: Select a Race
-      subtitle: Choose a race on the left to preview its identity.
+      title: Choisissez une Race
+      subtitle: Sélectionnez une race à gauche pour voir son identité.
     subtitle:
-      current: Currently active
-      preview: Preview only
+      current: Actuellement active
+      preview: Aperçu uniquement
     lore:
-      unavailable: Lore unavailable.
-      missing: No lore provided for this race.
+      unavailable: Histoire indisponible.
+      missing: Aucune histoire enregistrée pour cette race.
     actions:
-      view: VIEW
-      choose: CHOOSE
-      swap: SWAP
-      view_paths: VIEW PATHS
+      view: VOIR
+      choose: CHOISIR
+      swap: CHANGER
+      view_paths: VOIR LES VOIES
     passives:
-      none_selected: No race selected.
-      none_defined: This race does not define passive bonuses.
+      none_selected: Aucune race sélectionnée.
+      none_defined: Cette race n'a pas de bonus passifs.
     cooldown:
-      disabled: Disabled
-      card_title: Race Swap Cooldown
-      card_hint: Swapping again becomes available once the timer hits zero.
-      default_warning: You will be locked for the remaining cooldown after swapping.
-      bypassed: Bypassed
-      bypassed_hint: Operator bypass active.
-      bypassed_detail: Operator bypass active. Swapping is immediate.
-      in_cooldown: Swap in cooldown
-      ready: Ready
-      swap_triggers: Swapping will trigger a {0} cooldown.
-      unrestricted: Race swapping is unrestricted right now.
-      try_again_prefix: 'You can swap again in '
-      unlocks_in: Swap unlocks in {0}.
-      exhausted: No changes left
+      disabled: Désactivé
+      card_title: Temps de recharge (Race)
+      card_hint: Un changement sera possible quand le compteur atteindra zéro.
+      default_warning: Le changement sera bloqué pendant la durée restante après l'action.
+      bypassed: Ignoré
+      bypassed_hint: Bypass Opérateur actif.
+      bypassed_detail: Bypass Opérateur actif. Changement instantané.
+      in_cooldown: Changement en recharge
+      ready: Prêt
+      swap_triggers: Un changement déclenchera {0} de recharge.
+      unrestricted: Le changement de race est actuellement sans restriction.
+      try_again_prefix: "Nouveau changement possible dans "
+      unlocks_in: Déblocage dans {0}.
+      exhausted: Plus de changements restants
     chat:
-      prefix: '[Races] '
-      changed_prefix: 'You are now a '
+      prefix: "[Races] "
+      changed_prefix: "Vous êtes maintenant un "
     error:
-      playerdata: Unable to load your race info right now.
-      select_first: Select a race to swap into.
-      disabled: Races are disabled.
-      unknown: 'Unknown race: {0}'
-      already_selected: You already belong to that race.
-      no_changes_remaining: No race changes remaining.
-      cannot_ascend: 'Cannot switch race yet:'
-      cannot_ascend_simple: Cannot switch race yet.
+      playerdata: Impossible de charger les infos de race.
+      select_first: Sélectionnez une race pour changer.
+      disabled: Les races sont désactivées.
+      unknown: "Race inconnue : {0}"
+      already_selected: Vous appartenez déjà à cette race.
+      no_changes_remaining: Plus de changements de race possibles.
+      cannot_ascend: "Impossible de changer de race pour le moment :"
+      cannot_ascend_simple: Changement de race impossible pour le moment.
     attribute_tagline:
-      life_force: Base health
-      strength: Damage scaling
-      sorcery: Magic damage
-      defense: Damage reduction
-      haste: Movement speed
-      precision: Crit chance
-      ferocity: Crit damage
-      stamina: Base stamina
-      flow: Base flow (mana)
-      discipline: XP gain
+      life_force: Santé de Base
+      strength: Échelle de Dégâts
+      sorcery: Dégâts Magiques
+      defense: Réduction de Dégâts
+      haste: Vitesse de dépl.
+      precision: Chance de Critique
+      ferocity: Dégâts Critiques
+      stamina: Endurance de Base
+      flow: Flow de Base (Mana)
+      discipline: Gain d'EXP
     passive:
-      default_name: Passive
+      default_name: Passif
       label:
-        with_attribute: '{0} ({1})'
+        with_attribute: "{0} ({1})"
       type:
-        xp_bonus: XP Bonus
-        health_regen: Health Regen
-        mana_regen: Mana Regen
-        mana_regen_flat: Mana Regen Flat
-        regeneration: Regeneration
-        healing_bonus: Healing Bonus
-        life_steal: Life Steal
-        special_charge_bonus: Special Charge Bonus
-        stamina_gain_bonus: Stamina Gain Bonus
-        luck: Luck
-        second_wind: Second Wind
-        first_strike: First Strike
-        innate_attribute_gain: Innate Attribute Gain
-        adrenaline: Adrenaline
-        berzerker: Berzerker
-        retaliation: Retaliation
-        executioner: Executioner
-        swiftness: Swiftness
-        wither: Wither
-        crit_defense: Critical Defense
+        xp_bonus: Bonus d'EXP
+        health_regen: Régén. Santé
+        mana_regen: Régén. Mana
+        mana_regen_flat: Régén. Mana (fixe)
+        regeneration: Régénération
+        healing_bonus: Bonus de Soin
+        life_steal: Vol de Vie
+        special_charge_bonus: Bonus de Charge Spéciale
+        stamina_gain_bonus: Bonus Gain Endurance
+        luck: Chance
+        second_wind: Second Souffle
+        first_strike: Premier Coup
+        innate_attribute_gain: Gain d'Attribut Inné
+        adrenaline: Adrénaline
+        berzerker: Berserker
+        retaliation: Représailles
+        executioner: Exécuteur
+        swiftness: Célérité
+        wither: Flétrissement
+        crit_defense: Défense Critique
       scope:
-        hp: HP
-        stamina: stamina
-        target_hp: target HP
+        hp: PV
+        stamina: Endurance
+        target_hp: PV Cible
       desc:
-        xp_bonus: '{0} XP gain'
-        health_regen: '{0} HP/5s'
-        mana_regen: '{0} mana/5s'
-        mana_regen_flat: '{0} mana/s'
-        regeneration: '{0} HP/s'
-        healing_bonus: '{0} healing'
-        life_steal: '{0} life steal'
-        charge_bonus: '{0} charge rate'
-        stamina_gain: '{0} stamina gain'
-        luck: '{0} luck'
-        second_wind: '{0} heal'
-        first_strike: '{0} opener'
-        adrenaline: '{0} stamina'
-        berzerker: '{0} damage'
-        retaliation: '{0} reflect'
-        executioner: '{0} finisher'
-        swiftness: '{0} speed'
-        wither: '{0} max HP/sec'
-        crit_defense: '{0} dmg reduction'
-        absorb: '{0} dmg reduction'
+        xp_bonus: "{0} gain d'EXP"
+        health_regen: "{0} PV/5s"
+        mana_regen: "{0} Mana/5s"
+        mana_regen_flat: "{0} Mana/s"
+        regeneration: "{0} PV/s"
+        healing_bonus: "{0} soins"
+        life_steal: "{0} vol de vie"
+        charge_bonus: "{0} taux de charge"
+        stamina_gain: "{0} gain endurance"
+        luck: "{0} chance"
+        second_wind: "{0} soins"
+        first_strike: "{0} ouverture"
+        adrenaline: "{0} endurance"
+        berzerker: "{0} dégâts"
+        retaliation: "{0} renvoi"
+        executioner: "{0} finisher"
+        swiftness: "{0} vitesse"
+        wither: "{0} PV max/s"
+        crit_defense: "{0} red. dégâts"
+        absorb: "{0} red. dégâts"
       detail:
         threshold: <{0}% {1}
-        slow: '{0} slow'
-        scales_with: scales with {0}
-        per_level: '{0} per level'
-        total_at_level: '{0} (Total {1} @ Lv {2})'
-        duration: '{0}s duration'
-        cooldown: '{0}s cd'
-        window: '{0}s window'
-        stacks: '{0} stacks'
+        slow: "{0} ralentissement"
+        scales_with: selon {0}
+        per_level: "{0} par niveau"
+        total_at_level: "{0} (Total {1} @ Niv {2})"
+        duration: "{0}s durée"
+        cooldown: "{0}s recharge"
+        window: "{0}s fenêtre"
+        stacks: "{0} cumuls"
     evolution:
       summary:
-        placeholder: Select a race to inspect evolution branches.
-        final: 'Stage: {0} - Final form reached.'
-        expanded: 'Stage: {0} - Path: {1} - Paths: {2} ({3})'
-      none_selected: No race selected.
+        placeholder: Choisissez une race pour voir l'évolution.
+        final: "Niveau : {0} - Forme finale atteinte."
+        expanded: "Niveau : {0} - Voie : {1} - Voies : {2} ({3})"
+      none_selected: Aucune race sélectionnée.
       stage:
         base: Base
       path:
-        none: None
-        adventure: Adventure
-        damage: Damage
-        sorcery: Sorcery
+        none: Aucun
+        adventure: Aventure
+        damage: Dégâts
+        sorcery: Sorcellerie
         tank: Tank
-      none: No further evolutions
+      none: Plus d'évolutions
       none_value: FINAL
-      none_meta: This race is at the end of its ascension branch.
-      none_criteria: No additional upgrade criteria.
+      none_meta: Cette race a atteint la fin de sa lignée évolutive.
+      none_criteria: Plus de critères d'amélioration.
       progress:
-        active: Currently active form.
-        unlocked: Previously completed and unlocked.
-        unknown: Unable to evaluate current progress.
-        ready: All criteria met. Can evolve immediately.
-        ready_after: All criteria met. Reach this branch by progressing through earlier path nodes.
-        missing_generic: Missing requirements.
-        missing_header: 'Missing requirements:'
-        missing_any_skill_specific: 'Requires at least one skill option set to be met: {0}.'
+        active: Forme actuellement active.
+        unlocked: Déjà complétée et débloquée.
+        unknown: Progression indéterminée.
+        ready: Critères remplis. Évolution disponible.
+        ready_after: Critères remplis. Atteignez ce nœud via la voie précédente.
+        missing_generic: Prérequis manquants.
+        missing_header: "Prérequis manquants :"
+        missing_any_skill_specific: "Requiert au moins une compétence remplie : {0}."
       status:
-        active: ACTIVE
-        unlocked: UNLOCKED
-        available: AVAILABLE
-        eligible: ELIGIBLE
-        locked: LOCKED
-      meta: 'Type: {0} | Stage: {1} | Tier: {2} | From: {3}'
+        active: ACTIF
+        unlocked: DÉBLOQUÉ
+        available: DISPONIBLE
+        eligible: ÉLIGIBLE
+        locked: VERROUILLÉ
+      meta: "Type : {0} | Niveau : {1} | Palier : {2} | De : {3}"
       criteria:
-        prestige: '- Prestige: >= {0}'
-        min_skills: '- Minimum skill levels: {0}'
-        max_skills: '- Skill caps: {0}'
-        any_skills: '- Any one set: {0}'
-        forms: '- Required forms: {0}'
-        augments: '- Required augments: {0}'
-        none: 'Requirements: none'
+        prestige: "- Prestige : >= {0}"
+        min_skills: "- Niveaux de comp. min : {0}"
+        max_skills: "- Caps de comp. : {0}"
+        any_skills: "- N'importe quel set : {0}"
+        forms: "- Formes requises : {0}"
+        augments: "- Augmentations requises : {0}"
+        none: "Prérequis : aucun"
         general:
-          none: 'Requirements: skill targets only'
-          prefix: 'Requirements:
-
-            {0}'
+          none: "Prérequis : objectifs de comp. uniquement"
+          prefix: "Prérequis :\n\n            {0}"
         skills:
-          prefix: 'Trainable Skill Targets:
-
-            {0}'
+          prefix: "Objectifs de compétences :\n\n            {0}"
   classes:
-    count: '{0} {1}'
-    count_none: 0 available
+    count: "{0} {1}"
+    count_none: 0 disponible
     count_word:
-      singular: class
-      plural: classes
+      singular: Classe
+      plural: Classes
     current:
-      primary_none: Unassigned
+      primary_none: Non assignée
     status:
-      primary: PRIMARY
-      secondary: SECONDARY
-      viewing: VIEWING
+      primary: PRIMAIRE
+      secondary: SECONDAIRE
+      viewing: APERÇU
     slot:
-      primary: primary
-      secondary: secondary
+      primary: Primaire
+      secondary: Secondaire
     page:
-      title: Class Codex
-      cooldown_title: Class Swap Cooldown
-      available: Available Classes
-      assignments: Class Assignments
-      secondary_share_hint: Secondary classes share 50% of bonuses.
-      sorcery_label: Sorcery Bonus
-      lore_title: Lore Preview
-      weapons_title: Weapon Affinities
-      innate_title: Innate Attribute Gains
-      passives_title: Passives
-      evolution_title: Class Paths
-    none_selected: No class selected.
+      title: Codex des Classes
+      cooldown_title: Temps de recharge (Classe)
+      available: Classes Disponibles
+      assignments: Assignations de Classe
+      secondary_share_hint: Les classes secondaires partagent 50% des bonus.
+      sorcery_label: Bonus de Sorcellerie
+      lore_title: Histoire
+      weapons_title: Affinités d'Armes
+      innate_title: Gains d'Attributs Innés
+      passives_title: Capacités Passives
+      evolution_title: Voies de Classe
+    none_selected: Aucune classe sélectionnée.
     offline:
-      title: Classes Offline
-      subtitle: Classes are currently disabled in config.yml.
-      lore: Enable classes to browse archetypes.
-      hint: Enable classes to manage archetypes.
-      weapons: Weapon bonuses unavailable.
-      passives: Passive bonuses unavailable.
+      title: Classes Hors-ligne
+      subtitle: Les classes sont désactivées actuellement.
+      lore: Activez les classes pour explorer les archétypes.
+      hint: Activez les classes pour gérer les archétypes.
+      weapons: Bonus d'armes indisponibles.
+      passives: Bonus passifs indisponibles.
     playerdata:
-      title: Player data unavailable
-      subtitle: Unable to load your class information right now.
-      lore: Try reopening this page in a few moments.
-      hint: Try reopening this page in a few moments.
+      title: Données indisponibles
+      subtitle: Vos infos de classe ne peuvent pas être chargées.
+      lore: Réessayez d'ouvrir cette page sous peu.
+      hint: Réessayez d'ouvrir cette page sous peu.
     select:
-      title: Select a Class
-      subtitle: Choose a class on the left to preview its role and passives.
+      title: Choisissez une Classe
+      subtitle: Sélectionnez une classe pour voir son rôle et ses passifs.
     role:
-      unspecified: 'Role: Unspecified'
-      value: 'Role: {0}'
-      empty: 'Role: --'
+      unspecified: "Rôle : Non spécifié"
+      value: "Rôle : {0}"
+      empty: "Rôle : --"
     lore:
-      unavailable: Lore unavailable.
-      missing: No lore provided for this class.
+      unavailable: Histoire indisponible.
+      missing: Aucune histoire pour cette classe.
     subtitle:
-      primary: Currently your primary class
-      secondary: Currently your secondary class (50% effect)
-      preview: Preview only
+      primary: Classe primaire actuelle
+      secondary: Classe secondaire actuelle (50% d'effet)
+      preview: Aperçu uniquement
     weapons:
-      none_defined: This class does not define weapon bonuses.
+      none_defined: Cette classe n'a pas de bonus d'armes.
     weapon:
-      sword: Sword
-      axe: Axe
-      bow: Bow
-      staff: Staff
-      dagger: Dagger
-      gauntlet: Gauntlet
-      mace: Mace
-      spear: Spear
-      crossbow: Crossbow
-      wand: Wand
-      unarmed: Unarmed
-      generic: Generic
+      sword: Épée
+      axe: Hache
+      bow: Arc
+      staff: Bâton
+      dagger: Dague
+      gauntlet: Gantelet
+      mace: Masse
+      spear: Lance
+      crossbow: Arbalète
+      wand: Baguette
+      unarmed: À mains nues
+      generic: Générique
     cooldown:
-      bypassed: Bypassed
-      bypassed_hint: Operator bypass active; cooldowns ignored.
-      bypassed_detail: Operator bypass active; swapping is immediate.
-      each_swap: Each swap triggers a {0} cooldown per slot.
-      unrestricted: Class swapping is unrestricted right now.
-      ready: Ready
-      exhausted: No changes left
+      bypassed: Ignoré
+      bypassed_hint: Bypass Opérateur ; recharges ignorées.
+      bypassed_detail: Bypass Opérateur ; changement instantané.
+      each_swap: Chaque changement déclenche {0} de recharge par slot.
+      unrestricted: Le changement est actuellement sans restriction.
+      ready: Prêt
+      exhausted: Plus de changements restants
     actions:
-      view: VIEW
-      set_primary: SET PRIMARY
-      set_secondary: SET SECONDARY
-      view_paths: VIEW PATHS
+      view: VOIR
+      set_primary: DÉFINIR PRIMAIRE
+      set_secondary: DÉFINIR SECONDAIRE
+      view_paths: VOIR LES VOIES
     detail:
-      select_prompt: Select a class to preview bonuses.
-      primary_slot: Primary
-      secondary_slot: Secondary
-      swap_triggers: Changing classes triggers a {0} cooldown.
-      primary_bonus: Primary classes grant 100% of bonuses.
-      secondary_bonus: Secondary classes grant 50% of weapon + passive effects.
-      secondary_disabled: Secondary classes are disabled in config.
+      select_prompt: Choisissez une classe pour voir ses bonus.
+      primary_slot: Primaire
+      secondary_slot: Secondaire
+      swap_triggers: Les changements déclenchent {0} de recharge.
+      primary_bonus: Les classes primaires donnent 100% des bonus.
+      secondary_bonus: Les secondaires donnent 50% des effets d'armes + passifs.
+      secondary_disabled: Les classes secondaires sont désactivées.
     passives:
-      none_defined: This class does not define passive bonuses.
-      none_innate: This class does not grant innate attribute bonuses.
-    secondary_cleared: Secondary class cleared.
+      none_defined: Cette classe n'a pas de bonus passifs.
+      none_innate: Cette classe ne donne pas de bonus innés.
+    secondary_cleared: Classe secondaire retirée.
     info:
-      primary_set: Primary class set to {0}.
-      secondary_set: Secondary class set to {0}.
+      primary_set: Classe primaire définie sur {0}.
+      secondary_set: Classe secondaire définie sur {0}.
     value:
-      weapon_damage: +{0}% dmg
-      weapon_damage_negative: -{0}% dmg
+      weapon_damage: +{0}% de dégâts
+      weapon_damage_negative: -{0}% de dégâts
     passive:
       detail:
         threshold: <{0}% {1}
     error:
-      disabled: Classes are currently disabled.
-      playerdata: Unable to load your class info right now.
-      select_primary: Select a class to set as primary.
-      primary_already: That is already your primary class.
-      secondary_disabled: Secondary classes are currently disabled.
-      select_secondary: Select a class to set as secondary.
-      secondary_matches_primary: Your secondary class cannot match your primary.
-      secondary_already: That is already your secondary class.
-      secondary_set_failed: Unable to set that as your secondary class.
-      secondary_none: You do not have a secondary class assigned.
-      unknown: 'Unknown class: {0}'
-      cooldown_remaining: You can change your {0} class again in {1}.
-      no_changes_remaining: You have no class changes remaining.
+      disabled: Les classes sont désactivées.
+      playerdata: Impossible de charger les infos de classe.
+      select_primary: Sélectionnez une classe primaire.
+      primary_already: C'est déjà votre classe primaire.
+      secondary_disabled: Les classes secondaires sont désactivées.
+      select_secondary: Sélectionnez une classe secondaire.
+      secondary_matches_primary: La classe secondaire ne peut pas être la même que la primaire.
+      secondary_already: C'est déjà votre classe secondaire.
+      secondary_set_failed: Échec de l'assignation secondaire.
+      secondary_none: Aucune classe secondaire assignée.
+      unknown: "Classe inconnue : {0}"
+      cooldown_remaining: Vous pourrez changer votre classe {0} dans {1}.
+      no_changes_remaining: Plus de changements de classe restants.
     evolution:
       summary:
-        placeholder: Select a class to inspect ascension branches.
-        final: 'Stage: {0} - Final form reached.'
-        expanded: 'Stage: {0} - Path: {1} - Paths: {2} ({3})'
-      none_selected: No class selected.
+        placeholder: Choisissez une classe pour voir l'évolution.
+        final: "Niveau : {0} - Forme finale atteinte."
+        expanded: "Niveau : {0} - Voie : {1} - Voies : {2} ({3})"
+      none_selected: Aucune classe sélectionnée.
       stage:
         base: Base
       path:
-        none: None
-        damage: Damage
-        sorcery: Sorcery
+        none: Aucun
+        damage: Dégâts
+        sorcery: Sorcellerie
         tank: Tank
-        support: Support
-      none: No further class paths
+        support: Soutien
+      none: Plus de voies de classe
       none_value: FINAL
-      none_meta: This class is at the end of its ascension branch.
-      none_criteria: No additional upgrade criteria.
+      none_meta: Cette classe a atteint la fin de son évolution.
+      none_criteria: Plus de critères d'amélioration.
       progress:
-        active: Currently active class form.
-        unlocked: Previously completed and unlocked.
-        unknown: Unable to evaluate current progress.
-        ready: All criteria met. Can switch immediately.
-        ready_after: All criteria met. Reach this branch by progressing through earlier path nodes.
-        missing_generic: Missing requirements.
-        missing_header: 'Missing requirements:'
-        missing_any_skill_specific: 'Requires at least one skill option set to be met: {0}.'
+        active: Forme de classe active.
+        unlocked: Déjà complétée et débloquée.
+        unknown: Progression indéterminée.
+        ready: Critères remplis. Changement disponible.
+        ready_after: Critères remplis. Atteignez ce nœud via la voie précédente.
+        missing_generic: Prérequis manquants.
+        missing_header: "Prérequis manquants :"
+        missing_any_skill_specific: "Requiert au moins une compétence remplie : {0}."
       status:
-        active: ACTIVE
-        unlocked: UNLOCKED
-        available: AVAILABLE
-        eligible: ELIGIBLE
-        locked: LOCKED
-      meta: 'Type: {0} | Stage: {1} | Tier: {2} | From: {3}'
+        active: ACTIF
+        unlocked: DÉBLOQUÉ
+        available: DISPONIBLE
+        eligible: ÉLIGIBLE
+        locked: VERROUILLÉ
+      meta: "Type : {0} | Niveau : {1} | Palier : {2} | De : {3}"
       criteria:
-        prestige: '- Prestige: >= {0}'
-        min_skills: '- Minimum skill levels: {0}'
-        max_skills: '- Skill caps: {0}'
-        any_skills: '- Any one set: {0}'
-        forms: '- Required forms: {0}'
-        augments: '- Required augments: {0}'
-        none: 'Requirements: none'
+        prestige: "- Prestige : >= {0}"
+        min_skills: "- Niveaux de comp. min : {0}"
+        max_skills: "- Caps de comp. : {0}"
+        any_skills: "- N'importe quel set : {0}"
+        forms: "- Formes requises : {0}"
+        augments: "- Augmentations requises : {0}"
+        none: "Prérequis : aucun"
         general:
-          none: 'Requirements: skill targets only'
-          prefix: 'Requirements:
-
-            {0}'
+          none: "Prérequis : objectifs de comp. uniquement"
+          prefix: "Prérequis :\n\n            {0}"
         skills:
-          prefix: 'Trainable Skill Targets:
-
-            {0}'
+          prefix: "Objectifs de compétences :\n\n            {0}"
   skills:
-    unknown: Unknown
-    points: 'SKILL POINTS: {0}'
+    unknown: Inconnu
+    points: "POINTS DE COMPÉTENCE : {0}"
     page:
-      title: Skill Attributes
-      subtitle: Allocate points to shape your combat identity.
-      footer_hint: Undo to revert pending tweaks, apply to lock them in.
-      undo: UNDO
-      apply: APPLY
-    level_prefix: Lv.
+      title: Attributs de Compétence
+      subtitle: Distribuez vos points pour forger votre style de combat.
+      footer_hint: Annuler pour abandonner, Appliquer pour confirmer.
+      undo: ANNULER
+      apply: APPLIQUER
+    level_prefix: Niv.
     label:
-      life_force: Life Force
-      strength: Strength
-      sorcery: Sorcery
-      defense: Defense
-      haste: Haste
-      precision: Precision
-      ferocity: Ferocity
-      stamina: Stamina
+      life_force: Vitalité
+      strength: Force
+      sorcery: Sorcellerie
+      defense: Défense
+      haste: Hâte
+      precision: Précision
+      ferocity: Férocité
+      stamina: Endurance
       flow: Flow
       discipline: Discipline
     description:
-      life_force: Boosts your total health so you can tank more hits.
-      strength: Boosts physical damage for melee and ranged weapons.
-      sorcery: Boosts magic damage for staff weapons.
-      defense: Cuts down incoming damage through resistances.
-      haste: Increases movement speed
-      precision: Raises critical hit chance for every attack.
-      ferocity: Adds bonus damage to each critical strike.
-      stamina: Expands stamina for dodges, blocks, and bursts.
-      flow: Increases flow (mana) so spells and abilities stay online longer.
-      discipline: Increases XP gain rate from all sources.
+      life_force: Augmente votre santé totale pour encaisser plus de coups.
+      strength: Augmente les dégâts physiques des armes de mêlée et à distance.
+      sorcery: Augmente les dégâts magiques des bâtons.
+      defense: Réduit les dégâts subis via vos résistances.
+      haste: Augmente la vitesse de déplacement.
+      precision: Augmente les chances de coup critique pour chaque attaque.
+      ferocity: Ajoute des dégâts bonus à chaque coup critique.
+      stamina: Augmente l'endurance pour l'esquive, le blocage et les rafales.
+      flow: Augmente le Flow (mana) pour maintenir sorts et capacités.
+      discipline: Augmente le gain d'EXP de toutes les sources.
     value:
-      resource: '{0} {1}'
-      strength: +{0}% Damage
-      sorcery: +{0}% Magic Damage
-      defense: '{0}% Reduction'
-      haste: +{0}% Speed
-      precision: '{0}% Crit Chance'
-      ferocity: +{0}% Crit Damage
-      discipline: +{0}% XP Gain
+      resource: "{0} {1}"
+      strength: +{0}% de dégâts
+      sorcery: +{0}% dégâts magiques
+      defense: "{0}% de réduction"
+      haste: +{0}% vitesse
+      precision: "{0}% chances crit."
+      ferocity: +{0}% dégâts crit.
+      discipline: +{0}% gain d'EXP
     message:
-      granted: You were granted skill points!
-      reset: Pending changes reset.
-      applied: Skills applied!
-      added: Added {0} point(s) to {1}
-      removed: Removed {0} point(s) from {1}
-      precision_capped: Precision crit chance capped at 100%; excess points not applied.
+      granted: On vous a accordé des points de compétence !
+      reset: Modifications en attente annulées.
+      applied: Compétences appliquées !
+      added: {0} point(s) ajouté(s) à {1}
+      removed: {0} point(s) retiré(s) de {1}
+      precision_capped: Précision plafonnée à 100% ; points excédentaires non appliqués.
     error:
-      precision_at_cap: Precision crit chance is already 100%; remove other bonuses first.
-      not_enough_points: Not enough skill points
-      precision_no_refund: Precision crit chance is already 100% or lower; no excess points to refund.
-      below_original: Cannot go below original level
-      invalid_attribute: 'Invalid attribute: {0}'
-      action_failed: Error handling skill action
+      precision_at_cap: Précision déjà à 100% ; retirez d'autres bonus d'abord.
+      not_enough_points: Pas assez de points de compétence
+      precision_no_refund: Précision à 100% ou moins ; aucun point à rembourser.
+      below_original: Impossible de descendre sous le niveau d'origine
+      invalid_attribute: "Attribut invalide : {0}"
+      action_failed: Échec de l'action de compétence
     resource:
-      health: Health
-      stamina: Stamina
+      health: Santé
+      stamina: Endurance
       flow: Flow
   time:
-    hours: '{0}h'
-    minutes: '{0}m'
-    seconds: '{0}s'
+    hours: "{0}h"
+    minutes: "{0}m"
+    seconds: "{0}s"
   nav:
-    profile: PROFILE
-    skills: SKILLS
+    profile: PROFIL
+    skills: COMPS.
     races: RACES
     classes: CLASSES
-    leaderboards: LEADERBOARDS
-    settings: SETTINGS
+    leaderboards: CLASST.
+    settings: PARAMÈTRES
     augments: AUGMENTS
   profile:
     playerdata:
-      unavailable: Player data unavailable.
+      unavailable: Données joueur indisponibles.
     detail:
-      title: Selected Profile
+      title: Profil Sélectionné
       subtitle:
-        default: Select a profile to view stats
+        default: Choisissez un profil pour voir les stats
     level:
-      short: Lv {0}
+      short: Niv. {0}
     list:
-      title: Profiles {0}/{1}
+      title: Profils {0}/{1}
       slot: Slot {0}
-      level: Level {0}
-      xp: '{0} XP'
-      select: SELECT
+      level: Niveau {0}
+      xp: "{0} EXP"
+      select: CHOISIR
       status:
-        active: ACTIVE
+        active: ACTIF
       delete:
-        confirm: Delete {0}?
+        confirm: "Supprimer {0} ?"
     passives:
-      none: No passive bonuses active
-      innate_none: No innate passives active
-      innate_attr_none: No innate attribute bonuses
-      select_prompt: Select a profile to view passive bonuses
-      select_innate_prompt: Select a profile to view innate bonuses
-      level_label: '{0} (Lv {1})'
+      none: Aucun bonus passif actif
+      innate_none: Aucun passif inné actif
+      innate_attr_none: Aucun bonus d'attribut inné
+      select_prompt: Choisissez un profil pour les bonus passifs
+      select_innate_prompt: Choisissez un profil pour les bonus innés
+      level_label: "{0} (Niv. {1})"
     augments:
-      none: No augments active
+      none: Aucun augment actif
     error:
-      load: Unable to load your profiles right now.
-      generic: Something went wrong handling that request.
-      max_slots: All profile slots are already in use. Delete one first.
-      no_open_slot: Unable to find an open slot right now.
-      create_failed: Could not create that profile slot.
-      slot_range: Profile slot must be between 1 and {0}.
-      slot_missing: Profile slot {0} has not been created yet.
-      switch_failed: Unable to switch to that slot right now.
-      confirm_first: Please confirm the deletion of slot {0} first.
-      delete_failed: Could not delete that profile slot right now.
-      slot_empty: Profile slot {0} is already empty.
-      delete_active: Switch to a different profile before deleting slot {0}.
-      keep_one: You must keep at least one profile slot.
+      load: Les profils ne peuvent pas être chargés.
+      generic: Une erreur est survenue.
+      max_slots: Slots pleins. Supprimez un profil d'abord.
+      no_open_slot: Aucun slot libre trouvé.
+      create_failed: Échec de création du slot de profil.
+      slot_range: Le slot doit être entre 1 et {0}.
+      slot_missing: Le slot {0} n'est pas encore créé.
+      switch_failed: Changement de slot impossible actuellement.
+      confirm_first: Veuillez confirmer la suppression du slot {0}.
+      delete_failed: Échec de suppression du slot.
+      slot_empty: Le slot {0} est déjà vide.
+      delete_active: Changez de profil avant de supprimer le slot {0}.
+      keep_one: Vous devez garder au moins un profil.
     info:
-      created: Created and activated profile slot {0}.
-      already_active: Profile slot {0} is already active.
-      switched: Switched to profile slot {0} ({1}).
-      delete_prompt: Press CONFIRM to delete profile slot {0}.
-      deleted: Deleted profile slot {0}.
-      delete_canceled: Profile deletion canceled.
+      created: Slot de profil {0} créé et activé.
+      already_active: Le slot de profil {0} est déjà actif.
+      switched: Changé vers le slot de profil {0} ({1}).
+      delete_prompt: Appuyez sur CONFIRMER pour supprimer le slot {0}.
+      deleted: Slot de profil {0} supprimé.
+      delete_canceled: Suppression annulée.
     classes:
-      primary_weapon_none: No primary class weapon bonuses
-      none: None
+      primary_weapon_none: Aucun bonus d'arme de classe primaire
+      none: Aucune
 command:
   language:
-    unavailable: Language manager is unavailable.
-    data_not_loaded: Your player data is not loaded yet.
-    current: 'Current language: {0}'
-    available: 'Available locales: {0}'
-    usage: 'Usage: /el language list | /el language set <locale>'
-    invalid: 'Unknown locale ''{0}''. Available locales: {1}'
-    updated: Language set to {0}.
+    unavailable: Gestionnaire de langue indisponible.
+    data_not_loaded: Vos données joueur ne sont pas encore chargées.
+    current: "Langue actuelle : {0}"
+    available: "Langues disponibles : {0}"
+    usage: "Usage : /el language list | /el language set <langue>"
+    invalid: "Langue inconnue '{0}'. Disponibles : {1}"
+    updated: Langue définie sur {0}.
   reset_cooldowns:
-    unavailable: Passive and augment managers are unavailable.
-    success: Reset passive cooldowns for {0} player runtime state(s) and cleared all augment cooldown runtime state.
+    unavailable: Gestionnaire indisponible.
+    success: Recharges passives réinitialisées pour {0} joueurs et toutes les recharges d'augments effacées.
   reset_skillpoints:
-    system_unavailable: Skill system is not initialised. Please contact an admin.
-    player_not_found: 'Player not found: {0}'
-    no_data: No saved data found. Try rejoining.
-    success_target: Reset skill points for {0}.
-    notify_target: An admin reset your skill points to the default layout.
-    success_self: Your skill points have been reset to the default layout.
+    system_unavailable: Système de compétences non initialisé.
+    player_not_found: "Joueur non trouvé : {0}"
+    no_data: Aucune donnée trouvée. Réessayez de vous connecter.
+    success_target: Points réinitialisés pour {0}.
+    notify_target: Un administrateur a réinitialisé vos points de compétence.
+    success_self: Vos points de compétence ont été réinitialisés.
