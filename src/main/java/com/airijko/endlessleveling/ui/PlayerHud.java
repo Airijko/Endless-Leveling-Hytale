@@ -80,6 +80,9 @@ public class PlayerHud extends CustomUIHud {
     private final ClassManager classManager;
     private final AugmentHudOverlayController augmentHudOverlayController;
     private final PlayerRef targetPlayerRef;
+    private String lastRaceIconItemId;
+    private String lastPrimaryIconItemId;
+    private String lastSecondaryIconItemId;
     private final java.util.concurrent.atomic.AtomicBoolean built = new java.util.concurrent.atomic.AtomicBoolean(
             false);
 
@@ -144,19 +147,18 @@ public class PlayerHud extends CustomUIHud {
         uiCommandBuilder.set("#InfoRaceValue.Text", resolveRaceLabel());
         uiCommandBuilder.set("#InfoMobLevelValue.Text", resolveMobLevelLabel());
         uiCommandBuilder.set("#PrimaryClass.Text", resolveClassLabel(true));
+        setRaceIcon(uiCommandBuilder, resolveRaceIconId());
+        setPrimaryClassIcon(uiCommandBuilder, resolveClassIconId(true));
         boolean secondaryEnabled = classManager != null && classManager.isSecondaryClassEnabled();
         uiCommandBuilder.set("#SecondaryClassRow.Visible", secondaryEnabled);
         uiCommandBuilder.set("#SecondaryClass.Visible", secondaryEnabled);
         if (secondaryEnabled) {
             uiCommandBuilder.set("#SecondaryClass.Text", resolveClassLabel(false));
+            setSecondaryClassIcon(uiCommandBuilder, resolveClassIconId(false));
         } else {
             uiCommandBuilder.set("#SecondaryClass.Text", "");
+            setSecondaryClassIcon(uiCommandBuilder, null);
         }
-
-        // Runtime ItemIcon.ItemId updates on HUDs can hard-fail CustomUI command
-        // application on some clients. Keep HUD icons hidden to prioritize stability.
-        uiCommandBuilder.set("#PrimaryIcon.Visible", false);
-        uiCommandBuilder.set("#SecondaryIcon.Visible", false);
 
         applyAugmentOverlay(uiCommandBuilder);
 
@@ -271,6 +273,30 @@ public class PlayerHud extends CustomUIHud {
         return (id == null || id.isBlank()) ? Lang.tr(targetPlayerRef.getUuid(), LocalizationKey.HUD_CLASS_NONE) : id;
     }
 
+    private String resolveRaceIconId() {
+        PlayerData data = getPlayerData();
+        if (data == null) {
+            return null;
+        }
+
+        String raceId = data.getRaceId();
+        if (raceId == null || raceId.isBlank() || raceId.equalsIgnoreCase("none")) {
+            return null;
+        }
+
+        if (raceManager != null && raceManager.isEnabled()) {
+            RaceDefinition race = raceManager.getRace(raceId);
+            if (race != null) {
+                String icon = race.getIcon();
+                if (icon != null && !icon.isBlank()) {
+                    return icon.trim();
+                }
+            }
+        }
+
+        return RaceDefinition.DEFAULT_ICON_ITEM_ID;
+    }
+
     private String resolveMobLevelLabel() {
         if (mobLevelingManager == null || !mobLevelingManager.isMobLevelingEnabled()) {
             return Lang.tr(targetPlayerRef.getUuid(), LocalizationKey.HUD_COMMON_UNAVAILABLE);
@@ -327,6 +353,45 @@ public class PlayerHud extends CustomUIHud {
         }
         uiCommandBuilder.set(selector + ".ItemId", itemId);
         uiCommandBuilder.set(selector + ".Visible", true);
+    }
+
+    private void setRaceIcon(@Nonnull UICommandBuilder uiCommandBuilder, String itemId) {
+        if (itemId == null || itemId.isBlank()) {
+            lastRaceIconItemId = null;
+            uiCommandBuilder.set("#InfoRaceIcon.Visible", false);
+            return;
+        }
+        if (!itemId.equals(lastRaceIconItemId)) {
+            uiCommandBuilder.set("#InfoRaceIcon.ItemId", itemId);
+            lastRaceIconItemId = itemId;
+        }
+        uiCommandBuilder.set("#InfoRaceIcon.Visible", true);
+    }
+
+    private void setPrimaryClassIcon(@Nonnull UICommandBuilder uiCommandBuilder, String itemId) {
+        if (itemId == null || itemId.isBlank()) {
+            lastPrimaryIconItemId = null;
+            uiCommandBuilder.set("#PrimaryIcon.Visible", false);
+            return;
+        }
+        if (!itemId.equals(lastPrimaryIconItemId)) {
+            uiCommandBuilder.set("#PrimaryIcon.ItemId", itemId);
+            lastPrimaryIconItemId = itemId;
+        }
+        uiCommandBuilder.set("#PrimaryIcon.Visible", true);
+    }
+
+    private void setSecondaryClassIcon(@Nonnull UICommandBuilder uiCommandBuilder, String itemId) {
+        if (itemId == null || itemId.isBlank()) {
+            lastSecondaryIconItemId = null;
+            uiCommandBuilder.set("#SecondaryIcon.Visible", false);
+            return;
+        }
+        if (!itemId.equals(lastSecondaryIconItemId)) {
+            uiCommandBuilder.set("#SecondaryIcon.ItemId", itemId);
+            lastSecondaryIconItemId = itemId;
+        }
+        uiCommandBuilder.set("#SecondaryIcon.Visible", true);
     }
 
     private String resolveClassIconId(boolean primary) {

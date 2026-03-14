@@ -4,7 +4,7 @@ $Hotbar = "Hotbar.ui";
 
 Group #EndlessPlayerHud {
   LayoutMode: Bottom;
-  Anchor: (Bottom: 135, Width: 634, Height: 66);
+  Anchor: (Bottom: 145, Width: 634, Height: 66);
 
   Group #ActiveAugmentPanel {
     LayoutMode: Top;
@@ -75,8 +75,10 @@ Group #EndlessPlayerLevel {
 // Player level, race, class info
 Group #InfoPanel {
   LayoutMode: Top;
-  Anchor: (Bottom: 15, Left: 15, Width: 260, Height: 80);
+  Anchor: (Bottom: 15, Left: 15, Width: 260);
   Padding: (Full: 4);
+
+  Group { FlexWeight: 1; }
 
   Label #Level {
     Anchor: (Height: 18, Top: 4);
@@ -104,7 +106,13 @@ Group #InfoPanel {
     LayoutMode: Left;
     Anchor: (Height: 18, Top: 4);
 
+    ItemIcon #InfoRaceIcon {
+      Anchor: (Width: 16, Height: 16, Top: 1);
+      Visible: false;
+    }
+
     Label #InfoRacePrefix {
+      Anchor: (Left: 6);
       Style: (FontSize: 11, TextColor: #4fd7f7);
       Text: "Race: ";
     }
