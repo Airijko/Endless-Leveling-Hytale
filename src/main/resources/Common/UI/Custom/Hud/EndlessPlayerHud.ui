@@ -50,16 +50,16 @@ Group #EndlessPlayerHud {
     }
   }
 
-  Group #ConquerorIconPanel {
-    Anchor: (Bottom: 24, Width: 28, Height: 28, Left: 303);
+  Group #StackingAugmentIconPanel {
+    Anchor: (Bottom: 24, Width: 32, Height: 32, Left: 303);
     Visible: false;
 
-    Group #ConquerorIconBackground {
+    Group #StackingAugmentIconBackground {
       Anchor: (Width: 28, Height: 28);
       Background: #0f1824(0.82);
     }
 
-    Group #ConquerorMaxOutline {
+    Group #StackingAugmentMaxOutline {
       Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
       Visible: false;
 
@@ -84,20 +84,74 @@ Group #EndlessPlayerHud {
       }
     }
     
-    ItemIcon #ConquerorIcon {
-      ItemId: "Weapon_Daggers_Fang_Doomed";
-      Anchor: (Width: 22, Height: 22, Left: 3, Top: 3);
+    ItemIcon #StackingAugmentIconCommonStat {
+      ItemId: "Ingredient_Crystal_White";
+      Anchor: (Width: 32, Height: 32, Left: 3, Top: 3);
       Visible: false;
     }
 
-    Group #ConquerorStackBadge {
-      Anchor: (Width: 12, Height: 12, Right: 0, Bottom: 0);
+    ItemIcon #StackingAugmentIconPassiveStat {
+      ItemId: "Ingredient_Life_Essence";
+      Anchor: (Width: 32, Height: 32, Left: 3, Top: 3);
+      Visible: false;
+    }
+
+    ItemIcon #StackingAugmentIconMagicStat {
+      ItemId: "Weapon_Staff_Bronze";
+      Anchor: (Width: 32, Height: 32, Left: 3, Top: 3);
+      Visible: false;
+    }
+
+    ItemIcon #StackingAugmentIconOnHit {
+      ItemId: "Weapon_Daggers_Fang_Doomed";
+      Anchor: (Width: 32, Height: 32, Left: 3, Top: 3);
+      Visible: false;
+    }
+
+    ItemIcon #StackingAugmentIconOnRangedHit {
+      ItemId: "Weapon_Shortbow_Crude";
+      Anchor: (Width: 32, Height: 32, Left: 3, Top: 3);
+      Visible: false;
+    }
+
+    ItemIcon #StackingAugmentIconOnDamageTaken {
+      ItemId: "Weapon_Shield_Orbis_Knight";
+      Anchor: (Width: 32, Height: 32, Left: 3, Top: 3);
+      Visible: false;
+    }
+
+    ItemIcon #StackingAugmentIconOnLowHp {
+      ItemId: "Potion_Health_Lesser";
+      Anchor: (Width: 32, Height: 32, Left: 3, Top: 3);
+      Visible: false;
+    }
+
+    ItemIcon #StackingAugmentIconOnCrit {
+      ItemId: "Weapon_Battleaxe_Mithril";
+      Anchor: (Width: 32, Height: 32, Left: 3, Top: 3);
+      Visible: false;
+    }
+
+    ItemIcon #StackingAugmentIconOnKill {
+      ItemId: "Ingredient_Fire_Essence";
+      Anchor: (Width: 32, Height: 32, Left: 3, Top: 3);
+      Visible: false;
+    }
+
+    ItemIcon #StackingAugmentIconOnLifesteal {
+      ItemId: "Potion_Health_Greater";
+      Anchor: (Width: 32, Height: 32, Left: 3, Top: 3);
+      Visible: false;
+    }
+
+    Group #StackingAugmentStackBadge {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
       Background: #000000(0.85);
     }
 
-    Label #ConquerorStackCount {
-      Anchor: (Width: 12, Height: 12, Right: 0, Bottom: 0);
-      Style: (FontSize: 11, Alignment: Center, TextColor: #ffffff, RenderBold: true);
+    Label #StackingAugmentStackCount {
+      Anchor: (Width: 16, Height: 16, Right: 0, Bottom: 0);
+      Style: (FontSize: 12, Alignment: Center, TextColor: #ffffff, RenderBold: true);
       Text: "1";
     }
   }

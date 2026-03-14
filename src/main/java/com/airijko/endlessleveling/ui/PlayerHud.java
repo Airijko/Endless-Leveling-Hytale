@@ -32,6 +32,29 @@ public class PlayerHud extends CustomUIHud {
 
     public static final String ID = "EndlessLeveling:PlayerHud";
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+    private static final String[] STACKING_ICON_VARIANT_SUFFIXES = {
+            "CommonStat",
+            "PassiveStat",
+            "MagicStat",
+            "OnHit",
+            "OnRangedHit",
+            "OnDamageTaken",
+            "OnLowHp",
+            "OnCrit",
+            "OnKill",
+            "OnLifesteal"
+    };
+    private static final Map<String, String> STACKING_ICON_VARIANT_BY_ITEM_ID = Map.ofEntries(
+            Map.entry("Ingredient_Crystal_White", "CommonStat"),
+            Map.entry("Ingredient_Life_Essence", "PassiveStat"),
+            Map.entry("Weapon_Staff_Bronze", "MagicStat"),
+            Map.entry("Weapon_Daggers_Fang_Doomed", "OnHit"),
+            Map.entry("Weapon_Shortbow_Crude", "OnRangedHit"),
+            Map.entry("Weapon_Shield_Orbis_Knight", "OnDamageTaken"),
+            Map.entry("Potion_Health_Lesser", "OnLowHp"),
+            Map.entry("Weapon_Battleaxe_Mithril", "OnCrit"),
+            Map.entry("Ingredient_Fire_Essence", "OnKill"),
+            Map.entry("Potion_Health_Greater", "OnLifesteal"));
     private static final Map<UUID, PlayerHud> ACTIVE_HUDS = new ConcurrentHashMap<>();
     private static final Map<String, String> DEFAULT_CLASS_ICONS = Map.ofEntries(
             Map.entry("*", "Weapon_Longsword_Adamantite_Saurian"),
@@ -148,12 +171,25 @@ public class PlayerHud extends CustomUIHud {
                 "#ShieldStatusProgress",
                 overlayState.shieldBar());
 
-        uiCommandBuilder.set("#ConquerorIconPanel.Visible", overlayState.conquerorActive());
-        uiCommandBuilder.set("#ConquerorIcon.Visible", overlayState.conquerorActive());
-        uiCommandBuilder.set("#ConquerorStackCount.Visible", overlayState.conquerorActive());
-        uiCommandBuilder.set("#ConquerorMaxOutline.Visible", overlayState.conquerorAtMaxStacks());
-        uiCommandBuilder.set("#ConquerorStackCount.Text",
-                overlayState.conquerorActive() ? Integer.toString(Math.max(0, overlayState.conquerorStacks())) : "");
+        uiCommandBuilder.set("#StackingAugmentIconPanel.Visible", overlayState.stackingActive());
+        uiCommandBuilder.set("#StackingAugmentStackBadge.Visible", overlayState.stackingActive());
+        uiCommandBuilder.set("#StackingAugmentStackCount.Visible", overlayState.stackingActive());
+        uiCommandBuilder.set("#StackingAugmentMaxOutline.Visible", overlayState.stackingAtMaxStacks());
+        uiCommandBuilder.set("#StackingAugmentStackCount.Text",
+                overlayState.stackingActive() ? Integer.toString(Math.max(0, overlayState.stackingStacks())) : "");
+
+        setStackingIconVariant(uiCommandBuilder,
+                overlayState.stackingActive() ? overlayState.stackingIconItemId() : null);
+    }
+
+    private void setStackingIconVariant(@Nonnull UICommandBuilder uiCommandBuilder, String iconItemId) {
+        String chosenVariant = iconItemId == null
+                ? null
+                : STACKING_ICON_VARIANT_BY_ITEM_ID.getOrDefault(iconItemId, "PassiveStat");
+
+        for (String variant : STACKING_ICON_VARIANT_SUFFIXES) {
+            uiCommandBuilder.set("#StackingAugmentIcon" + variant + ".Visible", variant.equals(chosenVariant));
+        }
     }
 
     private void applyOverlayBar(@Nonnull UICommandBuilder uiCommandBuilder,

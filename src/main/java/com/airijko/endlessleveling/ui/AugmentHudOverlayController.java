@@ -5,7 +5,6 @@ import com.airijko.endlessleveling.augments.AugmentManager;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.types.BurnAugment;
-import com.airijko.endlessleveling.augments.types.ConquerorAugment;
 import com.airijko.endlessleveling.augments.types.EndurePainAugment;
 import com.airijko.endlessleveling.augments.types.FleetFootworkAugment;
 import com.airijko.endlessleveling.augments.types.FortressAugment;
@@ -14,6 +13,7 @@ import com.airijko.endlessleveling.augments.types.OverhealAugment;
 import com.airijko.endlessleveling.augments.types.PhaseRushAugment;
 import com.airijko.endlessleveling.augments.types.ProtectiveBubbleAugment;
 import com.airijko.endlessleveling.augments.types.UndyingRageAugment;
+import com.airijko.endlessleveling.enums.PassiveCategory;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
@@ -31,6 +31,7 @@ public final class AugmentHudOverlayController {
 
     private static final double EPSILON = 0.0001D;
     private static final double MIN_VISIBLE_BAR_PROGRESS = 1.0D / 634.0D;
+    private static final String STACKING_ICON_FALLBACK = "Ingredient_Life_Essence";
     private static final List<String> DURATION_PRIORITY = List.of(
             BurnAugment.ID,
             FleetFootworkAugment.ID,
@@ -68,28 +69,118 @@ public final class AugmentHudOverlayController {
         long now = System.currentTimeMillis();
         AugmentRuntimeManager.AugmentRuntimeState runtimeState = runtimeManager.getRuntimeState(uuid);
         EntityStatMap statMap = resolveStatMap(playerRef);
-        int conquerorStacks = resolveConquerorStacks(runtimeState, now);
-        int conquerorMaxStacks = resolveConfiguredMaxStacks(ConquerorAugment.ID, 8);
+        StackingHudState stackingHudState = resolveStackingHudState(runtimeState, now);
 
         return new HudOverlayState(resolveDurationBar(runtimeState, now),
                 resolveShieldBar(runtimeState, statMap, now),
-                conquerorStacks > 0,
-                conquerorStacks,
-                conquerorStacks > 0 && conquerorStacks >= conquerorMaxStacks);
+                stackingHudState.active(),
+                stackingHudState.stacks(),
+                stackingHudState.atMaxStacks(),
+                stackingHudState.iconItemId());
     }
 
-    private int resolveConquerorStacks(AugmentRuntimeManager.AugmentRuntimeState runtimeState, long now) {
-        if (runtimeState == null || !isAugmentSelected(runtimeState, ConquerorAugment.ID)) {
-            return 0;
+    private StackingHudState resolveStackingHudState(AugmentRuntimeManager.AugmentRuntimeState runtimeState, long now) {
+        if (runtimeState == null || augmentManager == null) {
+            return StackingHudState.hidden();
         }
 
-        AugmentRuntimeManager.AugmentState state = runtimeState.getState(ConquerorAugment.ID);
-        if (state == null || state.getStacks() <= 0) {
-            return 0;
+        List<String> selectedAugmentIds = resolveSelectedAugmentIds(runtimeState);
+        if (selectedAugmentIds.isEmpty()) {
+            return StackingHudState.hidden();
         }
 
-        boolean active = state.getExpiresAt() <= 0L || state.getExpiresAt() > now;
-        return active ? state.getStacks() : 0;
+        StackingHudState best = StackingHudState.hidden();
+        for (String augmentId : selectedAugmentIds) {
+            AugmentDefinition definition = augmentManager.getAugment(augmentId);
+            if (definition == null || !hasStackingMechanic(definition)) {
+                continue;
+            }
+
+            AugmentRuntimeManager.AugmentState state = runtimeState.getState(augmentId);
+            if (state == null) {
+                continue;
+            }
+
+            int stacks = Math.max(0, state.getStacks());
+            if (stacks <= 0) {
+                continue;
+            }
+
+            if (state.getExpiresAt() > 0L && state.getExpiresAt() <= now) {
+                continue;
+            }
+
+            int maxStacks = resolveConfiguredMaxStacks(definition.getId(), definition.getPassives());
+            boolean atMaxStacks = maxStacks > 0 && stacks >= maxStacks;
+            StackingHudState candidate = new StackingHudState(true,
+                    stacks,
+                    atMaxStacks,
+                    resolveCategoryIconItemId(definition));
+
+            if (candidate.stacks() > best.stacks()) {
+                best = candidate;
+            }
+        }
+
+        return best;
+    }
+
+    private List<String> resolveSelectedAugmentIds(AugmentRuntimeManager.AugmentRuntimeState runtimeState) {
+        if (runtimeState == null) {
+            return List.of();
+        }
+
+        String signature = runtimeState.getPassiveSelectionSignature();
+        if (signature == null || signature.isBlank()) {
+            return List.of();
+        }
+
+        List<String> selectedAugmentIds = new ArrayList<>();
+        String[] tokens = signature.split("\\|");
+        for (String token : tokens) {
+            if (token == null || token.isBlank()) {
+                continue;
+            }
+            selectedAugmentIds.add(token.trim().toLowerCase(Locale.ROOT));
+        }
+        return selectedAugmentIds;
+    }
+
+    private boolean hasStackingMechanic(AugmentDefinition definition) {
+        if (definition == null) {
+            return false;
+        }
+        if (definition.isStackable()) {
+            return true;
+        }
+
+        Map<String, Object> passives = definition.getPassives();
+        if (resolveConfiguredMaxStacks(definition.getId(), passives) > 0) {
+            return true;
+        }
+
+        return containsStackingHint(passives);
+    }
+
+    private boolean containsStackingHint(Object node) {
+        if (node instanceof Map<?, ?> map) {
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                String key = entry.getKey() == null ? "" : entry.getKey().toString().toLowerCase(Locale.ROOT);
+                if (key.contains("stack") || containsStackingHint(entry.getValue())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (node instanceof Iterable<?> iterable) {
+            for (Object value : iterable) {
+                if (containsStackingHint(value)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private BarState resolveDurationBar(AugmentRuntimeManager.AugmentRuntimeState runtimeState, long now) {
@@ -406,22 +497,50 @@ public final class AugmentHudOverlayController {
         });
     }
 
-    private int resolveConfiguredMaxStacks(String augmentId, int fallback) {
+    private int resolveConfiguredMaxStacks(String augmentId, Map<String, Object> passives) {
         if (augmentId == null || augmentId.isBlank()) {
-            return Math.max(1, fallback);
+            return 0;
         }
 
         return maxStacksCache.computeIfAbsent(augmentId, id -> {
-            AugmentDefinition definition = augmentManager == null ? null : augmentManager.getAugment(id);
-            if (definition == null) {
-                return Math.max(1, fallback);
+            Map<String, Object> buffs = AugmentValueReader.getMap(passives, "buffs");
+            if (buffs != null) {
+                int configured = AugmentValueReader.getInt(buffs, "max_stacks", 0);
+                if (configured > 0) {
+                    return configured;
+                }
             }
 
-            Map<String, Object> passives = definition.getPassives();
-            Map<String, Object> buffs = AugmentValueReader.getMap(passives, "buffs");
-            int configured = AugmentValueReader.getInt(buffs, "max_stacks", fallback);
-            return Math.max(1, configured);
+            Map<String, Object> stackingHealth = AugmentValueReader.getMap(passives, "stacking_health");
+            if (stackingHealth != null) {
+                int configured = AugmentValueReader.getInt(stackingHealth, "max_stacks", 0);
+                if (configured > 0) {
+                    return configured;
+                }
+            }
+
+            Map<String, Object> deathStacks = AugmentValueReader.getMap(passives, "death_stacks");
+            if (deathStacks != null) {
+                int configured = AugmentValueReader.getInt(deathStacks, "max_deaths", 0);
+                if (configured > 0) {
+                    return configured;
+                }
+            }
+
+            return Math.max(0, AugmentValueReader.getInt(passives, "max_stacks", 0));
         });
+    }
+
+    private String resolveCategoryIconItemId(AugmentDefinition definition) {
+        if (definition == null) {
+            return STACKING_ICON_FALLBACK;
+        }
+
+        PassiveCategory category = definition.getCategory() == null ? PassiveCategory.PASSIVE_STAT
+                : definition
+                        .getCategory();
+        String iconItemId = category.getIconItemId();
+        return iconItemId == null || iconItemId.isBlank() ? STACKING_ICON_FALLBACK : iconItemId;
     }
 
     private String resolveDisplayName(String augmentId) {
@@ -488,11 +607,12 @@ public final class AugmentHudOverlayController {
 
     public record HudOverlayState(BarState durationBar,
             BarState shieldBar,
-            boolean conquerorActive,
-            int conquerorStacks,
-            boolean conquerorAtMaxStacks) {
+            boolean stackingActive,
+            int stackingStacks,
+            boolean stackingAtMaxStacks,
+            String stackingIconItemId) {
         public static HudOverlayState hidden() {
-            return new HudOverlayState(BarState.hidden(), BarState.hidden(), false, 0, false);
+            return new HudOverlayState(BarState.hidden(), BarState.hidden(), false, 0, false, STACKING_ICON_FALLBACK);
         }
     }
 
@@ -503,5 +623,11 @@ public final class AugmentHudOverlayController {
     }
 
     private record DurationCandidate(String label, double progress, long activeSince, long expiresAt) {
+    }
+
+    private record StackingHudState(boolean active, int stacks, boolean atMaxStacks, String iconItemId) {
+        private static StackingHudState hidden() {
+            return new StackingHudState(false, 0, false, STACKING_ICON_FALLBACK);
+        }
     }
 }
