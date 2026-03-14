@@ -67,23 +67,26 @@ public final class AugmentHudOverlayController {
         long now = System.currentTimeMillis();
         AugmentRuntimeManager.AugmentRuntimeState runtimeState = runtimeManager.getRuntimeState(uuid);
         EntityStatMap statMap = resolveStatMap(playerRef);
+        int conquerorStacks = resolveConquerorStacks(runtimeState, now);
 
         return new HudOverlayState(resolveDurationBar(runtimeState, now),
                 resolveShieldBar(runtimeState, statMap, now),
-                resolveConquerorActive(runtimeState, now));
+                conquerorStacks > 0,
+                conquerorStacks);
     }
 
-    private boolean resolveConquerorActive(AugmentRuntimeManager.AugmentRuntimeState runtimeState, long now) {
+    private int resolveConquerorStacks(AugmentRuntimeManager.AugmentRuntimeState runtimeState, long now) {
         if (runtimeState == null || !isAugmentSelected(runtimeState, ConquerorAugment.ID)) {
-            return false;
+            return 0;
         }
 
         AugmentRuntimeManager.AugmentState state = runtimeState.getState(ConquerorAugment.ID);
         if (state == null || state.getStacks() <= 0) {
-            return false;
+            return 0;
         }
 
-        return state.getExpiresAt() <= 0L || state.getExpiresAt() > now;
+        boolean active = state.getExpiresAt() <= 0L || state.getExpiresAt() > now;
+        return active ? state.getStacks() : 0;
     }
 
     private BarState resolveDurationBar(AugmentRuntimeManager.AugmentRuntimeState runtimeState, long now) {
@@ -462,9 +465,12 @@ public final class AugmentHudOverlayController {
         return wrappedSignature.contains("|" + normalizedAugmentId + "|");
     }
 
-    public record HudOverlayState(BarState durationBar, BarState shieldBar, boolean conquerorActive) {
+    public record HudOverlayState(BarState durationBar,
+            BarState shieldBar,
+            boolean conquerorActive,
+            int conquerorStacks) {
         public static HudOverlayState hidden() {
-            return new HudOverlayState(BarState.hidden(), BarState.hidden(), false);
+            return new HudOverlayState(BarState.hidden(), BarState.hidden(), false, 0);
         }
     }
 

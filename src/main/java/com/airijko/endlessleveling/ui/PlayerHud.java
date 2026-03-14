@@ -151,6 +151,8 @@ public class PlayerHud extends CustomUIHud {
         uiCommandBuilder.set("#ConquerorIconPanel.Visible", overlayState.conquerorActive());
         uiCommandBuilder.set("#ConquerorIcon.Visible", overlayState.conquerorActive());
         uiCommandBuilder.set("#ConquerorStackCount.Visible", overlayState.conquerorActive());
+        uiCommandBuilder.set("#ConquerorStackCount.Text",
+                overlayState.conquerorActive() ? Integer.toString(Math.max(0, overlayState.conquerorStacks())) : "");
     }
 
     private void applyOverlayBar(@Nonnull UICommandBuilder uiCommandBuilder,
