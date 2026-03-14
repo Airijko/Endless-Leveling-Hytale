@@ -48,8 +48,6 @@ public final class ProtectiveBubbleAugment extends YamlAugment implements Augmen
         AugmentState state = runtime.getState(ID);
 
         if (state.getStacks() > 0 && state.getExpiresAt() > now) {
-            state.setStacks(0);
-            state.setExpiresAt(0L);
             return 0f;
         }
 

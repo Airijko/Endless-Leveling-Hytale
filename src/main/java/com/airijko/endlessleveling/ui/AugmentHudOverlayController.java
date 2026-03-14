@@ -148,12 +148,20 @@ public final class AugmentHudOverlayController {
     }
 
     private BarState resolveProtectiveBubbleBar(AugmentRuntimeManager.AugmentRuntimeState runtimeState, long now) {
-        AugmentRuntimeManager.AugmentState state = runtimeState.getState(ProtectiveBubbleAugment.ID);
-        if (state == null || state.getStacks() <= 0 || state.getExpiresAt() <= now) {
+        if (!isAugmentSelected(runtimeState, ProtectiveBubbleAugment.ID)) {
             return BarState.hidden();
         }
 
-        return new BarState(resolveDisplayName(ProtectiveBubbleAugment.ID), 1.0D, true);
+        AugmentRuntimeManager.AugmentState state = runtimeState.getState(ProtectiveBubbleAugment.ID);
+        if (state != null && state.getStacks() > 0 && state.getExpiresAt() > now) {
+            return new BarState(resolveDisplayName(ProtectiveBubbleAugment.ID), 1.0D, true);
+        }
+
+        AugmentRuntimeManager.CooldownState cooldown = runtimeState.getCooldown(ProtectiveBubbleAugment.ID);
+        boolean available = cooldown == null || cooldown.getExpiresAt() <= now;
+        return available
+                ? new BarState(resolveDisplayName(ProtectiveBubbleAugment.ID), 1.0D, true)
+                : BarState.hidden();
     }
 
     private BarState resolveFortressShieldBar(AugmentRuntimeManager.AugmentRuntimeState runtimeState, long now) {
@@ -381,6 +389,21 @@ public final class AugmentHudOverlayController {
 
     private boolean isVisiblyFilled(double progress) {
         return progress > MIN_VISIBLE_BAR_PROGRESS;
+    }
+
+    private boolean isAugmentSelected(AugmentRuntimeManager.AugmentRuntimeState runtimeState, String augmentId) {
+        if (runtimeState == null || augmentId == null || augmentId.isBlank()) {
+            return false;
+        }
+
+        String signature = runtimeState.getPassiveSelectionSignature();
+        if (signature == null || signature.isBlank()) {
+            return false;
+        }
+
+        String normalizedAugmentId = augmentId.trim().toLowerCase(Locale.ROOT);
+        String wrappedSignature = "|" + signature + "|";
+        return wrappedSignature.contains("|" + normalizedAugmentId + "|");
     }
 
     public record HudOverlayState(BarState durationBar, BarState shieldBar) {
