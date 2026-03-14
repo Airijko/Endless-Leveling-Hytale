@@ -3,6 +3,7 @@ package com.airijko.endlessleveling.listeners;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.augments.MobAugmentExecutor;
+import com.airijko.endlessleveling.augments.types.ProtectiveBubbleAugment;
 import com.airijko.endlessleveling.combat.CombatHookProcessor;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
@@ -60,6 +61,7 @@ public class PlayerCombatListener extends DamageEventSystem {
     private final PlayerDataManager playerDataManager;
     private final PassiveManager passiveManager;
     private final ArchetypePassiveManager archetypePassiveManager;
+    private final AugmentExecutor augmentExecutor;
     private final MobAugmentExecutor mobAugmentExecutor;
     private final MobLevelingManager mobLevelingManager;
     private final CombatHookProcessor combatHookProcessor;
@@ -75,6 +77,7 @@ public class PlayerCombatListener extends DamageEventSystem {
         this.playerDataManager = playerDataManager;
         this.passiveManager = passiveManager;
         this.archetypePassiveManager = archetypePassiveManager;
+        this.augmentExecutor = augmentExecutor;
         this.mobAugmentExecutor = mobAugmentExecutor;
         this.mobLevelingManager = mobLevelingManager;
         this.combatHookProcessor = new CombatHookProcessor(skillManager,
@@ -242,6 +245,7 @@ public class PlayerCombatListener extends DamageEventSystem {
         float appliedTrueDamage = applyTrueEdgeDamage(
                 attackerRef,
                 targetRef,
+                targetPlayer,
                 commandBuffer,
                 trueEdge.reducedTrueDamage() + reducedAugmentTrueDamage);
 
@@ -384,6 +388,7 @@ public class PlayerCombatListener extends DamageEventSystem {
 
     private float applyTrueEdgeDamage(Ref<EntityStore> attackerRef,
             Ref<EntityStore> targetRef,
+            PlayerRef targetPlayer,
             CommandBuffer<EntityStore> commandBuffer,
             double trueDamageAmount) {
         if (trueDamageAmount <= 0.0D || targetRef == null || commandBuffer == null) {
@@ -391,6 +396,23 @@ public class PlayerCombatListener extends DamageEventSystem {
         }
 
         EntityStatMap targetStats = commandBuffer.getComponent(targetRef, EntityStatMap.getComponentType());
+        if (targetPlayer != null && targetPlayer.isValid() && targetStats != null && augmentExecutor != null) {
+            PlayerData defenderData = playerDataManager.get(targetPlayer.getUuid());
+            if (defenderData != null) {
+                float afterBubble = augmentExecutor.applySpecificOnDamageTaken(defenderData,
+                        targetRef,
+                        attackerRef,
+                        commandBuffer,
+                        targetStats,
+                        (float) trueDamageAmount,
+                        ProtectiveBubbleAugment.ID);
+                trueDamageAmount = Math.max(0.0D, afterBubble);
+                if (trueDamageAmount <= 0.0D) {
+                    return 0.0f;
+                }
+            }
+        }
+
         EntityStatValue hp = targetStats == null ? null : targetStats.get(DefaultEntityStatTypes.getHealth());
         if (hp == null || hp.getMax() <= 0f || hp.get() <= 0f) {
             return 0.0f;

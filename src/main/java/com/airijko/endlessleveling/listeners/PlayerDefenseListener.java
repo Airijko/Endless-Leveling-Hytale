@@ -3,6 +3,7 @@ package com.airijko.endlessleveling.listeners;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.augments.MobAugmentExecutor;
+import com.airijko.endlessleveling.augments.types.ProtectiveBubbleAugment;
 import com.airijko.endlessleveling.combat.CombatHookProcessor;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.managers.MobLevelingManager;
@@ -147,7 +148,11 @@ public class PlayerDefenseListener extends DamageEventSystem {
 								originalDamage);
 						damage.setAmount(onHit.damage());
 
-						float appliedTrueDamage = applyMobTrueDamage(targetRef, commandBuffer, onHit.trueDamageBonus());
+						float appliedTrueDamage = applyMobTrueDamage(playerData,
+								targetRef,
+								attackerRef,
+								commandBuffer,
+								onHit.trueDamageBonus());
 						if (Math.abs(onHit.damage() - originalDamage) > 0.0001f || appliedTrueDamage > 0f) {
 							LOGGER.atInfo().log(
 									"MobOnHitAugments attacker=%d defender=%s damage=%.3f true=%.3f augments=%s",
@@ -204,16 +209,32 @@ public class PlayerDefenseListener extends DamageEventSystem {
 				result.resistance() * 100);
 	}
 
-	private float applyMobTrueDamage(Ref<EntityStore> defenderRef,
+	private float applyMobTrueDamage(PlayerData defenderData,
+			Ref<EntityStore> defenderRef,
+			Ref<EntityStore> attackerRef,
 			CommandBuffer<EntityStore> commandBuffer,
 			double rawTrueDamage) {
-		if (defenderRef == null || commandBuffer == null || rawTrueDamage <= 0.0D) {
+		if (defenderData == null || defenderRef == null || commandBuffer == null || rawTrueDamage <= 0.0D) {
 			return 0.0f;
 		}
 
 		EntityStatMap statMap = commandBuffer.getComponent(defenderRef, EntityStatMap.getComponentType());
 		if (statMap == null) {
 			return 0.0f;
+		}
+
+		if (augmentExecutor != null) {
+			float afterBubble = augmentExecutor.applySpecificOnDamageTaken(defenderData,
+					defenderRef,
+					attackerRef,
+					commandBuffer,
+					statMap,
+					(float) rawTrueDamage,
+					ProtectiveBubbleAugment.ID);
+			rawTrueDamage = Math.max(0.0D, afterBubble);
+			if (rawTrueDamage <= 0.0D) {
+				return 0.0f;
+			}
 		}
 
 		EntityStatValue hp = statMap.get(DefaultEntityStatTypes.getHealth());

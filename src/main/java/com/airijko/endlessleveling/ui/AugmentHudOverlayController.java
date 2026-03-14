@@ -216,20 +216,18 @@ public final class AugmentHudOverlayController {
             return BarState.hidden();
         }
 
-        double progress = 0.0D;
-        float maxHealth = statMap == null ? 0.0F
-                : com.airijko.endlessleveling.augments.AugmentUtils.getMaxHealth(statMap);
-        if (maxHealth > 0.0F) {
-            progress = clamp01(state.getStoredValue() / maxHealth);
+        AugmentRuntimeManager.AugmentState capState = runtimeState.getState(EndurePainAugment.SHIELD_CAP_STATE_ID);
+        if (capState != null && capState.getExpiresAt() < now) {
+            capState.clear();
         }
 
-        if (progress <= 0.0D) {
-            long totalDuration = resolveConfiguredDurationMillis(EndurePainAugment.ID);
-            if (totalDuration > 0L) {
-                long remaining = Math.max(0L, state.getExpiresAt() - now);
-                progress = clamp01(remaining / (double) totalDuration);
-            }
+        double capValue = Math.max(state.getStoredValue(), capState == null ? 0.0D : capState.getStoredValue());
+        if (capValue <= EPSILON) {
+            return BarState.hidden();
         }
+
+        double progress = 0.0D;
+        progress = clamp01(state.getStoredValue() / capValue);
 
         if (progress > 0.0D && !isVisiblyFilled(progress)) {
             progress = MIN_VISIBLE_BAR_PROGRESS * 1.1D;
@@ -319,7 +317,11 @@ public final class AugmentHudOverlayController {
     }
 
     private long loadDurationMillis(String augmentId) {
-        AugmentDefinition definition = augmentManager == null ? null : augmentManager.getAugment(augmentId);
+        String definitionId = FleetFootworkAugment.BUFF_WINDOW_STATE_ID.equalsIgnoreCase(augmentId)
+                ? FleetFootworkAugment.ID
+                : augmentId;
+
+        AugmentDefinition definition = augmentManager == null ? null : augmentManager.getAugment(definitionId);
         if (definition == null) {
             return 0L;
         }
@@ -336,10 +338,11 @@ public final class AugmentHudOverlayController {
                     AugmentValueReader.getMap(passives, "heal_over_time"),
                     "duration",
                     0.0D));
-            case FleetFootworkAugment.ID -> secondsToMillis(AugmentValueReader.getDouble(
-                    AugmentValueReader.getMap(AugmentValueReader.getMap(passives, "buffs"), "movement_speed"),
-                    "duration",
-                    0.0D));
+            case FleetFootworkAugment.ID, FleetFootworkAugment.BUFF_WINDOW_STATE_ID ->
+                secondsToMillis(AugmentValueReader.getDouble(
+                        AugmentValueReader.getMap(AugmentValueReader.getMap(passives, "buffs"), "movement_speed"),
+                        "duration",
+                        0.0D));
             case FortressAugment.ID -> secondsToMillis(
                     AugmentValueReader.getDouble(AugmentValueReader.getMap(passives, "buff_phase"), "duration", 0.0D));
             case FrozenDomainAugment.ID -> secondsToMillis(AugmentValueReader.getDouble(
@@ -382,7 +385,11 @@ public final class AugmentHudOverlayController {
     }
 
     private String resolveDisplayName(String augmentId) {
-        AugmentDefinition definition = augmentManager == null ? null : augmentManager.getAugment(augmentId);
+        String definitionId = FleetFootworkAugment.BUFF_WINDOW_STATE_ID.equalsIgnoreCase(augmentId)
+                ? FleetFootworkAugment.ID
+                : augmentId;
+
+        AugmentDefinition definition = augmentManager == null ? null : augmentManager.getAugment(definitionId);
         if (definition != null && definition.getName() != null && !definition.getName().isBlank()) {
             return definition.getName();
         }

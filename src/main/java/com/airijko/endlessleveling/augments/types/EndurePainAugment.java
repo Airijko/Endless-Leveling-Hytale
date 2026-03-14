@@ -18,6 +18,7 @@ public final class EndurePainAugment extends YamlAugment
         implements AugmentHooks.OnDamageTakenAugment, AugmentHooks.OnHitAugment, AugmentHooks.OnKillAugment,
         AugmentHooks.PassiveStatAugment {
     public static final String ID = "endure_pain";
+    public static final String SHIELD_CAP_STATE_ID = ID + "_shield_cap";
     private static final Map<UUID, Double> LAST_HIT_DAMAGE = new ConcurrentHashMap<>();
 
     private final double bleedPercent;
@@ -44,11 +45,24 @@ public final class EndurePainAugment extends YamlAugment
         if (runtime == null || bleedPercent <= 0.0D || durationSeconds <= 0.0D || incoming <= 0f) {
             return incoming;
         }
+
+        long now = System.currentTimeMillis();
         var state = runtime.getState(ID);
+        var capState = runtime.getState(SHIELD_CAP_STATE_ID);
+
+        if (state.isExpired(now)) {
+            state.clear();
+            capState.clear();
+        }
+
         double deferred = incoming * bleedPercent;
         float immediate = (float) Math.max(0.0D, incoming - deferred);
         state.setStoredValue(state.getStoredValue() + deferred);
-        state.setExpiresAt(System.currentTimeMillis() + AugmentUtils.secondsToMillis(durationSeconds));
+        state.setExpiresAt(now + AugmentUtils.secondsToMillis(durationSeconds));
+
+        capState.setStoredValue(Math.max(capState.getStoredValue(), state.getStoredValue()));
+        capState.setExpiresAt(state.getExpiresAt());
+        capState.setStacks(1);
         return immediate;
     }
 
@@ -75,6 +89,7 @@ public final class EndurePainAugment extends YamlAugment
         double executeDamage = playerId != null ? LAST_HIT_DAMAGE.getOrDefault(playerId, 0.0D) : 0.0D;
 
         var state = runtime.getState(ID);
+        var capState = runtime.getState(SHIELD_CAP_STATE_ID);
 
         EntityStatMap killerStats = context.getCommandBuffer() != null && context.getKillerRef() != null
                 ? context.getCommandBuffer().getComponent(context.getKillerRef(), EntityStatMap.getComponentType())
@@ -83,6 +98,7 @@ public final class EndurePainAugment extends YamlAugment
             AugmentUtils.heal(killerStats, executeDamage * healOnKillPercent);
         }
         state.clear();
+        capState.clear();
         if (playerId != null) {
             LAST_HIT_DAMAGE.remove(playerId);
         }
@@ -96,12 +112,15 @@ public final class EndurePainAugment extends YamlAugment
             return;
         }
         var state = runtime.getState(ID);
+        var capState = runtime.getState(SHIELD_CAP_STATE_ID);
         if (state.getStoredValue() <= 0.0D) {
+            capState.clear();
             return;
         }
         long now = System.currentTimeMillis();
         if (state.isExpired(now)) {
             state.clear();
+            capState.clear();
             return;
         }
 
@@ -131,6 +150,7 @@ public final class EndurePainAugment extends YamlAugment
         state.setStoredValue(Math.max(0.0D, state.getStoredValue() - applied));
         if (state.getStoredValue() <= 0.0001D) {
             state.clear();
+            capState.clear();
         }
     }
 }

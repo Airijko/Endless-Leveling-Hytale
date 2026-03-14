@@ -46,6 +46,7 @@ public final class AugmentRegistry {
             Map.entry(PhaseRushAugment.ID, PhaseRushAugment::new),
             Map.entry(PhantomHitsAugment.ID, PhantomHitsAugment::new),
             Map.entry(PredatorAugment.ID, PredatorAugment::new),
+            Map.entry(ProtectiveBubbleAugment.ID, ProtectiveBubbleAugment::new),
             Map.entry(RaidBossAugment.ID, RaidBossAugment::new),
             Map.entry(RagingMomentumAugment.ID, RagingMomentumAugment::new),
             Map.entry(RebirthAugment.ID, RebirthAugment::new),

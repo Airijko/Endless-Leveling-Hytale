@@ -182,6 +182,47 @@ public final class AugmentExecutor {
         return damage;
     }
 
+    public float applySpecificOnDamageTaken(@Nonnull PlayerData defender,
+            Ref<EntityStore> defenderRef,
+            Ref<EntityStore> attackerRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            EntityStatMap statMap,
+            float incomingDamage,
+            @Nonnull String augmentId) {
+        if (incomingDamage <= 0f || augmentId == null || augmentId.isBlank()) {
+            return Math.max(0f, incomingDamage);
+        }
+
+        List<Augment> augments = resolve(defender);
+        if (augments.isEmpty()) {
+            return incomingDamage;
+        }
+
+        Augment matched = null;
+        for (Augment augment : augments) {
+            if (augment != null && augment.getId() != null && augmentId.equalsIgnoreCase(augment.getId())) {
+                matched = augment;
+                break;
+            }
+        }
+        if (!(matched instanceof OnDamageTakenAugment handler)) {
+            return incomingDamage;
+        }
+
+        var runtime = runtimeManager.getRuntimeState(defender.getUuid());
+        notifyCooldowns(defender, runtime, commandBuffer, defenderRef, List.of(matched));
+        DamageTakenContext context = new DamageTakenContext(defender,
+                runtime,
+                skillManager,
+                defenderRef,
+                attackerRef,
+                commandBuffer,
+                statMap,
+                incomingDamage);
+        float updated = handler.onDamageTaken(context);
+        return Math.max(0f, updated);
+    }
+
     private List<Augment> resolveLowHpTriggerOrder(List<Augment> augments) {
         List<Augment> lowHpAugments = new ArrayList<>();
         for (Augment augment : augments) {

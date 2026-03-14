@@ -8,7 +8,6 @@ import com.airijko.endlessleveling.util.Lang;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
@@ -215,10 +214,9 @@ public final class AugmentUtils {
     }
 
     public static void sendAugmentMessage(PlayerRef playerRef, String text) {
-        if (playerRef == null || !playerRef.isValid() || text == null || text.isBlank()) {
-            return;
-        }
-        playerRef.sendMessage(Message.raw(text).color("#f7c74f"));
+        // Suppress activation/expiration/proc chat messages now that HUD bars provide
+        // state feedback. "ready again" cooldown messages are still emitted from
+        // AugmentExecutor.notifyCooldowns.
     }
 
     public static int setStacksWithNotify(AugmentRuntimeState runtimeState,

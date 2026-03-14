@@ -39,19 +39,15 @@ public final class FleetFootworkAugment extends YamlAugment implements AugmentHo
     @Override
     public float onHit(AugmentHooks.HitContext context) {
         if (context == null || context.getRuntimeState() == null) {
-            return 0f;
+            return context != null ? context.getDamage() : 0f;
         }
 
-        long now = System.currentTimeMillis();
         var runtime = context.getRuntimeState();
-        var cooldown = runtime.getCooldown(ID);
-        if (cooldown != null && cooldown.getExpiresAt() > now) {
+        if (!AugmentUtils.consumeCooldown(runtime, ID, getName(), cooldownMillis)) {
             return context.getDamage();
         }
 
-        if (cooldownMillis > 0L) {
-            runtime.setCooldown(ID, getName(), now + cooldownMillis);
-        }
+        long now = System.currentTimeMillis();
 
         if (healPercentOfDamage > 0.0D) {
             AugmentUtils.heal(context.getAttackerStats(), context.getDamage() * healPercentOfDamage);

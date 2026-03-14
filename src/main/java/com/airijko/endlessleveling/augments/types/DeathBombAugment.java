@@ -1,11 +1,14 @@
 package com.airijko.endlessleveling.augments.types;
 
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentDefinition;
+import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.augments.AugmentHooks;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentRuntimeState;
 import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
+import com.airijko.endlessleveling.data.PlayerData;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.math.vector.Vector3d;
@@ -191,14 +194,62 @@ public final class DeathBombAugment extends YamlAugment
                 continue;
             }
 
-            if (pending.damage >= targetHp.get()) {
+            double damageToApply = applyProtectiveBubbleGuard(commandBuffer,
+                    targetRef,
+                    sourceRef,
+                    targetStats,
+                    pending.damage);
+            if (damageToApply <= 0.0D) {
+                continue;
+            }
+
+            if (damageToApply >= targetHp.get()) {
                 markBombKill(sourceRef, targetRef, commandBuffer, targetStats);
                 continue;
             }
 
-            float updatedHealth = (float) Math.max(0.0D, targetHp.get() - pending.damage);
+            float updatedHealth = (float) Math.max(0.0D, targetHp.get() - damageToApply);
             targetStats.setStatValue(DefaultEntityStatTypes.getHealth(), updatedHealth);
         }
+    }
+
+    private double applyProtectiveBubbleGuard(CommandBuffer<EntityStore> commandBuffer,
+            Ref<EntityStore> targetRef,
+            Ref<EntityStore> sourceRef,
+            EntityStatMap targetStats,
+            double incomingDamage) {
+        if (incomingDamage <= 0.0D || commandBuffer == null || targetRef == null || targetStats == null) {
+            return Math.max(0.0D, incomingDamage);
+        }
+
+        PlayerRef targetPlayer = commandBuffer.getComponent(targetRef, PlayerRef.getComponentType());
+        if (targetPlayer == null || !targetPlayer.isValid()) {
+            return incomingDamage;
+        }
+
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null) {
+            return incomingDamage;
+        }
+
+        AugmentExecutor augmentExecutor = plugin.getAugmentExecutor();
+        if (augmentExecutor == null || plugin.getPlayerDataManager() == null) {
+            return incomingDamage;
+        }
+
+        PlayerData defenderData = plugin.getPlayerDataManager().get(targetPlayer.getUuid());
+        if (defenderData == null) {
+            return incomingDamage;
+        }
+
+        float guarded = augmentExecutor.applySpecificOnDamageTaken(defenderData,
+                targetRef,
+                sourceRef,
+                commandBuffer,
+                targetStats,
+                (float) incomingDamage,
+                ProtectiveBubbleAugment.ID);
+        return Math.max(0.0D, guarded);
     }
 
     private void markBombKill(Ref<EntityStore> sourceRef,

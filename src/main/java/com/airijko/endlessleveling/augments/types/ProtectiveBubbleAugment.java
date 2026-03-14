@@ -7,18 +7,13 @@ import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentState;
 import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
-import com.hypixel.hytale.component.CommandBuffer;
-import com.hypixel.hytale.component.Ref;
-import com.hypixel.hytale.server.core.asset.type.entityeffect.config.EntityEffect;
-import com.hypixel.hytale.server.core.asset.type.entityeffect.config.OverlapBehavior;
-import com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent;
-import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.logger.HytaleLogger;
 
 import java.util.Map;
 
 public final class ProtectiveBubbleAugment extends YamlAugment implements AugmentHooks.OnDamageTakenAugment {
     public static final String ID = "protective_bubble";
-    private static final String[] IMMUNITY_EFFECT_IDS = new String[] { "Dodge_Invulnerability", "Immune" };
+    private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
     private final long cooldownMillis;
     private final long immunityWindowMillis;
@@ -35,80 +30,61 @@ public final class ProtectiveBubbleAugment extends YamlAugment implements Augmen
     @Override
     public float onDamageTaken(AugmentHooks.DamageTakenContext context) {
         if (context == null || context.getRuntimeState() == null) {
+            LOGGER.atFine().log("ProtectiveBubble skip: missing context/runtime");
             return context != null ? context.getIncomingDamage() : 0f;
         }
 
         float incoming = Math.max(0f, context.getIncomingDamage());
         if (incoming <= 0f) {
+            LOGGER.atFine().log("ProtectiveBubble skip: non-positive incoming damage player=%s incoming=%.3f",
+                    context.getPlayerData() != null ? context.getPlayerData().getUuid() : "unknown",
+                    incoming);
             return incoming;
         }
 
         long now = System.currentTimeMillis();
         AugmentRuntimeState runtime = context.getRuntimeState();
         AugmentState state = runtime.getState(ID);
+        var cooldown = runtime.getCooldown(ID);
 
+        // After the shield is consumed, remain fully immune for the configured
+        // post-hit window.
         if (state.getStacks() > 0 && state.getExpiresAt() > now) {
+            LOGGER.atFine().log("ProtectiveBubble immunity active: player=%s incoming=%.3f remainingMs=%d",
+                    context.getPlayerData() != null ? context.getPlayerData().getUuid() : "unknown",
+                    incoming,
+                    state.getExpiresAt() - now);
             return 0f;
         }
 
         if (state.getStacks() > 0 && state.getExpiresAt() <= now) {
-            state.setStacks(0);
-            state.setExpiresAt(0L);
+            LOGGER.atFine().log("ProtectiveBubble immunity expired: player=%s",
+                    context.getPlayerData() != null ? context.getPlayerData().getUuid() : "unknown");
+            state.clear();
         }
 
-        if (!AugmentUtils.consumeCooldown(runtime, ID, getName(), cooldownMillis)) {
+        // "Shield up" state is represented by cooldown readiness.
+        if (cooldown != null && cooldown.getExpiresAt() > now) {
+            LOGGER.atFine().log("ProtectiveBubble shield unavailable: player=%s incoming=%.3f cooldownRemainingMs=%d",
+                    context.getPlayerData() != null ? context.getPlayerData().getUuid() : "unknown",
+                    incoming,
+                    cooldown.getExpiresAt() - now);
             return incoming;
         }
 
-        applySelfImmunityEffect(context);
-
+        // First damage while shield is up is fully prevented. This consumes the
+        // shield, starts cooldown, and grants a short post-hit immunity window.
+        if (cooldownMillis > 0L) {
+            runtime.setCooldown(ID, getName(), now + cooldownMillis);
+        }
+        state.setLastProc(now);
         state.setStacks(1);
         state.setExpiresAt(now + Math.max(1L, immunityWindowMillis));
+        LOGGER.atInfo().log("ProtectiveBubble triggered: player=%s blocked=%.3f cooldownMs=%d immunityMs=%d",
+                context.getPlayerData() != null ? context.getPlayerData().getUuid() : "unknown",
+                incoming,
+                cooldownMillis,
+                immunityWindowMillis);
         return 0f;
-    }
-
-    private void applySelfImmunityEffect(AugmentHooks.DamageTakenContext context) {
-        if (context == null || context.getCommandBuffer() == null || context.getDefenderRef() == null
-                || !context.getDefenderRef().isValid()) {
-            return;
-        }
-
-        CommandBuffer<EntityStore> commandBuffer = context.getCommandBuffer();
-        Ref<EntityStore> defenderRef = context.getDefenderRef();
-        EffectControllerComponent effectController = commandBuffer.getComponent(defenderRef,
-                EffectControllerComponent.getComponentType());
-        if (effectController == null) {
-            return;
-        }
-
-        EntityEffect immunityEffect = resolveImmunityEffect();
-        if (immunityEffect == null) {
-            return;
-        }
-
-        float durationSeconds = Math.max(0.1F, immunityWindowMillis / 1000.0F);
-        effectController.addEffect(defenderRef,
-                immunityEffect,
-                durationSeconds,
-                OverlapBehavior.OVERWRITE,
-                commandBuffer);
-    }
-
-    private static EntityEffect resolveImmunityEffect() {
-        for (String candidate : IMMUNITY_EFFECT_IDS) {
-            EntityEffect effect = EntityEffect.getAssetMap().getAsset(candidate);
-            if (effect != null) {
-                return effect;
-            }
-            effect = EntityEffect.getAssetMap().getAsset(candidate.toLowerCase());
-            if (effect != null) {
-                return effect;
-            }
-            effect = EntityEffect.getAssetMap().getAsset(candidate.toUpperCase());
-            if (effect != null) {
-                return effect;
-            }
-        }
-        return null;
     }
 }
