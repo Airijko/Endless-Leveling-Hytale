@@ -1,9 +1,7 @@
 meta:
   locale_name: 日本語 (JP)
 notify:
-  prefix: '[EndlessLeveling] '
   skills:
-    command: /el
     unspent:
       primary: You have {0} unspent skill points!
       secondary:
@@ -15,20 +13,53 @@ notify:
       end: ' to spend them.'
   augments:
     available:
-      header: '[EndlessLeveling] 利用可能なオーグメントがあります:'
-      footer: /el augments を使用して選択してください。
+      header: '[EndlessLeveling] You have augments available to choose from:'
+      footer: Use /lvl augments to choose.
+    cooldown:
+      ready: '{0} is ready again!'
+    generic: '{0}'
+    sync:
+      summary: '{0} player(s) have mismatched augment slot counts:'
+      entry: '- {0} [{1}: has {2}, should have {3}] -> /lvl augments reset {0}'
+      fixall: 'To fix all at once: /lvl augments resetallplayers'
+  passives:
+    swiftness:
+      faded: Swiftness has faded.
+    adrenaline:
+      triggered: Adrenaline triggered! Restoring {0}% stamina over {1}s
+    generic: '{0}'
   xp_suppressed:
-    mob_label: "このモブ"
-    mob_label_level: "このモブ (Lv {0})"
-    player_too_high: "XP獲得不可: あなたのレベル ({0}) は {1} に対して高すぎます。"
-    player_too_low: "XP獲得不可: {0} はあなたのレベル ({1}) に対して強すぎます。"
+    mob_label: this mob
+    mob_label_level: this mob (level {0})
+    player_too_high: 'No XP awarded: your level ({0}) is too high for {1}.'
+    player_too_low: 'No XP awarded: {0} is too far above your level ({1}).'
+augments:
+  stacks:
+    max: '{0} at max stacks ({1}).'
+    update: '{0}: {1}/{2} stacks.'
+    expired: '{0} stacks expired.'
+    remaining: '{0}: {1}/{2} stacks remaining.'
+  executioner:
+    triggered: '{0} triggered! +{1}% damage.'
+  fortress:
+    activated: '{0} activated! Shielded for {1}s, buffs for {2}s.'
+    buff_ended: '{0} buff ended.'
+    shield_ended: '{0} stasis shield ended.'
+  undying_rage:
+    active: '{0} is active for {1}s.'
+    ended: '{0} duration ended.'
+  rebirth:
+    activated: '{0} activated! Restored {1}% of max health.'
+  first_strike:
+    triggered: '{0} triggered! +{1}% damage.'
+    lost: '{0} lost: you were hit before striking. Cooldown started.'
 hud:
   common:
     unavailable: --
   race:
-    none: 種族なし
+    none: No Race
   class:
-    none: なし
+    none: None
   mob:
     level:
       single: Lv. {0}
@@ -37,33 +68,33 @@ hud:
 ui:
   common:
     toggle:
-      true: オン
-      false: オフ
-      disabled: 無効
+      true: 'ON'
+      false: 'OFF'
+      disabled: DISABLED
     state:
-      enabled: 有効
-      disabled: 無効
+      enabled: enabled
+      disabled: disabled
   settings:
     page:
-      title: "Settings"
-      subtitle: "Manage personal HUD, notifications, and visual preferences."
-      toggle_button: "TOGGLE"
+      title: Settings
+      subtitle: Manage personal HUD, notifications, and visual preferences.
+      toggle_button: TOGGLE
     description:
-      player_hud: "Show or hide the Endless Leveling HUD overlay."
-      critical_notif: "Toggle floating alerts for critical strike events."
-      xp_notif: "Show notifications whenever you gain experience."
-      passive_levelup_notif: "Display updates when passives rank up during play."
-      luck_double_notif: "Toggle bonus drop proc notifications from luck effects."
-      health_regen_notif: "Show notifications when health regeneration triggers."
-      race_model: "Enable race-specific character visuals when available."
+      player_hud: Show or hide the Endless Leveling HUD overlay.
+      critical_notif: Toggle floating alerts for critical strike events.
+      xp_notif: Show notifications whenever you gain experience.
+      passive_levelup_notif: Display updates when passives rank up during play.
+      luck_double_notif: Toggle bonus drop proc notifications from luck effects.
+      health_regen_notif: Show notifications when health regeneration triggers.
+      race_model: Enable race-specific character visuals when available.
     player_hud:
-      label: プレイヤーHUD
-      toggled: プレイヤーHUD {0}
+      label: Player HUD
+      toggled: Player HUD {0}
     critical_notif:
-      label: クリティカル通知
+      label: Critical Hit Notifications
       toggled: Critical hit notifications {0}
     xp_notif:
-      label: XP通知
+      label: XP Gain Notifications
       toggled: XP gain notifications {0}
     passive_levelup_notif:
       label: Passive Level-Up Notifications
@@ -81,48 +112,47 @@ ui:
       disabled: Race model visuals disabled
   leaderboards:
     page:
-      title: "Leaderboards"
-      subtitle: "Top champions ranked with live sort/filter controls. ({0} players)"
+      title: Leaderboards
+      subtitle: Top players ranked with live sort/filter controls. ({0} players)
     controls:
-      sort: "Sort"
-      filter: "Filter"
-      reset: "RESET"
-      sort_by_value: "BY: {0}"
-      sort_order_value: "ORDER: {0}"
-      race_value: "RACE: {0}"
-      class_value: "CLASS: {0}"
+      sort: Sort
+      filter: Filter
+      reset: RESET
+      sort_by_value: 'BY: {0}'
+      sort_order_value: 'ORDER: {0}'
+      race_value: 'RACE: {0}'
+      class_value: 'CLASS: {0}'
     sort:
-      prestige: "PRESTIGE"
-      level: "LEVEL"
-      xp: "XP"
-      alphabetical: "ALPHABETICAL"
-      race: "RACE"
-      class: "CLASS"
+      prestige: PRESTIGE
+      level: LEVEL
+      xp: XP
+      alphabetical: ALPHABETICAL
+      race: RACE
+      class: CLASS
     order:
-      asc: "ASC"
-      desc: "DESC"
+      asc: ASC
+      desc: DESC
     filter:
-      all: "ALL"
+      all: ALL
     column:
-      rank: "Rank"
-      player: "Player"
-      race: "Race"
-      class: "Class"
-      prestige: "Prestige"
-      level: "Level"
-      xp: "XP"
-    summary: "Showing {0}/{1} players • Sort: {2} {3} • Filters: Race={4}, Class={5}"
-
+      rank: Rank
+      player: Player
+      race: Race
+      class: Class
+      prestige: Prestige
+      level: Level
+      xp: XP
+    summary: 'Showing {0}/{1} players • Sort: {2} {3} • Filters: Race={4}, Class={5}'
   augments:
     tier:
-      default: オーグメント
+      default: AUGMENTS
     actions:
-      choose: 選択
-    selected: '選択されたオーグメント: {0} ({1})'
-    no_description: 説明がありません。
+      choose: Choose
+    selected: 'Selected augment: {0} ({1})'
+    no_description: No description provided.
     no_augment:
-      title: オーグメントなし
-      body: 現在利用可能なオーグメントはありません。
+      title: NO AUGMENT
+      body: No augments are currently available.
     no_augments_yet:
       title: NO AUGMENTS YET
       body: No augments available yet. Next unlock at level {0}.
@@ -131,8 +161,7 @@ ui:
       body: No augment unlock milestones are configured.
     all_claimed:
       title: ALL CLAIMED
-      next_unlock: You have claimed all currently unlocked augments. Next unlock at
-        level {0}.
+      next_unlock: You have claimed all currently unlocked augments. Next unlock at level {0}.
       done: You have already claimed all configured augment unlocks.
     remaining:
       header: '[EndlessLeveling] You still have more augments to choose from:'
@@ -141,17 +170,15 @@ ui:
       title: AUGMENT ERROR
       data_unavailable: Augment data unavailable.
       tier_unresolved: Unable to resolve augment tier.
-      playerdata_unavailable: Unable to load your player data. Try reopening this
-        page.
-      system_unavailable: Augment system is unavailable right now. Please contact
-        an admin.
+      playerdata_unavailable: Unable to load your player data. Try reopening this page.
+      system_unavailable: Augment system is unavailable right now. Please contact an admin.
       definitions_missing: No augment definitions are loaded. Check /mods/EndlessLeveling/augments.
-      offers_missing: ロック解除されたオーグメントが見つかりません。管理者に /el augment refresh <player> を実行するよう依頼してください。
+      offers_missing: Unlocked augments are missing from your offers. Ask an admin to run /el augment refresh <player>.
       slot_empty: No augment in that slot.
     effect:
-      cooldown: 'クールダウン: {0}'
+      cooldown: 'Cooldown: {0}'
       duration_per_stack: 'Duration per stack: {0}'
-      duration: '持続時間: {0}'
+      duration: 'Duration: {0}'
       max_stacks: 'Max stacks: {0}'
       note:
         full_at_health: ' (full at <= {0}% health)'
@@ -159,16 +186,16 @@ ui:
         range: ' (range {0}-{1})'
         full_at_distance: ' (full at {0} distance)'
       label:
-        strength: 力
-        sorcery: 魔術
-        haste: ヘイスト
+        strength: Strength
+        sorcery: Sorcery
+        haste: Haste
         haste_bonus: Haste
-        crit_damage: クリティカルダメージ
+        crit_damage: Critical Damage
         crit_damage_bonus: Critical Damage
         critical_damage: Critical Damage
-        crit_chance: クリティカル率
+        crit_chance: Critical Chance
         critical_chance: Critical Chance
-        life_steal: ライフスティール
+        life_steal: Life Steal
         life_steal_scaling: Life Steal
         heal_on_crit: Life Steal (Crit)
         heal_on_kill: Heal on Kill
@@ -189,14 +216,14 @@ ui:
         self_damage: Self Damage
         percent_of_current_hp: Self Damage
         movement_speed_bonus: Move Speed
-        movement_speed: 移動速度
+        movement_speed: Move Speed
         resistance_bonus: Resistance
-        resistance: 耐性
+        resistance: Resistance
         precision: Critical Chance
-        defense: 防御
+        defense: Defense
         wither: Wither
         slow_percent: Slow
-        mana: マナ
+        mana: Mana
         mana_from_sorcery: Mana
         sorcery_from_mana: Sorcery
         health_threshold: Health Threshold
@@ -215,16 +242,16 @@ ui:
       current: CURRENT
       viewing: VIEWING
     page:
-      title: 種族アーカイブ
-      available: 利用可能な種族
-      current_title: 現在の種族
-      current_badge: 有効
-      current_hint: 現在の種族があなたの特性と固有ボーナスを決定します。
-      lore_title: 伝承プレビュー
-      stats_title: 種族ステータス
-      passives_title: パッシブ
+      title: Race Archive
+      available: Available Races
+      current_title: Current Race
+      current_badge: Active
+      current_hint: Your active race sets identity and innate bonuses.
+      lore_title: Lore Preview
+      stats_title: Race Stats
+      passives_title: Passives
     offline:
-      title: 種族システムオフライン
+      title: Races Offline
       subtitle: Races are currently disabled in config.yml.
       hint: Enable races to manage identities.
     playerdata:
@@ -232,40 +259,40 @@ ui:
       subtitle: Unable to load your race information right now.
       hint: Try reopening this page in a few moments.
     select:
-      title: 種族を選択
-      subtitle: 左側のリストから種族を選んで詳細を確認してください。
+      title: Select a Race
+      subtitle: Choose a race on the left to preview its identity.
     subtitle:
-      current: 現在有効
-      preview: プレビューのみ
+      current: Currently active
+      preview: Preview only
     lore:
-      unavailable: 伝承を利用できません。
-      missing: この種族の伝承はありません。
+      unavailable: Lore unavailable.
+      missing: No lore provided for this race.
     actions:
-      view: 表示
-      choose: 選択
-      swap: 変更
+      view: VIEW
+      choose: CHOOSE
+      swap: SWAP
     passives:
-      none_selected: 種族が選択されていません。
-      none_defined: この種族にはパッシブボーナスがありません。
+      none_selected: No race selected.
+      none_defined: This race does not define passive bonuses.
     cooldown:
-      disabled: 無効
-      card_title: 種族変更クールダウン
-      card_hint: タイマーがゼロになると再び変更可能になります。
-      default_warning: 変更後、残りのクールダウン期間中は変更できません。
+      disabled: Disabled
+      card_title: Race Swap Cooldown
+      card_hint: Swapping again becomes available once the timer hits zero.
+      default_warning: You will be locked for the remaining cooldown after swapping.
       bypassed: Bypassed
       bypassed_hint: Operator bypass active.
       bypassed_detail: Operator bypass active. Swapping is immediate.
       in_cooldown: Swap in cooldown
-      ready: 準備完了
-      swap_triggers: 変更すると {0} のクールダウンが発生します。
-      unrestricted: 現在、種族変更の制限はありません。
-      try_again_prefix: '再変更可能まで: '
-      unlocks_in: あと {0} で変更可能になります。
+      ready: Ready
+      swap_triggers: Swapping will trigger a {0} cooldown.
+      unrestricted: Race swapping is unrestricted right now.
+      try_again_prefix: 'You can swap again in '
+      unlocks_in: Swap unlocks in {0}.
     chat:
       prefix: '[Races] '
       changed_prefix: 'You are now a '
     error:
-      playerdata: 現在、種族情報を読み込めません。
+      playerdata: Unable to load your race info right now.
       select_first: Select a race to swap into.
       disabled: Races are disabled.
       unknown: 'Unknown race: {0}'
@@ -363,13 +390,13 @@ ui:
       assignments: Class Assignments
       secondary_share_hint: Secondary classes share 50% of bonuses.
       sorcery_label: Sorcery Bonus
-      lore_title: 伝承プレビュー
+      lore_title: Lore Preview
       weapons_title: Weapon Affinities
       innate_title: Innate Attribute Gains
-      passives_title: パッシブ
+      passives_title: Passives
     none_selected: No class selected.
     offline:
-      title: クラスシステムオフライン
+      title: Classes Offline
       subtitle: Classes are currently disabled in config.yml.
       lore: Enable classes to browse archetypes.
       hint: Enable classes to manage archetypes.
@@ -381,19 +408,19 @@ ui:
       lore: Try reopening this page in a few moments.
       hint: Try reopening this page in a few moments.
     select:
-      title: クラスを選択
+      title: Select a Class
       subtitle: Choose a class on the left to preview its role and passives.
     role:
       unspecified: 'Role: Unspecified'
       value: 'Role: {0}'
       empty: 'Role: --'
     lore:
-      unavailable: 伝承を利用できません。
+      unavailable: Lore unavailable.
       missing: No lore provided for this class.
     subtitle:
       primary: Currently your primary class
       secondary: Currently your secondary class (50% effect)
-      preview: プレビューのみ
+      preview: Preview only
     weapons:
       none_defined: This class does not define weapon bonuses.
     weapon:
@@ -415,15 +442,15 @@ ui:
       bypassed_detail: Operator bypass active; swapping is immediate.
       each_swap: Each swap triggers a {0} cooldown per slot.
       unrestricted: Class swapping is unrestricted right now.
-      ready: 準備完了
+      ready: Ready
     actions:
-      view: 表示
+      view: VIEW
       set_primary: SET PRIMARY
       set_secondary: SET SECONDARY
     detail:
       select_prompt: Select a class to preview bonuses.
-      primary_slot: メイン
-      secondary_slot: サブ
+      primary_slot: Primary
+      secondary_slot: Secondary
       swap_triggers: Changing classes triggers a {0} cooldown.
       primary_bonus: Primary classes grant 100% of bonuses.
       secondary_bonus: Secondary classes grant 50% of weapon + passive effects.
@@ -456,14 +483,14 @@ ui:
       cooldown_remaining: You can change your {0} class again in {1}.
       no_changes_remaining: You have no class changes remaining.
   skills:
-    unknown: 不明
-    points: 'スキルポイント: {0}'
+    unknown: Unknown
+    points: 'SKILL POINTS: {0}'
     page:
-      title: スキル属性
-      subtitle: ポイントを割り振って戦闘スタイルを形成しましょう。
-      footer_hint: 元に戻すで変更を取り消し、適用で確定します。
-      undo: 元に戻す
-      apply: 適用
+      title: Skill Attributes
+      subtitle: Allocate points to shape your combat identity.
+      footer_hint: Undo to revert pending tweaks, apply to lock them in.
+      undo: UNDO
+      apply: APPLY
     level_prefix: Lv.
     label:
       life_force: Life Force
@@ -504,11 +531,9 @@ ui:
       removed: Removed {0} point(s) from {1}
       precision_capped: Precision crit chance capped at 100%; excess points not applied.
     error:
-      precision_at_cap: Precision crit chance is already 100%; remove other bonuses
-        first.
+      precision_at_cap: Precision crit chance is already 100%; remove other bonuses first.
       not_enough_points: Not enough skill points
-      precision_no_refund: Precision crit chance is already 100% or lower; no excess
-        points to refund.
+      precision_no_refund: Precision crit chance is already 100% or lower; no excess points to refund.
       below_original: Cannot go below original level
       invalid_attribute: 'Invalid attribute: {0}'
       action_failed: Error handling skill action
@@ -521,40 +546,40 @@ ui:
     minutes: '{0}m'
     seconds: '{0}s'
   nav:
-    profile: プロフィール
-    skills: スキル
-    races: 種族
-    classes: クラス
-    leaderboards: ランキング
-    settings: 設定
+    profile: PROFILE
+    skills: SKILLS
+    races: RACES
+    classes: CLASSES
+    leaderboards: LEADERBOARDS
+    settings: SETTINGS
   profile:
     playerdata:
       unavailable: Player data unavailable.
     detail:
       title: Selected Profile
       subtitle:
-        default: プロフィールを選択してステータスを表示
+        default: Select a profile to view stats
     level:
       short: Lv {0}
     list:
       title: Profiles {0}/{1}
-      slot: スロット {0}
-      level: レベル {0}
+      slot: Slot {0}
+      level: Level {0}
       xp: '{0} XP'
-      select: 選択
+      select: SELECT
       status:
-        active: アクティブ
+        active: ACTIVE
       delete:
-        confirm: '{0} を削除しますか？'
+        confirm: Delete {0}?
     passives:
-      none: 有効なパッシブボーナスなし
-      innate_none: 有効な固有パッシブなし
-      innate_attr_none: 有効な固有属性ボーナスなし
-      select_prompt: プロフィールを選択してパッシブボーナスを表示
-      select_innate_prompt: プロフィールを選択して固有ボーナスを表示
+      none: No passive bonuses active
+      innate_none: No innate passives active
+      innate_attr_none: No innate attribute bonuses
+      select_prompt: Select a profile to view passive bonuses
+      select_innate_prompt: Select a profile to view innate bonuses
       level_label: '{0} (Lv {1})'
     augments:
-      none: 有効なオーグメントなし
+      none: No augments active
     error:
       load: Unable to load your profiles right now.
       generic: Something went wrong handling that request.
@@ -578,49 +603,20 @@ ui:
       delete_canceled: Profile deletion canceled.
 command:
   language:
-    usage: '使い方: /el lang list | /el lang set <locale>'
-    current: '現在の言語: {0}'
-    available: '利用可能な言語: {0}'
-    invalid: '不明な言語 ''{0}''。利用可能: {1}'
-    updated: 言語を {0} に設定しました。
-
-augments:
-  stacks:
-    max: "{0} (最大スタック {1})."
-    update: "{0}: {1}/{2} スタック."
-    expired: "{0} スタック期限切れ."
-    remaining: "{0}: 後 {1}/{2} スタック."
-  executioner:
-    triggered: "{0} 発動！ +{1}% ダメージ."
-  fortress:
-    activated: "{0} 発動！ {1}秒シールド, {2}秒バフ."
-    buff_ended: "{0} バフ終了."
-    shield_ended: "{0} ステイシスシールド終了."
-  undying_rage:
-    active: "{0} が {1}秒間有効."
-    ended: "{0} 効果終了."
-  rebirth:
-    activated: "{0} 発動！ 最大HPの {1}% を回復."
-  first_strike:
-    triggered: "{0} 発動！ +{1}% ダメージ."
-    lost: "{0} 消失: 攻撃前に被弾. クールダウン開始."
-
-command:
-  language:
-    unavailable: "言語マネージャー利用不可."
-    data_not_loaded: "プレイヤーデータ未ロード."
-    current: "現在の言語: {0}"
-    available: "利用可能: {0}"
-    usage: "使用法: /el language list | /el language set <locale>"
-    invalid: "不明なロケール '{0}'. 利用可能: {1}"
-    updated: "言語を {0} に設定."
+    unavailable: Language manager is unavailable.
+    data_not_loaded: Your player data is not loaded yet.
+    current: 'Current language: {0}'
+    available: 'Available locales: {0}'
+    usage: 'Usage: /el language list | /el language set <locale>'
+    invalid: 'Unknown locale ''{0}''. Available locales: {1}'
+    updated: Language set to {0}.
   reset_cooldowns:
-    unavailable: "パッシブ/オーグメントマネージャー利用不可."
-    success: "{0} 人のパッシブCDをリセットし、オーグメント状態をクリア."
+    unavailable: Passive and augment managers are unavailable.
+    success: Reset passive cooldowns for {0} player runtime state(s) and cleared all augment cooldown runtime state.
   reset_skillpoints:
-    system_unavailable: "スキルシステム未初期化. 管理者に連絡してください."
-    player_not_found: "プレイヤー未発見: {0}"
-    no_data: "保存データなし. 再接続してください."
-    success_target: "{0} のスキルポイントをリセット."
-    notify_target: "管理者がスキルポイントをリセットしました."
-    success_self: "スキルポイントをデフォルトにリセットしました."
+    system_unavailable: Skill system is not initialised. Please contact an admin.
+    player_not_found: 'Player not found: {0}'
+    no_data: No saved data found. Try rejoining.
+    success_target: Reset skill points for {0}.
+    notify_target: An admin reset your skill points to the default layout.
+    success_self: Your skill points have been reset to the default layout.

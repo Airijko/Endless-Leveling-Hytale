@@ -22,8 +22,7 @@ public final class PlayerChatNotifier {
     private static final String PREFIX_TEXT = ChatMessageStrings.PREFIX_TEXT;
     private static final String PREFIX_COLOR = ChatMessageStrings.Color.PREFIX_RED;
 
-    private static final Pattern LEGACY_PREFIX_PATTERN = Pattern.compile(
-            "^\\s*\\[(?:EndlessLeveling|Passive|Luck|Races|Classes)\\]\\s*");
+    private static final Pattern LEGACY_PREFIX_PATTERN = Pattern.compile("^\\s*\\[[^\\]]+\\]\\s*");
     private static final Pattern COMMAND_TOKEN_PATTERN = Pattern.compile("/[A-Za-z][A-Za-z0-9_-]*");
 
     private PlayerChatNotifier() {
@@ -84,6 +83,9 @@ public final class PlayerChatNotifier {
     public static String text(PlayerRef playerRef, ChatMessageTemplate template, Object... args) {
         if (template == null) {
             return "";
+        }
+        if (template == ChatMessageTemplate.SKILLS_COMMAND) {
+            return ChatMessageStrings.Command.ROOT;
         }
         UUID uuid = playerRef != null ? playerRef.getUuid() : null;
         String translated = Lang.tr(uuid, template.key(), template.fallback(), args);
