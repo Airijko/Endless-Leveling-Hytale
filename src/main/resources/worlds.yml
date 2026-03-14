@@ -197,7 +197,7 @@ World_Overrides:
     Mob_Overrides:
       Azaroth:
         Level: 40
-        Augments: [rebirth, frozen_domain, wither]
+        Augments: [rebirth, frozen_domain]
         Scaling:
           Health:
             Base_Multiplier: 1.0
@@ -240,7 +240,7 @@ World_Overrides:
     Mob_Overrides:
       Katherina:
         Level: 60
-        Augments: [bloodthirster, vampirism, executioner]
+        Augments: [bloodthirster, vampirism]
         Scaling:
           Health:
             Base_Multiplier: 1.0
@@ -462,7 +462,7 @@ World_Overrides:
     Mob_Overrides:
       Shiva:
         Level: 55
-        Augments: [rebirth, frozen_domain, drain]
+        Augments: [rebirth, frozen_domain]
         Scaling:
           Health:
             Base_Multiplier: 2.0
@@ -506,7 +506,7 @@ World_Overrides:
       Hedera_Boss_Shiva_Group:
         Names: [Hedera_Boss_Shiva, Hedera_Boss_Shiva_Scaled]
         Level: 25
-        Augments: [rebirth, frozen_domain, wither]
+        Augments: [rebirth, frozen_domain]
         Scaling:
           Health:
             Base_Multiplier: 2.0
@@ -522,7 +522,7 @@ World_Overrides:
       Shiva_Boss_Group:
         Names: [Shivas_Ice_Cave, Shiva_Scaled]
         Level: 25
-        Augments: [rebirth, frozen_domain, drain]
+        Augments: [rebirth, frozen_domain]
         Scaling:
           Health:
             Base_Multiplier: 1.0

@@ -12,12 +12,12 @@ ascension:
   requirements:
     required_prestige: 10
     min_skill_levels:
-      discipline: 600
-      haste: 600
-      ferocity: 600
+      discipline: 200
+      haste: 150
+      ferocity: 400
     min_any_skill_levels:
-      - strength: 600
-      - sorcery: 600
+      - strength: 250
+      - sorcery: 250
     max_skill_levels: {}
     required_augments: []
     required_forms:

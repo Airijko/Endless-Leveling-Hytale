@@ -1,4 +1,4 @@
-race_name: "Wraith Phantom King"
+race_name: "Phantom King"
 icon: "Ingredient_Void_Essence"
 description: "The sovereign form of cursed spirits, fusing untouchable evasion with overwhelming critical lethality."
 model: "Wraith"
@@ -13,12 +13,12 @@ ascension:
   requirements:
     required_prestige: 10
     min_skill_levels:
-      haste: 600
-      stamina: 600
-      ferocity: 600
+      haste: 200
+      stamina: 100
+      ferocity: 500
     min_any_skill_levels:
-      - strength: 600
-      - sorcery: 600
+      - strength: 200
+      - sorcery: 200
     max_skill_levels: {}
     required_augments: []
     required_forms:

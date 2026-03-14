@@ -13,10 +13,10 @@ ascension:
   requirements:
     required_prestige: 10
     min_skill_levels:
-      sorcery: 600
-      flow: 600
-      precision: 600
-      ferocity: 600
+      sorcery: 350
+      flow: 250
+      precision: 150
+      ferocity: 250
     max_skill_levels: {}
     required_augments: []
     required_forms:

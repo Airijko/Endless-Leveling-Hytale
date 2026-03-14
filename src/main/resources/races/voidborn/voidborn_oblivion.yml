@@ -13,12 +13,12 @@ ascension:
   requirements:
     required_prestige: 10
     min_skill_levels:
-      life_force: 600
-      defense: 600
-      ferocity: 600
+      life_force: 400
+      defense: 150
+      ferocity: 150
     min_any_skill_levels:
-      - strength: 600
-      - sorcery: 600
+      - strength: 300
+      - sorcery: 300
     max_skill_levels: {}
     required_augments: []
     required_forms:
