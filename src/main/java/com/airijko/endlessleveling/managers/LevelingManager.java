@@ -273,6 +273,9 @@ public class LevelingManager {
         if (player == null || augmentUnlockManager == null) {
             return;
         }
+        if (!player.isAugmentNotifEnabled()) {
+            return;
+        }
         List<PassiveTier> tiers = augmentUnlockManager.getPendingOfferTiers(player);
         if (tiers.isEmpty()) {
             return;

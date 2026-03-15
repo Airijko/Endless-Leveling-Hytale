@@ -57,6 +57,7 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                 false);
                 events.addEventBinding(Activating, "#HealthRegenNotifToggle", of("Action", "toggle:healthRegenNotif"),
                                 false);
+                events.addEventBinding(Activating, "#AugmentNotifToggle", of("Action", "toggle:augmentNotif"), false);
                 events.addEventBinding(Activating, "#RaceModelToggle", of("Action", "toggle:raceModel"), false);
 
                 // Populate current values from PlayerData
@@ -116,6 +117,13 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                 ? Lang.tr(playerRef.getUuid(), "ui.common.toggle.on", "ON")
                                 : Lang.tr(playerRef.getUuid(), "ui.common.toggle.off", "OFF"));
 
+                ui.set("#AugmentNotifLabel.Text",
+                                Lang.tr(playerRef.getUuid(), "ui.settings.augment_notif.label",
+                                                "Augment Notifications"));
+                ui.set("#AugmentNotifValue.Text", data.isAugmentNotifEnabled()
+                                ? Lang.tr(playerRef.getUuid(), "ui.common.toggle.on", "ON")
+                                : Lang.tr(playerRef.getUuid(), "ui.common.toggle.off", "OFF"));
+
                 ui.set("#RaceModelLabel.Text",
                                 Lang.tr(playerRef.getUuid(), "ui.settings.race_model.label", "Race Model Visuals"));
                 ui.set("#RaceModelValue.Text", raceModelsDisabled
@@ -136,6 +144,7 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ui.set("#PassiveLevelUpNotifToggle.Text", toggleText);
                 ui.set("#LuckDoubleDropsNotifToggle.Text", toggleText);
                 ui.set("#HealthRegenNotifToggle.Text", toggleText);
+                ui.set("#AugmentNotifToggle.Text", toggleText);
                 ui.set("#RaceModelToggle.Text", toggleText);
 
                 ui.set("#PlayerHudDescription.Text",
@@ -156,6 +165,9 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ui.set("#HealthRegenNotifDescription.Text",
                                 Lang.tr(playerRef.getUuid(), "ui.settings.description.health_regen_notif",
                                                 "Show notifications when health regeneration triggers."));
+                ui.set("#AugmentNotifDescription.Text",
+                                Lang.tr(playerRef.getUuid(), "ui.settings.description.augment_notif",
+                                                "Show or hide augment status messages (available, activated, expired, cooldown ready, etc.)."));
                 ui.set("#RaceModelDescription.Text",
                                 Lang.tr(playerRef.getUuid(), "ui.settings.description.race_model",
                                                 "Enable race-specific character visuals when available."));
@@ -268,6 +280,19 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                         player.sendMessage(Message
                                         .raw(Lang.tr(playerRef.getUuid(), "ui.settings.health_regen_notif.toggled",
                                                         "Health regen notifications {0}",
+                                                        newValue ? Lang.tr(playerRef.getUuid(),
+                                                                        "ui.common.state.enabled", "enabled")
+                                                                        : Lang.tr(playerRef.getUuid(),
+                                                                                        "ui.common.state.disabled",
+                                                                                        "disabled")))
+                                        .color("#ffc300"));
+                } else if ("toggle:augmentNotif".equalsIgnoreCase(action)) {
+                        boolean newValue = !playerData.isAugmentNotifEnabled();
+                        playerData.setAugmentNotifEnabled(newValue);
+                        changed = true;
+                        player.sendMessage(Message
+                                        .raw(Lang.tr(playerRef.getUuid(), "ui.settings.augment_notif.toggled",
+                                                        "Augment notifications {0}",
                                                         newValue ? Lang.tr(playerRef.getUuid(),
                                                                         "ui.common.state.enabled", "enabled")
                                                                         : Lang.tr(playerRef.getUuid(),

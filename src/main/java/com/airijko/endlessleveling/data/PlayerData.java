@@ -40,6 +40,7 @@ public class PlayerData {
     private boolean passiveLevelUpNotifEnabled;
     private boolean luckDoubleDropsNotifEnabled;
     private boolean healthRegenNotifEnabled;
+    private boolean augmentNotifEnabled;
     private boolean useRaceModel;
     private String language;
 
@@ -60,6 +61,7 @@ public class PlayerData {
         this.passiveLevelUpNotifEnabled = true;
         this.luckDoubleDropsNotifEnabled = true;
         this.healthRegenNotifEnabled = true;
+        this.augmentNotifEnabled = true;
         this.useRaceModel = false;
         this.language = DEFAULT_LANGUAGE;
         LOGGER.atInfo().log("PlayerData created for player: %s (UUID: %s) with profile slot 1", playerName, uuid);
@@ -348,6 +350,14 @@ public class PlayerData {
 
     public void setHealthRegenNotifEnabled(boolean healthRegenNotifEnabled) {
         this.healthRegenNotifEnabled = healthRegenNotifEnabled;
+    }
+
+    public boolean isAugmentNotifEnabled() {
+        return augmentNotifEnabled;
+    }
+
+    public void setAugmentNotifEnabled(boolean augmentNotifEnabled) {
+        this.augmentNotifEnabled = augmentNotifEnabled;
     }
 
     public boolean isUseRaceModel() {

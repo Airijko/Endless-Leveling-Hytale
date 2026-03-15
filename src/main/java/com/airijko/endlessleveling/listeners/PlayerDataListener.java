@@ -218,6 +218,9 @@ public class PlayerDataListener {
         if (playerRef == null || playerData == null || augmentUnlockManager == null) {
             return;
         }
+        if (!playerData.isAugmentNotifEnabled()) {
+            return;
+        }
         List<PassiveTier> tiers = augmentUnlockManager.getPendingOfferTiers(playerData);
         if (tiers.isEmpty()) {
             return;

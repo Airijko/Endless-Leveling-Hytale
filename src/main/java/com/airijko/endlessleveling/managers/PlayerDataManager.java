@@ -1080,6 +1080,7 @@ public class PlayerDataManager {
         options.put("passiveLevelUpNotif", data.isPassiveLevelUpNotifEnabled());
         options.put("luckDoubleDropsNotif", data.isLuckDoubleDropsNotifEnabled());
         options.put("healthRegenNotif", data.isHealthRegenNotifEnabled());
+        options.put("augmentNotif", data.isAugmentNotifEnabled());
         options.put("useRaceModel", data.isUseRaceModel());
         options.put("language", data.getLanguage());
         map.put("options", options);
@@ -1267,6 +1268,7 @@ public class PlayerDataManager {
                 : map.get("luckDoubleDropsNotif");
         Object healthRegenNotif = options != null ? options.get("healthRegenNotif")
                 : map.get("healthRegenNotif");
+        Object augmentNotif = options != null ? options.get("augmentNotif") : map.get("augmentNotif");
         Object useRaceModel = options != null ? options.get("useRaceModel") : map.get("useRaceModel");
         Object language = options != null ? options.get("language") : map.get("language");
         data.setPlayerHudEnabled(parseBoolean(playerHud, true));
@@ -1275,6 +1277,7 @@ public class PlayerDataManager {
         data.setPassiveLevelUpNotifEnabled(parseBoolean(passiveLevelUpNotif, true));
         data.setLuckDoubleDropsNotifEnabled(parseBoolean(luckDoubleDropsNotif, true));
         data.setHealthRegenNotifEnabled(parseBoolean(healthRegenNotif, true));
+        data.setAugmentNotifEnabled(parseBoolean(augmentNotif, true));
         String configuredLanguage = parseString(language);
         if (configuredLanguage == null || configuredLanguage.isBlank()) {
             data.setLanguage(resolveConfiguredDefaultLanguage());

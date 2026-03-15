@@ -442,6 +442,9 @@ public final class AugmentExecutor {
         if (runtime == null || commandBuffer == null || entityRef == null) {
             return;
         }
+        if (!playerData.isAugmentNotifEnabled()) {
+            return;
+        }
         PlayerRef playerRef = AugmentUtils.getPlayerRef(commandBuffer, entityRef);
         if (playerRef == null) {
             return;

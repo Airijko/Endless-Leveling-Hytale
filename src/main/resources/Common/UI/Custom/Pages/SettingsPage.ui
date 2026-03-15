@@ -337,6 +337,49 @@ $C.@PageOverlay {
 
                         Group { Anchor: (Height: 10); }
 
+                        Group #AugmentNotifRow {
+                            LayoutMode: Left;
+                            Background: #0b141f(0.84);
+                            Padding: (Full: 12);
+
+                            Group {
+                                LayoutMode: Top;
+                                FlexWeight: 1;
+
+                                Group {
+                                    LayoutMode: Left;
+
+                                    Label #AugmentNotifLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; Text: "Augment Notifications"; }
+
+                                    Label #AugmentNotifValue {
+                                        Text: "ON";
+                                        Anchor: (Width: @SettingValueWidth, Height: 24);
+                                        Padding: (Horizontal: 8, Vertical: 4);
+                                        Style: (TextColor: #6fe3ff, FontSize: 12, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center);
+                                        Background: #061420;
+                                    }
+                                }
+
+                                Group { Anchor: (Height: 4); }
+
+                                Label #AugmentNotifDescription {
+                                    Text: "Show or hide augment status messages (available, activated, expired, cooldown ready, etc.)."
+                                    Style: (TextColor: #c0cee5, FontSize: 12);
+                                }
+                            }
+
+                            Group { Anchor: (Width: 12); }
+
+                            $C.@TextButton #AugmentNotifToggle {
+                                Anchor: (Height: 32, Width: @ToggleButtonWidth);
+                                Padding: (Horizontal: 8, Vertical: 4);
+                                Text: "Toggle";
+                                Style: @CustomStyle;
+                            }
+                        }
+
+                        Group { Anchor: (Height: 10); }
+
                         Group #RaceModelRow {
                             LayoutMode: Left;
                             Background: #0b141f(0.84);
