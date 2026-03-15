@@ -1,6 +1,7 @@
 package com.airijko.endlessleveling.systems;
 
 import com.airijko.endlessleveling.managers.MobLevelingManager;
+import com.airijko.endlessleveling.passives.type.ArmyOfTheDeadPassive;
 import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
@@ -61,6 +62,10 @@ public class MobDamageScalingSystem extends DamageEventSystem {
             PlayerRef attackerPlayer = EntityRefUtil.tryGetComponent(commandBuffer, attackerRef,
                     PlayerRef.getComponentType());
             if (attackerPlayer == null || !attackerPlayer.isValid()) {
+                if (ArmyOfTheDeadPassive.isManagedSummon(attackerRef, store, commandBuffer)) {
+                    return;
+                }
+
                 // Treat as mob source
                 int mobLevel = levelingManager.resolveMobLevel(attackerRef, commandBuffer);
                 PlayerRef defenderPlayer = EntityRefUtil.tryGetComponent(commandBuffer, targetRef,

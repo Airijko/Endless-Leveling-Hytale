@@ -5,6 +5,7 @@ import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentManager;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.data.PlayerData;
+import com.airijko.endlessleveling.passives.type.ArmyOfTheDeadPassive;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Component;
 import com.hypixel.hytale.component.ComponentType;
@@ -2815,6 +2816,9 @@ public class MobLevelingManager {
             CommandBuffer<EntityStore> commandBuffer) {
         if (ref == null)
             return false;
+        if (ArmyOfTheDeadPassive.isManagedSummon(ref, store, commandBuffer)) {
+            return true;
+        }
         String mobType = resolveMobType(ref, store, commandBuffer);
         return mobType != null && isMobTypeBlacklisted(mobType);
     }

@@ -15,6 +15,7 @@ import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.passives.type.ArmyOfTheDeadPassive;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.hypixel.hytale.component.ArchetypeChunk;
@@ -116,6 +117,11 @@ public class PlayerCombatSystem extends DamageEventSystem {
         Ref<EntityStore> attackerRef = entitySource.getRef();
         Ref<EntityStore> targetRef = archetypeChunk.getReferenceTo(index);
         if (!EntityRefUtil.isUsable(attackerRef) || !EntityRefUtil.isUsable(targetRef)) {
+            return;
+        }
+
+        if (ArmyOfTheDeadPassive.shouldPreventFriendlyDamage(attackerRef, targetRef, store, commandBuffer)) {
+            damage.setAmount(0.0f);
             return;
         }
 

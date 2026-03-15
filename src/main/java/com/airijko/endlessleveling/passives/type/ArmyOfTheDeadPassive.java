@@ -1,8 +1,10 @@
 package com.airijko.endlessleveling.passives.type;
 
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
+import com.airijko.endlessleveling.managers.PartyManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.util.EntityRefUtil;
@@ -20,10 +22,14 @@ import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntitySta
 import com.hypixel.hytale.server.core.modules.entitystats.modifier.Modifier.ModifierTarget;
 import com.hypixel.hytale.server.core.modules.entitystats.modifier.StaticModifier;
 import com.hypixel.hytale.server.core.modules.entitystats.modifier.StaticModifier.CalculationType;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.flock.FlockMembershipSystems;
+import com.hypixel.hytale.server.flock.FlockPlugin;
 import com.hypixel.hytale.server.npc.NPCPlugin;
+import com.hypixel.hytale.server.npc.entities.NPCEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,6 +103,84 @@ public final class ArmyOfTheDeadPassive {
             LOGGER.atWarning().withCause(throwable)
                     .log("[ARMY_OF_THE_DEAD] Failed to process pending summon trigger for %s", ownerUuid);
         }
+    }
+
+    public static void focusCurrentTarget(PlayerData sourcePlayerData,
+            Ref<EntityStore> targetRef,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (sourcePlayerData == null || targetRef == null || commandBuffer == null
+                || !EntityRefUtil.isUsable(targetRef)) {
+            return;
+        }
+
+        UUID ownerUuid = sourcePlayerData.getUuid();
+        if (ownerUuid == null) {
+            return;
+        }
+
+        OwnerSummonState ownerState = OWNER_STATES.get(ownerUuid);
+        if (ownerState == null) {
+            return;
+        }
+
+        synchronized (ownerState) {
+            for (SummonSlot slot : ownerState.slots) {
+                if (slot == null || !EntityRefUtil.isUsable(slot.activeRef)) {
+                    continue;
+                }
+
+                NPCEntity summonNpc = EntityRefUtil.tryGetComponent(commandBuffer,
+                        slot.activeRef,
+                        NPCEntity.getComponentType());
+                if (summonNpc == null || summonNpc.getRole() == null) {
+                    continue;
+                }
+
+                try {
+                    summonNpc.getRole().setMarkedTarget("LockedTarget", targetRef);
+                } catch (Throwable throwable) {
+                    LOGGER.atFiner().withCause(throwable)
+                            .log("[ARMY_OF_THE_DEAD] Failed to retarget summon for owner %s.", ownerUuid);
+                }
+            }
+        }
+    }
+
+    public static boolean isManagedSummon(Ref<EntityStore> ref,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        return resolveSummonOwnerUuid(ref, store, commandBuffer) != null;
+    }
+
+    public static boolean shouldPreventFriendlyDamage(Ref<EntityStore> attackerRef,
+            Ref<EntityStore> targetRef,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (!EntityRefUtil.isUsable(attackerRef) || !EntityRefUtil.isUsable(targetRef)) {
+            return false;
+        }
+
+        UUID attackerOwner = resolveSummonOwnerUuid(attackerRef, store, commandBuffer);
+        UUID targetOwner = resolveSummonOwnerUuid(targetRef, store, commandBuffer);
+
+        if (attackerOwner == null && targetOwner == null) {
+            return false;
+        }
+
+        UUID attackerPlayerUuid = resolvePlayerUuid(attackerRef, store, commandBuffer);
+        UUID targetPlayerUuid = resolvePlayerUuid(targetRef, store, commandBuffer);
+
+        if (attackerOwner != null && targetPlayerUuid != null && isAlliedWithOwner(attackerOwner, targetPlayerUuid)) {
+            return true;
+        }
+
+        if (targetOwner != null && attackerPlayerUuid != null && isAlliedWithOwner(targetOwner, attackerPlayerUuid)) {
+            return true;
+        }
+
+        return attackerOwner != null
+                && targetOwner != null
+                && areAlliedOwners(attackerOwner, targetOwner);
     }
 
     private static void triggerOnHitNow(PlayerData sourcePlayerData,
@@ -316,6 +400,9 @@ public final class ArmyOfTheDeadPassive {
                     return;
                 }
 
+                attachSummonToOwnerFlock(request.source().ownerRef(), summonRef, store,
+                        request.config().skeletonType());
+
                 applySummonScaling(summonRef,
                         store,
                         request.source(),
@@ -487,11 +574,110 @@ public final class ArmyOfTheDeadPassive {
         Vector3d position = sourceTransform.getPosition();
         Vector3f rotation = sourceTransform.getRotation();
         return new SummonSourceSnapshot(store.getExternalData().getWorld().getName(),
+                sourceRef,
                 new Vector3d(position.getX(), position.getY(), position.getZ()),
                 new Vector3f(rotation.getX(), rotation.getY(), rotation.getZ()),
                 healthMax,
                 manaMax,
                 staminaMax);
+    }
+
+    private static void attachSummonToOwnerFlock(Ref<EntityStore> ownerRef,
+            Ref<EntityStore> summonRef,
+            Store<EntityStore> store,
+            String allowedRole) {
+        if (!EntityRefUtil.isUsable(ownerRef) || !EntityRefUtil.isUsable(summonRef) || store == null) {
+            return;
+        }
+
+        try {
+            Ref<EntityStore> flockRef = FlockPlugin.getFlockReference(ownerRef, store);
+            if (flockRef == null) {
+                flockRef = FlockPlugin.createFlock(store,
+                        null,
+                        allowedRole == null || allowedRole.isBlank() ? new String[0] : new String[] { allowedRole });
+                FlockMembershipSystems.join(ownerRef, flockRef, store);
+            }
+
+            Ref<EntityStore> summonFlockRef = FlockPlugin.getFlockReference(summonRef, store);
+            if (summonFlockRef == null || !summonFlockRef.equals(flockRef)) {
+                FlockMembershipSystems.join(summonRef, flockRef, store);
+            }
+        } catch (Throwable throwable) {
+            LOGGER.atFiner().withCause(throwable)
+                    .log("[ARMY_OF_THE_DEAD] Failed to join summon to owner flock.");
+        }
+    }
+
+    private static UUID resolveSummonOwnerUuid(Ref<EntityStore> ref,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        UUID summonUuid = resolveEntityUuid(ref, store, commandBuffer);
+        if (summonUuid == null) {
+            return null;
+        }
+
+        SummonBinding binding = SUMMON_BINDINGS.get(summonUuid);
+        return binding != null ? binding.ownerUuid() : null;
+    }
+
+    private static UUID resolvePlayerUuid(Ref<EntityStore> ref,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (!EntityRefUtil.isUsable(ref)) {
+            return null;
+        }
+
+        PlayerRef playerRef = EntityRefUtil.tryGetComponent(commandBuffer, ref, PlayerRef.getComponentType());
+        if (playerRef == null && store != null) {
+            playerRef = EntityRefUtil.tryGetComponent(store, ref, PlayerRef.getComponentType());
+        }
+        return playerRef != null && playerRef.isValid() ? playerRef.getUuid() : null;
+    }
+
+    private static UUID resolveEntityUuid(Ref<EntityStore> ref,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (!EntityRefUtil.isUsable(ref)) {
+            return null;
+        }
+
+        UUIDComponent uuidComponent = EntityRefUtil.tryGetComponent(commandBuffer, ref,
+                UUIDComponent.getComponentType());
+        if (uuidComponent == null && store != null) {
+            uuidComponent = EntityRefUtil.tryGetComponent(store, ref, UUIDComponent.getComponentType());
+        }
+        return uuidComponent != null ? uuidComponent.getUuid() : null;
+    }
+
+    private static boolean isAlliedWithOwner(UUID ownerUuid, UUID candidateUuid) {
+        if (ownerUuid == null || candidateUuid == null) {
+            return false;
+        }
+        if (ownerUuid.equals(candidateUuid)) {
+            return true;
+        }
+
+        PartyManager partyManager = resolvePartyManager();
+        if (partyManager == null || !partyManager.isAvailable()) {
+            return false;
+        }
+        if (!partyManager.isInParty(ownerUuid) || !partyManager.isInParty(candidateUuid)) {
+            return false;
+        }
+
+        UUID ownerLeader = partyManager.getPartyLeader(ownerUuid);
+        UUID candidateLeader = partyManager.getPartyLeader(candidateUuid);
+        return ownerLeader != null && ownerLeader.equals(candidateLeader);
+    }
+
+    private static boolean areAlliedOwners(UUID firstOwnerUuid, UUID secondOwnerUuid) {
+        return isAlliedWithOwner(firstOwnerUuid, secondOwnerUuid);
+    }
+
+    private static PartyManager resolvePartyManager() {
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        return plugin != null ? plugin.getPartyManager() : null;
     }
 
     private static void clearPendingSlot(UUID ownerUuid, int slotIndex) {
@@ -681,6 +867,7 @@ public final class ArmyOfTheDeadPassive {
     }
 
     private record SummonSourceSnapshot(String worldId,
+            Ref<EntityStore> ownerRef,
             Vector3d position,
             Vector3f rotation,
             double healthMax,

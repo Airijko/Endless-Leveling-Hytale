@@ -13,6 +13,7 @@ import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.SkillManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.passives.type.ArmyOfTheDeadPassive;
 import com.airijko.endlessleveling.systems.MobDamageScalingSystem;
 import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.hypixel.hytale.component.ArchetypeChunk;
@@ -118,6 +119,12 @@ public class PlayerDefenseSystem extends DamageEventSystem {
 			}
 		}
 		UUID mobAttackerUuid = null;
+
+		if (attackerRef != null
+				&& ArmyOfTheDeadPassive.shouldPreventFriendlyDamage(attackerRef, targetRef, store, commandBuffer)) {
+			damage.setAmount(0.0f);
+			return;
+		}
 
 		if (attackerRef != null && mobAugmentExecutor != null && mobLevelingManager != null) {
 			PlayerRef attackerPlayer = EntityRefUtil.tryGetComponent(commandBuffer, attackerRef,
