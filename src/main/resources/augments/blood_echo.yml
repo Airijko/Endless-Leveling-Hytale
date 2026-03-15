@@ -2,7 +2,7 @@ id: blood_echo
 name: "Blood Echo"
 tier: ELITE
 description: "Convert healing into extra damage and sustain through lifesteal."
-category: ON_HIT
+category: LIFESTEAL
 
 passives:
   buffs:

@@ -2,7 +2,7 @@ id: blood_frenzy
 name: "Blood Frenzy"
 tier: ELITE
 description: "Provides Life Steal and Haste."
-category: ON_HIT
+category: LIFESTEAL
 
 passives:
   buffs:

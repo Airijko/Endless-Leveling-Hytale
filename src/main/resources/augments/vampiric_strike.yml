@@ -2,7 +2,7 @@ id: vampiric_strike
 name: "Vampiric Strike"
 tier: MYTHIC
 description: "Critical hits heal you, limited by an internal cooldown."
-category: ON_CRIT
+category: LIFESTEAL
 
 passives:
   heal_on_crit:

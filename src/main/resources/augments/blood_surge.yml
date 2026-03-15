@@ -2,7 +2,7 @@ id: blood_surge
 name: "Blood Surge"
 tier: MYTHIC
 description: "Missing health increases your Life Steal, and part of applied healing is fed into your attacks."
-category: ON_HIT
+category: LIFESTEAL
 
 passives:
   life_steal_scaling:
