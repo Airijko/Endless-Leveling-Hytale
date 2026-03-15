@@ -1054,7 +1054,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case FIRST_STRIKE -> appendDetails(
                     tr("ui.races.passive.desc.first_strike", "{0} opener", formatPercentValue(value)),
                     formatCooldownDetail(cooldown));
-            case INNATE_ATTRIBUTE_GAIN -> formatInnatePreview(passive);
+            case INNATE_ATTRIBUTE_GAIN -> formatInnatePreview(passive, playerData);
             case ADRENALINE -> appendDetails(
                     tr("ui.races.passive.desc.adrenaline", "{0} stamina", formatPercentValue(value)),
                     formatThresholdDetail(threshold, tr("ui.races.passive.scope.stamina", "stamina")),
@@ -1112,10 +1112,15 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return null;
     }
 
-    private String formatInnatePreview(RacePassiveDefinition passive) {
+    private String formatInnatePreview(RacePassiveDefinition passive, PlayerData playerData) {
         double perLevel = passive.value();
         String perLevelText = tr("ui.races.passive.detail.per_level", "{0} per level", formatSigned(perLevel));
-        int cap = levelingManager != null ? Math.max(1, levelingManager.getLevelCap()) : 1;
+        int cap = 1;
+        if (levelingManager != null) {
+            cap = playerData != null
+                    ? Math.max(1, levelingManager.getLevelCap(playerData))
+                    : Math.max(1, levelingManager.getLevelCap());
+        }
         double total = perLevel * cap;
         String totalText = formatSigned(total);
         return tr("ui.races.passive.detail.total_at_level", "{0} (Total {1} @ Lv {2})", perLevelText, totalText,
