@@ -118,18 +118,23 @@
   Group { FlexWeight: 1; }
 
   // ---- Footer ----
-  Label #NavVersion {
-    Text: "v?.?";
-    Anchor: (Height: 20);
-    Padding: (Left: 16);
-    Style: (FontSize: 10, TextColor: #4a5568);
-  }
+  Group {
+    LayoutMode: Top;
 
-  @LeftNavButton #NavSupport {
-    Text: "SUPPORT";
-  }
+    @LeftNavButton #NavSupport {
+      Text: "SUPPORT";
+    }
 
-  @LeftNavButton #NavSettings {
-    Text: "SETTINGS";
+    Group { Anchor: (Height: 8); }
+
+    Label #NavVersion {
+      Text: "v?.?";
+      Padding: (Left: 16);
+      Style: (FontSize: 10, TextColor: #4a5568);
+    }
+
+    @LeftNavButton #NavSettings {
+      Text: "SETTINGS";
+    }
   }
 };
