@@ -12,8 +12,14 @@ weapons:
     damage: 1.05
 
 passives:
-  - type: MANA_REGEN
-    value: 0.028
+  - type: ARMY_OF_THE_DEAD
+    base_summoned_minions: 2
+    summon_amount_scaling:
+      mana_per_summon: 100 # mana grants 1 extra summon, e.g. 200 mana grants 2 summons (3 total), 350 mana grants 3 summons (5 total), etc.
+    minion_lifetime_seconds: 30
+    activation: on_hit
+    cooldown_seconds: 20 # seconds per summon after their death
+    summon_stat_inheritance: 0.1
   - type: HEALTH_REGEN
     value: 0.014
   - type: INNATE_ATTRIBUTE_GAIN
