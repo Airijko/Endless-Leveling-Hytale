@@ -1,0 +1,34 @@
+class_name: "Healer"
+id: "healer"
+description: "A divine seer who empowers magic through foresight and blessing, excelling in sustained spellcasting."
+role: "Mage"
+enabled: true
+icon: "Weapon_Daggers_Mithril"
+
+weapons:
+  - type: STAFF
+    damage: 1.05
+  - type: DAGGER
+    damage: 1.05
+
+passives:
+  - type: SPECIAL_CHARGE_BONUS
+    value: 0.525
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: flow
+    value: 1.75
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: stamina
+    value: 0.7
+
+ascension:
+  id: class_healer_base
+  stage: base
+  path: healer
+  final_form: false
+  single_route_only: false
+  requirements:
+    required_prestige: 0
+  next_paths:
+    - id: class_healer_elite
+      name: "Elite"

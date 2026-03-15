@@ -1,0 +1,34 @@
+class_name: "Legendary Healer"
+id: "healer_legendary"
+description: "A divine seer who empowers magic through foresight and blessing, excelling in sustained spellcasting."
+role: "Mage"
+enabled: true
+icon: "Weapon_Daggers_Mithril"
+
+weapons:
+  - type: STAFF
+    damage: 1.38
+  - type: DAGGER
+    damage: 1.208
+
+passives:
+  - type: SPECIAL_CHARGE_BONUS
+    value: 0.862
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: flow
+    value: 2.875
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: stamina
+    value: 1.15
+
+ascension:
+  id: class_healer_legendary
+  stage: legendary
+  path: healer
+  final_form: false
+  single_route_only: true
+  requirements:
+    required_prestige: 6
+  next_paths:
+    - id: class_healer_exalted
+      name: "Exalted"
