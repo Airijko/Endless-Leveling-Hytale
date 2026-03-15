@@ -600,6 +600,25 @@ public class SkillManager {
         return contribution > 0.0D ? contribution : 0.0D;
     }
 
+    /**
+     * Computes the additive total contribution for the supplied attribute,
+     * including level scaling, innate gains, and runtime augment bonuses.
+     */
+    public double calculateSkillAttributeTotalBonus(PlayerData playerData,
+            SkillAttributeType attributeType,
+            int overrideLevel) {
+        if (playerData == null || attributeType == null) {
+            return 0.0D;
+        }
+        int effectiveLevel = overrideLevel >= 0 ? overrideLevel
+                : playerData.getPlayerSkillAttributeLevel(attributeType);
+        double perPointValue = getSkillAttributeConfigValue(attributeType);
+        double innateBonus = getInnateAttributeBonus(playerData, attributeType);
+        double augmentBonus = getAugmentAttributeBonus(playerData, attributeType);
+        double contribution = (effectiveLevel * perPointValue) + innateBonus + augmentBonus;
+        return contribution > 0.0D ? contribution : 0.0D;
+    }
+
     public boolean applyFlowModifiers(@Nonnull Ref<EntityStore> ref,
             @Nonnull ComponentAccessor<EntityStore> componentAccessor, PlayerData playerData) {
         float skillBonus = calculatePlayerFlow(playerData);

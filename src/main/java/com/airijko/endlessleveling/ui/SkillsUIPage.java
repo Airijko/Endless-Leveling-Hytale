@@ -381,7 +381,8 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                                 formatNumber(strengthPreview.totalValue())));
 
                 int sorcLevel = getPreviewLevel(SkillAttributeType.SORCERY);
-                double sorceryTotal = skillManager.calculateSkillAttributeBonus(playerData, SkillAttributeType.SORCERY,
+                double sorceryTotal = skillManager.calculateSkillAttributeTotalBonus(playerData,
+                                SkillAttributeType.SORCERY,
                                 sorcLevel);
                 ui.set("#SorceryLevel.Text", String.valueOf(sorcLevel));
                 ui.set("#SorceryValue.Text",
@@ -431,7 +432,9 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ui.set("#FlowValue.Text", formatResourceDisplay(flowTotal, tr("ui.skills.resource.flow", "Flow")));
 
                 int discLevel = getPreviewLevel(SkillAttributeType.DISCIPLINE);
-                double discBonus = skillManager.getDisciplineXpBonusPercent(discLevel);
+                double discBonus = skillManager.calculateSkillAttributeTotalBonus(playerData,
+                                SkillAttributeType.DISCIPLINE,
+                                discLevel);
                 ui.set("#DisciplineLevel.Text", String.valueOf(discLevel));
                 ui.set("#DisciplineValue.Text",
                                 tr("ui.skills.value.discipline", "+{0}% XP Gain", formatNumber(discBonus)));
@@ -485,7 +488,7 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                         raceBase = attributeManager.getRaceAttribute(playerData, type, 0.0D);
                 }
                 double skillBonus = skillManager != null
-                                ? skillManager.calculateSkillAttributeBonus(playerData, type, previewLevel)
+                                ? skillManager.calculateSkillAttributeTotalBonus(playerData, type, previewLevel)
                                 : 0.0D;
                 double total = raceBase + skillBonus;
                 return total > 0.0D ? total : 0.0D;
