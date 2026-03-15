@@ -696,8 +696,8 @@ ui:
       granted: Dir wurden Fertigkeitspunkte gewährt!
       reset: Ausstehende Änderungen zurückgesetzt.
       applied: Fertigkeiten angewendet!
-      added: {0} Punkt(e) zu {1} hinzugefügt
-      removed: {0} Punkt(e) von {1} entfernt
+      added: "{0} Punkt(e) zu {1} hinzugefügt"
+      removed: "{0} Punkt(e) von {1} entfernt"
       precision_capped: Präzision (Krit) bei 100% gedeckelt; überschüssige Punkte nicht angewendet.
     error:
       precision_at_cap: Präzision (Krit) ist bereits bei 100%; entferne erst andere Boni.

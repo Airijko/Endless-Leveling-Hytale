@@ -64,7 +64,7 @@ hud:
   mob:
     level:
       single: "{0}. szint"
-      single_compact: Szint: {0}
+      single_compact: "Szint: {0}"
       range: "{0}-{1}. szint"
     prefix: "Közeli lények: "
   level:
@@ -165,13 +165,13 @@ ui:
       body: Jelenleg nem érhető el fejlesztés.
     no_augments_yet:
       title: MÉG NINCSENEK FEJLESZTÉSEK
-      body: Nem érhető el fejlesztés. Következő feloldás: {0}. szint.
+      body: "Nem érhető el fejlesztés. Következő feloldás: {0}. szint."
     no_augments:
       title: NINCSENEK FEJLESZTÉSEK
       body: Nincsenek fejlesztési mérföldkövek beállítva.
     all_claimed:
       title: MIND MEGSZEREZVE
-      next_unlock: Minden jelenleg elérhető fejlesztést megszereztél. Következő feloldás: {0}. szint.
+      next_unlock: "Minden jelenleg elérhető fejlesztést megszereztél. Következő feloldás: {0}. szint."
       done: Már megszerezted az összes konfigurált fejlesztést.
     remaining:
       header: "Még vannak választható fejlesztéseid:"
@@ -355,7 +355,7 @@ ui:
       swap_triggers: Egy váltás {0} töltési időt vált ki.
       unrestricted: A fajváltás jelenleg korlátozás nélküli.
       try_again_prefix: "Újra válthatsz ennyi idő múlva: "
-      unlocks_in: Feloldás: {0} múlva.
+      unlocks_in: "Feloldás: {0} múlva."
       exhausted: Nincs több váltási lehetőség
     chat:
       prefix: "[Fajok] "
@@ -433,7 +433,7 @@ ui:
       detail:
         threshold: <{0}% {1}
         slow: "{0} lassítás"
-        scales_with: skálázódik ezzel: {0}
+        scales_with: "skálázódik ezzel: {0}"
         per_level: "{0} szintenként"
         total_at_level: "{0} (Összesen {1} @ {2}. sz.)"
         duration: "{0} mp időtartam"
@@ -582,8 +582,8 @@ ui:
       none_innate: Ez a kaszt nem ad veleszületett tulajdonság-bónuszokat.
     secondary_cleared: Másodlagos kaszt eltávolítva.
     info:
-      primary_set: Elsődleges kaszt beállítva: {0}.
-      secondary_set: Másodlagos kaszt beállítva: {0}.
+      primary_set: "Elsődleges kaszt beállítva: {0}."
+      secondary_set: "Másodlagos kaszt beállítva: {0}."
     value:
       weapon_damage: +{0}% sebzés
       weapon_damage_negative: -{0}% sebzés
@@ -602,7 +602,7 @@ ui:
       secondary_set_failed: Kaszt beállítása másodlagosként sikertelen.
       secondary_none: Nincs hozzárendelve másodlagos kasztod.
       unknown: "Ismeretlen kaszt: {0}"
-      cooldown_remaining: A(z) {0} kasztod újra váltható ennyi idő múlva: {1}.
+      cooldown_remaining: "A(z) {0} kasztod újra váltható ennyi idő múlva: {1}."
       no_changes_remaining: Nincs több kasztváltási lehetőséged.
     evolution:
       summary:
@@ -696,8 +696,8 @@ ui:
       granted: Képességpontokat kaptál!
       reset: Függőben lévő módosítások visszavonva.
       applied: Képességek alkalmazva!
-      added: {0} pont hozzáadva a(z) {1} tulajdonsághoz
-      removed: {0} pont eltávolítva a(z) {1} tulajdonságból
+      added: "{0} pont hozzáadva a(z) {1} tulajdonsághoz"
+      removed: "{0} pont eltávolítva a(z) {1} tulajdonságból"
       precision_capped: Precízió (Krit) 100%-nál korlátozva; a felesleges pontok nem lettek alkalmazva.
     error:
       precision_at_cap: A precízió már 100%-on van; előbb távolíts el más bónuszokat.
@@ -782,7 +782,7 @@ command:
     available: "Elérhető nyelvek: {0}"
     usage: "Használat: /el language list | /el language set <nyelv>"
     invalid: "Ismeretlen nyelv: '{0}'. Elérhető: {1}"
-    updated: Nyelv átállítva: {0}.
+    updated: "Nyelv átállítva: {0}."
   reset_cooldowns:
     unavailable: Passzív- és fejlesztéskezelő nem elérhető.
     success: Passzív töltési idők visszaállítva {0} játékosnál, és minden fejlesztési töltési idő törölve.

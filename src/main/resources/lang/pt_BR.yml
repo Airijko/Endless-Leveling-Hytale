@@ -171,7 +171,7 @@ ui:
       body: Marcos de aprimoramento não foram configurados.
     all_claimed:
       title: TODOS RESGATADOS
-      next_unlock: Você resgatou todos os aprimoramentos atuais. Próximo desbloqueio: Nível {0}.
+      next_unlock: "Você resgatou todos os aprimoramentos atuais. Próximo desbloqueio: Nível {0}."
       done: Você já resgatou todos os aprimoramentos configurados.
     remaining:
       header: "Você ainda tem escolhas de aprimoramento pendentes:"
@@ -355,7 +355,7 @@ ui:
       swap_triggers: Uma troca gera {0} de tempo de recarga.
       unrestricted: Trocas de raça não têm restrições no momento.
       try_again_prefix: "Você pode trocar novamente em: "
-      unlocks_in: Desbloqueia em: {0}.
+      unlocks_in: "Desbloqueia em: {0}."
       exhausted: Sem trocas restantes
     chat:
       prefix: "[Raças] "
@@ -696,8 +696,8 @@ ui:
       granted: Você recebeu pontos de habilidade!
       reset: Alterações pendentes resetadas.
       applied: Habilidades aplicadas!
-      added: {0} ponto(s) adicionado(s) a {1}
-      removed: {0} ponto(s) removido(s) de {1}
+      added: "{0} ponto(s) adicionado(s) a {1}"
+      removed: "{0} ponto(s) removido(s) de {1}"
       precision_capped: Precisão (Crítico) limitada em 100%; pontos excedentes não foram aplicados.
     error:
       precision_at_cap: Precisão já está em 100%; remova outros bônus primeiro.

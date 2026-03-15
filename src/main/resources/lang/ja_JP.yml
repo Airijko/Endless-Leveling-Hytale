@@ -98,27 +98,27 @@ ui:
       race_model: 種族固有のキャラクターモデルを有効にします。
     player_hud:
       label: プレイヤーHUD
-      toggled: プレイヤーHUD: {0}
+      toggled: "プレイヤーHUD: {0}"
     critical_notif:
       label: クリティカル通知
-      toggled: クリティカル通知: {0}
+      toggled: "クリティカル通知: {0}"
     xp_notif:
       label: 経験値通知
-      toggled: 経験値通知: {0}
+      toggled: "経験値通知: {0}"
     passive_levelup_notif:
       label: パッシブレベルアップ通知
-      toggled: パッシブレベルアップ通知: {0}
+      toggled: "パッシブレベルアップ通知: {0}"
     luck_double_notif:
       label: 追加ドロップ通知
-      toggled: 追加ドロップ通知: {0}
+      toggled: "追加ドロップ通知: {0}"
     health_regen_notif:
       label: HP回復通知
-      toggled: HP回復通知: {0}
+      toggled: "HP回復通知: {0}"
     race_model:
       label: 種族モデル表示
       globally_disabled: 種族モデルはサーバー設定で無効化されています。
-      enabled: 種族モデル表示: 有効
-      disabled: 種族モデル表示: 無効
+      enabled: "種族モデル表示: 有効"
+      disabled: "種族モデル表示: 無効"
   leaderboards:
     page:
       title: リーダーボード
@@ -696,8 +696,8 @@ ui:
       granted: スキルポイントを獲得しました！
       reset: 保留中の変更をリセットしました。
       applied: スキルを適用しました！
-      added: {1} に {0} ポイント追加しました
-      removed: {1} から {0} ポイント減らしました
+      added: "{1} に {0} ポイント追加しました"
+      removed: "{1} から {0} ポイント減らしました"
       precision_capped: 精密（クリティカル）は 100% が上限です。超過分は適用されません。
     error:
       precision_at_cap: 精密は既に 100% です。他のボーナスを先に解除してください。

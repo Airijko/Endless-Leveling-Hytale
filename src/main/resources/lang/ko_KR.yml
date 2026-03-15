@@ -657,7 +657,7 @@ ui:
     page:
       title: 능력치 분배
       subtitle: 포인트를 투자하여 당신만의 전투 스타일을 완성하세요.
-      footer_hint: '실행 취소'는 초기화, '적용'은 확정입니다.
+      footer_hint: "'실행 취소'는 초기화, '적용'은 확정입니다."
       undo: 실행 취소
       apply: 적용
     level_prefix: Lv.
@@ -734,7 +734,7 @@ ui:
     list:
       title: 프로필 {0}/{1}
       slot: 슬롯 {0}
-      level: {0} 레벨
+      level: "{0} 레벨"
       xp: "{0} EXP"
       select: 선택
       status:

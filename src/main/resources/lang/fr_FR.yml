@@ -696,8 +696,8 @@ ui:
       granted: On vous a accordé des points de compétence !
       reset: Modifications en attente annulées.
       applied: Compétences appliquées !
-      added: {0} point(s) ajouté(s) à {1}
-      removed: {0} point(s) retiré(s) de {1}
+      added: "{0} point(s) ajouté(s) à {1}"
+      removed: "{0} point(s) retiré(s) de {1}"
       precision_capped: Précision plafonnée à 100% ; points excédentaires non appliqués.
     error:
       precision_at_cap: Précision déjà à 100% ; retirez d'autres bonus d'abord.

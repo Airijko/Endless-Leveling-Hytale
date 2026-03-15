@@ -176,7 +176,7 @@ command:
 
   reset_cooldowns:
     unavailable: Pasif ve augment yöneticileri kullanılamıyor.
-    success: "{0} oyuncu için pasif bekleme süreleri sıfırlandı ve tüm augment bekleme süreleri temizlendi.""
+    success: "{0} oyuncu için pasif bekleme süreleri sıfırlandı ve tüm augment bekleme süreleri temizlendi."
 
   reset_skillpoints:
     system_unavailable: Yetenek sistemi başlatılmamış. Bir yöneticiyle iletişime geçin.

@@ -696,8 +696,8 @@ ui:
       granted: ¡Se te han otorgado puntos de habilidad!
       reset: Cambios pendientes revertidos.
       applied: ¡Habilidades aplicadas!
-      added: {0} punto(s) añadidos a {1}
-      removed: {0} punto(s) quitados de {1}
+      added: "{0} punto(s) añadidos a {1}"
+      removed: "{0} punto(s) quitados de {1}"
       precision_capped: Precisión (Crítico) limitada al 100%; puntos excedentes no aplicados.
     error:
       precision_at_cap: La precisión ya está al 100%; elimina otros bonos primero.
