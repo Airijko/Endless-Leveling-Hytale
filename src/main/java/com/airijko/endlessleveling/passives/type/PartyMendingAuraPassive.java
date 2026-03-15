@@ -7,6 +7,7 @@ import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.managers.PassiveManager.PassiveRuntimeState;
 import com.airijko.endlessleveling.managers.PartyManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
@@ -19,6 +20,8 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.TargetUtil;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -26,11 +29,12 @@ import java.util.UUID;
  */
 public final class PartyMendingAuraPassive {
 
-    private static final long PULSE_INTERVAL_MILLIS = 1000L;
+    private static final long PULSE_INTERVAL_MILLIS = 2000L;
     private static final double BASE_RANGE_BLOCKS = 5.0D;
     private static final double MANA_PER_RANGE_BLOCK = 75.0D;
     private static final double HEAL_FROM_TOTAL_MANA = 0.10D;
     private static final double HEAL_FROM_TOTAL_STAMINA = 0.20D;
+    private static final double DEFAULT_SELF_HEAL_EFFECTIVENESS = 1.0D;
 
     private PartyMendingAuraPassive() {
     }
@@ -50,6 +54,7 @@ public final class PartyMendingAuraPassive {
         if (passiveValue <= 0.0D) {
             return;
         }
+        HealingAuraConfig config = resolveConfig(archetypeSnapshot);
 
         long now = System.currentTimeMillis();
         long lastPulse = runtimeState.getPartyMendingLastPulseMillis();
@@ -67,14 +72,16 @@ public final class PartyMendingAuraPassive {
         double totalMana = sourceMana != null ? Math.max(0.0D, sourceMana.getMax()) : 0.0D;
         double totalStamina = sourceStamina != null ? Math.max(0.0D, sourceStamina.getMax()) : 0.0D;
 
-        double healPerPulse = (totalMana * HEAL_FROM_TOTAL_MANA) + (totalStamina * HEAL_FROM_TOTAL_STAMINA);
+        double healPerPulse = config.flatHealValue()
+                + (totalMana * config.manaRatio())
+                + (totalStamina * config.staminaRatio());
         if (healPerPulse <= 0.0D) {
             return;
         }
 
-        double radius = BASE_RANGE_BLOCKS;
-        if (MANA_PER_RANGE_BLOCK > 0.0D) {
-            radius += Math.floor(totalMana / MANA_PER_RANGE_BLOCK);
+        double radius = config.baseRadius();
+        if (config.manaPerBlock() > 0.0D) {
+            radius += Math.floor(totalMana / config.manaPerBlock());
         }
         if (radius <= 0.0D) {
             return;
@@ -112,15 +119,127 @@ public final class PartyMendingAuraPassive {
                 continue;
             }
 
-            if (!isSamePartyTarget(sourceUuid, sourcePartyLeader, targetPlayer.getUuid(), partyManager)) {
+            UUID targetUuid = targetPlayer.getUuid();
+            boolean selfTarget = sourceUuid != null && sourceUuid.equals(targetUuid);
+
+            if (!isSamePartyTarget(sourceUuid, sourcePartyLeader, targetUuid, partyManager)) {
+                continue;
+            }
+
+            double effectiveHeal = selfTarget
+                    ? healPerPulse * config.selfHealEffectiveness()
+                    : healPerPulse;
+            if (effectiveHeal <= 0.0D) {
                 continue;
             }
 
             EntityStatMap targetStats = EntityRefUtil.tryGetComponent(commandBuffer,
                     targetRef,
                     EntityStatMap.getComponentType());
-            applyHeal(targetStats, healPerPulse);
+            applyHeal(targetStats, effectiveHeal);
         }
+    }
+
+    private static HealingAuraConfig resolveConfig(ArchetypePassiveSnapshot snapshot) {
+        double flatHealValue = 0.0D;
+        double manaRatio = HEAL_FROM_TOTAL_MANA;
+        double staminaRatio = HEAL_FROM_TOTAL_STAMINA;
+        double baseRadius = BASE_RANGE_BLOCKS;
+        double manaPerBlock = MANA_PER_RANGE_BLOCK;
+        double selfHealEffectiveness = DEFAULT_SELF_HEAL_EFFECTIVENESS;
+
+        if (snapshot == null) {
+            return new HealingAuraConfig(flatHealValue,
+                    manaRatio,
+                    staminaRatio,
+                    baseRadius,
+                    manaPerBlock,
+                    selfHealEffectiveness);
+        }
+
+        RacePassiveDefinition strongestDefinition = resolveStrongestDefinition(
+                snapshot.getDefinitions(ArchetypePassiveType.HEALING_AURA));
+        if (strongestDefinition == null || strongestDefinition.properties() == null
+                || strongestDefinition.properties().isEmpty()) {
+            return new HealingAuraConfig(flatHealValue,
+                    manaRatio,
+                    staminaRatio,
+                    baseRadius,
+                    manaPerBlock,
+                    selfHealEffectiveness);
+        }
+
+        Map<String, Object> props = strongestDefinition.properties();
+        flatHealValue = parseNonNegative(props.get("flat_heal_value"), flatHealValue);
+        manaRatio = parseNonNegative(props.get("mana_ratio"), manaRatio);
+        staminaRatio = parseNonNegative(props.get("stamina_ratio"), staminaRatio);
+        baseRadius = parseNonNegative(props.get("radius"), baseRadius);
+
+        Object radiusScalingRaw = props.get("radius_mana_scaling");
+        if (radiusScalingRaw instanceof Map<?, ?> radiusScaling) {
+            manaPerBlock = parsePositive(radiusScaling.get("mana_per_block"), manaPerBlock);
+        }
+
+        Object selfEffectRaw = firstNonNull(props.get("self_heal_effectiveness"), props.get("self_heal_ratio"));
+        selfHealEffectiveness = parseBoundedRatio(selfEffectRaw, selfHealEffectiveness);
+
+        return new HealingAuraConfig(flatHealValue,
+                manaRatio,
+                staminaRatio,
+                baseRadius,
+                manaPerBlock,
+                selfHealEffectiveness);
+    }
+
+    private static RacePassiveDefinition resolveStrongestDefinition(List<RacePassiveDefinition> definitions) {
+        if (definitions == null || definitions.isEmpty()) {
+            return null;
+        }
+        RacePassiveDefinition strongest = null;
+        double strongestValue = Double.NEGATIVE_INFINITY;
+        for (RacePassiveDefinition definition : definitions) {
+            if (definition == null) {
+                continue;
+            }
+            double value = definition.value();
+            if (strongest == null || value > strongestValue) {
+                strongest = definition;
+                strongestValue = value;
+            }
+        }
+        return strongest;
+    }
+
+    private static Object firstNonNull(Object first, Object second) {
+        return first != null ? first : second;
+    }
+
+    private static double parseBoundedRatio(Object raw, double fallback) {
+        double value = parseRawDouble(raw, fallback);
+        return Math.max(0.0D, Math.min(1.0D, value));
+    }
+
+    private static double parseNonNegative(Object raw, double fallback) {
+        double value = parseRawDouble(raw, fallback);
+        return Math.max(0.0D, value);
+    }
+
+    private static double parsePositive(Object raw, double fallback) {
+        double value = parseRawDouble(raw, fallback);
+        return value > 0.0D ? value : fallback;
+    }
+
+    private static double parseRawDouble(Object raw, double fallback) {
+        if (raw instanceof Number number) {
+            return number.doubleValue();
+        }
+        if (raw instanceof String string) {
+            try {
+                return Double.parseDouble(string.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return fallback;
     }
 
     private static void applyHeal(EntityStatMap statMap, double healAmount) {
@@ -189,5 +308,13 @@ public final class PartyMendingAuraPassive {
     private static PartyManager resolvePartyManager() {
         EndlessLeveling plugin = EndlessLeveling.getInstance();
         return plugin != null ? plugin.getPartyManager() : null;
+    }
+
+    private record HealingAuraConfig(double flatHealValue,
+            double manaRatio,
+            double staminaRatio,
+            double baseRadius,
+            double manaPerBlock,
+            double selfHealEffectiveness) {
     }
 }
