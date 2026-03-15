@@ -1004,6 +1004,14 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return selectedRaceId != null && selectedRaceId.equalsIgnoreCase(raceId);
     }
 
+    private boolean isBaseRaceSelection(RaceDefinition race) {
+        if (race == null) {
+            return false;
+        }
+        String stage = race.getAscension() != null ? race.getAscension().getStage() : "base";
+        return stage == null || stage.isBlank() || "base".equalsIgnoreCase(stage.trim());
+    }
+
     private List<RaceDefinition> getSortedRaces() {
         Collection<RaceDefinition> loaded = raceManager.getLoadedRaces();
         List<RaceDefinition> races = new ArrayList<>();
@@ -1467,6 +1475,12 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     Message.raw(tr("ui.races.error.unknown", "Unknown race: {0}", targetRaceId)).color("#ff6666"));
             return;
         }
+        if (!isBaseRaceSelection(desired)) {
+            playerRef.sendMessage(Message.raw(tr("ui.races.error.base_only",
+                    "Base race swapping only supports base races. Use Race Paths to evolve into higher forms."))
+                    .color("#ff6666"));
+            return;
+        }
 
         RaceDefinition current = raceManager.getPlayerRace(playerData);
         if (current != null && current.getId().equalsIgnoreCase(desired.getId())) {
@@ -1475,27 +1489,6 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             this.selectedRaceId = current.getId();
             rebuild();
             return;
-        }
-
-        if (!operatorBypass && raceManager != null) {
-            RaceAscensionEligibility eligibility = raceManager.evaluateAscensionEligibility(playerData,
-                    desired.getId());
-            if (!eligibility.isEligible()) {
-                if (!eligibility.getBlockers().isEmpty()) {
-                    playerRef.sendMessage(Message.raw(tr("ui.races.error.cannot_ascend", "Cannot switch race yet:"))
-                            .color("#ff6666"));
-                    for (String blocker : eligibility.getBlockers()) {
-                        playerRef.sendMessage(Message.join(
-                                Message.raw(" - ").color("#ff6666"),
-                                Message.raw(blocker).color("#ffc300")));
-                    }
-                } else {
-                    playerRef.sendMessage(Message.raw(tr("ui.races.error.cannot_ascend_simple",
-                            "Cannot switch race yet."))
-                            .color("#ff6666"));
-                }
-                return;
-            }
         }
 
         if (!operatorBypass && raceManager != null && !raceManager.hasRaceSwitchesRemaining(playerData)) {

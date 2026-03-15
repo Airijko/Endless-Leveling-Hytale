@@ -4,7 +4,6 @@ import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
-import com.airijko.endlessleveling.races.RaceAscensionEligibility;
 import com.airijko.endlessleveling.races.RaceDefinition;
 import com.airijko.endlessleveling.util.OperatorHelper;
 import com.hypixel.hytale.component.Ref;
@@ -20,7 +19,6 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
 import java.time.Instant;
-import java.util.List;
 
 /**
  * /races choose <race> : lets a player pick a race subject to cooldowns.
@@ -80,29 +78,17 @@ public class RaceChooseCommand extends AbstractPlayerCommand {
                     Message.raw(desiredInput).color("#ffc300")));
             return;
         }
+        if (!isBaseRaceSelection(desiredRace)) {
+            senderRef.sendMessage(Message
+                    .raw("Base race swapping only supports base races. Use Race Paths to evolve into higher forms.")
+                    .color("#ff6666"));
+            return;
+        }
 
         RaceDefinition currentRace = raceManager.getPlayerRace(data);
         if (currentRace != null && currentRace.getId().equalsIgnoreCase(desiredRace.getId())) {
             senderRef.sendMessage(Message.raw("You already belong to that race.").color("#ff6666"));
             return;
-        }
-
-        if (!OperatorHelper.isOperator(senderRef)) {
-            RaceAscensionEligibility eligibility = raceManager.evaluateAscensionEligibility(data, desiredRace.getId());
-            if (!eligibility.isEligible()) {
-                List<String> blockers = eligibility.getBlockers();
-                if (!blockers.isEmpty()) {
-                    senderRef.sendMessage(Message.raw("Cannot switch race yet:").color("#ff6666"));
-                    for (String blocker : blockers) {
-                        senderRef.sendMessage(Message.join(
-                                Message.raw(" - ").color("#ff6666"),
-                                Message.raw(blocker).color("#ffc300")));
-                    }
-                } else {
-                    senderRef.sendMessage(Message.raw("Cannot switch race yet.").color("#ff6666"));
-                }
-                return;
-            }
         }
 
         if (!OperatorHelper.isOperator(senderRef)) {
@@ -163,6 +149,14 @@ public class RaceChooseCommand extends AbstractPlayerCommand {
                 Message.raw("You are now a ").color("#ffffff"),
                 Message.raw(displayName).color("#ffc300"),
                 Message.raw("!").color("#ffffff")));
+    }
+
+    private boolean isBaseRaceSelection(RaceDefinition race) {
+        if (race == null) {
+            return false;
+        }
+        String stage = race.getAscension() != null ? race.getAscension().getStage() : "base";
+        return stage == null || stage.isBlank() || "base".equalsIgnoreCase(stage.trim());
     }
 
     private String formatDuration(long seconds) {
