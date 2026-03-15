@@ -649,7 +649,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set(summarySelector + ".Visible", false);
         for (int index = 0; index < passives.size(); index++) {
             RacePassiveDefinition passive = passives.get(index);
-            ui.append(entriesSelector, "Pages/Profile/ProfileRacePassiveEntry.ui");
+            ui.append(entriesSelector, "Pages/Classes/ClassPassiveEntry.ui");
             String base = entriesSelector + "[" + index + "]";
             ui.set(base + " #PassiveName.Text", buildPassiveLabel(passive));
             ui.set(base + " #PassiveValue.Text", formatPassiveDescription(passive, data));
@@ -1028,6 +1028,23 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         Double stacks = getDoubleProp(props, "max_stacks");
         Double slowPercent = getDoubleProp(props, "slow_percent");
         Double healingChance = getDoubleProp(props, "healing_chance");
+        Double selfHealEffectiveness = getDoubleProp(props, "self_heal_effectiveness");
+        if (selfHealEffectiveness == null) {
+            selfHealEffectiveness = getDoubleProp(props, "self_heal_ratio");
+        }
+        Double selfShieldEffectiveness = getDoubleProp(props, "self_shield_effectiveness");
+        if (selfShieldEffectiveness == null) {
+            selfShieldEffectiveness = getDoubleProp(props, "self_shield_ratio");
+        }
+        Double maxBuffPerAlly = getDoubleProp(props, "max_buffed_value_per_ally");
+        if (maxBuffPerAlly == null) {
+            maxBuffPerAlly = getDoubleProp(props, "max_buff_per_ally");
+        }
+        Double selfBuffEffectiveness = getDoubleProp(props, "self_buff_effectiveness");
+        if (selfBuffEffectiveness == null) {
+            selfBuffEffectiveness = getDoubleProp(props, "self_buff_ratio");
+        }
+        String activation = getStringProp(props, "activation");
         String scalingStat = getStringProp(props, "scaling_stat");
         String sourceAttribute = getStringProp(props, "source_attribute");
 
@@ -1040,26 +1057,55 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case HEALTH_REGEN -> tr("ui.races.passive.desc.health_regen", "{0} HP/5s", formatPercentValue(value));
             case MANA_REGEN -> tr("ui.races.passive.desc.mana_regen", "{0} mana/5s", formatPercentValue(value));
             case MANA_REGEN_FLAT -> tr("ui.races.passive.desc.mana_regen_flat", "{0} mana/s", formatSigned(value));
-            case HEALING_TOUCH -> appendDetails(
-                    tr("ui.races.passive.desc.healing_touch", "on-hit heal: {0} of source", formatPercentValue(value)),
+            case HEALING_TOUCH -> appendLines(
+                    tr("ui.classes.passive.pretty.healing_touch.title", "On-hit burst heal"),
+                    tr("ui.classes.passive.pretty.healing_touch.amount", "- Heal: {0} of source",
+                            formatPercentValue(value)),
                     healingChance == null ? null
-                            : tr("ui.races.passive.detail.proc_chance", "{0} trigger",
+                            : tr("ui.classes.passive.pretty.healing_touch.chance", "- Trigger: {0}",
                                     formatPercentValue(healingChance)),
+                    tr("ui.classes.passive.pretty.healing_touch.self",
+                            "- Self effectiveness: {0}",
+                            selfHealEffectiveness == null
+                                    ? tr("ui.classes.passive.pretty.na", "n/a")
+                                    : formatPercentValue(selfHealEffectiveness)),
                     sourceAttribute == null || sourceAttribute.isBlank() ? null
-                            : tr("ui.races.passive.detail.source", "source: {0}",
+                            : tr("ui.classes.passive.pretty.healing_touch.source", "- Source: {0}",
                                     localizeAttributeName(sourceAttribute)));
-            case HEALING_AURA -> appendDetails(
-                    tr("ui.races.passive.desc.party_mending_aura", "Party healing pulse"),
-                    tr("ui.races.passive.detail.party_mending_heal", "heal: 10% mana + 20% stamina"),
-                    tr("ui.races.passive.detail.party_mending_radius", "radius: 5 +1/75 mana"));
-            case SHIELDING_AURA -> appendDetails(
-                    tr("ui.races.passive.desc.shielding_aura", "Party shielding aura"),
-                    tr("ui.races.passive.detail.shielding_aura_effect", "shield: flat + stamina scaling"),
-                    tr("ui.races.passive.detail.shielding_aura_duration", "duration + cooldown, party/range only"));
-            case BUFFING_AURA -> appendDetails(
-                    tr("ui.races.passive.desc.buffing_aura", "Party buffing aura"),
-                    tr("ui.races.passive.detail.buffing_aura_effect", "damage bonus from stamina (shared)"),
-                    tr("ui.races.passive.detail.buffing_aura_cap", "up to 100% per ally, self at 25%"));
+            case HEALING_AURA -> appendLines(
+                    tr("ui.classes.passive.pretty.healing_aura.title", "Party healing pulse"),
+                    tr("ui.classes.passive.pretty.healing_aura.effect", "- Heals from mana + stamina"),
+                    tr("ui.classes.passive.pretty.healing_aura.scope", "- Party-only, radius-scaled"),
+                    tr("ui.classes.passive.pretty.healing_aura.self",
+                            "- Self effectiveness: {0}",
+                            selfHealEffectiveness == null
+                                    ? tr("ui.classes.passive.pretty.na", "n/a")
+                                    : formatPercentValue(selfHealEffectiveness)));
+            case SHIELDING_AURA -> appendLines(
+                    tr("ui.classes.passive.pretty.shielding_aura.title", "Party shielding aura"),
+                    tr("ui.classes.passive.pretty.shielding_aura.effect", "- Shields from flat + stamina"),
+                    tr("ui.classes.passive.pretty.shielding_aura.self",
+                            "- Self effectiveness: {0}",
+                            selfShieldEffectiveness == null
+                                    ? tr("ui.classes.passive.pretty.na", "n/a")
+                                    : formatPercentValue(selfShieldEffectiveness)),
+                    "on_hit".equalsIgnoreCase(activation)
+                            ? tr("ui.classes.passive.pretty.shielding_aura.trigger_on_hit",
+                                    "- On-hit trigger, then duration/cooldown")
+                            : tr("ui.classes.passive.pretty.shielding_aura.trigger_always",
+                                    "- Auto pulse with duration/cooldown"));
+            case BUFFING_AURA -> appendLines(
+                    tr("ui.classes.passive.pretty.buffing_aura.title", "Party buffing aura"),
+                    tr("ui.classes.passive.pretty.buffing_aura.effect", "- Shares stamina-based damage"),
+                    tr("ui.classes.passive.pretty.buffing_aura.cap",
+                            "- Bonus damage cap: {0}",
+                            maxBuffPerAlly == null ? tr("ui.classes.passive.pretty.na", "n/a")
+                                    : formatPercentValue(maxBuffPerAlly)),
+                    tr("ui.classes.passive.pretty.buffing_aura.self",
+                            "- Self effectiveness: {0}",
+                            selfBuffEffectiveness == null
+                                    ? tr("ui.classes.passive.pretty.na", "n/a")
+                                    : formatPercentValue(selfBuffEffectiveness)));
             case REGENERATION -> tr("ui.races.passive.desc.regeneration", "{0} HP/s", formatSigned(value));
             case HEALING_BONUS -> tr("ui.races.passive.desc.healing_bonus", "{0} healing", formatPercentValue(value));
             case LIFE_STEAL -> tr("ui.races.passive.desc.life_steal", "{0} life steal", formatPercentValue(value));
@@ -1174,6 +1220,14 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return base + " (" + detail + ")";
     }
 
+    private String appendLines(String base, String... extra) {
+        String detail = joinLines(extra);
+        if (detail.isEmpty()) {
+            return base;
+        }
+        return base + "\n" + detail;
+    }
+
     private String joinDetails(String... parts) {
         StringBuilder builder = new StringBuilder();
         for (String part : parts) {
@@ -1182,6 +1236,20 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             }
             if (builder.length() > 0) {
                 builder.append(", ");
+            }
+            builder.append(part);
+        }
+        return builder.toString();
+    }
+
+    private String joinLines(String... parts) {
+        StringBuilder builder = new StringBuilder();
+        for (String part : parts) {
+            if (part == null || part.isBlank()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append("\n");
             }
             builder.append(part);
         }

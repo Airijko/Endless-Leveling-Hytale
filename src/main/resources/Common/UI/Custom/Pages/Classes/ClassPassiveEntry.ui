@@ -1,0 +1,17 @@
+Group {
+    LayoutMode: Top;
+    Background: #0f1824(0.8);
+    Padding: (Left: 10, Right: 10, Top: 5, Bottom: 5);
+
+    Label #PassiveName {
+        Style: (FontSize: 12, TextColor: #e5c68a, RenderBold: true, Wrap: true);
+        Text: "Class Passive";
+    }
+
+    Group { Anchor: (Height: 4); }
+
+    Label #PassiveValue {
+        Style: (FontSize: 11, TextColor: #ffc300, RenderBold: true, Wrap: true);
+        Text: "+0";
+    }
+}
