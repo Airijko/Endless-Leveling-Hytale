@@ -25,7 +25,7 @@ passives:
       mana_per_block: 75
   - type: BUFFING_AURA
     value: 1.0
-    stamina_ratio: 1.2
+    stamina_ratio: 0.3
     max_buffed_value_per_ally: 1.0 # 100% damage buff
     self_buff_effectiveness: 0.25
     duration: 4
