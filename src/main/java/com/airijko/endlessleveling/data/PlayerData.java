@@ -61,7 +61,6 @@ public class PlayerData {
         this.passiveLevelUpNotifEnabled = true;
         this.luckDoubleDropsNotifEnabled = true;
         this.healthRegenNotifEnabled = true;
-        this.augmentNotifEnabled = true;
         this.useRaceModel = false;
         this.language = DEFAULT_LANGUAGE;
         LOGGER.atInfo().log("PlayerData created for player: %s (UUID: %s) with profile slot 1", playerName, uuid);

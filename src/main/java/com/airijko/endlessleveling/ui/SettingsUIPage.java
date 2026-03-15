@@ -167,7 +167,7 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                                 "Show notifications when health regeneration triggers."));
                 ui.set("#AugmentNotifDescription.Text",
                                 Lang.tr(playerRef.getUuid(), "ui.settings.description.augment_notif",
-                                                "Show or hide augment status messages (available, activated, expired, cooldown ready, etc.)."));
+                                                "Toggle chat notifications for augment status events."));
                 ui.set("#RaceModelDescription.Text",
                                 Lang.tr(playerRef.getUuid(), "ui.settings.description.race_model",
                                                 "Enable race-specific character visuals when available."));

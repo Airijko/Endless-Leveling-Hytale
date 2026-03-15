@@ -95,6 +95,7 @@ ui:
       passive_levelup_notif: Display updates when passives rank up during play.
       luck_double_notif: Toggle bonus drop proc notifications from luck effects.
       health_regen_notif: Show notifications when health regeneration triggers.
+      augment_notif: Toggle chat notifications for augment status events.
       race_model: Enable race-specific character visuals when available.
     player_hud:
       label: Player HUD
@@ -114,6 +115,9 @@ ui:
     health_regen_notif:
       label: Health Regen Notifications
       toggled: Health regen notifications {0}
+    augment_notif:
+      label: Augment Notifications
+      toggled: Augment notifications {0}
     race_model:
       label: Race Model Visuals
       globally_disabled: Race model visuals are disabled by the server configuration.

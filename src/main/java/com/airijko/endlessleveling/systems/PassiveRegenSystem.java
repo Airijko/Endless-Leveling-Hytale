@@ -174,9 +174,6 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         if (augmentRuntimeManager == null || playerRef == null || playerData == null) {
             return;
         }
-        if (!playerData.isAugmentNotifEnabled()) {
-            return;
-        }
         AugmentRuntimeState state = augmentRuntimeManager.getRuntimeState(playerData.getUuid());
         if (state == null) {
             return;

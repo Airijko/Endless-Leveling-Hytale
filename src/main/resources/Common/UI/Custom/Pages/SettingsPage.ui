@@ -363,7 +363,7 @@ $C.@PageOverlay {
                                 Group { Anchor: (Height: 4); }
 
                                 Label #AugmentNotifDescription {
-                                    Text: "Show or hide augment status messages (available, activated, expired, cooldown ready, etc.)."
+                                    Text: "Toggle chat notifications for augment status events.";
                                     Style: (TextColor: #c0cee5, FontSize: 12);
                                 }
                             }
