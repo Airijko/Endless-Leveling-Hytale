@@ -740,10 +740,15 @@ public class SkillManager {
     }
 
     public FerocityBreakdown getFerocityBreakdown(PlayerData playerData) {
+        return getFerocityBreakdown(playerData, -1);
+    }
+
+    public FerocityBreakdown getFerocityBreakdown(PlayerData playerData, int overrideLevel) {
         if (playerData == null) {
             return new FerocityBreakdown(0.0f, 0.0f, 0.0f);
         }
-        int ferocityLevel = playerData.getPlayerSkillAttributeLevel(SkillAttributeType.FEROCITY);
+        int ferocityLevel = overrideLevel >= 0 ? overrideLevel
+                : playerData.getPlayerSkillAttributeLevel(SkillAttributeType.FEROCITY);
         double perPointFerocity = getSkillAttributeConfigValue(SkillAttributeType.FEROCITY);
         float raceValue = (float) attributeManager.getRaceAttribute(playerData, SkillAttributeType.FEROCITY, 0.0D);
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.FEROCITY);

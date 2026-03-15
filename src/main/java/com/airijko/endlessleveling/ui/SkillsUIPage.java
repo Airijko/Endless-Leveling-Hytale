@@ -411,10 +411,12 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                 tr("ui.skills.value.precision", "{0}% Crit Chance", formatNumber(precisionTotal)));
 
                 int ferLevel = getPreviewLevel(SkillAttributeType.FEROCITY);
-                double ferPer = skillManager.getSkillAttributeConfigValue(SkillAttributeType.FEROCITY);
+                SkillManager.FerocityBreakdown ferocityPreview = skillManager.getFerocityBreakdown(playerData,
+                                ferLevel);
                 ui.set("#FerocityLevel.Text", String.valueOf(ferLevel));
                 ui.set("#FerocityValue.Text",
-                                tr("ui.skills.value.ferocity", "+{0}% Crit Damage", formatNumber(ferLevel * ferPer)));
+                                tr("ui.skills.value.ferocity", "+{0}% Crit Damage",
+                                                formatNumber(ferocityPreview.totalValue())));
 
                 int stamLevel = getPreviewLevel(SkillAttributeType.STAMINA);
                 double staminaTotal = resolveResourcePreviewTotal(playerData, SkillAttributeType.STAMINA, stamLevel);
