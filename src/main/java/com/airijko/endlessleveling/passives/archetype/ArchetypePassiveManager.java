@@ -12,6 +12,7 @@ import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +21,11 @@ import java.util.Map;
  * classes, etc.).
  */
 public class ArchetypePassiveManager {
+
+    public static final String PASSIVE_SOURCE_PROPERTY = "__el_source";
+    public static final String PASSIVE_SOURCE_RACE = "race";
+    public static final String PASSIVE_SOURCE_CLASS = "class";
+    public static final String PASSIVE_CLASS_ID_PROPERTY = "__el_class_id";
 
     private final List<PassiveSource> sources;
 
@@ -136,17 +142,25 @@ public class ArchetypePassiveManager {
         StackAccumulator accumulator = totals.computeIfAbsent(passive.type(),
                 key -> new StackAccumulator(passive.effectiveStackingStyle()));
         accumulator.addValue(scaledValue);
-        RacePassiveDefinition effectiveDefinition = scale == 1.0D ? passive
-                : new RacePassiveDefinition(passive.type(),
-                        scaledValue,
-                        passive.properties(),
-                        passive.attributeType(),
-                        passive.damageLayer(),
-                        passive.tag(),
-                        passive.category(),
-                        passive.stackingStyle(),
-                        passive.tier(),
-                        passive.classValues());
+
+        Map<String, Object> effectiveProperties = new LinkedHashMap<>(passive.properties());
+        if (classId == null || classId.isBlank()) {
+            effectiveProperties.put(PASSIVE_SOURCE_PROPERTY, PASSIVE_SOURCE_RACE);
+        } else {
+            effectiveProperties.put(PASSIVE_SOURCE_PROPERTY, PASSIVE_SOURCE_CLASS);
+            effectiveProperties.put(PASSIVE_CLASS_ID_PROPERTY, classId);
+        }
+
+        RacePassiveDefinition effectiveDefinition = new RacePassiveDefinition(passive.type(),
+                scaledValue,
+                effectiveProperties,
+                passive.attributeType(),
+                passive.damageLayer(),
+                passive.tag(),
+                passive.category(),
+                passive.stackingStyle(),
+                passive.tier(),
+                passive.classValues());
         grouped.computeIfAbsent(passive.type(), key -> new ArrayList<>()).add(effectiveDefinition);
     }
 

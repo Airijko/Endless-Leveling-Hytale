@@ -1121,6 +1121,9 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     ? Math.max(1, levelingManager.getLevelCap(playerData))
                     : Math.max(1, levelingManager.getLevelCap());
         }
+        if (skillManager != null && passive.attributeType() != null) {
+            cap = skillManager.applyClassInnateAttributeLevelCap(passive.attributeType(), cap);
+        }
         double total = perLevel * cap;
         String totalText = formatSigned(total);
         return tr("ui.races.passive.detail.total_at_level", "{0} (Total {1} @ Lv {2})", perLevelText, totalText,

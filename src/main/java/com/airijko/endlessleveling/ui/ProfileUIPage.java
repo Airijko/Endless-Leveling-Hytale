@@ -617,7 +617,8 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (definitions.isEmpty()) {
             return List.of();
         }
-        Map<SkillAttributeType, Double> totals = new EnumMap<>(SkillAttributeType.class);
+        Map<SkillAttributeType, Double> uncappedPerLevelTotals = new EnumMap<>(SkillAttributeType.class);
+        Map<SkillAttributeType, Double> classPerLevelTotals = new EnumMap<>(SkillAttributeType.class);
         for (RacePassiveDefinition definition : definitions) {
             if (definition == null || definition.attributeType() == null) {
                 continue;
@@ -626,21 +627,50 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             if (Math.abs(value) <= 1.0E-6D) {
                 continue;
             }
-            totals.merge(definition.attributeType(), value, Double::sum);
+            if (isClassInnateDefinition(definition)) {
+                classPerLevelTotals.merge(definition.attributeType(), value, Double::sum);
+            } else {
+                uncappedPerLevelTotals.merge(definition.attributeType(), value, Double::sum);
+            }
         }
-        if (totals.isEmpty()) {
+        if (uncappedPerLevelTotals.isEmpty() && classPerLevelTotals.isEmpty()) {
             return List.of();
         }
-        List<SkillAttributeType> attributes = new ArrayList<>(totals.keySet());
+
+        List<SkillAttributeType> attributes = new ArrayList<>(uncappedPerLevelTotals.keySet());
+        for (SkillAttributeType attributeType : classPerLevelTotals.keySet()) {
+            if (!attributes.contains(attributeType)) {
+                attributes.add(attributeType);
+            }
+        }
         attributes.sort(Comparator.comparing(Enum::name));
+
+        int currentLevel = Math.max(1, profile.getLevel());
         List<PassiveEntry> entries = new ArrayList<>();
         for (SkillAttributeType attribute : attributes) {
-            double gain = totals.getOrDefault(attribute, 0.0D);
+            double uncappedPerLevel = uncappedPerLevelTotals.getOrDefault(attribute, 0.0D);
+            double classPerLevel = classPerLevelTotals.getOrDefault(attribute, 0.0D);
+            double gain = uncappedPerLevel + classPerLevel;
+            int classEffectiveLevel = skillManager != null
+                    ? skillManager.applyClassInnateAttributeLevelCap(attribute, currentLevel)
+                    : currentLevel;
+            double totalGain = (uncappedPerLevel * currentLevel) + (classPerLevel * classEffectiveLevel);
             String label = toDisplay(attribute.name());
-            String valueText = formatInnateAttributeValue(attribute, gain, profile);
+            String valueText = formatInnateAttributeValue(gain, totalGain, currentLevel);
             entries.add(new PassiveEntry(label, valueText));
         }
         return entries;
+    }
+
+    private boolean isClassInnateDefinition(@Nonnull RacePassiveDefinition definition) {
+        if (definition.properties() == null || definition.properties().isEmpty()) {
+            return false;
+        }
+        Object source = definition.properties().get(ArchetypePassiveManager.PASSIVE_SOURCE_PROPERTY);
+        if (!(source instanceof String sourceText)) {
+            return false;
+        }
+        return ArchetypePassiveManager.PASSIVE_SOURCE_CLASS.equalsIgnoreCase(sourceText.trim());
     }
 
     private AggregatedPassiveProps aggregatePassiveProperties(@Nonnull List<RacePassiveDefinition> definitions) {
@@ -1082,12 +1112,10 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         return tr("ui.races.passive.detail.scales_with", "scales with {0}", toDisplay(scalingStat));
     }
 
-    private String formatInnateAttributeValue(SkillAttributeType attributeType,
-            double perLevelGain,
-            @Nonnull PlayerProfile profile) {
+    private String formatInnateAttributeValue(double perLevelGain,
+            double totalGain,
+            int level) {
         String perLevelText = tr("ui.races.passive.detail.per_level", "{0} per level", formatSigned(perLevelGain));
-        int level = Math.max(1, profile.getLevel());
-        double totalGain = perLevelGain * level;
         String totalText = formatSigned(totalGain);
         return tr("ui.races.passive.detail.total_at_level", "{0} (Total {1} @ Lv {2})", perLevelText, totalText,
                 level);

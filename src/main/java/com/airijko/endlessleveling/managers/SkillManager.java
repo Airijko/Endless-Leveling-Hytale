@@ -21,8 +21,10 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.NotificationUtil;
 
 import javax.annotation.Nonnull;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 /**
  * Handles all skill points and modifiers.
@@ -38,6 +40,8 @@ public class SkillManager {
     private static final double DEFENSE_FINAL_SEGMENT_SLOPE = 0.2;
     private static final double DEFAULT_DISCIPLINE_XP_BONUS_PER_LEVEL_PERCENT = 0.5D;
     private static final double DEFAULT_FLOW_PER_LEVEL = 0.5D;
+    private static final String CLASS_INNATE_CAPS_PATH = "classes.innate_attribute_gain_level_caps";
+    private static final int DEFAULT_CLASS_INNATE_LEVEL_CAP = 100;
 
     private final ConfigManager levelingConfig;
     private final ConfigManager config;
@@ -48,6 +52,8 @@ public class SkillManager {
 
     private int baseSkillPoints;
     private int skillPointsPerLevel;
+    private final Map<SkillAttributeType, Integer> classInnateAttributeLevelCaps = new EnumMap<>(
+            SkillAttributeType.class);
 
     public SkillManager(PluginFilesManager filesManager,
             PlayerAttributeManager attributeManager,
@@ -77,13 +83,96 @@ public class SkillManager {
         try {
             baseSkillPoints = getIntFromLevelingConfig("baseSkillPoints", 8);
             skillPointsPerLevel = getIntFromLevelingConfig("skillPointsPerLevel", 4);
+            loadClassInnateAttributeLevelCaps();
             LOGGER.atInfo().log("SkillManager loaded: baseSkillPoints=%d, skillPointsPerLevel=%d",
                     baseSkillPoints, skillPointsPerLevel);
         } catch (Exception e) {
             LOGGER.atSevere().log("Failed to load skill points: %s", e.getMessage());
             baseSkillPoints = 8;
             skillPointsPerLevel = 4;
+            loadDefaultClassInnateAttributeLevelCaps();
         }
+    }
+
+    private void loadDefaultClassInnateAttributeLevelCaps() {
+        classInnateAttributeLevelCaps.clear();
+        for (SkillAttributeType type : SkillAttributeType.values()) {
+            classInnateAttributeLevelCaps.put(type,
+                    type == SkillAttributeType.LIFE_FORCE ? null : DEFAULT_CLASS_INNATE_LEVEL_CAP);
+        }
+    }
+
+    private void loadClassInnateAttributeLevelCaps() {
+        classInnateAttributeLevelCaps.clear();
+
+        Integer defaultCap = parseOptionalLevelCap(
+                levelingConfig.get(CLASS_INNATE_CAPS_PATH + ".default", DEFAULT_CLASS_INNATE_LEVEL_CAP, false),
+                DEFAULT_CLASS_INNATE_LEVEL_CAP,
+                CLASS_INNATE_CAPS_PATH + ".default");
+
+        for (SkillAttributeType type : SkillAttributeType.values()) {
+            String path = CLASS_INNATE_CAPS_PATH + "." + type.getConfigKey();
+            Object raw = levelingConfig.get(path, null, false);
+            Integer fallback = type == SkillAttributeType.LIFE_FORCE ? null : defaultCap;
+            Integer cap = raw == null ? fallback : parseOptionalLevelCap(raw, fallback, path);
+            classInnateAttributeLevelCaps.put(type, cap);
+        }
+    }
+
+    private Integer parseOptionalLevelCap(Object raw, Integer fallback, String path) {
+        if (raw == null) {
+            return fallback;
+        }
+        if (raw instanceof Number number) {
+            int cap = number.intValue();
+            return cap <= 0 ? null : cap;
+        }
+        if (raw instanceof String text) {
+            String normalized = text.trim().toLowerCase(Locale.ROOT);
+            if (normalized.isEmpty()) {
+                return fallback;
+            }
+            if ("none".equals(normalized) || "unlimited".equals(normalized) || "uncapped".equals(normalized)
+                    || "endless".equals(normalized) || "off".equals(normalized)
+                    || "disabled".equals(normalized) || "-1".equals(normalized)) {
+                return null;
+            }
+            try {
+                int cap = Integer.parseInt(normalized);
+                return cap <= 0 ? null : cap;
+            } catch (NumberFormatException ignored) {
+                LOGGER.atWarning().log("Invalid class innate cap at %s='%s'; using fallback=%s", path, text,
+                        fallback == null ? "NONE" : String.valueOf(fallback));
+                return fallback;
+            }
+        }
+
+        LOGGER.atWarning().log("Unsupported class innate cap type at %s (%s); using fallback=%s", path,
+                raw.getClass().getSimpleName(), fallback == null ? "NONE" : String.valueOf(fallback));
+        return fallback;
+    }
+
+    public int applyClassInnateAttributeLevelCap(SkillAttributeType attributeType, int level) {
+        int safeLevel = Math.max(1, level);
+        if (attributeType == null) {
+            return safeLevel;
+        }
+        Integer cap = classInnateAttributeLevelCaps.get(attributeType);
+        if (cap == null || cap <= 0) {
+            return safeLevel;
+        }
+        return Math.min(safeLevel, cap);
+    }
+
+    private boolean isClassInnateDefinition(RacePassiveDefinition definition) {
+        if (definition == null || definition.properties() == null) {
+            return false;
+        }
+        Object source = definition.properties().get(ArchetypePassiveManager.PASSIVE_SOURCE_PROPERTY);
+        if (!(source instanceof String sourceText)) {
+            return false;
+        }
+        return ArchetypePassiveManager.PASSIVE_SOURCE_CLASS.equalsIgnoreCase(sourceText.trim());
     }
 
     private int getIntFromLevelingConfig(String path, int defaultValue) {
@@ -860,7 +949,8 @@ public class SkillManager {
         if (definitions.isEmpty()) {
             return 0.0D;
         }
-        double perLevelValue = 0.0D;
+        double classPerLevelValue = 0.0D;
+        double uncappedPerLevelValue = 0.0D;
         for (RacePassiveDefinition definition : definitions) {
             if (definition == null) {
                 continue;
@@ -872,13 +962,18 @@ public class SkillManager {
             if (candidate == 0.0D) {
                 continue;
             }
-            perLevelValue += candidate;
+            if (isClassInnateDefinition(definition)) {
+                classPerLevelValue += candidate;
+            } else {
+                uncappedPerLevelValue += candidate;
+            }
         }
-        if (perLevelValue == 0.0D) {
+        if (classPerLevelValue == 0.0D && uncappedPerLevelValue == 0.0D) {
             return 0.0D;
         }
-        int effectiveLevels = Math.max(1, playerData.getLevel());
-        return perLevelValue * effectiveLevels;
+        int playerLevel = Math.max(1, playerData.getLevel());
+        int classEffectiveLevels = applyClassInnateAttributeLevelCap(attributeType, playerLevel);
+        return (uncappedPerLevelValue * playerLevel) + (classPerLevelValue * classEffectiveLevels);
     }
 
     public void clearAugmentAttributeBonuses(PlayerData playerData) {

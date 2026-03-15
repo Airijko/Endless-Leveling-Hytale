@@ -9,6 +9,15 @@ skillPointsPerLevel: 5
 
 player_level_cap: 75
 
+# Optional cap controls for class innate attribute gains.
+# These caps apply to class INNATE_ATTRIBUTE_GAIN scaling only.
+# - default: fallback cap for attributes not explicitly listed.
+# - Use ENDLESS / NONE / UNLIMITED / UNCAPPED / -1 / 0 to disable cap for an attribute. (same crap)
+classes:
+  innate_attribute_gain_level_caps:
+    default: 100
+    life_force: ENDLESS
+
 # Augment unlock milestones earned from normal player levels.
 # Only for prestige 0; prestige milestones are configured separately under prestige.
 # Each entry supports either explicit levels or progressive level milestones:
