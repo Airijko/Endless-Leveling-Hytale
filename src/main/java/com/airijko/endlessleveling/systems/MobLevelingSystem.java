@@ -11,6 +11,7 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.DelayedSystem;
+import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
@@ -38,8 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Applies mob-level stat scaling. For now mobs are hard-coded to level 10.
@@ -48,6 +49,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MobLevelingSystem extends DelayedSystem<EntityStore> {
 
+    private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final Query<EntityStore> ENTITY_QUERY = Query.any();
     private static final String MOB_HEALTH_SCALE_MODIFIER_KEY = "EL_MOB_HEALTH_SCALE";
     private static final float SYSTEM_INTERVAL_SECONDS = 0.15f;
@@ -55,10 +57,14 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     private static final int CHUNK_BIT_SHIFT = 5;
     private static final int MIN_PLAYER_VIEW_RADIUS_CHUNKS = 1;
     private static final int PLAYER_VIEW_RADIUS_BUFFER_CHUNKS = 1;
+    private static final long SUMMON_HEALTH_ANOMALY_LOG_COOLDOWN_MS = 3000L;
+    private static final long SUMMON_NAMEPLATE_LOG_COOLDOWN_MS = 3000L;
 
     private final MobLevelingManager mobLevelingManager = EndlessLeveling.getInstance().getMobLevelingManager();
     private final PlayerDataManager playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
     private final Map<Long, EntityRuntimeState> entityStates = new ConcurrentHashMap<>();
+    private final Map<Integer, Long> summonHealthAnomalyLogTimes = new ConcurrentHashMap<>();
+    private final Map<Integer, Long> summonNameplateLogTimes = new ConcurrentHashMap<>();
     private final AtomicBoolean fullMobRescaleRequested = new AtomicBoolean(false);
     private long systemTimeMillis = 0L;
 
@@ -221,8 +227,10 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                         }
                         state.lastKnownEntitySignature = currentEntitySignature;
 
+                        boolean managedSummon = ArmyOfTheDeadPassive.isManagedSummon(ref, store, commandBuffer);
+
                         Integer appliedLevel = state.appliedLevel > 0 ? state.appliedLevel : null;
-                        if (appliedLevel == null) {
+                        if (appliedLevel == null && !managedSummon) {
                             appliedLevel = resolveAndAssignLevelOnce(
                                     ref,
                                     store,
@@ -230,7 +238,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                                     entityId,
                                     state);
                         }
-                        if (appliedLevel == null || appliedLevel <= 0) {
+                        if (!managedSummon && (appliedLevel == null || appliedLevel <= 0)) {
                             if (isAtOrBelowZeroHealth(ref, commandBuffer)) {
                                 clearOrRemoveNameplate(ref, commandBuffer, entityKey, state);
                                 state.appliedLevel = 0;
@@ -239,23 +247,30 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                             continue;
                         }
 
-                        boolean shouldApplyHealthModifier = state.settledHealthLevel <= 0
-                                || state.settledHealthLevel != appliedLevel;
+                        boolean initializationSettled = false;
+                        if (managedSummon) {
+                            applyHealthModifier(ref, commandBuffer, 0, entityKey);
+                            initializationSettled = true;
+                        } else {
+                            boolean shouldApplyHealthModifier = state.settledHealthLevel <= 0
+                                    || state.settledHealthLevel != appliedLevel;
 
-                        if (shouldApplyHealthModifier) {
-                            boolean healthApplied = applyHealthModifier(ref, commandBuffer, appliedLevel, entityKey);
-                            if (healthApplied) {
-                                state.settledHealthLevel = appliedLevel;
+                            if (shouldApplyHealthModifier) {
+                                boolean healthApplied = applyHealthModifier(ref, commandBuffer, appliedLevel,
+                                        entityKey);
+                                if (healthApplied) {
+                                    state.settledHealthLevel = appliedLevel;
+                                }
                             }
+
+                            boolean healthSettled = state.settledHealthLevel > 0
+                                    && state.settledHealthLevel == appliedLevel;
+                            int resolveAssignments = state.resolveAssignments;
+                            initializationSettled = healthSettled
+                                    && resolveAssignments > 0;
                         }
 
-                        boolean healthSettled = state.settledHealthLevel > 0
-                                && state.settledHealthLevel == appliedLevel;
-                        int resolveAssignments = state.resolveAssignments;
-                        boolean initializationSettled = healthSettled
-                                && resolveAssignments > 0;
-
-                        if (showMobLevelUi && initializationSettled) {
+                        if (managedSummon || (showMobLevelUi && initializationSettled)) {
                             // Re-apply regularly so HP text stays in sync with live combat damage.
                             boolean nameplateApplied = applyNameplate(ref, commandBuffer, includeLevelInName,
                                     entityKey, state);
@@ -289,6 +304,8 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             iterator.remove();
 
             if (state.trackedEntityId >= 0) {
+                summonHealthAnomalyLogTimes.remove(state.trackedEntityId);
+                summonNameplateLogTimes.remove(state.trackedEntityId);
                 mobLevelingManager.clearEntityLevelOverride(state.trackedStore, state.trackedEntityId);
                 mobLevelingManager.forgetEntity(state.trackedStore, state.trackedEntityId);
             } else {
@@ -401,6 +418,10 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             }
 
             int healthIndex = DefaultEntityStatTypes.getHealth();
+            EntityStatValue before = summonStatMap.get(healthIndex);
+            float beforeCurrent = before != null ? before.get() : -1.0f;
+            float beforeMax = before != null ? before.getMax() : -1.0f;
+
             summonStatMap.removeModifier(healthIndex, MOB_HEALTH_SCALE_MODIFIER_KEY);
             EntityStatValue summonHp = summonStatMap.get(healthIndex);
             if (summonHp != null && Float.isFinite(summonHp.getMax()) && summonHp.getMax() > 0.0f) {
@@ -412,6 +433,22 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             if (updatedSummonHp != null && Float.isFinite(updatedSummonHp.getMax())
                     && updatedSummonHp.getMax() > 0.0f) {
                 mobLevelingManager.recordEntityMaxHealth(entityId, updatedSummonHp.getMax());
+
+                float afterCurrent = updatedSummonHp.get();
+                float afterMax = updatedSummonHp.getMax();
+                if (Float.isFinite(afterCurrent)
+                        && Float.isFinite(afterMax)
+                        && afterMax > 0.0f
+                        && afterCurrent < afterMax - 0.5f
+                        && shouldLogSummonHealthAnomaly(entityId)) {
+                    LOGGER.atWarning().log(
+                            "[ARMY_OF_THE_DEAD][DEBUG-HP][LEVELING] Managed summon still below max after normalize entity=%d before=%.3f/%.3f after=%.3f/%.3f",
+                            entityId,
+                            beforeCurrent,
+                            beforeMax,
+                            afterCurrent,
+                            afterMax);
+                }
             }
             return true;
         }
@@ -612,15 +649,6 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             return applied;
         }
 
-        Nameplate nameplate = commandBuffer.ensureAndGetComponent(ref, Nameplate.getComponentType());
-        if (nameplate == null) {
-            return false;
-        }
-
-        if (state != null && state.previousNameplateText == null) {
-            state.previousNameplateText = readNameplateText(nameplate);
-        }
-
         String baseName = "Mob";
         if (managedSummon) {
             String ownerName = resolveManagedSummonOwnerName(ref, commandBuffer);
@@ -657,14 +685,68 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             }
         }
 
+        boolean builderApplied = false;
         if (managedSummon && NameplateBuilderCompatibility.isAvailable()) {
-            NameplateBuilderCompatibility.registerMobText(ref.getStore(), ref, label);
+            builderApplied = NameplateBuilderCompatibility.registerSummonText(ref.getStore(), ref, label);
+            if (!builderApplied) {
+                // Fallback for installations where summon_label segment is unavailable.
+                builderApplied = NameplateBuilderCompatibility.registerMobText(ref.getStore(), ref, label);
+            }
+            // Keep old mob_level segment cleared so summon text is the only NPC label
+            // segment.
+            if (builderApplied) {
+                NameplateBuilderCompatibility.removeMobLevel(ref.getStore(), ref);
+            }
         }
 
-        nameplate.setText(label);
+        Nameplate nameplate = commandBuffer.ensureAndGetComponent(ref, Nameplate.getComponentType());
+        if (nameplate != null) {
+            if (state != null && state.previousNameplateText == null) {
+                state.previousNameplateText = readNameplateText(nameplate);
+            }
+            nameplate.setText(label);
+        }
+
         if (state != null) {
             state.managedNameplate = true;
         }
+
+        boolean vanillaApplied = nameplate != null;
+        if (managedSummon && shouldLogSummonNameplateDebug(ref.getIndex())) {
+            UUID ownerUuid = ArmyOfTheDeadPassive.getManagedSummonOwnerUuid(ref, ref.getStore(), commandBuffer);
+            LOGGER.atInfo().log(
+                    "[ARMY_OF_THE_DEAD][DEBUG-NAMEPLATE] summonRef=%d owner=%s builderApplied=%s vanillaApplied=%s text=%s",
+                    ref.getIndex(),
+                    ownerUuid,
+                    builderApplied,
+                    vanillaApplied,
+                    label);
+        }
+
+        if (managedSummon && !builderApplied && !vanillaApplied) {
+            LOGGER.atWarning().log(
+                    "[ARMY_OF_THE_DEAD][DEBUG-NAMEPLATE] Failed to apply summon label via NameplateBuilder and vanilla fallback.");
+        }
+        return builderApplied || vanillaApplied;
+    }
+
+    private boolean shouldLogSummonHealthAnomaly(int entityId) {
+        long now = System.currentTimeMillis();
+        Long last = summonHealthAnomalyLogTimes.get(entityId);
+        if (last != null && now - last < SUMMON_HEALTH_ANOMALY_LOG_COOLDOWN_MS) {
+            return false;
+        }
+        summonHealthAnomalyLogTimes.put(entityId, now);
+        return true;
+    }
+
+    private boolean shouldLogSummonNameplateDebug(int entityId) {
+        long now = System.currentTimeMillis();
+        Long last = summonNameplateLogTimes.get(entityId);
+        if (last != null && now - last < SUMMON_NAMEPLATE_LOG_COOLDOWN_MS) {
+            return false;
+        }
+        summonNameplateLogTimes.put(entityId, now);
         return true;
     }
 
@@ -741,6 +823,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
 
         if (NameplateBuilderCompatibility.isAvailable()) {
             NameplateBuilderCompatibility.removeMobLevel(ref.getStore(), ref);
+            NameplateBuilderCompatibility.removeSummonText(ref.getStore(), ref);
             state.managedNameplate = false;
             state.previousNameplateText = null;
             return;

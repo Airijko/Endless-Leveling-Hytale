@@ -453,6 +453,7 @@ public final class ArmyOfTheDeadPassive {
                     slot.activeRef = null;
                     slot.activeSummonUuid = null;
                     slot.summonExpiresAt = 0L;
+                    slot.postSpawnHealthNormalizePending = false;
                     slot.cooldownExpiresAt = cooldownUntil;
                     LOGGER.atFine().log(
                             "[ARMY_OF_THE_DEAD] Summon %s died. Cooldown set for owner %s slot %d until %d.",
@@ -570,12 +571,6 @@ public final class ArmyOfTheDeadPassive {
                 attachSummonToOwnerFlock(request.source().ownerRef(), summonRef, store,
                         spawnRoleType);
 
-                applySummonScaling(summonRef,
-                        store,
-                        request.source(),
-                        request.config().statInheritance(),
-                        request.slotIndex());
-
                 long expiresAt = request.config().lifetimeMillis() > 0L
                         ? Math.max(now, request.triggeredAtMillis()) + request.config().lifetimeMillis()
                         : 0L;
@@ -584,8 +579,23 @@ public final class ArmyOfTheDeadPassive {
                 slot.summonExpiresAt = expiresAt;
                 slot.statInheritance = Math.max(0.0D, request.config().statInheritance());
                 slot.spawnPending = false;
+                slot.postSpawnHealthNormalizePending = true;
                 SUMMON_BINDINGS.put(summonUuidComponent.getUuid(),
                         new SummonBinding(request.ownerUuid(), request.slotIndex()));
+
+                applySummonScaling(summonRef,
+                        store,
+                        request.source(),
+                        request.config().statInheritance(),
+                        request.slotIndex());
+
+                forceCurrentHealthToMax(summonRef, store);
+                logSummonHealthState(summonRef,
+                        store,
+                        request.ownerUuid(),
+                        request.slotIndex(),
+                        slot.statInheritance,
+                        "POST_SPAWN_NORMALIZE");
                 LOGGER.atFine().log(
                         "[ARMY_OF_THE_DEAD] Activated summon %s for owner %s slot %d type=%s.",
                         summonUuidComponent.getUuid(),
@@ -642,7 +652,7 @@ public final class ArmyOfTheDeadPassive {
             SummonSourceSnapshot source,
             double inheritance,
             int slotIndex) {
-        if (summonRef == null || store == null || source == null || inheritance <= 0.0D) {
+        if (summonRef == null || store == null || source == null) {
             return;
         }
 
@@ -653,25 +663,99 @@ public final class ArmyOfTheDeadPassive {
 
         SummonInheritedStats inheritedStats = resolveOwnerSummonInheritedStats(source.ownerUuid(), inheritance);
         double healthBonus = Math.max(0.0D, inheritedStats.lifeForceFlatHealthBonus());
-        if (healthBonus <= 0.0D) {
-            applySummonMovementSpeedBonus(summonRef, store, inheritedStats.movementMultiplier());
-            return;
-        }
-
         String modifierKey = "EL_AOTD_HP_" + slotIndex;
         summonStats.removeModifier(DefaultEntityStatTypes.getHealth(), modifierKey);
-        summonStats.putModifier(DefaultEntityStatTypes.getHealth(),
-                modifierKey,
-                new StaticModifier(ModifierTarget.MAX, CalculationType.ADDITIVE, (float) healthBonus));
+        if (healthBonus > 0.0D) {
+            summonStats.putModifier(DefaultEntityStatTypes.getHealth(),
+                    modifierKey,
+                    new StaticModifier(ModifierTarget.MAX, CalculationType.ADDITIVE, (float) healthBonus));
+        }
         summonStats.update();
 
         EntityStatValue updatedHp = summonStats.get(DefaultEntityStatTypes.getHealth());
         if (updatedHp != null) {
             summonStats.setStatValue(DefaultEntityStatTypes.getHealth(),
                     Math.max(MIN_RESOURCE_VALUE, updatedHp.getMax()));
+            summonStats.update();
+            UUID summonUuid = resolveEntityUuid(summonRef, store, null);
+            LOGGER.atInfo().log(
+                    "[ARMY_OF_THE_DEAD][DEBUG-HP][SCALE] summon=%s owner=%s slot=%d inheritance=%.3f healthBonus=%.3f afterScale=%.3f/%.3f",
+                    summonUuid,
+                    source.ownerUuid(),
+                    slotIndex,
+                    inheritance,
+                    healthBonus,
+                    updatedHp.get(),
+                    updatedHp.getMax());
         }
 
         applySummonMovementSpeedBonus(summonRef, store, inheritedStats.movementMultiplier());
+    }
+
+    private static void forceCurrentHealthToMax(Ref<EntityStore> summonRef,
+            Store<EntityStore> store) {
+        if (!EntityRefUtil.isUsable(summonRef) || store == null) {
+            return;
+        }
+
+        EntityStatMap summonStats = EntityRefUtil.tryGetComponent(store, summonRef, EntityStatMap.getComponentType());
+        if (summonStats == null) {
+            return;
+        }
+
+        EntityStatValue hp = summonStats.get(DefaultEntityStatTypes.getHealth());
+        if (hp == null || !Float.isFinite(hp.getMax()) || hp.getMax() <= 0.0f) {
+            return;
+        }
+
+        float beforeCurrent = hp.get();
+        float beforeMax = hp.getMax();
+        summonStats.setStatValue(DefaultEntityStatTypes.getHealth(), Math.max(MIN_RESOURCE_VALUE, hp.getMax()));
+        summonStats.update();
+
+        EntityStatValue after = summonStats.get(DefaultEntityStatTypes.getHealth());
+        UUID summonUuid = resolveEntityUuid(summonRef, store, null);
+        if (after != null) {
+            LOGGER.atInfo().log(
+                    "[ARMY_OF_THE_DEAD][DEBUG-HP][FORCE_MAX] summon=%s before=%.3f/%.3f after=%.3f/%.3f",
+                    summonUuid,
+                    beforeCurrent,
+                    beforeMax,
+                    after.get(),
+                    after.getMax());
+        }
+    }
+
+    private static void logSummonHealthState(Ref<EntityStore> summonRef,
+            Store<EntityStore> store,
+            UUID ownerUuid,
+            int slotIndex,
+            double inheritance,
+            String phase) {
+        if (!EntityRefUtil.isUsable(summonRef) || store == null) {
+            return;
+        }
+
+        EntityStatMap summonStats = EntityRefUtil.tryGetComponent(store, summonRef, EntityStatMap.getComponentType());
+        if (summonStats == null) {
+            return;
+        }
+
+        EntityStatValue hp = summonStats.get(DefaultEntityStatTypes.getHealth());
+        if (hp == null) {
+            return;
+        }
+
+        UUID summonUuid = resolveEntityUuid(summonRef, store, null);
+        LOGGER.atInfo().log(
+                "[ARMY_OF_THE_DEAD][DEBUG-HP][%s] summon=%s owner=%s slot=%d inheritance=%.3f current=%.3f max=%.3f",
+                phase,
+                summonUuid,
+                ownerUuid,
+                slotIndex,
+                inheritance,
+                hp.get(),
+                hp.getMax());
     }
 
     private static void applySummonMovementSpeedBonus(Ref<EntityStore> summonRef,
@@ -760,6 +844,7 @@ public final class ArmyOfTheDeadPassive {
             slot.activeSummonUuid = null;
             slot.summonExpiresAt = 0L;
             slot.spawnPending = false;
+            slot.postSpawnHealthNormalizePending = false;
             return;
         }
 
@@ -774,6 +859,7 @@ public final class ArmyOfTheDeadPassive {
             slot.summonExpiresAt = 0L;
             slot.cooldownExpiresAt = now + Math.max(0L, slot.cooldownDurationMillis);
             slot.spawnPending = false;
+            slot.postSpawnHealthNormalizePending = false;
             return;
         }
 
@@ -785,6 +871,7 @@ public final class ArmyOfTheDeadPassive {
             slot.summonExpiresAt = 0L;
             slot.cooldownExpiresAt = now + Math.max(0L, slot.cooldownDurationMillis);
             slot.spawnPending = false;
+            slot.postSpawnHealthNormalizePending = false;
             LOGGER.atFiner().log("[ARMY_OF_THE_DEAD] Expired summon for owner %s; cooldown until %d.",
                     ownerUuid,
                     slot.cooldownExpiresAt);
@@ -1052,6 +1139,7 @@ public final class ArmyOfTheDeadPassive {
                     slot.activeRef = null;
                     slot.activeSummonUuid = null;
                     slot.summonExpiresAt = 0L;
+                    slot.postSpawnHealthNormalizePending = false;
                     slot.cooldownExpiresAt = now + Math.max(0L, slot.cooldownDurationMillis);
                     slot.spawnPending = false;
                     LOGGER.atFiner().log(
@@ -1063,6 +1151,17 @@ public final class ArmyOfTheDeadPassive {
                 Store<EntityStore> store = EntityRefUtil.getStore(slot.activeRef);
                 if (store == null) {
                     continue;
+                }
+
+                if (slot.postSpawnHealthNormalizePending) {
+                    forceCurrentHealthToMax(slot.activeRef, store);
+                    logSummonHealthState(slot.activeRef,
+                            store,
+                            ownerUuid,
+                            -1,
+                            slot.statInheritance,
+                            "POST_SPAWN_TICK_NORMALIZE");
+                    slot.postSpawnHealthNormalizePending = false;
                 }
 
                 NPCEntity summonNpc = EntityRefUtil.tryGetComponent(store, slot.activeRef,
@@ -1328,5 +1427,6 @@ public final class ArmyOfTheDeadPassive {
         private long cooldownDurationMillis;
         private double statInheritance = DEFAULT_STAT_INHERITANCE;
         private boolean spawnPending;
+        private boolean postSpawnHealthNormalizePending;
     }
 }

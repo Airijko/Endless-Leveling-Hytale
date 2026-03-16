@@ -12,6 +12,7 @@ public final class NameplateBuilderCompatibility {
     private static final String API_CLASS = "com.frotty27.nameplatebuilder.api.NameplateAPI";
     private static final String SEGMENT_TARGET_CLASS = "com.frotty27.nameplatebuilder.api.SegmentTarget";
     private static final String MOB_SEGMENT_ID = "mob_level";
+    private static final String SUMMON_SEGMENT_ID = "summon_label";
     private static final String PLAYER_SEGMENT_ID = "player_level";
 
     private static volatile boolean initialized = false;
@@ -66,6 +67,25 @@ public final class NameplateBuilderCompatibility {
         }
     }
 
+    public static boolean describeSummonLabelSegment(JavaPlugin plugin) {
+        if (plugin == null || !ensureInitialized()) {
+            return false;
+        }
+
+        try {
+            describeMethod.invoke(
+                    null,
+                    plugin,
+                    SUMMON_SEGMENT_ID,
+                    "Summon Label",
+                    segmentTargetNpcs,
+                    "Player's Undead Summon");
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
     public static boolean registerMobLevel(Store<EntityStore> store, Ref<EntityStore> entityRef, int level) {
         if (store == null || entityRef == null || level <= 0 || !ensureInitialized()) {
             return false;
@@ -92,6 +112,19 @@ public final class NameplateBuilderCompatibility {
         }
     }
 
+    public static boolean registerSummonText(Store<EntityStore> store, Ref<EntityStore> entityRef, String text) {
+        if (store == null || entityRef == null || text == null || text.isBlank() || !ensureInitialized()) {
+            return false;
+        }
+
+        try {
+            registerMethod.invoke(null, store, entityRef, SUMMON_SEGMENT_ID, text);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
     public static boolean registerPlayerLevel(Store<EntityStore> store, Ref<EntityStore> entityRef, int level) {
         if (store == null || entityRef == null || level <= 0 || !ensureInitialized() || segmentTargetPlayers == null) {
             return false;
@@ -112,6 +145,19 @@ public final class NameplateBuilderCompatibility {
 
         try {
             removeMethod.invoke(null, store, entityRef, MOB_SEGMENT_ID);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    public static boolean removeSummonText(Store<EntityStore> store, Ref<EntityStore> entityRef) {
+        if (store == null || entityRef == null || !ensureInitialized()) {
+            return false;
+        }
+
+        try {
+            removeMethod.invoke(null, store, entityRef, SUMMON_SEGMENT_ID);
             return true;
         } catch (Throwable ignored) {
             return false;

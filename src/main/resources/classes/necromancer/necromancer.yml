@@ -17,10 +17,10 @@ passives:
     base_summon_amount: 1
     summon_amount_scaling:
       mana_per_summon: 140 # mana grants 1 extra summon
-    minion_lifetime_seconds: 30
+    minion_lifetime_seconds: 20
     activation: on_hit
-    cooldown_seconds: 15 # seconds per summon after their death
-    summon_stat_inheritance: 0.15
+    cooldown_seconds: 16 # seconds per summon after their death
+    summon_stat_inheritance: 0.2
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Copper
   - type: HEALTH_REGEN
     value: 0.014

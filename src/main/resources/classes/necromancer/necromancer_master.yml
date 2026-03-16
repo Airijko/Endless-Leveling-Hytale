@@ -17,10 +17,10 @@ passives:
     base_summon_amount: 3
     summon_amount_scaling:
       mana_per_summon: 120
-    minion_lifetime_seconds: 30
+    minion_lifetime_seconds: 40
     activation: on_hit
-    cooldown_seconds: 15
-    summon_stat_inheritance: 0.45
+    cooldown_seconds: 12
+    summon_stat_inheritance: 0.4
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Adamantite
   - type: MANA_REGEN
     value: 0.04

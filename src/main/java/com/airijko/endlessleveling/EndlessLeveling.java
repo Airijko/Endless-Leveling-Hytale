@@ -230,6 +230,14 @@ public class EndlessLeveling extends JavaPlugin {
                 LOGGER.atWarning().log(
                         "NameplateBuilder detected but player_level segment registration failed (falling back to native nameplate text).");
             }
+
+            boolean summonDescribed = NameplateBuilderCompatibility.describeSummonLabelSegment(this);
+            if (summonDescribed) {
+                LOGGER.atInfo().log("NameplateBuilder detected; registered summon_label segment.");
+            } else {
+                LOGGER.atWarning().log(
+                        "NameplateBuilder detected but summon_label segment registration failed (falling back to native summon nameplate text).");
+            }
         }
 
         // Register event listeners
