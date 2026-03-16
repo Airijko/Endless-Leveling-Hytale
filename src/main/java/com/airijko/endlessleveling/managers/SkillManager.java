@@ -473,6 +473,25 @@ public class SkillManager {
         return new CapRefundResult(totalRefund, precisionRefund, defenseRefund);
     }
 
+    public int getOverflowRefundablePoints(PlayerData playerData, SkillAttributeType attributeType, int currentLevel) {
+        if (playerData == null || attributeType == null || currentLevel <= 0) {
+            return 0;
+        }
+
+        return switch (attributeType) {
+            case PRECISION -> computeOverflowRefund(currentLevel, findFirstPrecisionCapLevel(playerData, currentLevel));
+            case DEFENSE -> computeOverflowRefund(currentLevel, findFirstDefenseCapLevel(playerData, currentLevel));
+            default -> 0;
+        };
+    }
+
+    private int computeOverflowRefund(int currentLevel, int capLevel) {
+        if (capLevel < 0 || currentLevel <= capLevel) {
+            return 0;
+        }
+        return currentLevel - capLevel;
+    }
+
     private int findFirstPrecisionCapLevel(PlayerData playerData, int currentLevel) {
         if (currentLevel <= 0) {
             return -1;

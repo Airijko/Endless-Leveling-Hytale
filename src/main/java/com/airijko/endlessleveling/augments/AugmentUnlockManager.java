@@ -3,6 +3,7 @@ package com.airijko.endlessleveling.augments;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.PassiveTier;
+import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.managers.ConfigManager;
 import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
@@ -35,6 +36,8 @@ public class AugmentUnlockManager {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final int DEFAULT_OFFER_COUNT = 3;
     private static final String DEFENSE_STAT_KEY = "defense";
+    private static final String STRENGTH_STAT_KEY = "strength";
+    private static final String SORCERY_STAT_KEY = "sorcery";
     private static final Set<String> DEFENSE_COMMON_BLOCKED_PRIMARY_CLASSES = Set.of(
             "mage",
             "arcanist",
@@ -488,11 +491,18 @@ public class AugmentUnlockManager {
             return List.of();
         }
 
+        DamageBuildFocus damageBuildFocus = resolveDamageBuildFocus(playerData);
         boolean blockDefenseOffer = shouldBlockDefenseCommonOffer(playerData);
         List<String> statKeys = new ArrayList<>();
         for (String key : buffs.keySet()) {
             if (key != null && !key.isBlank()) {
                 String normalized = key.trim().toLowerCase(Locale.ROOT);
+                if (damageBuildFocus == DamageBuildFocus.STRENGTH && SORCERY_STAT_KEY.equals(normalized)) {
+                    continue;
+                }
+                if (damageBuildFocus == DamageBuildFocus.SORCERY && STRENGTH_STAT_KEY.equals(normalized)) {
+                    continue;
+                }
                 if (blockDefenseOffer && DEFENSE_STAT_KEY.equals(normalized)) {
                     continue;
                 }
@@ -563,6 +573,46 @@ public class AugmentUnlockManager {
         return basePrimaryClassId != null && DEFENSE_COMMON_BLOCKED_PRIMARY_CLASSES.contains(basePrimaryClassId);
     }
 
+    private DamageBuildFocus resolveDamageBuildFocus(PlayerData playerData) {
+        if (playerData == null) {
+            return DamageBuildFocus.NONE;
+        }
+
+        int selectedCommonStrengthCount = 0;
+        int selectedCommonSorceryCount = 0;
+        for (String selectedAugmentId : playerData.getSelectedAugmentsSnapshot().values()) {
+            CommonAugment.CommonStatOffer offer = CommonAugment.parseStatOfferId(selectedAugmentId);
+            if (offer == null) {
+                continue;
+            }
+
+            String attributeKey = offer.attributeKey();
+            if (STRENGTH_STAT_KEY.equals(attributeKey)) {
+                selectedCommonStrengthCount++;
+            } else if (SORCERY_STAT_KEY.equals(attributeKey)) {
+                selectedCommonSorceryCount++;
+            }
+        }
+
+        if (selectedCommonStrengthCount > 0 && selectedCommonSorceryCount == 0) {
+            return DamageBuildFocus.STRENGTH;
+        }
+        if (selectedCommonSorceryCount > 0 && selectedCommonStrengthCount == 0) {
+            return DamageBuildFocus.SORCERY;
+        }
+
+        int strengthLevel = Math.max(0, playerData.getPlayerSkillAttributeLevel(SkillAttributeType.STRENGTH));
+        int sorceryLevel = Math.max(0, playerData.getPlayerSkillAttributeLevel(SkillAttributeType.SORCERY));
+        if (strengthLevel > sorceryLevel) {
+            return DamageBuildFocus.STRENGTH;
+        }
+        if (sorceryLevel > strengthLevel) {
+            return DamageBuildFocus.SORCERY;
+        }
+
+        return DamageBuildFocus.NONE;
+    }
+
     private String normalizePrimaryClassBaseId(PlayerData playerData) {
         if (playerData == null) {
             return null;
@@ -579,6 +629,12 @@ public class AugmentUnlockManager {
             return normalized.substring(0, separatorIndex);
         }
         return normalized;
+    }
+
+    private enum DamageBuildFocus {
+        NONE,
+        STRENGTH,
+        SORCERY
     }
 
     private OfferLocation findOfferLocation(PlayerData playerData, PassiveTier expectedTier, String offerId) {

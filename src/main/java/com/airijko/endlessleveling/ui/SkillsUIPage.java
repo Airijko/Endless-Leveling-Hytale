@@ -203,18 +203,8 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                                                                 .valueOf(attrName);
                                                                 int current = getPreviewLevel(type);
                                                                 if ("add".equals(op)) {
-                                                                        int requestedAdd = Math.min(amount,
+                                                                        int toAdd = Math.min(amount,
                                                                                         previewSkillPoints);
-                                                                        int toAdd = requestedAdd;
-                                                                        boolean precisionCapped = false;
-                                                                        if (type == SkillAttributeType.PRECISION) {
-                                                                                toAdd = clampPrecisionAddition(
-                                                                                                playerData,
-                                                                                                current,
-                                                                                                requestedAdd);
-                                                                                precisionCapped = requestedAdd > 0
-                                                                                                && toAdd < requestedAdd;
-                                                                        }
                                                                         if (toAdd > 0) {
                                                                                 previewLevels.put(type,
                                                                                                 current + toAdd);
@@ -225,39 +215,19 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                                                                                 toAdd,
                                                                                                 type.name()))
                                                                                                 .color("#00ff00"));
-                                                                                if (precisionCapped) {
-                                                                                        player.sendMessage(Message
-                                                                                                        .raw(tr(
-                                                                                                                        "ui.skills.message.precision_capped",
-                                                                                                                        "Precision crit chance capped at 100%; excess points not applied."))
-                                                                                                        .color("#ffc300"));
-                                                                                }
                                                                                 LOGGER.atInfo().log(
                                                                                                 "Added %d to %s for player %s",
                                                                                                 toAdd, type.name(),
                                                                                                 playerRef.getUuid());
                                                                                 refreshUI = true;
                                                                         } else {
-                                                                                boolean atCap = type == SkillAttributeType.PRECISION
-                                                                                                && requestedAdd > 0
-                                                                                                && previewSkillPoints > 0
-                                                                                                && isPrecisionAtCap(
-                                                                                                                playerData,
-                                                                                                                current);
-                                                                                Message response = atCap
-                                                                                                ? Message.raw(tr(
-                                                                                                                "ui.skills.error.precision_at_cap",
-                                                                                                                "Precision crit chance is already 100%; remove other bonuses first."))
-                                                                                                                .color("#ff0000")
-                                                                                                : Message.raw(tr(
-                                                                                                                "ui.skills.error.not_enough_points",
-                                                                                                                "Not enough skill points"))
-                                                                                                                .color("#ff0000");
+                                                                                Message response = Message.raw(tr(
+                                                                                                "ui.skills.error.not_enough_points",
+                                                                                                "Not enough skill points"))
+                                                                                                .color("#ff0000");
                                                                                 player.sendMessage(response);
                                                                                 LOGGER.atSevere().log(
-                                                                                                atCap
-                                                                                                                ? "Precision capped at 100%% for player %s"
-                                                                                                                : "Not enough skill points for add: %s",
+                                                                                                "Not enough skill points for add: %s",
                                                                                                 playerRef.getUuid());
                                                                         }
                                                                 } else if ("sub".equals(op)) {
@@ -268,9 +238,13 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                                                         int availableToSub = Math.max(0,
                                                                                         current - originalLevel);
                                                                         int overflowRefund = 0;
-                                                                        if (type == SkillAttributeType.PRECISION) {
-                                                                                overflowRefund = computePrecisionOverflowRefund(
-                                                                                                playerData, current);
+                                                                        boolean overflowOnlyAttribute = type == SkillAttributeType.PRECISION
+                                                                                        || type == SkillAttributeType.DEFENSE;
+                                                                        if (overflowOnlyAttribute) {
+                                                                                overflowRefund = computeOverflowRefund(
+                                                                                                playerData,
+                                                                                                type,
+                                                                                                current);
                                                                                 if (overflowRefund > 0) {
                                                                                         availableToSub = Math.max(
                                                                                                         availableToSub,
@@ -296,23 +270,29 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                                                                                 playerRef.getUuid());
                                                                                 refreshUI = true;
                                                                         } else {
-                                                                                boolean precisionBlocked = type == SkillAttributeType.PRECISION
+                                                                                boolean overflowBlocked = overflowOnlyAttribute
                                                                                                 && overflowRefund <= 0;
-                                                                                Message response = precisionBlocked
+                                                                                Message response = overflowBlocked
                                                                                                 ? Message.raw(tr(
-                                                                                                                "ui.skills.error.precision_no_refund",
-                                                                                                                "Precision crit chance is already 100% or lower; no excess points to refund."))
+                                                                                                                "ui.skills.error.overflow_no_refund",
+                                                                                                                "{0} is at or below its effective cap; no excess points to refund.",
+                                                                                                                type.name()))
                                                                                                                 .color("#ff0000")
                                                                                                 : Message.raw(tr(
                                                                                                                 "ui.skills.error.below_original",
                                                                                                                 "Cannot go below original level"))
                                                                                                                 .color("#ff0000");
                                                                                 player.sendMessage(response);
-                                                                                LOGGER.atSevere().log(
-                                                                                                precisionBlocked
-                                                                                                                ? "Precision refund blocked (no overflow) for %s"
-                                                                                                                : "Cannot go below original level for sub: %s",
-                                                                                                playerRef.getUuid());
+                                                                                if (overflowBlocked) {
+                                                                                        LOGGER.atSevere().log(
+                                                                                                        "Overflow refund blocked (no excess) for %s attribute %s",
+                                                                                                        playerRef.getUuid(),
+                                                                                                        type.name());
+                                                                                } else {
+                                                                                        LOGGER.atSevere().log(
+                                                                                                        "Cannot go below original level for sub: %s",
+                                                                                                        playerRef.getUuid());
+                                                                                }
                                                                         }
                                                                 }
                                                         } catch (IllegalArgumentException iae) {
@@ -508,49 +488,13 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 return racePercent;
         }
 
-        private int clampPrecisionAddition(@Nonnull PlayerData playerData, int currentLevel, int requestedPoints) {
-                if (requestedPoints <= 0) {
-                        return 0;
-                }
-                if (skillManager == null) {
-                        return requestedPoints;
-                }
-                double perPoint = skillManager.getSkillAttributeConfigValue(SkillAttributeType.PRECISION);
-                if (perPoint <= 0.0D) {
-                        return requestedPoints;
-                }
-                double remaining = 100.0D - getPrecisionPreviewPercent(playerData, currentLevel);
-                if (remaining <= 0.0D) {
-                        return 0;
-                }
-                int maxByPercent = (int) Math.floor((remaining + 1e-6D) / perPoint);
-                if (maxByPercent <= 0) {
-                        return 0;
-                }
-                return Math.min(requestedPoints, maxByPercent);
-        }
-
-        private boolean isPrecisionAtCap(@Nonnull PlayerData playerData, int currentLevel) {
-                return getPrecisionPreviewPercent(playerData, currentLevel) >= 99.999D;
-        }
-
-        private int computePrecisionOverflowRefund(@Nonnull PlayerData playerData, int currentLevel) {
+        private int computeOverflowRefund(@Nonnull PlayerData playerData,
+                        @Nonnull SkillAttributeType type,
+                        int currentLevel) {
                 if (skillManager == null) {
                         return 0;
                 }
-                double perPoint = skillManager.getSkillAttributeConfigValue(SkillAttributeType.PRECISION);
-                if (perPoint <= 0.0D) {
-                        return 0;
-                }
-                double overflow = getPrecisionPreviewPercent(playerData, currentLevel) - 100.0D;
-                if (overflow <= 0.0D) {
-                        return 0;
-                }
-                int points = (int) Math.ceil((overflow - 1e-6D) / perPoint);
-                if (points <= 0) {
-                        points = 1;
-                }
-                return Math.min(currentLevel, points);
+                return Math.max(0, skillManager.getOverflowRefundablePoints(playerData, type, currentLevel));
         }
 
         private String formatResourceDisplay(double total, String label) {
