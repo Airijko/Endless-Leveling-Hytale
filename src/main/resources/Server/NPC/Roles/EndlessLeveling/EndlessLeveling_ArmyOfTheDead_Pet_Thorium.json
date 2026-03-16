@@ -4,13 +4,16 @@
   "NameTranslationKey": "server.npcRoles.Skeleton_Soldier.name",
   "MaxHealth": 61,
   "DropList": "Empty",
-  "DefaultPlayerAttitude": "Neutral",
-  "DefaultNPCAttitude": "Neutral",
+  "DefaultPlayerAttitude": "Hostile",
+  "DefaultNPCAttitude": "Hostile",
   "DisableDamageFlock": true,
   "FlockCanLead": false,
-  "ApplySeparation": false,
+  "ApplySeparation": true,
   "HotbarItems": [
-    "Weapon_Sword_Thorium"
+    "Weapon_Axe_Iron_Rusty"
+  ],
+  "Weapons": [
+    "Weapon_Axe_Iron_Rusty"
   ],
   "Armor": [
     "Armor_Thorium_Head",
@@ -29,85 +32,38 @@
   ],
   "Instructions": [
     {
-      "Continue": true,
-      "Instructions": [
+      "Sensor": {
+        "Type": "Target",
+        "TargetSlot": "LockedTarget",
+        "Range": 3.0
+      },
+      "ActionsBlocking": true,
+      "Actions": [
         {
-          "Sensor": {
-            "Type": "Eval",
-            "Expression": "blocked"
-          },
-          "BodyMotion": {
-            "Type": "Timer",
-            "Time": [
-              2,
-              4
-            ],
-            "Motion": {
-              "Type": "Wander"
-            }
-          }
-        },
-        {
-          "Sensor": {
-            "Type": "And",
-            "Sensors": [
-              {
-                "Type": "FlockLeader"
-              },
-              {
-                "Type": "Self",
-                "Filters": [
-                  {
-                    "Type": "Flock",
-                    "FlockStatus": "Follower"
-                  }
-                ]
-              }
-            ]
-          },
-          "BodyMotion": {
-            "Type": "Seek",
-            "SlowDownDistance": 7,
-            "StopDistance": 3
-          }
-        },
-        {
-          "Sensor": {
-            "Type": "Mob",
-            "Range": 24,
-            "GetPlayers": true,
-            "OnlyLockedTarget": true
-          },
-          "HeadMotion": {
-            "Type": "Watch"
-          },
-          "BodyMotion": {
-            "Type": "Seek",
-            "SlowDownDistance": 4,
-            "StopDistance": 2
-          }
-        },
-        {
-          "Sensor": {
-            "Type": "Mob",
-            "GetPlayers": true,
-            "Range": 2.8,
-            "OnlyLockedTarget": true,
-            "Filters": [
-              {
-                "Type": "ViewSector",
-                "ViewSector": 40
-              }
-            ]
-          },
-          "Actions": [
-            {
-              "Type": "Attack",
-              "Attack": "Root_NPC_Skeleton_Soldier_Attack"
-            }
-          ]
+          "Type": "Attack",
+          "Attack": "Root_NPC_Skeleton_Soldier_Attack"
         }
       ]
+    },
+    {
+      "Sensor": {
+        "Type": "Target",
+        "TargetSlot": "LockedTarget",
+        "Range": 100
+      },
+      "HeadMotion": { "Type": "Watch" },
+      "BodyMotion": {
+        "Type": "Seek",
+        "SlowDownDistance": 4,
+        "StopDistance": 2
+      }
+    },
+    {
+      "Sensor": { "Type": "Any" },
+      "BodyMotion": {
+        "Type": "WanderInCircle",
+        "Radius": 4
+      }
     }
   ]
 }
