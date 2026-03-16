@@ -422,6 +422,7 @@ ui:
         swiftness: Swiftness
         wither: Wither
         army_of_the_dead: Army of the Dead
+        true_edge: True Edge
         crit_defense: Critical Defense
       scope:
         hp: HP
@@ -614,6 +615,11 @@ ui:
         threshold: <{0}% {1}
       pretty:
         na: n/a
+        true_edge:
+          title: Defense-piercing strikes
+          flat: "- Flat true damage: {0} per hit"
+          ratio: "- Damage conversion: {0} of dealt damage as true damage"
+          note: "- Applies as direct health loss after the hit"
         army_of_the_dead:
           title: Undead summon command
           base: "- Base summons: {0}"

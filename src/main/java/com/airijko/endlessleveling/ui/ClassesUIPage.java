@@ -1026,6 +1026,11 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         Double cooldown = getDoubleProp(props, "cooldown");
         Double window = getDoubleProp(props, "window");
         Double stacks = getDoubleProp(props, "max_stacks");
+        Double flatTrueDamage = getDoubleProp(props, "flat_true_damage");
+        if (flatTrueDamage == null) {
+            flatTrueDamage = value;
+        }
+        Double trueDamagePercent = getDoubleProp(props, "true_damage_percent");
         Double baseSummonAmount = getDoubleProp(props, "base_summon_amount");
         if (baseSummonAmount == null) {
             baseSummonAmount = getDoubleProp(props, "base_summons");
@@ -1084,6 +1089,20 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case HEALTH_REGEN -> tr("ui.races.passive.desc.health_regen", "{0} HP/5s", formatPercentValue(value));
             case MANA_REGEN -> tr("ui.races.passive.desc.mana_regen", "{0} mana/5s", formatPercentValue(value));
             case MANA_REGEN_FLAT -> tr("ui.races.passive.desc.mana_regen_flat", "{0} mana/s", formatSigned(value));
+            case TRUE_EDGE -> appendLines(
+                    tr("ui.classes.passive.pretty.true_edge.title", "Defense-piercing strikes"),
+                    flatTrueDamage == null || flatTrueDamage <= 0.0D
+                            ? null
+                            : tr("ui.classes.passive.pretty.true_edge.flat",
+                                    "- Flat true damage: {0} per hit",
+                                    formatSigned(flatTrueDamage)),
+                    trueDamagePercent == null || trueDamagePercent <= 0.0D
+                            ? null
+                            : tr("ui.classes.passive.pretty.true_edge.ratio",
+                                    "- Damage conversion: {0} of dealt damage as true damage",
+                                    formatPercentValue(trueDamagePercent)),
+                    tr("ui.classes.passive.pretty.true_edge.note",
+                            "- Applies as direct health loss after the hit"));
             case ARMY_OF_THE_DEAD -> appendLines(
                     tr("ui.classes.passive.pretty.army_of_the_dead.title", "Undead summon command"),
                     baseSummonAmount == null
