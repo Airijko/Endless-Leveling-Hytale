@@ -126,6 +126,10 @@ public class PlayerDefenseSystem extends DamageEventSystem {
 			return;
 		}
 
+		if (attackerRef != null) {
+			ArmyOfTheDeadPassive.focusCurrentTarget(playerData, attackerRef, commandBuffer);
+		}
+
 		if (attackerRef != null && mobAugmentExecutor != null && mobLevelingManager != null) {
 			PlayerRef attackerPlayer = EntityRefUtil.tryGetComponent(commandBuffer, attackerRef,
 					PlayerRef.getComponentType());

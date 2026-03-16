@@ -125,6 +125,8 @@ public class PlayerCombatSystem extends DamageEventSystem {
             return;
         }
 
+        ArmyOfTheDeadPassive.focusSummonsOnSummonAttacker(targetRef, attackerRef, store, commandBuffer);
+
         PlayerRef attackerPlayer = EntityRefUtil.tryGetComponent(commandBuffer, attackerRef,
                 PlayerRef.getComponentType());
         if (attackerPlayer == null || !attackerPlayer.isValid()) {

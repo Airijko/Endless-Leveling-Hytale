@@ -136,6 +136,38 @@ public final class ArmyOfTheDeadPassive {
             return;
         }
 
+        focusOwnerSummonsOnThreat(ownerUuid, targetRef, EntityRefUtil.getStore(targetRef), commandBuffer);
+    }
+
+    public static void focusSummonsOnSummonAttacker(Ref<EntityStore> attackedSummonRef,
+            Ref<EntityStore> attackerRef,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (!EntityRefUtil.isUsable(attackedSummonRef) || !EntityRefUtil.isUsable(attackerRef)
+                || commandBuffer == null) {
+            return;
+        }
+
+        UUID ownerUuid = resolveSummonOwnerUuid(attackedSummonRef, store, commandBuffer);
+        if (ownerUuid == null) {
+            return;
+        }
+
+        focusOwnerSummonsOnThreat(ownerUuid, attackerRef, store, commandBuffer);
+    }
+
+    private static void focusOwnerSummonsOnThreat(UUID ownerUuid,
+            Ref<EntityStore> targetRef,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (ownerUuid == null || !EntityRefUtil.isUsable(targetRef) || commandBuffer == null) {
+            return;
+        }
+
+        if (!isValidAggroTargetForOwner(ownerUuid, targetRef, store, commandBuffer)) {
+            return;
+        }
+
         OwnerSummonState ownerState = OWNER_STATES.get(ownerUuid);
         if (ownerState == null) {
             return;
@@ -162,6 +194,28 @@ public final class ArmyOfTheDeadPassive {
                 }
             }
         }
+    }
+
+    private static boolean isValidAggroTargetForOwner(UUID ownerUuid,
+            Ref<EntityStore> targetRef,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (ownerUuid == null || !EntityRefUtil.isUsable(targetRef)) {
+            return false;
+        }
+
+        Store<EntityStore> effectiveStore = store != null ? store : EntityRefUtil.getStore(targetRef);
+        UUID targetPlayerUuid = resolvePlayerUuid(targetRef, effectiveStore, commandBuffer);
+        if (targetPlayerUuid != null && isAlliedWithOwner(ownerUuid, targetPlayerUuid)) {
+            return false;
+        }
+
+        UUID targetOwner = resolveSummonOwnerUuid(targetRef, effectiveStore, commandBuffer);
+        if (targetOwner != null && areAlliedOwners(ownerUuid, targetOwner)) {
+            return false;
+        }
+
+        return true;
     }
 
     public static boolean isManagedSummon(Ref<EntityStore> ref,

@@ -68,6 +68,8 @@ public class MobDamageScalingSystem extends DamageEventSystem {
                 return;
             }
 
+            ArmyOfTheDeadPassive.focusSummonsOnSummonAttacker(targetRef, attackerRef, store, commandBuffer);
+
             boolean managedSummonAttacker = ArmyOfTheDeadPassive.isManagedSummon(attackerRef, store, commandBuffer);
             if (managedSummonAttacker) {
                 applySummonOutgoingScaling(damage, attackerRef, store, commandBuffer);
