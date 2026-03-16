@@ -10,13 +10,13 @@
   "FlockCanLead": false,
   "ApplySeparation": false,
   "HotbarItems": [
-    "Weapon_Sword_Copper"
+    "Weapon_Sword_Onyxium"
   ],
   "Armor": [
-    "Armor_Copper_Head",
-    "Armor_Copper_Chest",
-    "Armor_Copper_Legs",
-    "Armor_Copper_Hands"
+    "Armor_Onyxium_Head",
+    "Armor_Onyxium_Chest",
+    "Armor_Onyxium_Legs",
+    "Armor_Onyxium_Hands"
   ],
   "MotionControllerList": [
     {

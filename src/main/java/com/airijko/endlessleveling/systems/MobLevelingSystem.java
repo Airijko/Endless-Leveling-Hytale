@@ -3,6 +3,8 @@ package com.airijko.endlessleveling.systems;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.compatibility.NameplateBuilderCompatibility;
 import com.airijko.endlessleveling.managers.MobLevelingManager;
+import com.airijko.endlessleveling.managers.PlayerDataManager;
+import com.airijko.endlessleveling.passives.type.ArmyOfTheDeadPassive;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
@@ -55,6 +57,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     private static final int PLAYER_VIEW_RADIUS_BUFFER_CHUNKS = 1;
 
     private final MobLevelingManager mobLevelingManager = EndlessLeveling.getInstance().getMobLevelingManager();
+    private final PlayerDataManager playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
     private final Map<Long, EntityRuntimeState> entityStates = new ConcurrentHashMap<>();
     private final AtomicBoolean fullMobRescaleRequested = new AtomicBoolean(false);
     private long systemTimeMillis = 0L;
@@ -560,12 +563,27 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             return false;
         }
 
-        if (appliedLevel == null || appliedLevel <= 0) {
+        boolean managedSummon = ArmyOfTheDeadPassive.isManagedSummon(ref, ref.getStore(), commandBuffer);
+
+        Integer nameplateLevel = appliedLevel;
+        if (managedSummon) {
+            Integer ownerLevel = resolveManagedSummonOwnerLevel(ref, commandBuffer);
+            if (ownerLevel != null && ownerLevel > 0) {
+                nameplateLevel = ownerLevel;
+            }
+
+            // Do not keep mob_level segments for managed summons.
+            if (NameplateBuilderCompatibility.isAvailable()) {
+                NameplateBuilderCompatibility.removeMobLevel(ref.getStore(), ref);
+            }
+        }
+
+        if (nameplateLevel == null || nameplateLevel <= 0) {
             return false;
         }
 
-        if (NameplateBuilderCompatibility.isAvailable()) {
-            boolean applied = NameplateBuilderCompatibility.registerMobLevel(ref.getStore(), ref, appliedLevel);
+        if (NameplateBuilderCompatibility.isAvailable() && !managedSummon) {
+            boolean applied = NameplateBuilderCompatibility.registerMobLevel(ref.getStore(), ref, nameplateLevel);
             if (applied && state != null) {
                 state.managedNameplate = true;
             }
@@ -590,8 +608,8 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         }
 
         String label;
-        if (includeLevelInName) {
-            label = "[Lv." + appliedLevel + "] " + baseName;
+        if (includeLevelInName || managedSummon) {
+            label = "[Lv." + nameplateLevel + "] " + baseName;
         } else {
             label = baseName;
         }
@@ -609,6 +627,29 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             state.managedNameplate = true;
         }
         return true;
+    }
+
+    private Integer resolveManagedSummonOwnerLevel(Ref<EntityStore> summonRef,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (summonRef == null || commandBuffer == null || playerDataManager == null) {
+            return null;
+        }
+
+        UUID ownerUuid = ArmyOfTheDeadPassive.getManagedSummonOwnerUuid(
+                summonRef,
+                summonRef.getStore(),
+                commandBuffer);
+        if (ownerUuid == null) {
+            return null;
+        }
+
+        var ownerData = playerDataManager.get(ownerUuid);
+        if (ownerData == null) {
+            return null;
+        }
+
+        int ownerLevel = ownerData.getLevel();
+        return ownerLevel > 0 ? ownerLevel : null;
     }
 
     private void clearOrRemoveNameplate(Ref<EntityStore> ref,

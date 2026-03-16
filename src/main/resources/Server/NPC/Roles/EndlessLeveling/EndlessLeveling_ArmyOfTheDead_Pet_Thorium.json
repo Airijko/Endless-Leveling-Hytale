@@ -10,13 +10,13 @@
   "FlockCanLead": false,
   "ApplySeparation": false,
   "HotbarItems": [
-    "Weapon_Sword_Copper"
+    "Weapon_Sword_Thorium"
   ],
   "Armor": [
-    "Armor_Copper_Head",
-    "Armor_Copper_Chest",
-    "Armor_Copper_Legs",
-    "Armor_Copper_Hands"
+    "Armor_Thorium_Head",
+    "Armor_Thorium_Chest",
+    "Armor_Thorium_Legs",
+    "Armor_Thorium_Hands"
   ],
   "MotionControllerList": [
     {

@@ -152,6 +152,12 @@ public final class ArmyOfTheDeadPassive {
         return resolveSummonOwnerUuid(ref, store, commandBuffer) != null;
     }
 
+    public static UUID getManagedSummonOwnerUuid(Ref<EntityStore> ref,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        return resolveSummonOwnerUuid(ref, store, commandBuffer);
+    }
+
     public static boolean shouldPreventFriendlyDamage(Ref<EntityStore> attackerRef,
             Ref<EntityStore> targetRef,
             Store<EntityStore> store,
@@ -388,10 +394,15 @@ public final class ArmyOfTheDeadPassive {
                     return;
                 }
 
+                Vector3d spawnPosition = resolveSummonSpawnPosition(
+                        request.source().position(),
+                        request.ownerUuid(),
+                        request.slotIndex());
+
                 var spawned = NPCPlugin.get().spawnNPC(store,
                         spawnRoleType,
                         null,
-                        request.source().position(),
+                        spawnPosition,
                         request.source().rotation());
                 if (spawned == null || !EntityRefUtil.isUsable(spawned.first())) {
                     slot.spawnPending = false;
@@ -622,6 +633,43 @@ public final class ArmyOfTheDeadPassive {
                 healthMax,
                 manaMax,
                 staminaMax);
+    }
+
+    private static Vector3d resolveSummonSpawnPosition(Vector3d ownerPosition,
+            UUID ownerUuid,
+            int slotIndex) {
+        if (ownerPosition == null || ownerUuid == null) {
+            return ownerPosition;
+        }
+
+        long seed = mixSpawnSeed(ownerUuid, slotIndex);
+        double angle = unitFromSeed(seed) * (Math.PI * 2.0D);
+        double radius = 1.75D + (unitFromSeed(Long.rotateLeft(seed, 21)) * 1.45D);
+
+        // Keep additional summons from stacking on top of each other.
+        radius += Math.min(1.15D, Math.max(0, slotIndex) * 0.12D);
+
+        double x = ownerPosition.getX() + (Math.cos(angle) * radius);
+        double z = ownerPosition.getZ() + (Math.sin(angle) * radius);
+        return new Vector3d(x, ownerPosition.getY(), z);
+    }
+
+    private static long mixSpawnSeed(UUID ownerUuid, int slotIndex) {
+        long mixed = ownerUuid.getMostSignificantBits()
+                ^ Long.rotateLeft(ownerUuid.getLeastSignificantBits(), 17)
+                ^ (0x9E3779B97F4A7C15L * (slotIndex + 1L));
+
+        mixed ^= (mixed >>> 33);
+        mixed *= 0xff51afd7ed558ccdL;
+        mixed ^= (mixed >>> 33);
+        mixed *= 0xc4ceb9fe1a85ec53L;
+        mixed ^= (mixed >>> 33);
+        return mixed;
+    }
+
+    private static double unitFromSeed(long seed) {
+        long bits = (seed >>> 11) & ((1L << 53) - 1L);
+        return bits / (double) (1L << 53);
     }
 
     private static void attachSummonToOwnerFlock(Ref<EntityStore> ownerRef,
