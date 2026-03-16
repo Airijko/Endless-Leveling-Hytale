@@ -1125,6 +1125,12 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         Double cooldown = getDoubleProp(props, "cooldown");
         Double window = getDoubleProp(props, "window");
         Double stacks = getDoubleProp(props, "max_stacks");
+        Double flatHeal = getDoubleProp(props, "flat_heal");
+        if (flatHeal == null) {
+            flatHeal = value;
+        }
+        Double strengthScaling = getDoubleProp(props, "strength_scaling");
+        Double sorceryScaling = getDoubleProp(props, "sorcery_scaling");
         Double slowPercent = getDoubleProp(props, "slow_percent");
         Double healingChance = getDoubleProp(props, "healing_chance");
         Double selfHealEffectiveness = getDoubleProp(props, "self_heal_effectiveness");
@@ -1205,6 +1211,25 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                             selfBuffEffectiveness == null
                                     ? tr("ui.classes.passive.pretty.na", "n/a")
                                     : formatPercentValue(selfBuffEffectiveness)));
+            case RAVENOUS_STRIKE -> appendLines(
+                    tr("ui.classes.passive.pretty.ravenous_strike.title", "Predatory lifesteal strikes"),
+                    flatHeal == null || flatHeal <= 0.0D
+                            ? null
+                            : tr("ui.classes.passive.pretty.ravenous_strike.flat",
+                                    "- On-hit heal: {0}",
+                                    formatSigned(flatHeal)),
+                    strengthScaling == null || strengthScaling <= 0.0D
+                            ? null
+                            : tr("ui.classes.passive.pretty.ravenous_strike.strength",
+                                    "- Strength scaling: {0}",
+                                    formatPercentValue(strengthScaling)),
+                    sorceryScaling == null || sorceryScaling <= 0.0D
+                            ? null
+                            : tr("ui.classes.passive.pretty.ravenous_strike.sorcery",
+                                    "- Sorcery scaling: {0}",
+                                    formatPercentValue(sorceryScaling)),
+                    tr("ui.classes.passive.pretty.ravenous_strike.note",
+                            "- Added to healing from your damaging hits"));
             case REGENERATION -> tr("ui.races.passive.desc.regeneration", "{0} HP/s", formatSigned(value));
             case HEALING_BONUS -> tr("ui.races.passive.desc.healing_bonus", "{0} healing", formatPercentValue(value));
             case LIFE_STEAL -> tr("ui.races.passive.desc.life_steal", "{0} life steal", formatPercentValue(value));

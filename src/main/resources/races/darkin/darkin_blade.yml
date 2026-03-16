@@ -35,7 +35,7 @@ attributes:
 
 passives:
   - type: HEALING_BONUS
-    value: 1.0 # +100% healing dealt/received
+    value: 0.65 # +65% healing dealt/received
   - type: RAVENOUS_STRIKE
     value: 5.5 # Flat healing per hit
     strength_scaling: 0.09 # +9.0% of Strength added to healing

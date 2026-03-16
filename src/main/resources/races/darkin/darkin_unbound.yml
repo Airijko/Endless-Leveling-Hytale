@@ -39,7 +39,7 @@ attributes:
 
 passives:
   - type: HEALING_BONUS
-    value: 1.4 # +140% healing dealt/received
+    value: 1.0 # +100% healing dealt/received
   - type: MANA_REGEN
     value: 0.02 # Restore 2.0% of max mana every 5 seconds
   - type: RAVENOUS_STRIKE

@@ -615,6 +615,12 @@ ui:
         threshold: <{0}% {1}
       pretty:
         na: n/a
+        ravenous_strike:
+          title: Predatory lifesteal strikes
+          flat: "- On-hit heal: {0}"
+          strength: "- Strength scaling: {0}"
+          sorcery: "- Sorcery scaling: {0}"
+          note: "- Added to healing from your damaging hits"
         true_edge:
           title: Defense-piercing strikes
           flat: "- Flat true damage: {0} per hit"
