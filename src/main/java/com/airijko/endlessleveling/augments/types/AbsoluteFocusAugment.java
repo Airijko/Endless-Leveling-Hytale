@@ -52,7 +52,10 @@ public final class AbsoluteFocusAugment extends YamlAugment implements AugmentHo
                 totalBonusMultiplier += (ferocity / 100.0D) * guaranteedCritChance;
             }
         }
-        float finalDamage = AugmentUtils.applyMultiplier(originalDamage, totalBonusMultiplier);
+        float finalDamage = AugmentUtils.applyAdditiveBonusFromBase(
+                originalDamage,
+                context.getBaseDamage(),
+                totalBonusMultiplier);
         if (activated) {
             AugmentUtils.sendAugmentMessage(
                     AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getAttackerRef()),

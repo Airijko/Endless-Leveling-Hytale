@@ -2,6 +2,7 @@ package com.airijko.endlessleveling.augments.types;
 
 import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentHooks;
+import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
@@ -19,7 +20,8 @@ public final class GiantSlayerAugment extends YamlAugment implements AugmentHook
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> bonus = AugmentValueReader.getMap(passives, "bonus_damage_vs_hp_ratio");
-        this.maxBonus = AugmentValueReader.getDouble(bonus, "max_value", 0.0D);
+        this.maxBonus = AugmentUtils
+                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(bonus, "max_value", 0.0D));
         this.maxRatio = AugmentValueReader.getDouble(bonus, "max_ratio", 1.0D);
     }
 

@@ -40,7 +40,10 @@ public final class CutdownAugment extends YamlAugment implements AugmentHooks.On
         double ratio = hp.get() / hp.getMax();
         for (Threshold threshold : thresholds) {
             if (ratio > threshold.targetHealthPercentAbove()) {
-                return AugmentUtils.applyMultiplier(context.getDamage(), threshold.value());
+                return AugmentUtils.applyAdditiveBonusFromBase(
+                        context.getDamage(),
+                        context.getBaseDamage(),
+                        threshold.value());
             }
         }
         return context.getDamage();
@@ -61,7 +64,8 @@ public final class CutdownAugment extends YamlAugment implements AugmentHooks.On
             Map<String, Object> thresholdNode = (Map<String, Object>) map;
             double healthAbove = Math.max(0.0D,
                     Math.min(1.0D, AugmentValueReader.getDouble(thresholdNode, "target_health_percent_above", 0.0D)));
-            double value = AugmentValueReader.getDouble(thresholdNode, "value", 0.0D);
+            double value = AugmentUtils
+                    .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(thresholdNode, "value", 0.0D));
             if (value > 0.0D) {
                 parsed.add(new Threshold(healthAbove, value));
             }

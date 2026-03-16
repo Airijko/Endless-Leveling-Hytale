@@ -41,8 +41,10 @@ public final class PhaseRushAugment extends YamlAugment
         this.hasteBurstMultiplier = Math.max(1.0D, AugmentValueReader.getDouble(hasteBurst, "multiplier", 1.0D));
         this.hasteBurstDurationMillis = AugmentUtils
                 .secondsToMillis(AugmentValueReader.getDouble(hasteBurst, "duration", 0.0D));
-        this.hasteToDamageConversionPercent = Math.max(0.0D,
-                AugmentValueReader.getDouble(conversion, "conversion_percent", 0.0D));
+        this.hasteToDamageConversionPercent = AugmentUtils
+                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(conversion,
+                        "conversion_percent",
+                        0.0D));
     }
 
     @Override
@@ -117,7 +119,10 @@ public final class PhaseRushAugment extends YamlAugment
                 0L);
 
         double conversionBonus = resolveHasteConversionBonus(context);
-        return AugmentUtils.applyMultiplier(context.getDamage(), conversionBonus);
+        return AugmentUtils.applyAdditiveBonusFromBase(
+                context.getDamage(),
+                context.getBaseDamage(),
+                conversionBonus);
     }
 
     private double resolveHasteConversionBonus(AugmentHooks.HitContext context) {

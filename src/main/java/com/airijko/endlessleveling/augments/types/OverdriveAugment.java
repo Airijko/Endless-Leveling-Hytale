@@ -26,8 +26,10 @@ public final class OverdriveAugment extends YamlAugment
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> buffs = AugmentValueReader.getMap(passives, "buffs");
         Map<String, Object> duration = AugmentValueReader.getMap(passives, "duration");
-        this.critDamagePerStack = AugmentValueReader.getNestedDouble(buffs, 0.0D, "crit_damage", "value");
-        this.hastePerStack = AugmentValueReader.getNestedDouble(buffs, 0.0D, "haste", "value");
+        this.critDamagePerStack = AugmentUtils.normalizeConfiguredBonusMultiplier(
+                AugmentValueReader.getNestedDouble(buffs, 0.0D, "crit_damage", "value"));
+        this.hastePerStack = AugmentUtils.normalizeConfiguredBonusMultiplier(
+                AugmentValueReader.getNestedDouble(buffs, 0.0D, "haste", "value"));
         this.maxStacks = AugmentValueReader.getInt(buffs, "max_stacks", 0);
         this.stackDurationMillis = AugmentUtils
                 .secondsToMillis(AugmentValueReader.getDouble(duration, "seconds", 0.0D));
@@ -69,7 +71,7 @@ public final class OverdriveAugment extends YamlAugment
 
         double bonus = stacks * critDamagePerStack;
         applyAttributeBonuses(runtime, stacks, state.getExpiresAt());
-        return (float) (context.getDamage() * (1.0D + bonus));
+        return AugmentUtils.applyAdditiveBonusFromBase(context.getDamage(), context.getBaseDamage(), bonus);
     }
 
     @Override

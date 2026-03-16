@@ -2,6 +2,7 @@ package com.airijko.endlessleveling.augments.types;
 
 import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentHooks;
+import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
@@ -20,7 +21,8 @@ public final class SnipersReachAugment extends YamlAugment implements AugmentHoo
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> bonus = AugmentValueReader.getMap(passives, "bonus_damage_by_distance");
-        this.maxValue = AugmentValueReader.getDouble(bonus, "max_value", 0.0D);
+        this.maxValue = AugmentUtils
+                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(bonus, "max_value", 0.0D));
         this.minDistance = Math.max(0.0D, AugmentValueReader.getDouble(bonus, "min_distance", 0.0D));
         this.maxDistance = Math.max(minDistance, AugmentValueReader.getDouble(bonus, "max_distance", minDistance));
         this.scalingType = String.valueOf(bonus.getOrDefault("scaling_type", "linear")).trim().toLowerCase();
@@ -54,7 +56,7 @@ public final class SnipersReachAugment extends YamlAugment implements AugmentHoo
         }
 
         double bonus = maxValue * normalized;
-        return (float) (context.getDamage() * (1.0D + bonus));
+        return AugmentUtils.applyAdditiveBonusFromBase(context.getDamage(), context.getBaseDamage(), bonus);
     }
 
     private double resolveDistance(AugmentHooks.HitContext context) {

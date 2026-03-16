@@ -31,7 +31,8 @@ public final class ConquerorAugment extends YamlAugment implements AugmentHooks.
         Map<String, Object> trueDamage = AugmentValueReader.getMap(maxStackBonus, "bonus_true_damage");
         Map<String, Object> duration = AugmentValueReader.getMap(passives, "duration");
 
-        this.bonusDamagePerStack = Math.max(0.0D, AugmentValueReader.getDouble(bonusDamage, "value", 0.0D));
+        this.bonusDamagePerStack = AugmentUtils
+                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(bonusDamage, "value", 0.0D));
         this.maxStacks = Math.max(1, AugmentValueReader.getInt(buffs, "max_stacks", 1));
         this.maxStackFlatTrueDamage = Math.max(0.0D, AugmentValueReader.getDouble(trueDamage, "value", 0.0D));
         this.maxStackTrueDamagePercent = normalizePercent(AugmentValueReader.getDouble(trueDamage,
@@ -72,13 +73,15 @@ public final class ConquerorAugment extends YamlAugment implements AugmentHooks.
             markStackDelay(runtime, now);
         }
 
-        float preMitigatedDamage = context.getDamage();
-        float updatedDamage = AugmentUtils.applyMultiplier(preMitigatedDamage, stacks * bonusDamagePerStack);
+        float updatedDamage = AugmentUtils.applyAdditiveBonusFromBase(
+                context.getDamage(),
+                context.getBaseDamage(),
+                stacks * bonusDamagePerStack);
         if (stacks >= maxStacks && (maxStackFlatTrueDamage > 0.0D || maxStackTrueDamagePercent > 0.0D)) {
             boolean cooldownReady = state.getLastProc() <= 0L || now - state.getLastProc() >= INTERNAL_COOLDOWN_MILLIS;
             if (cooldownReady) {
                 double bonusTrueDamage = maxStackFlatTrueDamage
-                        + (Math.max(0.0D, updatedDamage) * maxStackTrueDamagePercent);
+                        + (Math.max(0.0D, context.getBaseDamage()) * maxStackTrueDamagePercent);
                 context.addTrueDamageBonus(bonusTrueDamage);
                 state.setLastProc(now);
             }

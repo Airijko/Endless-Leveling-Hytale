@@ -24,7 +24,8 @@ public final class GlassCannonAugment extends YamlAugment
         Map<String, Object> bonusDamageNode = AugmentValueReader.getMap(buffs, "bonus_damage");
 
         this.movementSpeedBonus = AugmentValueReader.getDouble(movementSpeed, "value", 0.0D);
-        this.bonusDamage = AugmentValueReader.getDouble(bonusDamageNode, "value", 0.0D);
+        this.bonusDamage = AugmentUtils
+                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(bonusDamageNode, "value", 0.0D));
     }
 
     @Override
@@ -44,6 +45,6 @@ public final class GlassCannonAugment extends YamlAugment
         if (context == null) {
             return 0f;
         }
-        return AugmentUtils.applyMultiplier(context.getDamage(), bonusDamage);
+        return AugmentUtils.applyAdditiveBonusFromBase(context.getDamage(), context.getBaseDamage(), bonusDamage);
     }
 }

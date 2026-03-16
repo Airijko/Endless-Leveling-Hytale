@@ -21,15 +21,17 @@ public final class FirstStrikeAugment extends YamlAugment
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> bonus = AugmentValueReader.getMap(passives, "bonus_damage_on_hit");
-        this.baseMultiplier = AugmentValueReader.getDouble(bonus, "value", 0.0D);
+        this.baseMultiplier = AugmentUtils
+                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(bonus, "value", 0.0D));
         this.cooldownMillis = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(bonus, "cooldown", 0.0D));
         this.classValues = AugmentValueReader.getMap(bonus, "class_values");
     }
 
     @Override
     public float onHit(AugmentHooks.HitContext context) {
-        double classMultiplier = AugmentUtils.resolveClassValue(classValues,
-                context.getPlayerData().getPrimaryClassId());
+        double classMultiplier = AugmentUtils.normalizeConfiguredBonusMultiplier(
+                AugmentUtils.resolveClassValue(classValues,
+                        context.getPlayerData().getPrimaryClassId()));
         double multiplier = classMultiplier > 0 ? classMultiplier : baseMultiplier;
         if (multiplier <= 0.0D) {
             return context.getDamage();
@@ -45,7 +47,7 @@ public final class FirstStrikeAugment extends YamlAugment
                             "{0} triggered! +{1}% damage.",
                             getName(), multiplier * 100.0D));
         }
-        return AugmentUtils.applyMultiplier(context.getDamage(), multiplier);
+        return AugmentUtils.applyAdditiveBonusFromBase(context.getDamage(), context.getBaseDamage(), multiplier);
     }
 
     @Override

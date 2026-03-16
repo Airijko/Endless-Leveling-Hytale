@@ -278,6 +278,25 @@ public final class AugmentUtils {
         return (float) (baseDamage * (1.0D + bonusMultiplier));
     }
 
+    public static float applyAdditiveBonusFromBase(float runningDamage, float baseDamage, double bonusMultiplier) {
+        if (bonusMultiplier == 0.0D || baseDamage <= 0f) {
+            return runningDamage;
+        }
+        return runningDamage + (float) (baseDamage * bonusMultiplier);
+    }
+
+    public static double normalizeConfiguredBonusMultiplier(double configuredValue) {
+        if (!Double.isFinite(configuredValue) || configuredValue <= 0.0D) {
+            return 0.0D;
+        }
+        // Backward compatible: existing configs use decimal ratios (0.5, 1.75, 2.0).
+        // New configs may use percent points (50, 175, 180).
+        if (configuredValue >= 10.0D) {
+            return configuredValue / 100.0D;
+        }
+        return configuredValue;
+    }
+
     public static double resolveClassValue(Map<String, Object> classValues, String classId) {
         if (classValues == null || classValues.isEmpty() || classId == null) {
             return 0.0D;

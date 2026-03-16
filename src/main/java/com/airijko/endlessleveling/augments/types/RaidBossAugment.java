@@ -33,7 +33,8 @@ public final class RaidBossAugment extends YamlAugment
                         AugmentValueReader.getNestedDouble(buffs, 0.0D, "health_percent", "value"),
                         "max_health_percent",
                         "value"));
-        this.bonusDamage = AugmentValueReader.getNestedDouble(buffs, 0.0D, "bonus_damage", "value");
+        this.bonusDamage = AugmentUtils.normalizeConfiguredBonusMultiplier(
+                AugmentValueReader.getNestedDouble(buffs, 0.0D, "bonus_damage", "value"));
     }
 
     @Override
@@ -49,7 +50,7 @@ public final class RaidBossAugment extends YamlAugment
         if (context == null) {
             return 0f;
         }
-        return AugmentUtils.applyMultiplier(context.getDamage(), bonusDamage);
+        return AugmentUtils.applyAdditiveBonusFromBase(context.getDamage(), context.getBaseDamage(), bonusDamage);
     }
 
     private void applyMaxHealthBonus(EntityStatMap statMap, double percentBonus) {

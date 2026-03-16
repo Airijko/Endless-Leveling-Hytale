@@ -57,7 +57,8 @@ public final class BloodthirsterAugment extends YamlAugment implements AugmentHo
                 AugmentValueReader.getDouble(healthyState, "health_threshold_above", 0.50D));
         this.sharedHitCounter = Math.max(1, configuredHitCounter > 0 ? configuredHitCounter : 3);
         this.sharedHitCounterDurationMillis = AugmentUtils.secondsToMillis(configuredDurationSeconds);
-        this.healthyBonusDamage = Math.max(0.0D, AugmentValueReader.getDouble(healthyBonus, "value", 0.0D));
+        this.healthyBonusDamage = AugmentUtils
+                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(healthyBonus, "value", 0.0D));
         this.healthySelfDamagePercentOfCurrent = clampRatio(
                 AugmentValueReader.getDouble(healthySelfDamage, "percent_of_current_hp", 0.0D));
 
@@ -114,7 +115,10 @@ public final class BloodthirsterAugment extends YamlAugment implements AugmentHo
         var playerRef = AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getAttackerRef());
 
         if (mode == MODE_HEALTHY) {
-            float outgoing = AugmentUtils.applyMultiplier(context.getDamage(), healthyBonusDamage);
+            float outgoing = AugmentUtils.applyAdditiveBonusFromBase(
+                    context.getDamage(),
+                    context.getBaseDamage(),
+                    healthyBonusDamage);
             applyHealthySelfDamage(attackerStats, healthySelfDamagePercentOfCurrent);
             if (playerRef != null && playerRef.isValid()) {
                 AugmentUtils.sendAugmentMessage(playerRef,

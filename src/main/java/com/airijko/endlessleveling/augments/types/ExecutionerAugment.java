@@ -22,7 +22,8 @@ public final class ExecutionerAugment extends YamlAugment implements AugmentHook
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> bonus = AugmentValueReader.getMap(passives, "bonus_damage_on_hit");
-        this.bonusMultiplier = AugmentValueReader.getDouble(bonus, "value", 0.0D);
+        this.bonusMultiplier = AugmentUtils
+                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(bonus, "value", 0.0D));
         this.thresholdRatio = AugmentValueReader.getDouble(bonus, "threshold", 0.0D);
         this.cooldownMillis = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(bonus, "cooldown", 0.0D));
     }
@@ -60,6 +61,6 @@ public final class ExecutionerAugment extends YamlAugment implements AugmentHook
                             "{0} triggered! +{1}% damage.",
                             getName(), bonusMultiplier * 100.0D));
         }
-        return AugmentUtils.applyMultiplier(context.getDamage(), bonusMultiplier);
+        return AugmentUtils.applyAdditiveBonusFromBase(context.getDamage(), context.getBaseDamage(), bonusMultiplier);
     }
 }

@@ -35,8 +35,10 @@ public final class PredatorAugment extends YamlAugment
                     AugmentValueReader.getNestedDouble(buffs, 0.0D, "strength", "duration"));
         }
         this.durationMillis = AugmentUtils.secondsToMillis(durationSeconds);
-        this.strengthPerStack = AugmentValueReader.getNestedDouble(buffs, 0.0D, "strength", "value");
-        this.hastePerStack = AugmentValueReader.getNestedDouble(buffs, 0.0D, "haste", "value");
+        this.strengthPerStack = AugmentUtils.normalizeConfiguredBonusMultiplier(
+                AugmentValueReader.getNestedDouble(buffs, 0.0D, "strength", "value"));
+        this.hastePerStack = AugmentUtils.normalizeConfiguredBonusMultiplier(
+                AugmentValueReader.getNestedDouble(buffs, 0.0D, "haste", "value"));
         Map<String, Object> debuffs = AugmentValueReader.getMap(passives, "debuffs");
         this.defensePenalty = AugmentValueReader.getNestedDouble(debuffs, 0.0D, "defense", "value");
         Map<String, Object> defenseDebuff = AugmentValueReader.getMap(debuffs, "defense");
@@ -87,7 +89,7 @@ public final class PredatorAugment extends YamlAugment
         }
         applyAttributeBonuses(runtime, state.getStacks(), state.getExpiresAt());
         double bonus = state.getStacks() * strengthPerStack;
-        return (float) (context.getDamage() * (1.0D + bonus));
+        return AugmentUtils.applyAdditiveBonusFromBase(context.getDamage(), context.getBaseDamage(), bonus);
     }
 
     @Override

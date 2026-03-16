@@ -32,7 +32,8 @@ public final class ReckoningAugment extends YamlAugment implements AugmentHooks.
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> bonus = AugmentValueReader.getMap(passives, "bonus_damage");
-        this.maxBonus = AugmentValueReader.getDouble(bonus, "max_bonus_damage", 0.0D);
+        this.maxBonus = AugmentUtils
+                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(bonus, "max_bonus_damage", 0.0D));
         this.bonusScalingStat = String.valueOf(bonus.getOrDefault("scaling_stat", "missing_health_percent"))
                 .trim()
                 .toLowerCase();
@@ -58,7 +59,10 @@ public final class ReckoningAugment extends YamlAugment implements AugmentHooks.
         }
 
         double bonus = resolveBonusDamageMultiplier(hp);
-        float updatedDamage = (float) (context.getDamage() * (1.0D + bonus));
+        float updatedDamage = AugmentUtils.applyAdditiveBonusFromBase(
+                context.getDamage(),
+                context.getBaseDamage(),
+                bonus);
 
         // Always pay the health cost on any resolved hit.
         applySelfDamage(attackerStats, hp);

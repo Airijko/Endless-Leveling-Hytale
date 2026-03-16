@@ -23,12 +23,17 @@ public final class MagicBladeAugment extends YamlAugment implements AugmentHooks
         Map<String, Object> conversion = AugmentValueReader.getMap(passives, "sorcery_weapon_conversion");
         Map<String, Object> weaponBonus = AugmentValueReader.getMap(passives, "weapon_bonus");
 
-        this.sorceryWeaponConversionPercent = Math.max(0.0D,
-                AugmentValueReader.getDouble(conversion, "conversion_percent", 0.0D));
+        this.sorceryWeaponConversionPercent = AugmentUtils
+                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(conversion,
+                        "conversion_percent",
+                        0.0D));
 
         String weaponTypeKey = String.valueOf(weaponBonus.getOrDefault("weapon_type", "")).trim();
         this.bonusWeaponType = ClassWeaponType.fromConfigKey(weaponTypeKey);
-        this.weaponBonusDamage = Math.max(0.0D, AugmentValueReader.getDouble(weaponBonus, "bonus_damage", 0.0D));
+        this.weaponBonusDamage = AugmentUtils
+                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(weaponBonus,
+                        "bonus_damage",
+                        0.0D));
     }
 
     @Override
@@ -48,6 +53,9 @@ public final class MagicBladeAugment extends YamlAugment implements AugmentHooks
             totalMultiplierBonus += weaponBonusDamage;
         }
 
-        return AugmentUtils.applyMultiplier(context.getDamage(), totalMultiplierBonus);
+        return AugmentUtils.applyAdditiveBonusFromBase(
+                context.getDamage(),
+                context.getBaseDamage(),
+                totalMultiplierBonus);
     }
 }
