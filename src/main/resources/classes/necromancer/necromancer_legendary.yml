@@ -16,11 +16,11 @@ passives:
     value: 1.0
     base_summon_amount: 4
     summon_amount_scaling:
-      mana_per_summon: 175
+      mana_per_summon: 110
     minion_lifetime_seconds: 30
     activation: on_hit
     cooldown_seconds: 15
-    summon_stat_inheritance: 0.4
+    summon_stat_inheritance: 0.60
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Mithril
   - type: MANA_REGEN
     value: 0.046

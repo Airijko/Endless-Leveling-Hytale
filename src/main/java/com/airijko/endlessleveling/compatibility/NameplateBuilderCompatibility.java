@@ -79,6 +79,19 @@ public final class NameplateBuilderCompatibility {
         }
     }
 
+    public static boolean registerMobText(Store<EntityStore> store, Ref<EntityStore> entityRef, String text) {
+        if (store == null || entityRef == null || text == null || text.isBlank() || !ensureInitialized()) {
+            return false;
+        }
+
+        try {
+            registerMethod.invoke(null, store, entityRef, MOB_SEGMENT_ID, text);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
     public static boolean registerPlayerLevel(Store<EntityStore> store, Ref<EntityStore> entityRef, int level) {
         if (store == null || entityRef == null || level <= 0 || !ensureInitialized() || segmentTargetPlayers == null) {
             return false;

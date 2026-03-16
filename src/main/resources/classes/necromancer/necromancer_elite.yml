@@ -16,11 +16,11 @@ passives:
     value: 1.0
     base_summon_amount: 2
     summon_amount_scaling:
-      mana_per_summon: 225
+      mana_per_summon: 130
     minion_lifetime_seconds: 30
     activation: on_hit
     cooldown_seconds: 15
-    summon_stat_inheritance: 0.2
+    summon_stat_inheritance: 0.3
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Iron
   - type: MANA_REGEN
     value: 0.034

@@ -394,6 +394,28 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             return false;
         }
 
+        if (ArmyOfTheDeadPassive.isManagedSummon(ref, ref.getStore(), commandBuffer)) {
+            EntityStatMap summonStatMap = commandBuffer.getComponent(ref, EntityStatMap.getComponentType());
+            if (summonStatMap == null) {
+                return false;
+            }
+
+            int healthIndex = DefaultEntityStatTypes.getHealth();
+            summonStatMap.removeModifier(healthIndex, MOB_HEALTH_SCALE_MODIFIER_KEY);
+            EntityStatValue summonHp = summonStatMap.get(healthIndex);
+            if (summonHp != null && Float.isFinite(summonHp.getMax()) && summonHp.getMax() > 0.0f) {
+                summonStatMap.setStatValue(healthIndex, summonHp.getMax());
+            }
+            summonStatMap.update();
+
+            EntityStatValue updatedSummonHp = summonStatMap.get(healthIndex);
+            if (updatedSummonHp != null && Float.isFinite(updatedSummonHp.getMax())
+                    && updatedSummonHp.getMax() > 0.0f) {
+                mobLevelingManager.recordEntityMaxHealth(entityId, updatedSummonHp.getMax());
+            }
+            return true;
+        }
+
         EntityStatMap statMap = commandBuffer.getComponent(ref, EntityStatMap.getComponentType());
         if (statMap == null) {
             return false;
@@ -578,7 +600,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             }
         }
 
-        if (nameplateLevel == null || nameplateLevel <= 0) {
+        if (!managedSummon && (nameplateLevel == null || nameplateLevel <= 0)) {
             return false;
         }
 
@@ -600,26 +622,43 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         }
 
         String baseName = "Mob";
-        DisplayNameComponent display = commandBuffer.getComponent(ref, DisplayNameComponent.getComponentType());
-        if (display != null && display.getDisplayName() != null
-                && display.getDisplayName().getAnsiMessage() != null
-                && !display.getDisplayName().getAnsiMessage().isBlank()) {
-            baseName = display.getDisplayName().getAnsiMessage();
+        if (managedSummon) {
+            String ownerName = resolveManagedSummonOwnerName(ref, commandBuffer);
+            if (ownerName != null && !ownerName.isBlank()) {
+                baseName = ownerName + "'s Undead Summon";
+            } else {
+                baseName = "Undead Summon";
+            }
+        } else {
+            DisplayNameComponent display = commandBuffer.getComponent(ref, DisplayNameComponent.getComponentType());
+            if (display != null && display.getDisplayName() != null
+                    && display.getDisplayName().getAnsiMessage() != null
+                    && !display.getDisplayName().getAnsiMessage().isBlank()) {
+                baseName = display.getDisplayName().getAnsiMessage();
+            }
         }
 
         String label;
-        if (includeLevelInName || managedSummon) {
+        if (managedSummon) {
+            label = baseName;
+        } else if (includeLevelInName) {
             label = "[Lv." + nameplateLevel + "] " + baseName;
         } else {
             label = baseName;
         }
 
-        EntityStatMap statMap = commandBuffer.getComponent(ref, EntityStatMap.getComponentType());
-        EntityStatValue hp = statMap == null ? null : statMap.get(DefaultEntityStatTypes.getHealth());
-        if (hp != null && Float.isFinite(hp.get()) && Float.isFinite(hp.getMax()) && hp.getMax() > 0.0f) {
-            int currentHp = Math.max(0, Math.round(hp.get()));
-            int maxHp = Math.max(1, Math.round(hp.getMax()));
-            label = label + " [HP " + currentHp + "/" + maxHp + "]";
+        if (!managedSummon) {
+            EntityStatMap statMap = commandBuffer.getComponent(ref, EntityStatMap.getComponentType());
+            EntityStatValue hp = statMap == null ? null : statMap.get(DefaultEntityStatTypes.getHealth());
+            if (hp != null && Float.isFinite(hp.get()) && Float.isFinite(hp.getMax()) && hp.getMax() > 0.0f) {
+                int currentHp = Math.max(0, Math.round(hp.get()));
+                int maxHp = Math.max(1, Math.round(hp.getMax()));
+                label = label + " [HP " + currentHp + "/" + maxHp + "]";
+            }
+        }
+
+        if (managedSummon && NameplateBuilderCompatibility.isAvailable()) {
+            NameplateBuilderCompatibility.registerMobText(ref.getStore(), ref, label);
         }
 
         nameplate.setText(label);
@@ -650,6 +689,35 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
 
         int ownerLevel = ownerData.getLevel();
         return ownerLevel > 0 ? ownerLevel : null;
+    }
+
+    private String resolveManagedSummonOwnerName(Ref<EntityStore> summonRef,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (summonRef == null || commandBuffer == null) {
+            return null;
+        }
+
+        UUID ownerUuid = ArmyOfTheDeadPassive.getManagedSummonOwnerUuid(
+                summonRef,
+                summonRef.getStore(),
+                commandBuffer);
+        if (ownerUuid == null) {
+            return null;
+        }
+
+        if (playerDataManager != null) {
+            var ownerData = playerDataManager.get(ownerUuid);
+            if (ownerData != null && ownerData.getPlayerName() != null && !ownerData.getPlayerName().isBlank()) {
+                return ownerData.getPlayerName();
+            }
+        }
+
+        PlayerRef ownerRef = Universe.get().getPlayer(ownerUuid);
+        if (ownerRef != null && ownerRef.getUsername() != null && !ownerRef.getUsername().isBlank()) {
+            return ownerRef.getUsername();
+        }
+
+        return null;
     }
 
     private void clearOrRemoveNameplate(Ref<EntityStore> ref,
