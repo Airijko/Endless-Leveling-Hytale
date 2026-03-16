@@ -13,7 +13,6 @@ weapons:
   - type: DAGGER
     damage: 1.05
 
-
 passives:
   - type: TRUE_EDGE
     value: 7 # Flat true damage added to each hit
@@ -27,7 +26,6 @@ passives:
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: defense
     value: 0.105
-
 
 ascension:
   id: class_slayer_base
