@@ -905,6 +905,7 @@ public class ClassManager {
         }
         String description = safeString(yamlData.get("description"));
         String role = safeString(yamlData.get("role"));
+        String category = parseClassCategory(yamlData, classId);
         boolean enabled = parseBoolean(yamlData.getOrDefault("enabled", Boolean.TRUE), true);
 
         String iconItemId = parseIconId(yamlData);
@@ -917,12 +918,41 @@ public class ClassManager {
                 displayName,
                 description,
                 role,
+                category,
                 enabled,
                 iconItemId,
                 weaponMultipliers,
                 passives,
                 passiveDefinitions,
                 ascension);
+    }
+
+    private String parseClassCategory(Map<String, Object> yamlData, String classId) {
+        String configured = safeString(yamlData.get("category"));
+        if (configured != null) {
+            return normalizeKey(configured);
+        }
+
+        String fallback = inferLegacyClassCategory(classId);
+        LOGGER.atFine().log("Class %s missing category in yaml; using fallback category '%s'", classId, fallback);
+        return fallback;
+    }
+
+    private String inferLegacyClassCategory(String classId) {
+        String normalized = normalizeKey(classId);
+        String baseId = normalized;
+        int firstUnderscore = normalized.indexOf('_');
+        if (firstUnderscore > 0) {
+            baseId = normalized.substring(0, firstUnderscore);
+        }
+
+        return switch (baseId) {
+            case "mage", "arcanist", "marksman", "assassin", "oracle", "healer", "necromancer" ->
+                "glass_cannon";
+            case "battlemage", "duelist", "brawler", "adventurer", "slayer" -> "fighter";
+            case "juggernaut", "vanguard" -> "tank";
+            default -> "default";
+        };
     }
 
     private RaceAscensionDefinition parseAscensionDefinition(String classId, Object node) {

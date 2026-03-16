@@ -7,5 +7,5 @@ category: PASSIVE_STAT
 passives:
   brute_force:
     precision_lock_value: 10000 # effectively disables crit and prevents crit gain
-    strength_multiplier: 1.6 # 1.75x effective strength
-    sorcery_multiplier: 1.6 # 1.75x effective sorcery
+    strength_multiplier: 2.5 # 2.5x effective strength
+    sorcery_multiplier: 2.5 # 2.5x effective sorcery

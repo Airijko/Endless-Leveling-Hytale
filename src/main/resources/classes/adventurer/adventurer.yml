@@ -2,6 +2,7 @@ class_name: "Adventurer"
 id: "adventurer"
 description: "A flexible pathfinder who blends martial training with survival instincts."
 role: "Vanguard"
+category: "fighter"
 enabled: true
 icon: "Ingredient_Life_Essence"
 

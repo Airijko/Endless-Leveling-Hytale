@@ -2,6 +2,7 @@ class_name: "Legendary Juggernaut"
 id: "juggernaut_legendary"
 description: "A relentless war engine that swings massive blades until nothing stands."
 role: "Juggernaut"
+category: "tank"
 enabled: true
 icon: "Weapon_Shield_Orbis_Knight"
 

@@ -19,6 +19,7 @@ public class CharacterClassDefinition {
     private final String displayName;
     private final String description;
     private final String role;
+    private final String category;
     private final boolean enabled;
     private final String iconItemId;
     private final Map<String, Double> weaponMultipliers;
@@ -30,6 +31,7 @@ public class CharacterClassDefinition {
             String displayName,
             String description,
             String role,
+            String category,
             boolean enabled,
             String iconItemId,
             Map<String, Double> weaponMultipliers,
@@ -40,6 +42,7 @@ public class CharacterClassDefinition {
         this.displayName = displayName == null ? id : displayName;
         this.description = description == null ? "" : description;
         this.role = role == null ? "" : role;
+        this.category = normalizeCategory(category);
         this.enabled = enabled;
         this.iconItemId = iconItemId == null ? "" : iconItemId.trim();
         Map<String, Double> copiedWeaponMultipliers = new LinkedHashMap<>();
@@ -88,6 +91,10 @@ public class CharacterClassDefinition {
         return role;
     }
 
+    public String getCategory() {
+        return category;
+    }
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -118,5 +125,12 @@ public class CharacterClassDefinition {
 
     public RaceAscensionDefinition getAscension() {
         return ascension;
+    }
+
+    private String normalizeCategory(String rawCategory) {
+        if (rawCategory == null || rawCategory.isBlank()) {
+            return "default";
+        }
+        return rawCategory.trim().toLowerCase(java.util.Locale.ROOT);
     }
 }

@@ -90,6 +90,21 @@ default_secondary_class: "None" # Optional secondary class default (None disable
 choose_class_cooldown: 1800 # Cooldown (seconds) before changing class again
 class_max_switches: 1 # -1 = unlimited; positive values apply per slot (primary and, if enabled, secondary each get their own cap)
 
+# Primary class defense cap categories
+# Each class .yml can define `category` and that value maps to one of these entries.
+# You can add new categories here and assign them in class yml files.
+defense_caps:
+  default_category: "default" # fallback when class category is missing/unknown
+  categories:
+    default:
+      max_reduction: 80.0
+    glass_cannon:
+      max_reduction: 50.0
+    fighter:
+      max_reduction: 65.0
+    tank:
+      max_reduction: 80.0
+
 # Swap anti-exploit
 # Auto-consume one race swap and one class swap-per-slot once players hit the threshold.
 swap_anti_exploit:

@@ -2,6 +2,7 @@ class_name: "Legendary Vanguard"
 id: "vanguard_legendary"
 description: "A stalwart line-holder that drives forward with crushing blows."
 role: "Vanguard"
+category: "tank"
 enabled: true
 icon: "Weapon_Battleaxe_Mithril"
 

@@ -1,6 +1,7 @@
 class_name: "Example"
 description: "Template class showcasing supported fields."
 role: "Template"
+category: "default" # Maps to config.yml -> defense_caps.categories.<category>
 enabled: false
 icon: "Potion_Health"
 

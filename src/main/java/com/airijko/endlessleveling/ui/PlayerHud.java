@@ -70,7 +70,7 @@ public class PlayerHud extends CustomUIHud {
             Map.entry("battlemage", "Weapon_Staff_Onyxium"),
             Map.entry("oracle", "Weapon_Daggers_Mithril"),
             Map.entry("marksman", "Weapon_Shortbow_Combat"),
-            Map.entry("skirmisher", "Weapon_Longsword_Mithril"),
+            Map.entry("slayer", "Weapon_Spear_Tribal"),
             Map.entry("vanguard", "Weapon_Mace_Prisma"),
             Map.entry("example", "Potion_Health"));
 

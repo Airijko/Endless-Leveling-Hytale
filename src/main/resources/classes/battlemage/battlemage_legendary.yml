@@ -2,6 +2,7 @@ class_name: "Legendary BattleMage"
 id: "battlemage_legendary"
 description: "A relentless arcane warrior who draws devastating power from the brink of death, blending melee combat with volatile sorcery."
 role: "Mage"
+category: "fighter"
 enabled: true
 icon: "Weapon_Staff_Onyxium"
 

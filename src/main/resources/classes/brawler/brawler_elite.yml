@@ -2,6 +2,7 @@ class_name: "Elite Brawler"
 id: "brawler_elite"
 description: "A fierce fist-fighter who thrives in close-quarters combat, using raw power and relentless aggression to overwhelm opponents."
 role: "Brawler"
+category: "fighter"
 enabled: true
 icon: "Armor_Prisma_Hands"
 

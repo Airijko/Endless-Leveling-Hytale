@@ -2,6 +2,7 @@ class_name: "Master Vanguard"
 id: "vanguard_master"
 description: "A stalwart line-holder that drives forward with crushing blows."
 role: "Vanguard"
+category: "tank"
 enabled: true
 icon: "Weapon_Battleaxe_Mithril"
 

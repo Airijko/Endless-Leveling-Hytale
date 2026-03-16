@@ -1,6 +1,7 @@
 package com.airijko.endlessleveling.managers;
 
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager;
+import com.airijko.endlessleveling.classes.CharacterClassDefinition;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
@@ -22,6 +23,7 @@ import com.hypixel.hytale.server.core.util.NotificationUtil;
 
 import javax.annotation.Nonnull;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
@@ -32,7 +34,7 @@ import java.util.Locale;
 public class SkillManager {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final double DEFENSE_MAX_REDUCTION = 80.0;
+    private static final double DEFENSE_MAX_REDUCTION = 80.0D;
     private static final double PRECISION_MAX_PERCENT = 100.0;
     private static final double DEFENSE_CURVE_START = 25.0;
     private static final double DEFENSE_SHARP_CURVE_START = 70.0;
@@ -42,10 +44,16 @@ public class SkillManager {
     private static final double DEFAULT_FLOW_PER_LEVEL = 0.5D;
     private static final String COMMON_AUGMENT_SOURCE_PREFIX = "common_";
     private static final String CLASS_INNATE_CAPS_PATH = "classes.innate_attribute_gain_level_caps";
+    private static final String DEFENSE_CAPS_PATH = "defense_caps";
+    private static final String DEFENSE_CAPS_DEFAULT_CATEGORY_PATH = DEFENSE_CAPS_PATH + ".default_category";
+    private static final String DEFENSE_CAPS_CATEGORIES_PATH = DEFENSE_CAPS_PATH + ".categories";
+    private static final String DEFENSE_CAPS_MAX_REDUCTION_KEY = "max_reduction";
+    private static final String DEFENSE_CAPS_DEFAULT_CATEGORY = "default";
     private static final int DEFAULT_CLASS_INNATE_LEVEL_CAP = 100;
 
     private final ConfigManager levelingConfig;
     private final ConfigManager config;
+    private final ClassManager classManager;
     private final PlayerAttributeManager attributeManager;
     private final ArchetypePassiveManager archetypePassiveManager;
     private final PassiveManager passiveManager;
@@ -53,21 +61,28 @@ public class SkillManager {
 
     private int baseSkillPoints;
     private int skillPointsPerLevel;
+    private volatile Map<String, Double> defenseCapByCategory = Map.of(
+            DEFENSE_CAPS_DEFAULT_CATEGORY,
+            DEFENSE_MAX_REDUCTION);
+    private volatile String defaultDefenseCapCategory = DEFENSE_CAPS_DEFAULT_CATEGORY;
     private final Map<SkillAttributeType, Integer> classInnateAttributeLevelCaps = new EnumMap<>(
             SkillAttributeType.class);
 
     public SkillManager(PluginFilesManager filesManager,
+            ClassManager classManager,
             PlayerAttributeManager attributeManager,
             ArchetypePassiveManager archetypePassiveManager,
             PassiveManager passiveManager,
             AugmentRuntimeManager augmentRuntimeManager) {
         this.levelingConfig = new ConfigManager(filesManager, filesManager.getLevelingFile());
         this.config = new ConfigManager(filesManager, filesManager.getConfigFile());
+        this.classManager = classManager;
         this.attributeManager = attributeManager;
         this.archetypePassiveManager = archetypePassiveManager;
         this.passiveManager = passiveManager;
         this.augmentRuntimeManager = augmentRuntimeManager;
         ensureFlowConfigLine();
+        ensureDefenseCapConfigSection();
         loadConfigValues();
     }
 
@@ -76,6 +91,7 @@ public class SkillManager {
         levelingConfig.load();
         config.load();
         ensureFlowConfigLine();
+        ensureDefenseCapConfigSection();
         loadConfigValues();
     }
 
@@ -85,6 +101,7 @@ public class SkillManager {
             baseSkillPoints = getIntFromLevelingConfig("baseSkillPoints", 8);
             skillPointsPerLevel = getIntFromLevelingConfig("skillPointsPerLevel", 4);
             loadClassInnateAttributeLevelCaps();
+            loadDefenseCapCategories();
             LOGGER.atInfo().log("SkillManager loaded: baseSkillPoints=%d, skillPointsPerLevel=%d",
                     baseSkillPoints, skillPointsPerLevel);
         } catch (Exception e) {
@@ -92,6 +109,103 @@ public class SkillManager {
             baseSkillPoints = 8;
             skillPointsPerLevel = 4;
             loadDefaultClassInnateAttributeLevelCaps();
+            loadDefaultDefenseCapCategories();
+        }
+    }
+
+    private void loadDefaultDefenseCapCategories() {
+        defenseCapByCategory = Map.of(
+                DEFENSE_CAPS_DEFAULT_CATEGORY,
+                DEFENSE_MAX_REDUCTION,
+                "glass_cannon",
+                50.0D,
+                "fighter",
+                65.0D,
+                "tank",
+                80.0D);
+        defaultDefenseCapCategory = DEFENSE_CAPS_DEFAULT_CATEGORY;
+    }
+
+    private void loadDefenseCapCategories() {
+        Object rawCategories = config.get(DEFENSE_CAPS_CATEGORIES_PATH, null, false);
+        if (!(rawCategories instanceof Map<?, ?> categoriesNode)) {
+            loadDefaultDefenseCapCategories();
+            return;
+        }
+
+        Map<String, Double> parsed = new LinkedHashMap<>();
+        for (Map.Entry<?, ?> entry : categoriesNode.entrySet()) {
+            if (!(entry.getKey() instanceof String key)) {
+                continue;
+            }
+            String normalizedKey = normalizeCategoryKey(key);
+            if (normalizedKey == null) {
+                continue;
+            }
+            double maxReduction = parseCategoryMaxReduction(entry.getValue(), DEFENSE_MAX_REDUCTION,
+                    DEFENSE_CAPS_CATEGORIES_PATH + "." + key);
+            parsed.put(normalizedKey, maxReduction);
+        }
+
+        if (parsed.isEmpty()) {
+            loadDefaultDefenseCapCategories();
+            return;
+        }
+
+        String configuredDefault = normalizeCategoryKey(config.get(DEFENSE_CAPS_DEFAULT_CATEGORY_PATH,
+                DEFENSE_CAPS_DEFAULT_CATEGORY,
+                false));
+        if (configuredDefault == null || !parsed.containsKey(configuredDefault)) {
+            configuredDefault = parsed.containsKey(DEFENSE_CAPS_DEFAULT_CATEGORY)
+                    ? DEFENSE_CAPS_DEFAULT_CATEGORY
+                    : parsed.keySet().iterator().next();
+        }
+
+        defenseCapByCategory = Map.copyOf(parsed);
+        defaultDefenseCapCategory = configuredDefault;
+    }
+
+    private double parseCategoryMaxReduction(Object rawValue, double fallback, String path) {
+        double parsed;
+        if (rawValue instanceof Number number) {
+            parsed = number.doubleValue();
+        } else if (rawValue instanceof Map<?, ?> map) {
+            Object maxReduction = map.get(DEFENSE_CAPS_MAX_REDUCTION_KEY);
+            if (!(maxReduction instanceof Number number)) {
+                LOGGER.atWarning().log("Missing numeric %s in %s; using fallback %.2f",
+                        DEFENSE_CAPS_MAX_REDUCTION_KEY,
+                        path,
+                        fallback);
+                return fallback;
+            }
+            parsed = number.doubleValue();
+        } else {
+            LOGGER.atWarning().log("Invalid defense cap category node at %s; using fallback %.2f", path, fallback);
+            return fallback;
+        }
+        return Math.max(0.0D, Math.min(100.0D, parsed));
+    }
+
+    private String normalizeCategoryKey(Object rawCategory) {
+        if (!(rawCategory instanceof String text) || text.isBlank()) {
+            return null;
+        }
+        return text.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private void ensureDefenseCapConfigSection() {
+        boolean changed = false;
+        changed |= config.ensurePath(DEFENSE_CAPS_DEFAULT_CATEGORY_PATH, DEFENSE_CAPS_DEFAULT_CATEGORY);
+        changed |= config.ensurePath(DEFENSE_CAPS_CATEGORIES_PATH + ".default." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+                DEFENSE_MAX_REDUCTION);
+        changed |= config.ensurePath(DEFENSE_CAPS_CATEGORIES_PATH + ".glass_cannon." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+                50.0D);
+        changed |= config.ensurePath(DEFENSE_CAPS_CATEGORIES_PATH + ".fighter." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+                65.0D);
+        changed |= config.ensurePath(DEFENSE_CAPS_CATEGORIES_PATH + ".tank." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+                80.0D);
+        if (changed) {
+            config.save();
         }
     }
 
@@ -397,8 +511,9 @@ public class SkillManager {
             return -1;
         }
 
+        double defenseCap = resolvePrimaryDefenseMaxReduction(playerData);
         double currentReduction = getDefenseReductionPercentWithoutAugment(playerData, currentLevel);
-        if (currentReduction < DEFENSE_MAX_REDUCTION - 1e-6D) {
+        if (currentReduction < defenseCap - 1e-6D) {
             return -1;
         }
 
@@ -407,7 +522,7 @@ public class SkillManager {
         while (low < high) {
             int mid = low + ((high - low) / 2);
             double midReduction = getDefenseReductionPercentWithoutAugment(playerData, mid);
-            if (midReduction >= DEFENSE_MAX_REDUCTION - 1e-6D) {
+            if (midReduction >= defenseCap - 1e-6D) {
                 high = mid;
             } else {
                 low = mid + 1;
@@ -428,7 +543,7 @@ public class SkillManager {
         double innate = getInnateAttributeBonus(playerData, SkillAttributeType.DEFENSE);
         double rawDefenseValue = (Math.max(0, level) * perPoint) + innate;
         double scaledValue = rawDefenseValue * raceMultiplier;
-        return applyDefenseCurve(scaledValue);
+        return applyDefenseCurve(scaledValue, resolvePrimaryDefenseMaxReduction(playerData));
     }
 
     // Sorcery / skill modifiers
@@ -929,7 +1044,7 @@ public class SkillManager {
         double nonCommonAugmentBonus = augmentBonusTotal - commonLinearDefenseBonus;
         float defenseAttributeValue = (float) (skillValue + innateValue + nonCommonAugmentBonus);
         float scaledValue = defenseAttributeValue * raceMultiplier;
-        double curvedResistancePercent = applyDefenseCurve(scaledValue);
+        double curvedResistancePercent = applyDefenseCurve(scaledValue, resolvePrimaryDefenseMaxReduction(playerData));
         double commonLinearResistancePercent = Math.min(DEFENSE_MAX_REDUCTION, commonLinearDefenseBonus);
         float curvedResistance = (float) (curvedResistancePercent / 100.0D);
         float commonLinearResistance = (float) (commonLinearResistancePercent / 100.0D);
@@ -944,7 +1059,7 @@ public class SkillManager {
                 commonLinearResistance);
     }
 
-    private double applyDefenseCurve(double defenseValue) {
+    private double applyDefenseCurve(double defenseValue, double maxReduction) {
         double reductionAtSharpStart = DEFENSE_CURVE_START
                 + (DEFENSE_SHARP_CURVE_START - DEFENSE_CURVE_START) * DEFENSE_MID_SEGMENT_SLOPE;
 
@@ -959,7 +1074,41 @@ public class SkillManager {
                     + (defenseValue - DEFENSE_SHARP_CURVE_START) * DEFENSE_FINAL_SEGMENT_SLOPE;
         }
 
-        return Math.min(reduction, DEFENSE_MAX_REDUCTION);
+        return Math.min(reduction, Math.max(0.0D, maxReduction));
+    }
+
+    private double resolvePrimaryDefenseMaxReduction(PlayerData playerData) {
+        if (playerData == null) {
+            return resolveDefenseCapByCategory(null);
+        }
+
+        String classCategory = null;
+        if (classManager != null) {
+            CharacterClassDefinition primaryClass = classManager.getClass(playerData.getPrimaryClassId());
+            if (primaryClass != null) {
+                classCategory = primaryClass.getCategory();
+            }
+        }
+        return resolveDefenseCapByCategory(classCategory);
+    }
+
+    private double resolveDefenseCapByCategory(String classCategory) {
+        String normalized = normalizeCategoryKey(classCategory);
+        Map<String, Double> configuredCaps = defenseCapByCategory;
+        if (normalized != null) {
+            Double direct = configuredCaps.get(normalized);
+            if (direct != null) {
+                return direct;
+            }
+        }
+
+        Double fallback = configuredCaps.get(defaultDefenseCapCategory);
+        if (fallback != null) {
+            return fallback;
+        }
+
+        Double defaultCap = configuredCaps.get(DEFENSE_CAPS_DEFAULT_CATEGORY);
+        return defaultCap != null ? defaultCap : DEFENSE_MAX_REDUCTION;
     }
 
     private float getSwiftnessMultiplier(PlayerData playerData) {
