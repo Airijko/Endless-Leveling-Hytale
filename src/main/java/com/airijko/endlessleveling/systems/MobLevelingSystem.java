@@ -686,15 +686,19 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         }
 
         boolean builderApplied = false;
+        boolean usedSummonSegment = false;
+        boolean usedMobSegmentFallback = false;
         if (managedSummon && NameplateBuilderCompatibility.isAvailable()) {
             builderApplied = NameplateBuilderCompatibility.registerSummonText(ref.getStore(), ref, label);
+            usedSummonSegment = builderApplied;
             if (!builderApplied) {
                 // Fallback for installations where summon_label segment is unavailable.
                 builderApplied = NameplateBuilderCompatibility.registerMobText(ref.getStore(), ref, label);
+                usedMobSegmentFallback = builderApplied;
             }
             // Keep old mob_level segment cleared so summon text is the only NPC label
             // segment.
-            if (builderApplied) {
+            if (usedSummonSegment) {
                 NameplateBuilderCompatibility.removeMobLevel(ref.getStore(), ref);
             }
         }
@@ -715,11 +719,13 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         if (managedSummon && shouldLogSummonNameplateDebug(ref.getIndex())) {
             UUID ownerUuid = ArmyOfTheDeadPassive.getManagedSummonOwnerUuid(ref, ref.getStore(), commandBuffer);
             LOGGER.atInfo().log(
-                    "[ARMY_OF_THE_DEAD][DEBUG-NAMEPLATE] summonRef=%d owner=%s builderApplied=%s vanillaApplied=%s text=%s",
+                    "[ARMY_OF_THE_DEAD][DEBUG-NAMEPLATE] summonRef=%d owner=%s builderApplied=%s vanillaApplied=%s summonSegment=%s mobFallback=%s text=%s",
                     ref.getIndex(),
                     ownerUuid,
                     builderApplied,
                     vanillaApplied,
+                    usedSummonSegment,
+                    usedMobSegmentFallback,
                     label);
         }
 
@@ -821,9 +827,23 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             return;
         }
 
+        boolean managedSummon = ArmyOfTheDeadPassive.isManagedSummon(ref, ref.getStore(), commandBuffer);
+        UUID ownerUuid = null;
+        if (managedSummon) {
+            ownerUuid = ArmyOfTheDeadPassive.getManagedSummonOwnerUuid(ref, ref.getStore(), commandBuffer);
+        }
+
         if (NameplateBuilderCompatibility.isAvailable()) {
-            NameplateBuilderCompatibility.removeMobLevel(ref.getStore(), ref);
-            NameplateBuilderCompatibility.removeSummonText(ref.getStore(), ref);
+            boolean removedMob = NameplateBuilderCompatibility.removeMobLevel(ref.getStore(), ref);
+            boolean removedSummon = NameplateBuilderCompatibility.removeSummonText(ref.getStore(), ref);
+            if (managedSummon && shouldLogSummonNameplateDebug(ref.getIndex())) {
+                LOGGER.atInfo().log(
+                        "[ARMY_OF_THE_DEAD][DEBUG-NAMEPLATE-CLEAR] summonRef=%d owner=%s removedMob=%s removedSummon=%s",
+                        ref.getIndex(),
+                        ownerUuid,
+                        removedMob,
+                        removedSummon);
+            }
             state.managedNameplate = false;
             state.previousNameplateText = null;
             return;
@@ -833,6 +853,14 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         String previousText = state.previousNameplateText;
         if (nameplate != null && previousText != null) {
             nameplate.setText(previousText);
+        }
+        if (managedSummon && shouldLogSummonNameplateDebug(ref.getIndex())) {
+            LOGGER.atInfo().log(
+                    "[ARMY_OF_THE_DEAD][DEBUG-NAMEPLATE-CLEAR] summonRef=%d owner=%s restoredVanilla=%s previousTextPresent=%s",
+                    ref.getIndex(),
+                    ownerUuid,
+                    nameplate != null,
+                    previousText != null && !previousText.isBlank());
         }
         state.previousNameplateText = null;
         state.managedNameplate = false;

@@ -1,6 +1,7 @@
 package com.airijko.endlessleveling.passives.type;
 
 import com.airijko.endlessleveling.EndlessLeveling;
+import com.airijko.endlessleveling.compatibility.NameplateBuilderCompatibility;
 import com.airijko.endlessleveling.data.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
@@ -17,6 +18,7 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.math.vector.Vector3f;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
+import com.hypixel.hytale.server.core.entity.nameplate.Nameplate;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
@@ -34,6 +36,7 @@ import com.hypixel.hytale.server.flock.FlockMembershipSystems;
 import com.hypixel.hytale.server.flock.FlockPlugin;
 import com.hypixel.hytale.server.npc.NPCPlugin;
 import com.hypixel.hytale.server.npc.entities.NPCEntity;
+import com.hypixel.hytale.server.npc.role.support.EntitySupport;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,13 +61,18 @@ public final class ArmyOfTheDeadPassive {
     private static final double TELEPORT_RANGE = 32.0D;
     private static final double TELEPORT_RANGE_SQ = TELEPORT_RANGE * TELEPORT_RANGE;
     private static final float MIN_RESOURCE_VALUE = 1.0f;
-    private static final boolean DEBUG_SUMMON_INHERITANCE = true;
+    private static final boolean DEBUG_SUMMON_INHERITANCE = false;
+    private static final boolean DEBUG_SUMMON_HEALTH = false;
+    private static final boolean DEBUG_SUMMON_NAMEPLATE = true;
     private static final long INHERITANCE_DEBUG_LOG_COOLDOWN_MS = 5000L;
+    private static final long NAMEPLATE_REFRESH_INTERVAL_MS = 2000L;
+    private static final long NAMEPLATE_FAILURE_LOG_COOLDOWN_MS = 5000L;
 
     private static final Map<UUID, OwnerSummonState> OWNER_STATES = new ConcurrentHashMap<>();
     private static final Map<UUID, SummonBinding> SUMMON_BINDINGS = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> PENDING_ON_HIT_TRIGGERS = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> INHERITANCE_DEBUG_LAST_LOG = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> NAMEPLATE_FAILURE_LAST_LOG = new ConcurrentHashMap<>();
 
     private ArmyOfTheDeadPassive() {
     }
@@ -454,6 +462,7 @@ public final class ArmyOfTheDeadPassive {
                     slot.activeSummonUuid = null;
                     slot.summonExpiresAt = 0L;
                     slot.postSpawnHealthNormalizePending = false;
+                    slot.nextNameplateRefreshAt = 0L;
                     slot.cooldownExpiresAt = cooldownUntil;
                     LOGGER.atFine().log(
                             "[ARMY_OF_THE_DEAD] Summon %s died. Cooldown set for owner %s slot %d until %d.",
@@ -580,6 +589,7 @@ public final class ArmyOfTheDeadPassive {
                 slot.statInheritance = Math.max(0.0D, request.config().statInheritance());
                 slot.spawnPending = false;
                 slot.postSpawnHealthNormalizePending = true;
+                slot.nextNameplateRefreshAt = now + NAMEPLATE_REFRESH_INTERVAL_MS;
                 SUMMON_BINDINGS.put(summonUuidComponent.getUuid(),
                         new SummonBinding(request.ownerUuid(), request.slotIndex()));
 
@@ -590,6 +600,7 @@ public final class ArmyOfTheDeadPassive {
                         request.slotIndex());
 
                 forceCurrentHealthToMax(summonRef, store);
+                applySummonNameplate(summonRef, store, request.ownerUuid(), true);
                 logSummonHealthState(summonRef,
                         store,
                         request.ownerUuid(),
@@ -677,16 +688,18 @@ public final class ArmyOfTheDeadPassive {
             summonStats.setStatValue(DefaultEntityStatTypes.getHealth(),
                     Math.max(MIN_RESOURCE_VALUE, updatedHp.getMax()));
             summonStats.update();
-            UUID summonUuid = resolveEntityUuid(summonRef, store, null);
-            LOGGER.atInfo().log(
-                    "[ARMY_OF_THE_DEAD][DEBUG-HP][SCALE] summon=%s owner=%s slot=%d inheritance=%.3f healthBonus=%.3f afterScale=%.3f/%.3f",
-                    summonUuid,
-                    source.ownerUuid(),
-                    slotIndex,
-                    inheritance,
-                    healthBonus,
-                    updatedHp.get(),
-                    updatedHp.getMax());
+            if (DEBUG_SUMMON_HEALTH) {
+                UUID summonUuid = resolveEntityUuid(summonRef, store, null);
+                LOGGER.atInfo().log(
+                        "[ARMY_OF_THE_DEAD][DEBUG-HP][SCALE] summon=%s owner=%s slot=%d inheritance=%.3f healthBonus=%.3f afterScale=%.3f/%.3f",
+                        summonUuid,
+                        source.ownerUuid(),
+                        slotIndex,
+                        inheritance,
+                        healthBonus,
+                        updatedHp.get(),
+                        updatedHp.getMax());
+            }
         }
 
         applySummonMovementSpeedBonus(summonRef, store, inheritedStats.movementMultiplier());
@@ -715,7 +728,7 @@ public final class ArmyOfTheDeadPassive {
 
         EntityStatValue after = summonStats.get(DefaultEntityStatTypes.getHealth());
         UUID summonUuid = resolveEntityUuid(summonRef, store, null);
-        if (after != null) {
+        if (after != null && DEBUG_SUMMON_HEALTH) {
             LOGGER.atInfo().log(
                     "[ARMY_OF_THE_DEAD][DEBUG-HP][FORCE_MAX] summon=%s before=%.3f/%.3f after=%.3f/%.3f",
                     summonUuid,
@@ -732,6 +745,9 @@ public final class ArmyOfTheDeadPassive {
             int slotIndex,
             double inheritance,
             String phase) {
+        if (!DEBUG_SUMMON_HEALTH) {
+            return;
+        }
         if (!EntityRefUtil.isUsable(summonRef) || store == null) {
             return;
         }
@@ -845,6 +861,7 @@ public final class ArmyOfTheDeadPassive {
             slot.summonExpiresAt = 0L;
             slot.spawnPending = false;
             slot.postSpawnHealthNormalizePending = false;
+            slot.nextNameplateRefreshAt = 0L;
             return;
         }
 
@@ -860,6 +877,7 @@ public final class ArmyOfTheDeadPassive {
             slot.cooldownExpiresAt = now + Math.max(0L, slot.cooldownDurationMillis);
             slot.spawnPending = false;
             slot.postSpawnHealthNormalizePending = false;
+            slot.nextNameplateRefreshAt = 0L;
             return;
         }
 
@@ -872,6 +890,7 @@ public final class ArmyOfTheDeadPassive {
             slot.cooldownExpiresAt = now + Math.max(0L, slot.cooldownDurationMillis);
             slot.spawnPending = false;
             slot.postSpawnHealthNormalizePending = false;
+            slot.nextNameplateRefreshAt = 0L;
             LOGGER.atFiner().log("[ARMY_OF_THE_DEAD] Expired summon for owner %s; cooldown until %d.",
                     ownerUuid,
                     slot.cooldownExpiresAt);
@@ -974,6 +993,9 @@ public final class ArmyOfTheDeadPassive {
             float defenseReduction,
             float movementMultiplier,
             float lifeForceFlatHealthBonus) {
+        if (!DEBUG_SUMMON_INHERITANCE) {
+            return;
+        }
         if (ownerUuid == null) {
             return;
         }
@@ -1070,6 +1092,117 @@ public final class ArmyOfTheDeadPassive {
         return uuidComponent != null ? uuidComponent.getUuid() : null;
     }
 
+    private static void applySummonNameplate(Ref<EntityStore> summonRef,
+            Store<EntityStore> store,
+            UUID ownerUuid,
+            boolean logSuccess) {
+        if (!EntityRefUtil.isUsable(summonRef) || store == null) {
+            return;
+        }
+
+        String ownerName = resolveOwnerName(ownerUuid);
+        String label = ownerName != null && !ownerName.isBlank()
+                ? ownerName + "'s Undead Summon"
+                : "Undead Summon";
+
+        boolean builderAvailable = NameplateBuilderCompatibility.isAvailable();
+        boolean summonSegmentApplied = false;
+        boolean mobFallbackApplied = false;
+        if (builderAvailable) {
+            summonSegmentApplied = NameplateBuilderCompatibility.registerSummonText(store, summonRef, label);
+            if (!summonSegmentApplied) {
+                mobFallbackApplied = NameplateBuilderCompatibility.registerMobText(store, summonRef, label);
+            }
+        }
+
+        boolean entitySupportApplied = false;
+        try {
+            EntitySupport.setDisplayName(summonRef, label, store);
+            entitySupportApplied = true;
+        } catch (Throwable throwable) {
+            if (DEBUG_SUMMON_NAMEPLATE && logSuccess) {
+                LOGGER.atWarning().withCause(throwable)
+                        .log("[ARMY_OF_THE_DEAD][DEBUG-NAMEPLATE-SPAWN] EntitySupport setDisplayName failed for summon=%s owner=%s",
+                                resolveEntityUuid(summonRef, store, null),
+                                ownerUuid);
+            }
+        }
+
+        Nameplate nameplate = EntityRefUtil.tryGetComponent(store, summonRef, Nameplate.getComponentType());
+        boolean vanillaApplied = false;
+        if (nameplate != null) {
+            nameplate.setText(label);
+            vanillaApplied = true;
+        }
+
+        UUID summonUuid = resolveEntityUuid(summonRef, store, null);
+        if (logSuccess && DEBUG_SUMMON_NAMEPLATE) {
+            LOGGER.atInfo().log(
+                    "[ARMY_OF_THE_DEAD][DEBUG-NAMEPLATE-SPAWN] summon=%s owner=%s builderAvailable=%s summonSegment=%s mobFallback=%s entitySupportApplied=%s vanillaApplied=%s hasVanillaComponent=%s text=%s",
+                    summonUuid,
+                    ownerUuid,
+                    builderAvailable,
+                    summonSegmentApplied,
+                    mobFallbackApplied,
+                    entitySupportApplied,
+                    vanillaApplied,
+                    nameplate != null,
+                    label);
+        }
+
+        if (summonSegmentApplied || mobFallbackApplied || vanillaApplied || entitySupportApplied) {
+            if (summonUuid != null) {
+                NAMEPLATE_FAILURE_LAST_LOG.remove(summonUuid);
+            }
+            return;
+        }
+
+        UUID nameplateFailureKey = ownerUuid != null ? ownerUuid : summonUuid;
+        if (shouldLogNameplateFailure(nameplateFailureKey)) {
+            LOGGER.atWarning().log(
+                    "[ARMY_OF_THE_DEAD][DEBUG-NAMEPLATE-SPAWN] Failed to apply summon nameplate for summon=%s owner=%s",
+                    summonUuid,
+                    ownerUuid);
+        }
+    }
+
+    private static boolean shouldLogNameplateFailure(UUID summonUuid) {
+        if (summonUuid == null) {
+            return true;
+        }
+        long now = System.currentTimeMillis();
+        Long last = NAMEPLATE_FAILURE_LAST_LOG.get(summonUuid);
+        if (last != null && now - last < NAMEPLATE_FAILURE_LOG_COOLDOWN_MS) {
+            return false;
+        }
+        NAMEPLATE_FAILURE_LAST_LOG.put(summonUuid, now);
+        return true;
+    }
+
+    private static String resolveOwnerName(UUID ownerUuid) {
+        if (ownerUuid == null) {
+            return null;
+        }
+
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin != null) {
+            PlayerDataManager playerDataManager = plugin.getPlayerDataManager();
+            if (playerDataManager != null) {
+                PlayerData ownerData = playerDataManager.get(ownerUuid);
+                if (ownerData != null && ownerData.getPlayerName() != null && !ownerData.getPlayerName().isBlank()) {
+                    return ownerData.getPlayerName();
+                }
+            }
+        }
+
+        PlayerRef ownerRef = Universe.get().getPlayer(ownerUuid);
+        if (ownerRef != null && ownerRef.getUsername() != null && !ownerRef.getUsername().isBlank()) {
+            return ownerRef.getUsername();
+        }
+
+        return null;
+    }
+
     private static boolean isAlliedWithOwner(UUID ownerUuid, UUID candidateUuid) {
         if (ownerUuid == null || candidateUuid == null) {
             return false;
@@ -1140,6 +1273,7 @@ public final class ArmyOfTheDeadPassive {
                     slot.activeSummonUuid = null;
                     slot.summonExpiresAt = 0L;
                     slot.postSpawnHealthNormalizePending = false;
+                    slot.nextNameplateRefreshAt = 0L;
                     slot.cooldownExpiresAt = now + Math.max(0L, slot.cooldownDurationMillis);
                     slot.spawnPending = false;
                     LOGGER.atFiner().log(
@@ -1162,6 +1296,11 @@ public final class ArmyOfTheDeadPassive {
                             slot.statInheritance,
                             "POST_SPAWN_TICK_NORMALIZE");
                     slot.postSpawnHealthNormalizePending = false;
+                }
+
+                if (now >= slot.nextNameplateRefreshAt) {
+                    applySummonNameplate(slot.activeRef, store, ownerUuid, false);
+                    slot.nextNameplateRefreshAt = now + NAMEPLATE_REFRESH_INTERVAL_MS;
                 }
 
                 NPCEntity summonNpc = EntityRefUtil.tryGetComponent(store, slot.activeRef,
@@ -1428,5 +1567,6 @@ public final class ArmyOfTheDeadPassive {
         private double statInheritance = DEFAULT_STAT_INHERITANCE;
         private boolean spawnPending;
         private boolean postSpawnHealthNormalizePending;
+        private long nextNameplateRefreshAt;
     }
 }
