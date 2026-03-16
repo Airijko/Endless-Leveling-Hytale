@@ -6,6 +6,7 @@ import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.RaceManager;
 import com.airijko.endlessleveling.races.RaceAscensionDefinition;
 import com.airijko.endlessleveling.races.RaceAscensionEligibility;
+import com.airijko.endlessleveling.races.RaceAscensionRequirements;
 import com.airijko.endlessleveling.races.RaceDefinition;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.component.Ref;
@@ -634,7 +635,7 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
         ui.set("#PathInfoSource.Text", resolveSourceLabel(focused));
         ui.set("#PathInfoAttributes.Text", buildAttributesText(focused));
         ui.set("#PathInfoPassives.Text", buildPassivesText(focused));
-        ui.set("#PathInfoRequirements.Text", buildRequirementsText(status, baseTier, eligibility));
+        ui.set("#PathInfoRequirements.Text", buildRequirementsText(status, baseTier, eligibility, focused));
         ui.set("#ChooseRacePathButton.Text", resolvePathActionButtonText(status));
     }
 
@@ -785,7 +786,8 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
 
     private String buildRequirementsText(NodeStatus status,
             boolean baseTier,
-            RaceAscensionEligibility eligibility) {
+            RaceAscensionEligibility eligibility,
+            RaceDefinition focusedRace) {
         if ("Active".equalsIgnoreCase(status.label())) {
             return "This is your currently active race form.";
         }
@@ -813,12 +815,64 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
             if (i > 0) {
                 summary.append("\n");
             }
-            summary.append("- ").append(blockers.get(i));
+            summary.append("- ").append(normalizeAnySkillSetBlocker(blockers.get(i), focusedRace));
         }
         if (blockers.size() > shown) {
             summary.append("\n- +").append(blockers.size() - shown).append(" more requirement(s)");
         }
         return summary.toString();
+    }
+
+    private String normalizeAnySkillSetBlocker(String blocker, RaceDefinition focusedRace) {
+        if (blocker == null || blocker.isBlank()) {
+            return blocker;
+        }
+        if (!isAnySkillSetBlocker(blocker)) {
+            return blocker;
+        }
+
+        String options = buildAnySkillOptions(focusedRace);
+        if (options.isBlank()) {
+            return blocker;
+        }
+        return "Requires at least one skill option set to be met: " + options + ".";
+    }
+
+    private boolean isAnySkillSetBlocker(String blocker) {
+        if (blocker == null || blocker.isBlank()) {
+            return false;
+        }
+        String normalized = blocker.toLowerCase(Locale.ROOT);
+        return normalized.contains("at least one or skill requirement set")
+                || normalized.contains("at least one skill requirement set")
+                || normalized.contains("any one skill requirement set")
+                || normalized.contains("one or skill requirement set");
+    }
+
+    private String buildAnySkillOptions(RaceDefinition focusedRace) {
+        RaceAscensionDefinition ascension = focusedRace == null ? null : focusedRace.getAscension();
+        RaceAscensionRequirements requirements = ascension == null
+                ? RaceAscensionRequirements.none()
+                : ascension.getRequirements();
+
+        List<String> groups = new ArrayList<>();
+        for (Map<SkillAttributeType, Integer> group : requirements.getMinAnySkillLevels()) {
+            if (group == null || group.isEmpty()) {
+                continue;
+            }
+            List<String> rendered = new ArrayList<>();
+            for (Map.Entry<SkillAttributeType, Integer> entry : group.entrySet()) {
+                if (entry.getKey() == null || entry.getValue() == null) {
+                    continue;
+                }
+                rendered.add(prettifyPathName(entry.getKey().getConfigKey()) + " >= " + entry.getValue());
+            }
+            if (!rendered.isEmpty()) {
+                groups.add(String.join(", ", rendered));
+            }
+        }
+
+        return String.join(" OR ", groups);
     }
 
     private NodeStatus resolveNodeStatus(RaceDefinition race,

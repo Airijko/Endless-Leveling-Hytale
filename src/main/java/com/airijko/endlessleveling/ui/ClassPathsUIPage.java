@@ -6,8 +6,10 @@ import com.airijko.endlessleveling.managers.PlayerDataManager;
 import com.airijko.endlessleveling.managers.ClassManager;
 import com.airijko.endlessleveling.races.RaceAscensionDefinition;
 import com.airijko.endlessleveling.races.RaceAscensionEligibility;
+import com.airijko.endlessleveling.races.RaceAscensionRequirements;
 import com.airijko.endlessleveling.classes.CharacterClassDefinition;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
+import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
@@ -637,7 +639,7 @@ public class ClassPathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data>
         ui.set("#PathInfoSource.Text", resolveSourceLabel(focused));
         ui.set("#PathInfoWeapons.Text", buildWeaponsText(focused));
         ui.set("#PathInfoPassives.Text", buildPassivesText(focused));
-        ui.set("#PathInfoRequirements.Text", buildRequirementsText(status, baseTier, eligibility));
+        ui.set("#PathInfoRequirements.Text", buildRequirementsText(status, baseTier, eligibility, focused));
         ui.set("#ChooseClassPathButton.Text", resolvePathActionButtonText(status));
     }
 
@@ -795,7 +797,8 @@ public class ClassPathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data>
 
     private String buildRequirementsText(NodeStatus status,
             boolean baseTier,
-            RaceAscensionEligibility eligibility) {
+            RaceAscensionEligibility eligibility,
+            CharacterClassDefinition focusedClass) {
         if ("Active".equalsIgnoreCase(status.label())) {
             return "This is your currently active class form.";
         }
@@ -823,12 +826,64 @@ public class ClassPathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data>
             if (i > 0) {
                 summary.append("\n");
             }
-            summary.append("- ").append(blockers.get(i));
+            summary.append("- ").append(normalizeAnySkillSetBlocker(blockers.get(i), focusedClass));
         }
         if (blockers.size() > shown) {
             summary.append("\n- +").append(blockers.size() - shown).append(" more requirement(s)");
         }
         return summary.toString();
+    }
+
+    private String normalizeAnySkillSetBlocker(String blocker, CharacterClassDefinition focusedClass) {
+        if (blocker == null || blocker.isBlank()) {
+            return blocker;
+        }
+        if (!isAnySkillSetBlocker(blocker)) {
+            return blocker;
+        }
+
+        String options = buildAnySkillOptions(focusedClass);
+        if (options.isBlank()) {
+            return blocker;
+        }
+        return "Requires at least one skill option set to be met: " + options + ".";
+    }
+
+    private boolean isAnySkillSetBlocker(String blocker) {
+        if (blocker == null || blocker.isBlank()) {
+            return false;
+        }
+        String normalized = blocker.toLowerCase(Locale.ROOT);
+        return normalized.contains("at least one or skill requirement set")
+                || normalized.contains("at least one skill requirement set")
+                || normalized.contains("any one skill requirement set")
+                || normalized.contains("one or skill requirement set");
+    }
+
+    private String buildAnySkillOptions(CharacterClassDefinition focusedClass) {
+        RaceAscensionDefinition ascension = focusedClass == null ? null : focusedClass.getAscension();
+        RaceAscensionRequirements requirements = ascension == null
+                ? RaceAscensionRequirements.none()
+                : ascension.getRequirements();
+
+        List<String> groups = new ArrayList<>();
+        for (Map<SkillAttributeType, Integer> group : requirements.getMinAnySkillLevels()) {
+            if (group == null || group.isEmpty()) {
+                continue;
+            }
+            List<String> rendered = new ArrayList<>();
+            for (Map.Entry<SkillAttributeType, Integer> entry : group.entrySet()) {
+                if (entry.getKey() == null || entry.getValue() == null) {
+                    continue;
+                }
+                rendered.add(prettifyPathName(entry.getKey().getConfigKey()) + " >= " + entry.getValue());
+            }
+            if (!rendered.isEmpty()) {
+                groups.add(String.join(", ", rendered));
+            }
+        }
+
+        return String.join(" OR ", groups);
     }
 
     private NodeStatus resolveNodeStatus(CharacterClassDefinition clazz,
