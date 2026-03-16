@@ -38,6 +38,11 @@ public final class GiantSlayerAugment extends YamlAugment implements AugmentHook
         }
         double t = Math.min(1.0D, (ratio - 1.0D) / (maxRatio - 1.0D));
         double bonus = maxBonus * t;
-        return (float) (context.getDamage() * (1.0D + bonus));
+        float baseDamage = context.getBaseDamage();
+        if (baseDamage <= 0f || bonus <= 0.0D) {
+            return context.getDamage();
+        }
+        float bonusDamage = (float) (baseDamage * bonus);
+        return context.getDamage() + bonusDamage;
     }
 }

@@ -84,6 +84,7 @@ public interface AugmentHooks {
         private final boolean critical;
         private final boolean rangedAttack;
         private final ClassWeaponType weaponType;
+        private final float baseDamage;
         private float damage;
         private double trueDamageBonus;
 
@@ -105,6 +106,7 @@ public interface AugmentHooks {
             this.commandBuffer = commandBuffer;
             this.attackerStats = attackerStats;
             this.targetStats = targetStats;
+            this.baseDamage = damage;
             this.damage = damage;
             this.critical = critical;
             this.rangedAttack = rangedAttack;
@@ -147,6 +149,10 @@ public interface AugmentHooks {
 
         public float getDamage() {
             return damage;
+        }
+
+        public float getBaseDamage() {
+            return baseDamage;
         }
 
         public void setDamage(float damage) {
