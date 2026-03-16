@@ -51,7 +51,7 @@ public final class ArmyOfTheDeadPassive {
     private static final double DEFAULT_LIFETIME_SECONDS = 30.0D;
     private static final double DEFAULT_STAT_INHERITANCE = 0.10D;
     private static final int MAX_SUMMON_CAP = 64;
-    private static final double TELEPORT_RANGE = 16.0D;
+    private static final double TELEPORT_RANGE = 32.0D;
     private static final double TELEPORT_RANGE_SQ = TELEPORT_RANGE * TELEPORT_RANGE;
 
     private static final Map<UUID, OwnerSummonState> OWNER_STATES = new ConcurrentHashMap<>();
