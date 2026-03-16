@@ -796,9 +796,26 @@ public final class ArmyOfTheDeadPassive {
         }
 
         Vector3d ownerPosition = ownerTransform.getPosition();
+        long now = System.currentTimeMillis();
         synchronized (ownerState) {
             for (SummonSlot slot : ownerState.slots) {
                 if (slot == null || slot.activeRef == null || !EntityRefUtil.isUsable(slot.activeRef)) {
+                    continue;
+                }
+
+                // Enforce lifetime expiry on a per-tick basis so summons always
+                // despawn at 30 s regardless of whether a new summon is triggered.
+                if (slot.summonExpiresAt > 0L && now >= slot.summonExpiresAt) {
+                    forceKillSummon(slot.activeRef, commandBuffer, ownerRef);
+                    SUMMON_BINDINGS.remove(slot.activeSummonUuid);
+                    slot.activeRef = null;
+                    slot.activeSummonUuid = null;
+                    slot.summonExpiresAt = 0L;
+                    slot.cooldownExpiresAt = now + Math.max(0L, slot.cooldownDurationMillis);
+                    slot.spawnPending = false;
+                    LOGGER.atFiner().log(
+                            "[ARMY_OF_THE_DEAD] Lifetime expired for slot of owner %s; cooldown until %d.",
+                            ownerUuid, slot.cooldownExpiresAt);
                     continue;
                 }
 
