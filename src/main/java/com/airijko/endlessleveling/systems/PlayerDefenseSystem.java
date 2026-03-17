@@ -271,6 +271,18 @@ public class PlayerDefenseSystem extends DamageEventSystem {
 			if (rawTrueDamage <= 0.0D) {
 				return 0.0f;
 			}
+
+			float afterNestingLowHp = augmentExecutor.applySpecificOnLowHp(defenderData,
+					defenderRef,
+					attackerRef,
+					commandBuffer,
+					statMap,
+					(float) rawTrueDamage,
+					NestingDollAugment.ID);
+			rawTrueDamage = Math.max(0.0D, afterNestingLowHp);
+			if (rawTrueDamage <= 0.0D) {
+				return 0.0f;
+			}
 		}
 
 		EntityStatValue hp = statMap.get(DefaultEntityStatTypes.getHealth());

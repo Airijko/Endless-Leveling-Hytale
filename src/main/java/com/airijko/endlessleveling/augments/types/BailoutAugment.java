@@ -164,7 +164,7 @@ public final class BailoutAugment extends YamlAugment
         DeathComponent.tryAddComponent(
                 context.getCommandBuffer(),
                 context.getPlayerRef(),
-                new Damage(Damage.NULL_SOURCE, DamageCause.COMMAND, Float.MAX_VALUE));
+                new Damage(Damage.NULL_SOURCE, DamageCause.PHYSICAL, Float.MAX_VALUE));
     }
 
     private double resolveDrainRatePerSecond(Map<String, Object> healthDecay) {

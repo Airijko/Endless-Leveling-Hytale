@@ -450,6 +450,18 @@ public class PlayerCombatSystem extends DamageEventSystem {
                 if (trueDamageAmount <= 0.0D) {
                     return 0.0f;
                 }
+
+                float afterNestingLowHp = augmentExecutor.applySpecificOnLowHp(defenderData,
+                        targetRef,
+                        attackerRef,
+                        commandBuffer,
+                        targetStats,
+                        (float) trueDamageAmount,
+                        NestingDollAugment.ID);
+                trueDamageAmount = Math.max(0.0D, afterNestingLowHp);
+                if (trueDamageAmount <= 0.0D) {
+                    return 0.0f;
+                }
             }
         }
 

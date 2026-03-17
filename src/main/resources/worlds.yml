@@ -192,10 +192,10 @@ World_Overrides:
         Scaling:
           Health:
             Base_Multiplier: 1.0
-            Per_Level: 0.075
+            Per_Level: 0.1
           Damage:
             Base_Multiplier: 1.0
-            Per_Level: 0.07
+            Per_Level: 0.075
           Defense:
             At_Negative_Max_Difference: 0.45
             At_Positive_Max_Difference: 0.9
@@ -235,10 +235,10 @@ World_Overrides:
         Scaling:
           Health:
             Base_Multiplier: 1.0
-            Per_Level: 0.075
+            Per_Level: 0.1
           Damage:
             Base_Multiplier: 1.0
-            Per_Level: 0.07
+            Per_Level: 0.075
           Defense:
             At_Negative_Max_Difference: 0.45
             At_Positive_Max_Difference: 0.9
@@ -292,7 +292,7 @@ World_Overrides:
         Scaling:
           Health:
             Base_Multiplier: 1.0
-            Per_Level: 0.075
+            Per_Level: 0.1
           Damage:
             Base_Multiplier: 1.0
             Per_Level: 0.075
@@ -311,7 +311,7 @@ World_Overrides:
             Base_Multiplier: 1.0
             Per_Level: 0.05
           Defense:
-            At_Negative_Max_Difference: 0.275
+            At_Negative_Max_Difference: 0.3
             At_Positive_Max_Difference: 0.8
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.9
@@ -352,7 +352,7 @@ World_Overrides:
     Scaling:
       Health:
         Base_Multiplier: 3.0
-        Per_Level: 0.075
+        Per_Level: 0.1
       Damage:
         Base_Multiplier: 1.25
         Per_Level: 0.065
@@ -457,10 +457,10 @@ World_Overrides:
         Scaling:
           Health:
             Base_Multiplier: 2.0
-            Per_Level: 0.075
+            Per_Level: 0.1
           Damage:
             Base_Multiplier: 1.0
-            Per_Level: 0.07
+            Per_Level: 0.075
           Defense:
             At_Negative_Max_Difference: 0.45
             At_Positive_Max_Difference: 0.9
@@ -501,10 +501,10 @@ World_Overrides:
         Scaling:
           Health:
             Base_Multiplier: 2.0
-            Per_Level: 0.075
+            Per_Level: 0.1
           Damage:
             Base_Multiplier: 1.0
-            Per_Level: 0.07
+            Per_Level: 0.075
           Defense:
             At_Negative_Max_Difference: 0.45
             At_Positive_Max_Difference: 0.9
@@ -517,10 +517,10 @@ World_Overrides:
         Scaling:
           Health:
             Base_Multiplier: 1.0
-            Per_Level: 0.075
+            Per_Level: 0.1
           Damage:
             Base_Multiplier: 1.0
-            Per_Level: 0.07
+            Per_Level: 0.075
           Defense:
             At_Negative_Max_Difference: 0.45
             At_Positive_Max_Difference: 0.9
