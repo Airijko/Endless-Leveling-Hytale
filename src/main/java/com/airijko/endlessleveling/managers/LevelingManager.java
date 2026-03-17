@@ -526,10 +526,11 @@ public class LevelingManager {
                     withinAllowedRange = !blockedForBeingTooHigh;
                     diffForScaling = Math.min(diff, xpMaxDifference);
                 } else if (diff < -xpMaxDifference) {
-                    // If the mob is far above the player, clamp the diff for scaling instead of
-                    // zeroing XP so high-level mobs still award XP when over the Max_Difference.
+                    adjustedXp *= xpBelowRangeMultiplier;
+                    blockedForBeingTooLow = xpBelowRangeMultiplier <= 0.0;
+                    withinAllowedRange = !blockedForBeingTooLow;
+                    // Clamp diff used for scaling at the configured max gap.
                     diffForScaling = -xpMaxDifference;
-                    withinAllowedRange = true;
                 }
             }
             relativeDiff = diffForScaling;
