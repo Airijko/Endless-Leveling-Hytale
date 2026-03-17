@@ -22,6 +22,7 @@ import com.hypixel.hytale.server.core.inventory.transaction.ItemStackSlotTransac
 import com.hypixel.hytale.server.core.inventory.transaction.ItemStackTransaction;
 import com.hypixel.hytale.server.core.inventory.transaction.Transaction;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
+import com.hypixel.hytale.server.core.modules.entity.item.ItemComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.math.vector.Vector3d;
@@ -336,6 +337,68 @@ public class LuckDoubleDropSystem {
     }
 
     /**
+     * Applies mob-drop luck immediately when a spawned world item is matched to a
+     * recent mob death. This makes mob luck provenance deterministic and prevents
+     * non-mob inventory additions (manual drops, chest drops, player death drops)
+     * from consuming kill windows.
+     */
+    public void applyMobLuckToSpawnedDrop(@Nonnull UUID killerUuid, @Nonnull ItemComponent itemComponent) {
+        ItemStack currentStack = itemComponent.getItemStack();
+        if (currentStack == null || ItemStack.isEmpty(currentStack)) {
+            return;
+        }
+
+        // Always strip provenance metadata before the item reaches inventory so
+        // normal stack merging is preserved.
+        ItemStack sanitizedBase = currentStack.withMetadata(MOB_KILL_TAG_KEY, KILL_TAG_CODEC, null);
+
+        PlayerData playerData = playerDataManager.get(killerUuid);
+        if (playerData == null) {
+            itemComponent.setItemStack(sanitizedBase);
+            return;
+        }
+
+        double luckValue = passiveManager.getLuckValue(playerData);
+        if (luckValue <= 0.0D) {
+            itemComponent.setItemStack(sanitizedBase);
+            return;
+        }
+
+        if (!passiveManager.hasMobDropStack(killerUuid) || !passiveManager.consumeMobDropStack(killerUuid)) {
+            itemComponent.setItemStack(sanitizedBase);
+            LOGGER.atFine().log(
+                    "[MOB_LUCK] applyMobLuckToSpawnedDrop: killer=%s item=%s no mob-drop stack available; leaving base quantity",
+                    killerUuid, sanitizedBase.getItemId());
+            return;
+        }
+
+        int baseAmount = Math.max(1, sanitizedBase.getQuantity());
+        double clamped = Math.min(100.0D, Math.max(0.0D, luckValue));
+        double roll = ThreadLocalRandom.current().nextDouble(100.0D);
+        boolean success = roll < clamped;
+        String playerName = playerData.getPlayerName() == null || playerData.getPlayerName().isBlank()
+                ? killerUuid.toString()
+                : playerData.getPlayerName();
+
+        if (!success) {
+            itemComponent.setItemStack(sanitizedBase);
+            LOGGER.atFiner().log(
+                    "Luck double-drop failed for %s (chance=%.2f%% roll=%.2f | type=%s)",
+                    playerName, clamped, roll, DropType.MOB);
+            return;
+        }
+
+        ItemStack boosted = sanitizedBase.withQuantity(baseAmount * 2);
+        itemComponent.setItemStack(boosted);
+        passiveManager.notifyLuckDoubleDrop(playerData, formatDropName(sanitizedBase), baseAmount, baseAmount);
+        LOGGER.atFiner().log(
+                "Luck double-drop triggered for %s (chance=%.2f%% roll=%.2f | type=%s)",
+                playerName, clamped, roll, DropType.MOB);
+        LOGGER.atFiner().log("Luck double-drop applied to %s for %s: +%d",
+                playerName, sanitizedBase.getItemId(), baseAmount);
+    }
+
+    /**
      * Returns the killer UUID for a recently killed mob, or {@code null} if the mob
      * UUID is unknown or the kill entry has expired. Used by
      * {@link MobDropTaggingSystem} to tag dropped items.
@@ -561,59 +624,10 @@ public class LuckDoubleDropSystem {
             return Optional.empty();
         }
 
-        if (!passiveManager.hasMobDropStack(uuid)) {
-            LOGGER.atFine().log(
-                    "[MOB_LUCK] resolveDropType: player=%s has no mob drop window open; skipping mob luck for item=%s",
-                    uuid, stack.getItemId());
-            return Optional.empty();
-        }
-
-        if (isContainerBreakGuardActive(uuid)) {
-            LOGGER.atFine().log(
-                    "Luck double-drop blocked for %s: recent container break guard active (item=%s)",
-                    uuid, stack.getItemId());
-            return Optional.empty();
-        }
-
-        if (isRecentlyDroppedByAnyPlayer(stack)) {
-            LOGGER.atFine().log(
-                    "[MOB_LUCK] resolveDropType: blocked player-dropped item for player=%s item=%s",
-                    uuid, stack.getItemId());
-            return Optional.empty();
-        }
-
-        long killTimestamp = passiveManager.getLastMobKillMillis(uuid);
-        if (isItemStagedByAnyPlayer(stack, killTimestamp)) {
-            LOGGER.atFine().log(
-                    "[MOB_LUCK] resolveDropType: blocked pre-staged item for player=%s item=%s",
-                    uuid, stack.getItemId());
-            return Optional.empty();
-        }
-
-        // Strict gate: item must either carry the killer tag, or consume a
-        // killer-bound spawned-loot allowance registered from a death marker.
-        // This preserves mob-only provenance while tolerating metadata loss in
-        // merge transactions.
-        boolean hasMobTag = hasMobKillTag(uuid, stack);
-        boolean hasSpawnedAllowance = consumeSpawnedMobLootAllowance(uuid, stack, addedAmount);
-        if (!hasMobTag && !hasSpawnedAllowance) {
-            enqueueDeferredMobPickup(uuid, stack, addedAmount);
-            LOGGER.atFine().log(
-                    "[MOB_LUCK] resolveDropType: player=%s item=%s missing mob-kill tag and allowance; blocking now and queueing deferred replay",
-                    uuid, stack.getItemId());
-            return Optional.empty();
-        }
-        if (!hasMobTag && hasSpawnedAllowance) {
-            LOGGER.atFine().log(
-                    "[MOB_LUCK] resolveDropType: player=%s item=%s allowed via killer-bound spawned-loot allowance",
-                    uuid, stack.getItemId());
-        }
-
-        if (!passiveManager.consumeMobDropStack(uuid)) {
-            return Optional.empty();
-        }
-
-        return Optional.of(DropType.MOB);
+        // Mob-drop luck is resolved at world-item spawn time in
+        // MobDropTaggingSystem#onEntityAdded via applyMobLuckToSpawnedDrop().
+        // Inventory events should only drive ore luck.
+        return Optional.empty();
     }
 
     private void enqueueDeferredMobPickup(@Nonnull UUID playerUuid, @Nonnull ItemStack stack, int addedAmount) {

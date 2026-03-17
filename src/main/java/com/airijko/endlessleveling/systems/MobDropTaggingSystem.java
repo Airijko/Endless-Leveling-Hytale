@@ -46,23 +46,18 @@ public class MobDropTaggingSystem extends RefSystem<EntityStore> {
             return;
         }
 
-        boolean isPlayerDropped = luckDoubleDropSystem.isLikelyPlayerDropped(itemStack);
-        if (isPlayerDropped) {
+        UUID killerUuid = luckDoubleDropSystem.resolveKillerForSpawnedItem(ref, store, commandBuffer);
+        if (killerUuid == null) {
+            // Any spawned item not linked to a recent mob death is non-mob loot
+            // (player drop, chest/container, world systems, etc.) and must not
+            // be eligible for mob luck.
             ItemStack sanitized = itemStack.withMetadata(
                     LuckDoubleDropSystem.MOB_KILL_TAG_KEY,
                     LuckDoubleDropSystem.KILL_TAG_CODEC,
                     null);
             itemComponent.setItemStack(sanitized);
             LOGGER.atFine().log(
-                    "[MOB_LUCK] MobDropTaggingSystem: REJECTING player-dropped item itemRef=%d item=%s",
-                    ref.getIndex(), itemStack.getItemId());
-            return;
-        }
-
-        UUID killerUuid = luckDoubleDropSystem.resolveKillerForSpawnedItem(ref, store, commandBuffer);
-        if (killerUuid == null) {
-            LOGGER.atFine().log(
-                    "[MOB_LUCK] MobDropTaggingSystem: no death-marker found itemRef=%d item=%s reason=no_nearby_mob_death",
+                    "[MOB_LUCK] MobDropTaggingSystem: non-mob spawned item itemRef=%d item=%s reason=no_nearby_mob_death",
                     ref.getIndex(), itemStack.getItemId());
             return;
         }
@@ -73,7 +68,9 @@ public class MobDropTaggingSystem extends RefSystem<EntityStore> {
                 killerUuid.toString());
         itemComponent.setItemStack(tagged);
 
-        luckDoubleDropSystem.registerSpawnedMobLoot(killerUuid, tagged);
+        // Resolve mob luck at spawn-time only, then strip provenance metadata
+        // before players can pick up the stack.
+        luckDoubleDropSystem.applyMobLuckToSpawnedDrop(killerUuid, itemComponent);
 
         LOGGER.atFine().log("[MOB_LUCK] MobDropTaggingSystem: tagged spawned item=%s itemRef=%d killer=%s",
                 itemStack.getItemId(), ref.getIndex(), killerUuid);
