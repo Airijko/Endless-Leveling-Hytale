@@ -3,6 +3,7 @@ package com.airijko.endlessleveling.systems;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.augments.MobAugmentExecutor;
+import com.airijko.endlessleveling.augments.types.NestingDollAugment;
 import com.airijko.endlessleveling.augments.types.ProtectiveBubbleAugment;
 import com.airijko.endlessleveling.combat.CombatHookProcessor;
 import com.airijko.endlessleveling.data.PlayerData;
@@ -425,6 +426,18 @@ public class PlayerCombatSystem extends DamageEventSystem {
         if (targetPlayer != null && targetPlayer.isValid() && targetStats != null && augmentExecutor != null) {
             PlayerData defenderData = playerDataManager.get(targetPlayer.getUuid());
             if (defenderData != null) {
+                float afterNestingImmunity = augmentExecutor.applySpecificOnDamageTaken(defenderData,
+                        targetRef,
+                        attackerRef,
+                        commandBuffer,
+                        targetStats,
+                        (float) trueDamageAmount,
+                        NestingDollAugment.ID);
+                trueDamageAmount = Math.max(0.0D, afterNestingImmunity);
+                if (trueDamageAmount <= 0.0D) {
+                    return 0.0f;
+                }
+
                 float afterBubble = augmentExecutor.applySpecificOnDamageTaken(defenderData,
                         targetRef,
                         attackerRef,
