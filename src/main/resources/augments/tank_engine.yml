@@ -10,5 +10,6 @@ passives:
     max_health_multiplier_at_max_stacks: 2.0 # 2.0 means 2x max HP at full stacks (set 1.75 for 1.75x)
     percent_max_health_per_stack: 0.04 # legacy fallback when max_health_multiplier_at_max_stacks is not set
     max_stacks: 25
-    duration_per_stack: 10 # seconds
+    duration: 8 # seconds before stacks begin decaying
+    decay_per_second: 5 # stacks lost per second after duration expires
     exclude_flat_from_percent_scaling: true # flat HP does not contribute to % scaling

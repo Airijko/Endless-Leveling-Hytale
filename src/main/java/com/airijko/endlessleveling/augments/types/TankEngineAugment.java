@@ -28,7 +28,8 @@ public final class TankEngineAugment extends YamlAugment
     private final double percentMaxHealthPerStack;
     private final double maxHealthMultiplierAtMaxStacks;
     private final int maxStacks;
-    private final long durationPerStackMillis;
+    private final long durationMillis;
+    private final double decayPerSecond;
     private final boolean excludeFlatFromPercentScaling;
 
     public TankEngineAugment(AugmentDefinition definition) {
@@ -42,8 +43,9 @@ public final class TankEngineAugment extends YamlAugment
         this.maxHealthMultiplierAtMaxStacks = Math.max(0.0D,
                 AugmentValueReader.getDouble(stacking, "max_health_multiplier_at_max_stacks", 0.0D));
         this.maxStacks = Math.max(1, AugmentValueReader.getInt(stacking, "max_stacks", 1));
-        this.durationPerStackMillis = AugmentUtils
-                .secondsToMillis(AugmentValueReader.getDouble(stacking, "duration_per_stack", 0.0D));
+        this.durationMillis = AugmentUtils
+                .secondsToMillis(AugmentValueReader.getDouble(stacking, "duration", 0.0D));
+        this.decayPerSecond = Math.max(0.0D, AugmentValueReader.getDouble(stacking, "decay_per_second", 0.0D));
         this.excludeFlatFromPercentScaling = AugmentValueReader.getBoolean(stacking,
                 "exclude_flat_from_percent_scaling",
                 true);
@@ -79,14 +81,19 @@ public final class TankEngineAugment extends YamlAugment
         var state = runtime.getState(ID);
         long now = System.currentTimeMillis();
 
-        if (durationPerStackMillis > 0L && state.getStacks() > 0) {
-            long anchor = state.getLastProc();
-            if (anchor > 0L && now > anchor) {
-                long elapsed = now - anchor;
-                int decay = (int) (elapsed / durationPerStackMillis);
+        if (durationMillis > 0L && decayPerSecond > 0.0D && state.getStacks() > 0) {
+            long expiresAt = state.getExpiresAt();
+            if (expiresAt > 0L && now > expiresAt) {
+                double elapsedSeconds = (now - expiresAt) / 1000.0D;
+                int decay = (int) Math.floor(elapsedSeconds * decayPerSecond);
                 if (decay > 0) {
-                    state.setStacks(Math.max(0, state.getStacks() - decay));
-                    state.setLastProc(anchor + (long) decay * durationPerStackMillis);
+                    int newStacks = Math.max(0, state.getStacks() - decay);
+                    state.setStacks(newStacks);
+                    if (newStacks == 0) {
+                        state.setExpiresAt(0L);
+                    } else {
+                        state.setExpiresAt(now); // sliding window: continue decay next tick
+                    }
                 }
             }
         }
@@ -176,6 +183,8 @@ public final class TankEngineAugment extends YamlAugment
                 }
             }
         }
-        state.setLastProc(System.currentTimeMillis());
+        if (durationMillis > 0L) {
+            state.setExpiresAt(System.currentTimeMillis() + durationMillis);
+        }
     }
 }
