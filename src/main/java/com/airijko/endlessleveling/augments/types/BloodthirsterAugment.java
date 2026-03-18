@@ -8,21 +8,37 @@ import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
 import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.util.EntityRefUtil;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.math.vector.Vector3d;
+import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
 import com.hypixel.hytale.server.core.universe.world.SoundUtil;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import java.util.Map;
 
 public final class BloodthirsterAugment extends YamlAugment implements AugmentHooks.OnHitAugment {
     public static final String ID = "bloodthirster";
+    private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
     private static final int MODE_NONE = 0;
     private static final int MODE_HEALTHY = 1;
     private static final int MODE_WOUNDED = 2;
+    private static final String[] TRIGGER_VFX_IDS = new String[] {
+            "Sword_Signature_Dash_Effect",
+            "Sword_Signature_Dash_Trail",
+            "Sword_Signature_AoE",
+            "Sword_Signature_AoE2",
+            "Sword_Charged_Trail",
+            "Sword_Charged_Trail_Blade",
+            "Explosion_Small"
+    };
 
     // Placeholder SFX for testing — differentiate healthy/wounded sounds below later
     private static final String TRIGGER_SFX_HEALTHY = "SFX_Sword_T2_Signature_Part_2";
@@ -129,6 +145,7 @@ public final class BloodthirsterAugment extends YamlAugment implements AugmentHo
                     healthyBonusDamage);
             applyHealthySelfDamage(attackerStats, healthySelfDamagePercentOfCurrent);
             playTriggerSound(context, TRIGGER_SFX_HEALTHY);
+                playTriggerVfx(context);
             if (playerRef != null && playerRef.isValid()) {
                 AugmentUtils.sendAugmentMessage(playerRef,
                         String.format("%s activated! +%.0f%% damage (healthy state).",
@@ -140,6 +157,7 @@ public final class BloodthirsterAugment extends YamlAugment implements AugmentHo
         double healAmount = resolveWoundedHealing(context, hp);
         float healed = AugmentUtils.heal(attackerStats, healAmount);
         playTriggerSound(context, TRIGGER_SFX_WOUNDED);
+        playTriggerVfx(context);
         if (playerRef != null && playerRef.isValid()) {
             AugmentUtils.sendAugmentMessage(playerRef,
                     String.format("%s activated! Healed %.1f HP (wounded state).", getName(), healed));
@@ -167,6 +185,43 @@ public final class BloodthirsterAugment extends YamlAugment implements AugmentHo
             return;
         }
         SoundUtil.playSoundEvent3d(null, soundIndex, attackerTransform.getPosition(), attackerRef.getStore());
+    }
+
+    private void playTriggerVfx(AugmentHooks.HitContext context) {
+        if (context == null || context.getCommandBuffer() == null) {
+            LOGGER.atInfo().log("[BLOODTHIRSTER] VFX skipped: missing context/commandBuffer");
+            return;
+        }
+        Ref<EntityStore> targetRef = context.getTargetRef();
+        if (!EntityRefUtil.isUsable(targetRef)) {
+            LOGGER.atInfo().log("[BLOODTHIRSTER] VFX skipped: target ref unusable");
+            return;
+        }
+
+        TransformComponent targetTransform = EntityRefUtil.tryGetComponent(context.getCommandBuffer(),
+                targetRef,
+                TransformComponent.getComponentType());
+        if (targetTransform == null || targetTransform.getPosition() == null) {
+            LOGGER.atInfo().log("[BLOODTHIRSTER] VFX skipped: target transform/position missing");
+            return;
+        }
+
+        Vector3d targetPosition = targetTransform.getPosition();
+        LOGGER.atInfo().log("[BLOODTHIRSTER] VFX trigger at pos=(%.2f, %.2f, %.2f)",
+                targetPosition.getX(),
+                targetPosition.getY(),
+                targetPosition.getZ());
+
+        for (String vfxId : TRIGGER_VFX_IDS) {
+            try {
+                ParticleUtil.spawnParticleEffect(vfxId, targetPosition, targetRef.getStore());
+                LOGGER.atInfo().log("[BLOODTHIRSTER] VFX applied id=%s", vfxId);
+                return;
+            } catch (RuntimeException ex) {
+                LOGGER.atWarning().log("[BLOODTHIRSTER] VFX failed id=%s cause=%s", vfxId, ex.getMessage());
+            }
+        }
+        LOGGER.atWarning().log("[BLOODTHIRSTER] VFX failed: no candidate particle system could be spawned");
     }
 
     private double resolveWoundedHealing(AugmentHooks.HitContext context, EntityStatValue hp) {
