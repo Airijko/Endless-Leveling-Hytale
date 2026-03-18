@@ -44,6 +44,8 @@ import com.airijko.endlessleveling.managers.ConfigManager;
 public class MobLevelingManager {
 
     private static final double PLAYER_LEVEL_LOCK_RADIUS_BLOCKS = 40.0D;
+    private static final int PLAYER_LEVEL_MISSING = Integer.MIN_VALUE;
+    private static final int MAX_PLAYER_LEVEL_RESOLVE_ATTEMPTS = 3;
     private static final Query<EntityStore> ENTITY_QUERY = Query.any();
 
     private final Map<Integer, Integer> cachedPlayerDiffs = new ConcurrentHashMap<>();
@@ -439,6 +441,8 @@ public class MobLevelingManager {
                 case FIXED -> getFixedLevel(store, entityId, position);
                 case TIERS -> getTieredLevel(store, entityId, position);
             };
+        } catch (MissingPlayerLevelException strictFailure) {
+            throw strictFailure;
         } catch (Throwable t) {
             LOGGER.atWarning().log("MobLeveling: failed to resolve level via mode %s: %s", mode, t.toString());
             level = getFixedLevel(store, entityId, position);
@@ -567,6 +571,9 @@ public class MobLevelingManager {
         } catch (Throwable t) {
             LOGGER.atWarning().log("MobLeveling: failed to resolve level via mode %s: %s", mode, t.toString());
             level = getFixedLevel(store, entityId, mobPosition);
+        }
+        if (level <= 0) {
+            return -1;
         }
         return clampToConfiguredRange(level, store);
     }
@@ -1635,6 +1642,18 @@ public class MobLevelingManager {
         }
 
         int computed = computePlayerModeLevelFromNearestPlayer(store, mobPos, entityId);
+        if (computed == PLAYER_LEVEL_MISSING) {
+            if (resolveAttempts >= MAX_PLAYER_LEVEL_RESOLVE_ATTEMPTS) {
+                throw new MissingPlayerLevelException(String.format(
+                        Locale.ROOT,
+                        "MobLeveling: failed to resolve nearby player level after %d attempts (entity=%s, world=%s)",
+                        MAX_PLAYER_LEVEL_RESOLVE_ATTEMPTS,
+                        entityId,
+                        resolveWorldIdentifier(store)));
+            }
+            return -1;
+        }
+
         if (computed > 0) {
             return clampToConfiguredRange(computed, store);
         }
@@ -1655,6 +1674,9 @@ public class MobLevelingManager {
         }
 
         int nearestPlayerLevel = findNearestPlayerLevelWithinRadius(store, mobPos, radiusBlocks);
+        if (nearestPlayerLevel == PLAYER_LEVEL_MISSING) {
+            return PLAYER_LEVEL_MISSING;
+        }
         if (nearestPlayerLevel <= 0) {
             return -1;
         }
@@ -2497,7 +2519,12 @@ public class MobLevelingManager {
                 continue;
             }
             if (distSq < closestDistSq) {
-                int level = getPlayerLevel(playerRef.getUuid());
+                Integer level = getPlayerLevelOrNull(playerRef.getUuid());
+                if (level == null) {
+                    closestDistSq = distSq;
+                    bestLevel = PLAYER_LEVEL_MISSING;
+                    continue;
+                }
                 closestDistSq = distSq;
                 bestLevel = level;
             }
@@ -2574,13 +2601,30 @@ public class MobLevelingManager {
         return (dx * dx) + (dz * dz);
     }
 
-    private int getPlayerLevel(UUID uuid) {
-        if (uuid == null || playerDataManager == null)
-            return 1;
+    private Integer getPlayerLevelOrNull(UUID uuid) {
+        if (uuid == null || playerDataManager == null) {
+            return null;
+        }
+
         PlayerData data = playerDataManager.get(uuid);
-        if (data == null)
+        if (data == null) {
+            return null;
+        }
+
+        int level = data.getLevel();
+        if (level <= 0) {
+            return null;
+        }
+
+        return level;
+    }
+
+    private int getPlayerLevel(UUID uuid) {
+        Integer level = getPlayerLevelOrNull(uuid);
+        if (level == null) {
             return 1;
-        return Math.max(1, data.getLevel());
+        }
+        return Math.max(1, level);
     }
 
     public int getPlayerLevel(PlayerRef playerRef) {
@@ -2588,6 +2632,12 @@ public class MobLevelingManager {
             return 1;
         }
         return getPlayerLevel(playerRef.getUuid());
+    }
+
+    private static final class MissingPlayerLevelException extends IllegalStateException {
+        private MissingPlayerLevelException(String message) {
+            super(message);
+        }
     }
 
     /** Whether mob leveling is enabled (Mob_Leveling.Enabled) */

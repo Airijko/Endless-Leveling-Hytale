@@ -75,7 +75,7 @@ Mob_Leveling:
   Level_Source:
     Party_System:
       Enabled: true
-      Level_Calculation: "AVERAGE"
+      Level_Calculation: "MEDIAN"
       Dominant_Party_Resolution:
         Mode: "MOST_MEMBERS"
       Max_Internal_Level_Gap: 999
