@@ -15,8 +15,6 @@ java {
 
 def hytaleInstallPath = providers.gradleProperty('hytaleInstallPath')
         .orElse('C:/Users/jojoj/AppData/Roaming/Hytale/install/release/package/game/latest')
-def hytaleToolkitPath = providers.gradleProperty('hytaleToolkitPath')
-        .orElse('C:/Users/jojoj/AppData/Local/Hytale-Toolkit')
 
 repositories {
     mavenCentral()
