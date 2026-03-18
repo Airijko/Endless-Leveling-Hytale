@@ -4,6 +4,7 @@ import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.types.GlassCannonAugment;
+import com.airijko.endlessleveling.augments.types.NestingDollAugment;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.hypixel.hytale.component.ComponentAccessor;
@@ -41,6 +42,7 @@ public class PlayerAttributeManager {
     private static final String LEGACY_RACE_BASE_VITALITY_KEY = "EL_RACE_BASE_VITALITY";
     private static final String LEGACY_SKILL_BONUS_VITALITY_KEY = "SKILL_BONUS_VITALITY";
     private static final double DEFAULT_GLASS_CANNON_HEALTH_PENALTY = 0.20D;
+    private static final double DEFAULT_NESTING_DOLL_HEALTH_PENALTY = 1.0D / 3.0D;
     private static final double MAX_HEALTH_PENALTY = 0.95D;
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
@@ -126,6 +128,13 @@ public class PlayerAttributeManager {
             return false;
         }
 
+        // Do not rewrite LIFE_FORCE while the entity is in a dead/near-death
+        // state. This avoids stat-map correction churn interfering with combat
+        // death attribution during revive/low-hp transitions.
+        if (slot == AttributeSlot.LIFE_FORCE && current.get() <= 1.0f) {
+            return true;
+        }
+
         float previousMax = current.getMax();
         float previousValue = current.get();
 
@@ -199,17 +208,30 @@ public class PlayerAttributeManager {
         float effectiveSkillBonus = skillBonus;
 
         if (slot == AttributeSlot.LIFE_FORCE) {
-            double penalty = resolveGlassCannonHealthPenalty(playerData);
-            if (penalty > 0.0D) {
-                float multiplier = (float) Math.max(0.0D, 1.0D - penalty);
+            double multiplier = 1.0D;
+            double glassCannonPenalty = resolveGlassCannonHealthPenalty(playerData);
+            if (glassCannonPenalty > 0.0D) {
+                multiplier *= Math.max(0.0D, 1.0D - glassCannonPenalty);
+            }
+
+            double nestingDollPenalty = resolveNestingDollHealthPenalty(playerData);
+            if (nestingDollPenalty > 0.0D) {
+                multiplier *= Math.max(0.0D, 1.0D - nestingDollPenalty);
+            }
+
+            if (multiplier < 0.9999D) {
+                float scaledMultiplier = (float) Math.max(0.0D, multiplier);
                 // The EndlessLeveling-owned LIFE_FORCE target is (raceBase + skillBonus).
-                // Convert that target back into an additive modifier against baseline's
-                // built-in vanilla base so external non-mod health sources stay untouched.
+                // Keep the race contribution intact when possible and consume the
+                // penalty from skill-owned health first. This avoids surfacing a
+                // giant negative standalone modifier or collapsing everything into
+                // the race bucket, while still leaving external non-mod health
+                // sources untouched.
                 float modOwnedTarget = Math.max(0.0f, raceBase + skillBonus);
-                float penalizedTarget = modOwnedTarget * multiplier;
-                float combinedModifier = penalizedTarget - vanillaBase;
-                effectiveRaceDelta = combinedModifier;
-                effectiveSkillBonus = 0.0f;
+                float penalizedTarget = modOwnedTarget * scaledMultiplier;
+                float adjustedRaceBase = Math.min(Math.max(0.0f, raceBase), penalizedTarget);
+                effectiveRaceDelta = adjustedRaceBase - vanillaBase;
+                effectiveSkillBonus = Math.max(0.0f, penalizedTarget - adjustedRaceBase);
             }
         }
 
@@ -237,6 +259,44 @@ public class PlayerAttributeManager {
         double penalty = Math.abs(
                 AugmentValueReader.getDouble(healthPenalty, "max_health_percent", DEFAULT_GLASS_CANNON_HEALTH_PENALTY));
         return Math.min(MAX_HEALTH_PENALTY, Math.max(0.0D, penalty));
+    }
+
+    private double resolveNestingDollHealthPenalty(@Nonnull PlayerData playerData) {
+        if (!hasSelectedAugment(playerData, NestingDollAugment.ID)) {
+            return 0.0D;
+        }
+
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null || plugin.getAugmentRuntimeManager() == null || playerData.getUuid() == null) {
+            return 0.0D;
+        }
+
+        var state = plugin.getAugmentRuntimeManager()
+                .getRuntimeState(playerData.getUuid())
+                .getState(NestingDollAugment.ID);
+        if (state == null || state.getStacks() <= 0) {
+            return 0.0D;
+        }
+
+        double perDeathPenalty = DEFAULT_NESTING_DOLL_HEALTH_PENALTY;
+        int maxRevives = 1;
+        if (plugin.getAugmentManager() != null) {
+            AugmentDefinition definition = plugin.getAugmentManager().getAugment(NestingDollAugment.ID);
+            if (definition != null) {
+                Map<String, Object> passives = definition.getPassives();
+                Map<String, Object> deathStacks = AugmentValueReader.getMap(passives, "death_stacks");
+                int maxDeaths = Math.max(1, AugmentValueReader.getInt(deathStacks, "max_deaths", 1));
+                maxRevives = Math.max(0, maxDeaths - 1);
+                perDeathPenalty = Math.max(0.0D,
+                        AugmentValueReader.getDouble(deathStacks,
+                                "health_penalty_per_death",
+                                DEFAULT_NESTING_DOLL_HEALTH_PENALTY));
+            }
+        }
+
+        int safeStacks = Math.max(0, Math.min(maxRevives, state.getStacks()));
+        double totalPenalty = perDeathPenalty * safeStacks;
+        return Math.min(MAX_HEALTH_PENALTY, Math.max(0.0D, totalPenalty));
     }
 
     private boolean hasSelectedAugment(@Nonnull PlayerData playerData, @Nonnull String augmentId) {

@@ -28,8 +28,10 @@ import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
+import com.hypixel.hytale.server.core.modules.entity.damage.DamageCause;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
+import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
@@ -296,8 +298,39 @@ public class PlayerDefenseSystem extends DamageEventSystem {
 			return 0.0f;
 		}
 
+		if (applied >= current - 0.0001f) {
+			markLethalTrueDamageKill(attackerRef, defenderRef, commandBuffer, statMap);
+			return applied;
+		}
+
 		statMap.setStatValue(DefaultEntityStatTypes.getHealth(), Math.max(0.0f, current - applied));
 		return applied;
+	}
+
+	private void markLethalTrueDamageKill(Ref<EntityStore> attackerRef,
+			Ref<EntityStore> defenderRef,
+			CommandBuffer<EntityStore> commandBuffer,
+			EntityStatMap statMap) {
+		if (defenderRef == null || commandBuffer == null || statMap == null) {
+			return;
+		}
+
+		if (commandBuffer.getComponent(defenderRef, DeathComponent.getComponentType()) == null) {
+			Damage killDamage = createPhysicalDamage(attackerRef, Float.MAX_VALUE);
+			DeathComponent.tryAddComponent(commandBuffer, defenderRef, killDamage);
+		}
+
+		statMap.setStatValue(DefaultEntityStatTypes.getHealth(), 0.0f);
+	}
+
+	private Damage createPhysicalDamage(Ref<EntityStore> sourceRef, float amount) {
+		if (EntityRefUtil.isUsable(sourceRef)) {
+			try {
+				return new Damage(new Damage.EntitySource(sourceRef), DamageCause.PHYSICAL, amount);
+			} catch (IllegalStateException ignored) {
+			}
+		}
+		return new Damage(Damage.NULL_SOURCE, DamageCause.PHYSICAL, amount);
 	}
 
 	private UUID resolveEntityUuid(Ref<EntityStore> ref,

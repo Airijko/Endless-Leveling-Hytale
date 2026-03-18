@@ -7,10 +7,14 @@ import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentState;
 import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
+import com.airijko.endlessleveling.player.PlayerData;
+import com.hypixel.hytale.component.CommandBuffer;
+import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import java.util.Map;
 
@@ -18,6 +22,8 @@ public final class NestingDollAugment extends YamlAugment
         implements AugmentHooks.OnDamageTakenAugment, AugmentHooks.OnLowHpAugment, AugmentHooks.PassiveStatAugment {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     public static final String ID = "nesting_doll";
+    private static final String MAX_HP_PENALTY_KEY = "EL_" + ID + "_max_hp_penalty";
+    private static final String LEGACY_MAX_HP_PENALTY_KEY = ID + "_max_hp_penalty";
 
     // Short burst immunity so one lethal cluster only consumes one revive.
     private static final long STACK_GRANT_IMMUNITY_MS = 250L;
@@ -85,8 +91,16 @@ public final class NestingDollAugment extends YamlAugment
             state.setLastProc(now);
             state.setExpiresAt(restoreAfterMillis > 0L ? now + restoreAfterMillis : 0L);
 
+            syncMaxHealthPenalty(context.getPlayerData(),
+                    context.getDefenderRef(),
+                    context.getCommandBuffer(),
+                    context.getStatMap(),
+                    state);
+            EntityStatValue updatedHp = context.getStatMap().get(DefaultEntityStatTypes.getHealth());
+            float healedTo = updatedHp != null ? Math.max(1.0f, updatedHp.getMax()) : 1.0f;
+
             AugmentUtils.applyUnkillableThreshold(context.getStatMap(), context.getIncomingDamage(), 1.0f, 1.0f);
-            context.getStatMap().setStatValue(DefaultEntityStatTypes.getHealth(), Math.max(1.0f, hp.getMax()));
+            context.getStatMap().setStatValue(DefaultEntityStatTypes.getHealth(), healedTo);
 
             LOGGER.atFine().log(
                     "[NestingDoll] Revive triggered: player=%s stacks=%d/%d incoming=%.2f healedTo=%.2f",
@@ -94,7 +108,7 @@ public final class NestingDollAugment extends YamlAugment
                     newStacks,
                     maxRevives,
                     context.getIncomingDamage(),
-                    Math.max(1.0f, hp.getMax()));
+                    healedTo);
 
             var playerRef = AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getDefenderRef());
             if (playerRef != null && playerRef.isValid()) {
@@ -121,7 +135,6 @@ public final class NestingDollAugment extends YamlAugment
                     context.getRuntimeState().getPlayerId(),
                     state.getStacks());
             clearState(state);
-            return;
         }
 
         EntityStatValue hp = context.getStatMap().get(DefaultEntityStatTypes.getHealth());
@@ -130,31 +143,26 @@ public final class NestingDollAugment extends YamlAugment
         }
 
         if (hp.get() <= 0f && state.getStacks() > 0) {
-            long now = System.currentTimeMillis();
-
-            // Fallback for lethal paths that bypass onLowHp; consume remaining charges
-            // naturally, then die when exhausted.
-            if (state.getStacks() < maxRevives && !isWithinStackGrantImmunity(state, now)) {
-                int newStacks = state.getStacks() + 1;
-                state.setStacks(newStacks);
-                state.setLastProc(now);
-                state.setExpiresAt(restoreAfterMillis > 0L ? now + restoreAfterMillis : 0L);
-
-                context.getStatMap().setStatValue(DefaultEntityStatTypes.getHealth(), Math.max(1.0f, hp.getMax()));
-                LOGGER.atFine().log(
-                        "[NestingDoll] Passive fallback revive: player=%s stacks=%d/%d restoredHp=%.2f",
-                        context.getRuntimeState().getPlayerId(),
-                        newStacks,
-                        maxRevives,
-                        Math.max(1.0f, hp.getMax()));
-                return;
-            }
-
             LOGGER.atFine().log("[NestingDoll] Passive death reset: player=%s stacks=%d hp=%.2f",
                     context.getRuntimeState().getPlayerId(),
                     state.getStacks(),
                     hp.get());
             clearState(state);
+            return;
+        }
+
+        if (state.getStacks() == 0 && state.getStoredValue() == 0.0D && state.getLastProc() == 0L
+                && state.getExpiresAt() == 0L) {
+            state.setStoredValue(-1.0D);
+        }
+
+        syncMaxHealthPenalty(context.getPlayerData(),
+                context.getPlayerRef(),
+                context.getCommandBuffer(),
+                context.getStatMap(),
+                state);
+        hp = context.getStatMap().get(DefaultEntityStatTypes.getHealth());
+        if (hp == null || hp.getMax() <= 0f) {
             return;
         }
 
@@ -206,6 +214,38 @@ public final class NestingDollAugment extends YamlAugment
             return;
         }
         state.clear();
+        // Force one safe sync pass after respawn/out-of-combat to remove any
+        // lingering max-HP penalty modifier without doing per-tick churn.
+        state.setStoredValue(-1.0D);
+    }
+
+    private void syncMaxHealthPenalty(PlayerData playerData,
+            Ref<EntityStore> playerRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            EntityStatMap statMap,
+            AugmentState state) {
+        if (statMap == null || state == null || playerData == null || playerRef == null || commandBuffer == null) {
+            return;
+        }
+
+        int targetStacks = Math.max(0, Math.min(maxRevives, state.getStacks()));
+        int appliedStacks = (int) Math.round(state.getStoredValue());
+        if (appliedStacks == targetStacks) {
+            return;
+        }
+
+        statMap.removeModifier(DefaultEntityStatTypes.getHealth(), MAX_HP_PENALTY_KEY);
+        statMap.removeModifier(DefaultEntityStatTypes.getHealth(), LEGACY_MAX_HP_PENALTY_KEY);
+
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        var skillManager = plugin != null ? plugin.getSkillManager() : null;
+        if (skillManager != null) {
+            skillManager.applyHealthModifiers(playerRef, commandBuffer, playerData);
+        } else {
+            statMap.update();
+        }
+
+        state.setStoredValue(targetStacks);
     }
 
     private boolean isWithinStackGrantImmunity(AugmentState state, long nowMillis) {

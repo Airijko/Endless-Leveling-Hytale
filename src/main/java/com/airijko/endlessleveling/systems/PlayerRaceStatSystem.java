@@ -10,6 +10,9 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.tick.TickingSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
+import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
+import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
@@ -91,6 +94,12 @@ public class PlayerRaceStatSystem extends TickingSystem<EntityStore> {
                     playerData = playerDataManager.loadOrCreate(uuid, playerRef.getUsername());
                 }
                 if (playerData == null) {
+                    continue;
+                }
+
+                EntityStatMap statMap = commandBuffer.getComponent(ref, EntityStatMap.getComponentType());
+                EntityStatValue hp = statMap == null ? null : statMap.get(DefaultEntityStatTypes.getHealth());
+                if (hp != null && hp.get() <= 1.0f) {
                     continue;
                 }
 
