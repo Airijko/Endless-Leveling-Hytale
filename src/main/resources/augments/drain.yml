@@ -3,6 +3,7 @@ name: "Drain"
 tier: ELITE
 description: "On hit, deal bonus damage based on the target's current health."
 category: ON_HIT
+enabled: true
 
 passives:
   bonus_damage_on_hit:

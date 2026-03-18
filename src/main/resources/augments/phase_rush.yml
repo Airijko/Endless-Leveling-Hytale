@@ -3,6 +3,7 @@ name: "Phase Rush"
 tier: MYTHIC
 description: "Rapid attacks accelerate your combat tempo and convert speed into power."
 category: ON_HIT
+enabled: true
 
 passives:
   buffs:

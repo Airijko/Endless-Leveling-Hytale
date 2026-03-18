@@ -3,6 +3,7 @@ name: "Magic Blade"
 tier: ELITE
 description: "Your magical power empowers your weapons, converting Sorcery into weapon damage and empowering swords."
 category: PASSIVE_STAT
+enabled: true
 
 passives:
   sorcery_weapon_conversion:

@@ -3,6 +3,7 @@ name: "Glass Cannon"
 tier: ELITE
 description: "Sacrifice durability for overwhelming speed and damage."
 category: PASSIVE_STAT
+enabled: true
 
 passives:
   health_penalty:

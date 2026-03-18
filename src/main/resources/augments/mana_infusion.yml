@@ -3,6 +3,7 @@ name: "Mana Infusion"
 tier: ELITE
 description: "Gain bonus Sorcery equal to a portion of your current Mana."
 category: MAGIC_STAT
+enabled: true
 
 passives:
   buffs:

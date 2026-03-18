@@ -3,6 +3,7 @@ name: "Absolute Focus"
 tier: ELITE
 description: "Periodically guarantee a critical strike. Excess critical chance is converted into bonus damage."
 category: PASSIVE_STAT
+enabled: true
 
 passives:
   guaranteed_crit:

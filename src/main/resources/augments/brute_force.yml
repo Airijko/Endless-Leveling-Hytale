@@ -3,6 +3,7 @@ name: "Brute Force"
 tier: ELITE
 description: "Trade all critical potential for overwhelming raw power."
 category: PASSIVE_STAT
+enabled: true
 
 passives:
   brute_force:

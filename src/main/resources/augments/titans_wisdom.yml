@@ -3,6 +3,7 @@ name: "Titan's Wisdom"
 tier: ELITE
 description: "Gain Sorcery based on your total max Health, but lose some Haste."
 category: PASSIVE_STAT
+enabled: true
 
 passives:
   buffs:

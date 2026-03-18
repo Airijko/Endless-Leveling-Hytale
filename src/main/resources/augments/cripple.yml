@@ -3,6 +3,7 @@ name: "Cripple"
 tier: ELITE
 description: "On hit, stun enemies for 2 seconds on cooldown and gain a large health bonus."
 category: ON_HIT
+enabled: true
 
 passives:
   on_hit:

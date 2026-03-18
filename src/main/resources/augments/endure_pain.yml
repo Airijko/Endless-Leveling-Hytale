@@ -3,6 +3,7 @@ name: "Endure Pain"
 tier: ELITE
 description: "A portion of incoming damage is deferred as Bleed and applied over time. Killing a target cleanses all Bleed and heals you for a percentage of the execute damage dealt."
 category: ON_DAMAGE_TAKEN
+enabled: true
 
 passives:
   heal_over_time:

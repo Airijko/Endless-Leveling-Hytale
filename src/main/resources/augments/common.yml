@@ -4,6 +4,7 @@ tier: COMMON
 stackable: true
 description: "Small raw boosts to your core stats."
 category: COMMON_STAT
+enabled: true
 
 passives:
   buffs:

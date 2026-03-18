@@ -3,6 +3,7 @@ name: "Predator"
 tier: ELITE
 description: "Kills grant stacking Haste and Strength while a Defense penalty persists until fully stacked."
 category: ON_KILL
+enabled: true
 
 passives:
   buffs:

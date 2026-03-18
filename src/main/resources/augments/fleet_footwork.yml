@@ -3,6 +3,7 @@ name: "Fleet Footwork"
 tier: ELITE
 description: "Periodically empower your next strike to heal you and grant a burst of speed."
 category: ON_HIT
+enabled: true
 
 passives:
   empowered_hit:

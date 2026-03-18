@@ -3,6 +3,7 @@ name: "Giant Slayer"
 tier: MYTHIC
 description: "Deal more damage to enemies with higher health than you, scaling with the health gap."
 category: ON_HIT
+enabled: true
 
 passives:
   bonus_damage_vs_hp_ratio:

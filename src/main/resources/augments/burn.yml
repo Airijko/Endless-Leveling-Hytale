@@ -3,6 +3,7 @@ name: "Burn"
 tier: ELITE
 description: "Your presence scorches nearby enemies, dealing damage over time that scales with your maximum health and expanding in size as you grow stronger."
 category: ON_DAMAGE_TAKEN
+enabled: true
 
 passives:
   aura_burn:

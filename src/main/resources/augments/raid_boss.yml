@@ -3,6 +3,7 @@ name: "Raid Boss"
 tier: MYTHIC
 description: "Tower over the battlefield with massive vitality and crushing damage."
 category: PASSIVE_STAT
+enabled: true
 
 passives:
   buffs:

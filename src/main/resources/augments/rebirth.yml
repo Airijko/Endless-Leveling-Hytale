@@ -3,6 +3,7 @@ name: "Rebirth"
 tier: ELITE
 description: "Cheat death at low health with a large heal on a long cooldown."
 category: ON_LOW_HP
+enabled: true
 
 passives:
   heal_on_trigger:

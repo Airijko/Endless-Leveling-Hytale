@@ -3,6 +3,7 @@ name: "Conqueror"
 tier: MYTHIC
 description: "Sustained combat builds momentum, increasing your damage. At full stacks your attacks pierce defenses with true damage."
 category: ON_HIT
+enabled: true
 
 passives:
   buffs:

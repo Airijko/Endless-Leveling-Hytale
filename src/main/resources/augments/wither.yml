@@ -3,6 +3,7 @@ name: "Wither"
 tier: ELITE
 description: "Inflict a lingering wither that slows targets and deals a percent of their max health as damage each second."
 category: ON_HIT
+enabled: true
 
 passives:
   wither:

@@ -3,6 +3,7 @@ name: "Protective Bubble"
 tier: ELITE
 description: "Negate one incoming attack and become briefly immune when the bubble pops."
 category: ON_DAMAGE_TAKEN
+enabled: true
 
 passives:
   immunity_bubble:

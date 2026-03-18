@@ -3,6 +3,7 @@ name: "Vampirism"
 tier: ELITE
 description: "Steal life from every hit."
 category: LIFESTEAL
+enabled: true
 
 passives:
   buffs:

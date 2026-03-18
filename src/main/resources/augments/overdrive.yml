@@ -3,6 +3,7 @@ name: "Overdrive"
 tier: ELITE
 description: "Build Haste and Critical Damage with consecutive hits; lose momentum when you take damage."
 category: ON_HIT
+enabled: true
 
 passives:
   buffs:

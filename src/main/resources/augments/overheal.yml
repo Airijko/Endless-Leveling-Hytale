@@ -3,6 +3,7 @@ name: "Overheal"
 tier: ELITE
 description: "Any healing beyond max health is stored as a temporary decaying shield. Also grants Life Steal."
 category: ON_HIT
+enabled: true
 
 passives:
   overheal_shield:

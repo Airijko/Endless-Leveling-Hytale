@@ -3,6 +3,7 @@ name: "Four Leaf Clover"
 tier: ELITE
 description: "Adds luck to your passive total (affecting double-drops and XP gain scaling)."
 category: PASSIVE_STAT
+enabled: true
 
 passives:
   buffs:

@@ -3,6 +3,7 @@ name: "Frozen Domain"
 tier: ELITE
 description: "Create a freezing aura that slows nearby enemies, steals part of that speed, and fortifies your life force."
 category: ON_DAMAGE_TAKEN
+enabled: true
 
 passives:
   aura_frozen_domain:

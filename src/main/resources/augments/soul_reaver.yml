@@ -3,6 +3,7 @@ name: "Soul Reaver"
 tier: ELITE
 description: "Slain enemies heal you based on their max health, gated by a short cooldown."
 category: ON_KILL
+enabled: true
 
 passives:
   heal_on_kill:

@@ -3,6 +3,7 @@ name: "Goliath"
 tier: ELITE
 description: "Become a towering presence with greater vitality and empowered combat stats."
 category: PASSIVE_STAT
+enabled: true
 
 passives:
   buffs:

@@ -3,6 +3,7 @@ name: "Supersonic"
 tier: ELITE
 description: "Trade Strength for blazing Haste."
 category: PASSIVE_STAT
+enabled: true
 
 passives:
   buffs:

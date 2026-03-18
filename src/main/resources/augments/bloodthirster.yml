@@ -3,6 +3,7 @@ name: "Bloodthirster"
 tier: MYTHIC
 description: "Your strikes grow stronger while healthy and sustain you when wounded."
 category: LIFESTEAL
+enabled: true
 
 passives:
   hit_counter: 3

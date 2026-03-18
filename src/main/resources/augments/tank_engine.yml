@@ -3,6 +3,7 @@ name: "Tank Engine"
 tier: MYTHIC
 description: "Sustained combat massively increases your maximum health."
 category: PASSIVE_STAT
+enabled: true
 
 passives:
   stacking_health:

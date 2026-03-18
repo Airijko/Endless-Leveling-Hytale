@@ -3,6 +3,7 @@ name: "Bailout"
 tier: ELITE
 description: "Cheat death briefly and rapidly decay unless you secure a kill."
 category: ON_DEATH
+enabled: true
 
 passives:
   death_prevention:

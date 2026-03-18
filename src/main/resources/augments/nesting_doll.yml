@@ -3,6 +3,7 @@ name: "Nesting Doll"
 tier: MYTHIC
 description: "Each death weakens you temporarily, but you can revive multiple times before truly falling."
 category: ON_DEATH
+enabled: true
 
 passives:
   death_stacks:

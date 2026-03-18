@@ -3,6 +3,7 @@ name: "Executioner"
 tier: ELITE
 description: "Executes low-health targets with a heavy strike on a cooldown."
 category: ON_HIT
+enabled: true
 
 passives:
   bonus_damage_on_hit:

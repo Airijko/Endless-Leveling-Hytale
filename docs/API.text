@@ -72,6 +72,10 @@ double totalHealth = life.total();
         String line = String.format("HP: base %.0f + skill %.0f + gear %.0f = %.0f",
                         life.raceBase(), life.skillBonus(), life.externalBonus(), life.total());
 
+  Convenience overload: no external bonus
+    var cleanLife = api.getAttributeBreakdown(uuid, SkillAttributeType.LIFE_FORCE, 0.0);
+    // Equivalent to externalBonus = 0. Use this when you only need EL's internal race + skill total.
+
 - Per-point config values (from config.yml)
     double perPointFlow = api.getSkillAttributeConfigValue(SkillAttributeType.FLOW);
     double perPointDefense = api.getSkillAttributeConfigValue(SkillAttributeType.DEFENSE);
@@ -81,10 +85,18 @@ double totalHealth = life.total();
 - Level / XP helpers
     int level = api.getPlayerLevel(uuid);
     double xp = api.getPlayerXp(uuid);
+    int prestige = api.getPlayerPrestigeLevel(uuid);
     int cap = api.getLevelCap();
+    int personalCap = api.getLevelCap(uuid);
     double xpToNext = api.getXpForNextLevel(level);
+    double personalXpToNext = api.getXpForNextLevel(uuid, level);
     Example: progress bar fraction
         double pct = xpToNext == Double.POSITIVE_INFINITY ? 1.0 : Math.min(1.0, xp / xpToNext);
+    Example: prestige-aware UI
+        String levelLabel = "Level " + level + " / " + personalCap + " (Prestige " + prestige + ")";
+        double pctPrestigeAware = personalXpToNext == Double.POSITIVE_INFINITY
+                ? 1.0
+                : Math.min(1.0, xp / personalXpToNext);
 
 - IDs
     String raceId = api.getRaceId(uuid);
@@ -107,6 +119,7 @@ double totalHealth = life.total();
     api.removeMobAreaLevelOverride("starter-dungeon");
     api.clearMobAreaLevelOverrides();
     api.clearMobEntityLevelOverride(bossRef.getIndex());
+    api.clearAllMobEntityLevelOverrides();
 
     // Dungeon example (radius + boss)
     // - Dungeon trash between 12 and 16 inside radius 80 at (512, 512) in world "dungeon_world"
@@ -122,6 +135,21 @@ double totalHealth = life.total();
     // Mob kill sharing: pass the total mob XP, it is divided evenly among nearby party members (includes killer)
     // Only members in the same world within 30 blocks get a share
     api.grantSharedXpInRange(killerUuid, mobXpTotal, 30.0);
+
+- Definition lookups and catalogs
+    // Resolve individual definitions by id
+    RaceDefinition race = api.getRaceDefinition("stormborn");
+    CharacterClassDefinition clazz = api.getClassDefinition("tempestblade");
+    AugmentDefinition augment = api.getAugmentDefinition("crit_mastery");
+
+    // Enumerate everything currently loaded, including API-registered content
+    Collection<RaceDefinition> races = api.getRaceDefinitions();
+    Collection<CharacterClassDefinition> classes = api.getClassDefinitions();
+
+    Example: build a selector list for your UI
+        for (RaceDefinition def : api.getRaceDefinitions()) {
+            addOption(def.getId(), def.getName());
+        }
 
 - Augment registration for integrations
     import com.airijko.endlessleveling.augments.Augment;
@@ -146,6 +174,9 @@ double totalHealth = life.total();
 
     // Override an existing built-in or file-backed augment id
     boolean replaced = api.registerAugment(definition, MyCritMasteryAugment::new, true);
+
+    // Read back the definition that EL currently recognizes
+    AugmentDefinition current = api.getAugmentDefinition("crit_mastery");
 
     // Cleanup on your plugin shutdown / reload
     api.unregisterAugment("crit_mastery");
@@ -199,6 +230,10 @@ double totalHealth = life.total();
         // Read back definitions that EL currently recognizes
         RaceDefinition race = api.getRaceDefinition("stormborn");
         CharacterClassDefinition clazz = api.getClassDefinition("tempestblade");
+
+        // Enumerate loaded definitions for menus or sync checks
+        Collection<RaceDefinition> allRaces = api.getRaceDefinitions();
+        Collection<CharacterClassDefinition> allClasses = api.getClassDefinitions();
 
         // Remove on your plugin shutdown / reload
         api.unregisterRace("stormborn");
@@ -262,6 +297,12 @@ Notes:
 - Missing data returns safe defaults (0, null, or your fallback).
 - All calls are read-only; safe from the normal server thread.
 - Cache what you need if calling per-tick; values are cheap but avoid excessive map lookups.
+- Prefer player-specific progression overloads when prestige matters:
+    getLevelCap(uuid)
+    getXpForNextLevel(uuid, level)
+- getLevelCap(uuid) falls back to the global configured cap when player data is unavailable.
+- getAttributeBreakdown(uuid, type, fallback) is the simplest way to query clean race + skill totals with no third-party flat bonus.
+- getRaceDefinitions() / getClassDefinitions() return snapshot copies, so you can iterate safely without mutating EndlessLeveling internals.
 
 5) Calculation cheat sheet
 ---------------------------
@@ -338,6 +379,12 @@ Notes:
 - XP to next level
     xpNeeded(level) = baseXp * ((ln(level) + 1) * sqrt(level))^multiplier
     baseXp, multiplier from config.yml; helper: api.getXpForNextLevel(level)
+
+- Prestige-aware progression helpers
+    prestige = api.getPlayerPrestigeLevel(uuid)
+    cap = api.getLevelCap(uuid)
+    xpNeeded = api.getXpForNextLevel(uuid, level)
+    Use these overloads when your mod shows progression for players whose cap or XP curve changes with prestige.
 
 - Level cap
     api.getLevelCap() returns the configured maximum; XP beyond cap is ignored.

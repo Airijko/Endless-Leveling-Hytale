@@ -3,6 +3,7 @@ name: "Fortress"
 tier: ELITE
 description: "At the brink of death you gain a brief shielded immobile phase, then a follow-up window of protection and empowered stats."
 category: ON_LOW_HP
+enabled: true
 
 passives:
   shield_phase:

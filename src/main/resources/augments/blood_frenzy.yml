@@ -3,6 +3,7 @@ name: "Blood Frenzy"
 tier: ELITE
 description: "Provides Life Steal and Haste."
 category: LIFESTEAL
+enabled: true
 
 passives:
   buffs:

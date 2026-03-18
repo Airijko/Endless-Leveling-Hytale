@@ -3,6 +3,7 @@ name: "Raging Momentum"
 tier: MYTHIC
 description: "Stack Strength and Sorcery that ramps up, doubles at cap, and decays over time."
 category: PASSIVE_STAT
+enabled: true
 
 passives:
   buffs:

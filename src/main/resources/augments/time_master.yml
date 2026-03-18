@@ -3,6 +3,7 @@ name: "Time Master"
 tier: ELITE
 description: "Killing enemies reduces the cooldown of all your augments and passives."
 category: ON_KILL
+enabled: true
 
 passives:
   cooldown_reduction:

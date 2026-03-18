@@ -3,6 +3,7 @@ name: "Death Bomb"
 tier: ELITE
 description: "On death, prime a delayed explosion that scales from your vitality and combat stats."
 category: ON_DAMAGE_TAKEN
+enabled: true
 
 passives:
   death_bomb:

@@ -3,6 +3,7 @@ name: "Cutdown"
 tier: ELITE
 description: "Deal significantly increased damage to high-health enemies."
 category: PASSIVE_STAT
+enabled: true
 
 passives:
   bonus_damage_vs_high_hp:

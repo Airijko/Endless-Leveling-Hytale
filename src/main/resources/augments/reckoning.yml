@@ -3,6 +3,7 @@ name: "Reckoning"
 tier: MYTHIC
 description: "Your attack damage is enhanced at the cost of your health."
 category: ON_HIT
+enabled: true
 
 passives:
   bonus_damage:

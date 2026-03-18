@@ -3,6 +3,7 @@ name: "Undying Rage"
 tier: MYTHIC
 description: "For a short window you cannot drop below a sliver of health and hit harder as you get lower."
 category: ON_LOW_HP
+enabled: true
 
 passives:
   rage:
