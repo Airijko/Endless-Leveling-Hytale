@@ -30,19 +30,18 @@ public final class BloodthirsterAugment extends YamlAugment implements AugmentHo
     private static final int MODE_NONE = 0;
     private static final int MODE_HEALTHY = 1;
     private static final int MODE_WOUNDED = 2;
+    private static final double TRIGGER_VFX_Y_OFFSET = 1.0D;
     private static final String[] TRIGGER_VFX_IDS = new String[] {
-            "Sword_Signature_Dash_Effect",
-            "Sword_Signature_Dash_Trail",
-            "Sword_Signature_AoE",
             "Sword_Signature_AoE2",
-            "Sword_Charged_Trail",
-            "Sword_Charged_Trail_Blade",
+            "Sword_Signature_AoE",
+            "Impact_Sword_Basic",
             "Explosion_Small"
     };
 
     // Placeholder SFX for testing — differentiate healthy/wounded sounds below later
     private static final String TRIGGER_SFX_HEALTHY = "SFX_Sword_T2_Signature_Part_2";
     private static final String TRIGGER_SFX_WOUNDED = "SFX_Sword_T2_Signature_Part_2";
+    private static final int TRIGGER_SFX_PLAY_COUNT = 3;
 
     private final double healthyThresholdAbove;
     private final int sharedHitCounter;
@@ -145,7 +144,7 @@ public final class BloodthirsterAugment extends YamlAugment implements AugmentHo
                     healthyBonusDamage);
             applyHealthySelfDamage(attackerStats, healthySelfDamagePercentOfCurrent);
             playTriggerSound(context, TRIGGER_SFX_HEALTHY);
-                playTriggerVfx(context);
+            playTriggerVfx(context);
             if (playerRef != null && playerRef.isValid()) {
                 AugmentUtils.sendAugmentMessage(playerRef,
                         String.format("%s activated! +%.0f%% damage (healthy state).",
@@ -184,7 +183,9 @@ public final class BloodthirsterAugment extends YamlAugment implements AugmentHo
         if (attackerTransform == null || attackerTransform.getPosition() == null) {
             return;
         }
-        SoundUtil.playSoundEvent3d(null, soundIndex, attackerTransform.getPosition(), attackerRef.getStore());
+        for (int i = 0; i < TRIGGER_SFX_PLAY_COUNT; i++) {
+            SoundUtil.playSoundEvent3d(null, soundIndex, attackerTransform.getPosition(), attackerRef.getStore());
+        }
     }
 
     private void playTriggerVfx(AugmentHooks.HitContext context) {
@@ -206,7 +207,11 @@ public final class BloodthirsterAugment extends YamlAugment implements AugmentHo
             return;
         }
 
-        Vector3d targetPosition = targetTransform.getPosition();
+        Vector3d baseTargetPosition = targetTransform.getPosition();
+        Vector3d targetPosition = new Vector3d(
+            baseTargetPosition.getX(),
+            baseTargetPosition.getY() + TRIGGER_VFX_Y_OFFSET,
+            baseTargetPosition.getZ());
         LOGGER.atInfo().log("[BLOODTHIRSTER] VFX trigger at pos=(%.2f, %.2f, %.2f)",
                 targetPosition.getX(),
                 targetPosition.getY(),
