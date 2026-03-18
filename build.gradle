@@ -21,9 +21,6 @@ def hytaleJdkPath = providers.gradleProperty('hytaleJdkPath')
         .orElse('C:/Program Files/Eclipse Adoptium/jdk-25.0.1.8-hotspot')
 
 repositories {
-    maven {
-        url = uri('https://maven.hytale-mods.dev/releases')
-    }
     mavenCentral()
 }
 
