@@ -38,9 +38,9 @@ public final class FleetFootworkAugment extends YamlAugment
         "Dagger_Signature"
     };
     private static final String[] TRIGGER_SFX_PRIMARY_IDS = new String[] {
-        "SFX_Sword_T2_Signature_Part_2",
-        "SFX_Consume_Bread_Local",
-        "SFX_Arrow_Frost_Hit"
+        "SFX_Staff_Flame_Fireball_Impact",
+        "SFX_Ice_Ball_Death",
+        "SFX_Arrow_Frost_Miss"
     };
     private static final int TRIGGER_SFX_PLAY_COUNT = 1;
 
