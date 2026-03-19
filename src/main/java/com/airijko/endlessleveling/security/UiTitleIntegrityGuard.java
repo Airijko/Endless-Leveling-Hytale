@@ -141,7 +141,7 @@ public final class UiTitleIntegrityGuard {
 
         playerRef.sendMessage(Message.join(
             Message.raw(ALERT_PREFIX).color("#ff4d4d"),
-            Message.raw("1) Open ").color("#ffd166"),
+            Message.raw("1) Click this link: ").color("#ffd166"),
             Message.raw("Endless Leveling Discord").link(discordInviteUrl).color("#6fe3ff"),
             Message.raw(".").color("#ffd166")));
 
