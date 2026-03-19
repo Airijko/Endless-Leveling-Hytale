@@ -14,9 +14,11 @@ import com.hypixel.hytale.builtin.mounts.NPCMountComponent;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.protocol.MovementSettings;
 import com.hypixel.hytale.server.core.asset.type.entityeffect.config.EntityEffect;
 import com.hypixel.hytale.server.core.asset.type.entityeffect.config.OverlapBehavior;
+import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
 import com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent;
 import com.hypixel.hytale.server.core.entity.entities.player.movement.MovementManager;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
@@ -24,6 +26,8 @@ import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
+import com.hypixel.hytale.server.core.universe.world.SoundUtil;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.TargetUtil;
 
@@ -37,10 +41,20 @@ public final class FrozenDomainAugment extends YamlAugment
     public static final String ID = "frozen_domain";
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final long REAPPLY_GRACE_MILLIS = 1500L;
+    private static final long SLOW_DURATION_MILLIS = 2500L;
     private static final float MIN_MOVEMENT_MULTIPLIER = 0.0001F;
     private static final String[] SLOW_EFFECT_IDS = new String[] { "slowness", "slow" };
+    private static final String[] TRIGGER_PULSE_VFX_IDS = new String[] { "Impact_Ice" };
+    private static final String[] TRIGGER_PULSE_SFX_IDS = new String[] { "SFX_Ice_Break", "SFX_Ice_Ball_Death" };
+    private static final long TRIGGER_PULSE_DURATION_MILLIS = 250L;
+    private static final long TRIGGER_PULSE_STEP_MILLIS = 50L;
+    private static final int TRIGGER_PULSE_MIN_POINT_COUNT = 8;
+    private static final int TRIGGER_PULSE_MAX_POINT_COUNT = 18;
+    private static final int TRIGGER_PULSE_MIN_LAYER_COUNT = 1;
+    private static final double TRIGGER_PULSE_START_RADIUS = 0.1D;
+    private static final double TRIGGER_PULSE_Y_OFFSET = 0.3D;
     private static final Map<String, ActiveFrozen> ACTIVE_FROST = new ConcurrentHashMap<>();
+    private static final Map<String, ActivePulse> ACTIVE_PULSES = new ConcurrentHashMap<>();
 
     private final double slowPercent;
     private final double stolenSlowRatio;
@@ -48,6 +62,7 @@ public final class FrozenDomainAugment extends YamlAugment
     private final double healthPerRadiusBlock;
     private final long activeDurationMillis;
     private final long cooldownMillis;
+    private final long slowTickIntervalMillis;
     private final double lifeForceFlatBonus;
 
     private static final class MovementSnapshot {
@@ -117,6 +132,15 @@ public final class FrozenDomainAugment extends YamlAugment
         boolean loggedEffectApplyFailure;
     }
 
+    private static final class ActivePulse {
+        Ref<EntityStore> sourceRef;
+        long startedAt;
+        long expiresAt;
+        long lastVisualAt;
+        double endRadius;
+        boolean soundPlayed;
+    }
+
     public FrozenDomainAugment(AugmentDefinition definition) {
         super(definition);
         Map<String, Object> passives = definition.getPassives();
@@ -132,6 +156,7 @@ public final class FrozenDomainAugment extends YamlAugment
                 AugmentValueReader.getDouble(radiusScaling, "health_per_block", 0.0D));
         this.activeDurationMillis = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(aura, "duration", 0.0D));
         this.cooldownMillis = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(aura, "cooldown", 0.0D));
+        this.slowTickIntervalMillis = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(aura, "slow_interval", 2.5D));
         this.lifeForceFlatBonus = Math.max(0.0D, AugmentValueReader.getDouble(lifeForce, "value", 0.0D));
     }
 
@@ -158,6 +183,7 @@ public final class FrozenDomainAugment extends YamlAugment
         state.setExpiresAt(activeUntil);
         state.setStoredValue(combinedCooldownEnd);
         state.setStacks(1);
+        state.setLastProc(0L);
         if (combinedCooldownEnd > now) {
             runtimeState.setCooldown(ID, getName(), combinedCooldownEnd);
         }
@@ -180,6 +206,7 @@ public final class FrozenDomainAugment extends YamlAugment
 
         long now = System.currentTimeMillis();
         var augmentState = context.getRuntimeState().getState(ID);
+        updateTriggerPulse(context.getPlayerRef(), context.getCommandBuffer(), now);
         boolean active = augmentState.getExpiresAt() > now;
         if (!active) {
             if (augmentState.getStacks() > 0) {
@@ -198,13 +225,17 @@ public final class FrozenDomainAugment extends YamlAugment
             return;
         }
 
+        AugmentUtils.setAttributeBonus(context.getRuntimeState(), ID + "_life_force", SkillAttributeType.LIFE_FORCE,
+                lifeForceFlatBonus, 0L);
+
+        if (augmentState.getLastProc() > 0L && now - augmentState.getLastProc() < slowTickIntervalMillis) {
+            cleanupExpired(context.getCommandBuffer(), now);
+            return;
+        }
+
         EntityStatMap sourceStats = context.getStatMap();
         EntityStatValue sourceHp = sourceStats.get(DefaultEntityStatTypes.getHealth());
         if (sourceHp == null || sourceHp.getMax() <= 0f || sourceHp.get() <= 0f) {
-            AugmentUtils.setAttributeBonus(context.getRuntimeState(), ID + "_life_force", SkillAttributeType.LIFE_FORCE,
-                    lifeForceFlatBonus, 0L);
-            AugmentUtils.setAttributeBonus(context.getRuntimeState(), ID + "_stolen_haste", SkillAttributeType.HASTE,
-                    0.0D, 0L);
             cleanupExpired(context.getCommandBuffer(), now);
             return;
         }
@@ -212,12 +243,7 @@ public final class FrozenDomainAugment extends YamlAugment
         double maxHealth = Math.max(0.0D, sourceHp.getMax());
         double radius = resolveRadius(maxHealth);
 
-        AugmentUtils.setAttributeBonus(context.getRuntimeState(), ID + "_life_force", SkillAttributeType.LIFE_FORCE,
-                lifeForceFlatBonus, 0L);
-
         if (radius <= 0.0D || slowPercent <= 0.0D) {
-            AugmentUtils.setAttributeBonus(context.getRuntimeState(), ID + "_stolen_haste", SkillAttributeType.HASTE,
-                    0.0D, 0L);
             cleanupExpired(context.getCommandBuffer(), now);
             return;
         }
@@ -228,11 +254,12 @@ public final class FrozenDomainAugment extends YamlAugment
                 sourceRef,
                 TransformComponent.getComponentType());
         if (sourceTransform == null || sourceTransform.getPosition() == null) {
-            AugmentUtils.setAttributeBonus(context.getRuntimeState(), ID + "_stolen_haste", SkillAttributeType.HASTE,
-                    0.0D, 0L);
             cleanupExpired(commandBuffer, now);
             return;
         }
+
+        augmentState.setLastProc(now);
+        startTriggerPulse(sourceRef, commandBuffer, now);
 
         UUID sourceUuid = context.getPlayerData() != null ? context.getPlayerData().getUuid() : null;
         PartyManager partyManager = resolvePartyManager();
@@ -240,7 +267,6 @@ public final class FrozenDomainAugment extends YamlAugment
 
         int affectedTargets = 0;
         HashSet<Integer> visitedEntityIds = new HashSet<>();
-        long activeUntil = augmentState.getExpiresAt();
         for (Ref<EntityStore> targetRef : TargetUtil.getAllEntitiesInSphere(
                 sourceTransform.getPosition(),
                 radius,
@@ -272,7 +298,7 @@ public final class FrozenDomainAugment extends YamlAugment
             String key = keyFor(targetRef, commandBuffer);
             ActiveFrozen state = ACTIVE_FROST.computeIfAbsent(key, unused -> new ActiveFrozen());
             state.targetRef = targetRef;
-            state.expiresAt = Math.min(activeUntil, now + REAPPLY_GRACE_MILLIS);
+            state.expiresAt = now + SLOW_DURATION_MILLIS;
             state.slowPercent = slowPercent;
             applySlowIfPossible(state, commandBuffer, targetRef);
             affectedTargets++;
@@ -490,6 +516,134 @@ public final class FrozenDomainAugment extends YamlAugment
             }
         }
         return null;
+    }
+
+    private void startTriggerPulse(Ref<EntityStore> sourceRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            long now) {
+        if (sourceRef == null || commandBuffer == null) {
+            return;
+        }
+
+        ActivePulse pulse = ACTIVE_PULSES.computeIfAbsent(keyFor(sourceRef, commandBuffer), unused -> new ActivePulse());
+        pulse.sourceRef = sourceRef;
+        pulse.startedAt = now;
+        pulse.expiresAt = now + TRIGGER_PULSE_DURATION_MILLIS;
+        pulse.lastVisualAt = 0L;
+        pulse.endRadius = resolveTriggerPulseRadius(sourceRef, commandBuffer);
+        pulse.soundPlayed = false;
+        updateTriggerPulse(sourceRef, commandBuffer, now);
+    }
+
+    private void updateTriggerPulse(Ref<EntityStore> sourceRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            long now) {
+        if (sourceRef == null || commandBuffer == null) {
+            return;
+        }
+
+        String pulseKey = keyFor(sourceRef, commandBuffer);
+        ActivePulse pulse = ACTIVE_PULSES.get(pulseKey);
+        if (pulse == null) {
+            return;
+        }
+        if (pulse.expiresAt <= now || pulse.sourceRef == null || !pulse.sourceRef.isValid()) {
+            ACTIVE_PULSES.remove(pulseKey);
+            return;
+        }
+
+        TransformComponent sourceTransform = EntityRefUtil.tryGetComponent(commandBuffer,
+                pulse.sourceRef,
+                TransformComponent.getComponentType());
+        if (sourceTransform == null || sourceTransform.getPosition() == null) {
+            return;
+        }
+
+        Vector3d centerPosition = sourceTransform.getPosition();
+        double centerY = centerPosition.getY() + TRIGGER_PULSE_Y_OFFSET;
+        if (!pulse.soundPlayed) {
+            playTriggerPulseSound(pulse.sourceRef, new Vector3d(centerPosition.getX(), centerY, centerPosition.getZ()));
+            pulse.soundPlayed = true;
+        }
+        if (pulse.lastVisualAt > 0L && now - pulse.lastVisualAt < TRIGGER_PULSE_STEP_MILLIS) {
+            return;
+        }
+
+        double progress = Math.max(0.0D,
+                Math.min(1.0D, (double) (now - pulse.startedAt) / (double) TRIGGER_PULSE_DURATION_MILLIS));
+        double ringRadius = TRIGGER_PULSE_START_RADIUS + ((pulse.endRadius - TRIGGER_PULSE_START_RADIUS) * progress);
+        double baseAngleOffset = progress * Math.PI * 2.0D;
+        int pointCount = resolveTriggerPulsePointCount(pulse.endRadius);
+        int layerCount = resolveTriggerPulseLayerCount(pulse.endRadius);
+        double layerSpacing = resolveTriggerPulseLayerSpacing(pulse.endRadius, layerCount);
+
+        for (int layer = 0; layer < layerCount; layer++) {
+            double layerRadius = Math.max(TRIGGER_PULSE_START_RADIUS, ringRadius - (layer * layerSpacing));
+            double angleOffset = baseAngleOffset + ((Math.PI / pointCount) * layer);
+            for (int i = 0; i < pointCount; i++) {
+            double angle = angleOffset + ((Math.PI * 2.0D * i) / pointCount);
+                Vector3d particlePosition = new Vector3d(
+                        centerPosition.getX() + (Math.cos(angle) * layerRadius),
+                        centerY,
+                        centerPosition.getZ() + (Math.sin(angle) * layerRadius));
+                spawnTriggerPulseParticle(pulse.sourceRef, particlePosition);
+            }
+        }
+
+        pulse.lastVisualAt = now;
+        if (progress >= 1.0D) {
+            ACTIVE_PULSES.remove(pulseKey);
+        }
+    }
+
+    private double resolveTriggerPulseRadius(Ref<EntityStore> sourceRef, CommandBuffer<EntityStore> commandBuffer) {
+        EntityStatMap sourceStats = EntityRefUtil.tryGetComponent(commandBuffer,
+                sourceRef,
+                EntityStatMap.getComponentType());
+        EntityStatValue sourceHp = sourceStats == null ? null : sourceStats.get(DefaultEntityStatTypes.getHealth());
+        double auraRadius = sourceHp == null || sourceHp.getMax() <= 0f
+                ? baseRadius
+                : resolveRadius(Math.max(0.0D, sourceHp.getMax()));
+        return Math.max(TRIGGER_PULSE_START_RADIUS, auraRadius);
+    }
+
+    private int resolveTriggerPulsePointCount(double targetRadius) {
+        return Math.max(TRIGGER_PULSE_MIN_POINT_COUNT,
+                Math.min(TRIGGER_PULSE_MAX_POINT_COUNT, (int) Math.ceil(targetRadius * 3.0D)));
+    }
+
+    private int resolveTriggerPulseLayerCount(double targetRadius) {
+        return TRIGGER_PULSE_MIN_LAYER_COUNT;
+    }
+
+    private double resolveTriggerPulseLayerSpacing(double targetRadius, int layerCount) {
+        return 0.0D;
+    }
+
+    private static void spawnTriggerPulseParticle(Ref<EntityStore> sourceRef, Vector3d position) {
+        for (String particleId : TRIGGER_PULSE_VFX_IDS) {
+            try {
+                ParticleUtil.spawnParticleEffect(particleId, position, sourceRef.getStore());
+                return;
+            } catch (RuntimeException ignored) {
+            }
+        }
+    }
+
+    private static void playTriggerPulseSound(Ref<EntityStore> sourceRef, Vector3d position) {
+        for (String soundId : TRIGGER_PULSE_SFX_IDS) {
+            int soundIndex = resolveSoundIndex(soundId);
+            if (soundIndex == 0) {
+                continue;
+            }
+            SoundUtil.playSoundEvent3d(null, soundIndex, position, sourceRef.getStore());
+            return;
+        }
+    }
+
+    private static int resolveSoundIndex(String id) {
+        int index = SoundEvent.getAssetMap().getIndex(id);
+        return index == Integer.MIN_VALUE ? 0 : index;
     }
 
     private boolean isPetEntity(Ref<EntityStore> targetRef, CommandBuffer<EntityStore> commandBuffer) {

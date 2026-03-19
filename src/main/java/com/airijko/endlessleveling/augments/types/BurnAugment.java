@@ -35,21 +35,29 @@ import com.hypixel.hytale.server.core.util.TargetUtil;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class BurnAugment extends YamlAugment
         implements AugmentHooks.OnDamageTakenAugment, AugmentHooks.PassiveStatAugment {
     public static final String ID = "burn";
     private static final String[] BURN_EFFECT_IDS = new String[] { "burning", "Burning", "Burn" };
     private static final float BURN_EFFECT_DURATION_SECONDS = 1.25F;
-    private static final String[] PULSE_RING_VFX_IDS = new String[] { "Effect_Fire", "Campfire_New_Cartoon" };
+    private static final String[] PULSE_RING_VFX_IDS = new String[] { "Impact_Critical", "Impact_Blade_01" };
     private static final String[] PULSE_RING_SFX_IDS = new String[] {
             "SFX_Effect_Burn_World",
             "SFX_Staff_Flame_Fireball_Impact"
     };
-    private static final int PULSE_RING_POINT_COUNT = 8;
-    private static final double PULSE_RING_MIN_RADIUS = 1.5D;
-    private static final double PULSE_RING_MAX_RADIUS = 3.0D;
-    private static final double PULSE_RING_Y_OFFSET = 0.15D;
+    private static final long PULSE_RING_DURATION_MILLIS = 250L;
+    private static final long PULSE_RING_STEP_MILLIS = 50L;
+    private static final int PULSE_RING_MIN_POINT_COUNT = 10;
+    private static final int PULSE_RING_MAX_POINT_COUNT = 36;
+    private static final int PULSE_RING_MIN_LAYER_COUNT = 2;
+    private static final int PULSE_RING_MAX_LAYER_COUNT = 4;
+    private static final double PULSE_RING_START_RADIUS = 0.1D;
+    private static final double PULSE_RING_MIN_LAYER_SPACING = 0.2D;
+    private static final double PULSE_RING_MAX_LAYER_SPACING = 0.45D;
+    private static final double PULSE_RING_Y_OFFSET = 0.3D;
+    private static final Map<String, ActivePulse> ACTIVE_PULSES = new ConcurrentHashMap<>();
 
     private final double basePercentPerSecond;
     private final double bonusScalingPer100Health;
@@ -59,6 +67,15 @@ public final class BurnAugment extends YamlAugment
     private final long cooldownMillis;
     private final double lifeForceFlatBonus;
     private final double maxDamagePerTick;
+
+    private static final class ActivePulse {
+        Ref<EntityStore> sourceRef;
+        long startedAt;
+        long expiresAt;
+        long lastVisualAt;
+        double endRadius;
+        boolean soundPlayed;
+    }
 
     public BurnAugment(AugmentDefinition definition) {
         super(definition);
@@ -130,6 +147,7 @@ public final class BurnAugment extends YamlAugment
         var burnState = context.getRuntimeState().getState(ID);
         boolean active = burnState.getExpiresAt() > now;
         if (!active) {
+            clearPulse(context.getPlayerRef(), context.getCommandBuffer());
             if (burnState.getStacks() > 0) {
                 PlayerRef playerRef = AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getPlayerRef());
                 if (playerRef != null && playerRef.isValid()) {
@@ -148,6 +166,10 @@ public final class BurnAugment extends YamlAugment
                 ID + "_life_force",
                 lifeForceFlatBonus,
                 0L);
+
+        CommandBuffer<EntityStore> commandBuffer = context.getCommandBuffer();
+        Ref<EntityStore> sourceRef = context.getPlayerRef();
+        updatePulse(sourceRef, commandBuffer, now);
 
         // Gate aura damage to once per second
         if (burnState.getLastProc() > 0L && now - burnState.getLastProc() < 1000L) {
@@ -170,8 +192,6 @@ public final class BurnAugment extends YamlAugment
             return;
         }
 
-        CommandBuffer<EntityStore> commandBuffer = context.getCommandBuffer();
-        Ref<EntityStore> sourceRef = context.getPlayerRef();
         TransformComponent sourceTransform = EntityRefUtil.tryGetComponent(commandBuffer,
                 sourceRef,
                 TransformComponent.getComponentType());
@@ -181,7 +201,7 @@ public final class BurnAugment extends YamlAugment
 
         burnState.setLastProc(now);
         double ratioThisTick = percentPerSecond;
-        playPulseRing(sourceRef, sourceTransform.getPosition(), radius);
+        startPulse(sourceRef, commandBuffer, now, radius);
         EntityEffect burnEffect = resolveBurnEffect();
         UUID sourceUuid = resolveSourceUuid(context, sourceRef, commandBuffer);
         PartyManager partyManager = resolvePartyManager();
@@ -261,24 +281,117 @@ public final class BurnAugment extends YamlAugment
                 commandBuffer);
     }
 
-    private void playPulseRing(Ref<EntityStore> sourceRef, Vector3d centerPosition, double auraRadius) {
-        if (sourceRef == null || centerPosition == null) {
+    private void startPulse(Ref<EntityStore> sourceRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            long now,
+            double auraRadius) {
+        if (sourceRef == null || commandBuffer == null) {
             return;
         }
 
-        double ringRadius = Math.max(PULSE_RING_MIN_RADIUS, Math.min(PULSE_RING_MAX_RADIUS, auraRadius));
-        double centerY = centerPosition.getY() + PULSE_RING_Y_OFFSET;
+        String pulseKey = resolvePulseKey(sourceRef, commandBuffer);
+        ActivePulse pulse = ACTIVE_PULSES.computeIfAbsent(pulseKey, unused -> new ActivePulse());
+        pulse.sourceRef = sourceRef;
+        pulse.endRadius = Math.max(PULSE_RING_START_RADIUS, auraRadius);
+        if (pulse.expiresAt <= now || pulse.startedAt <= 0L) {
+            pulse.startedAt = now;
+            pulse.expiresAt = now + PULSE_RING_DURATION_MILLIS;
+            pulse.lastVisualAt = 0L;
+            pulse.soundPlayed = false;
+        }
+        updatePulse(sourceRef, commandBuffer, now);
+    }
 
-        for (int i = 0; i < PULSE_RING_POINT_COUNT; i++) {
-            double angle = (Math.PI * 2.0D * i) / PULSE_RING_POINT_COUNT;
-            Vector3d particlePosition = new Vector3d(
-                    centerPosition.getX() + (Math.cos(angle) * ringRadius),
-                    centerY,
-                    centerPosition.getZ() + (Math.sin(angle) * ringRadius));
-            spawnPulseParticle(sourceRef, particlePosition);
+    private void updatePulse(Ref<EntityStore> sourceRef, CommandBuffer<EntityStore> commandBuffer, long now) {
+        if (sourceRef == null || commandBuffer == null) {
+            return;
         }
 
-        playPulseSound(sourceRef, new Vector3d(centerPosition.getX(), centerY, centerPosition.getZ()));
+        String pulseKey = resolvePulseKey(sourceRef, commandBuffer);
+        ActivePulse pulse = ACTIVE_PULSES.get(pulseKey);
+        if (pulse == null) {
+            return;
+        }
+        if (pulse.expiresAt <= now || pulse.sourceRef == null || !pulse.sourceRef.isValid()) {
+            ACTIVE_PULSES.remove(pulseKey);
+            return;
+        }
+
+        TransformComponent sourceTransform = EntityRefUtil.tryGetComponent(commandBuffer,
+                pulse.sourceRef,
+                TransformComponent.getComponentType());
+        if (sourceTransform == null || sourceTransform.getPosition() == null) {
+            return;
+        }
+
+        Vector3d centerPosition = sourceTransform.getPosition();
+        double centerY = centerPosition.getY() + PULSE_RING_Y_OFFSET;
+        if (!pulse.soundPlayed) {
+            playPulseSound(pulse.sourceRef, new Vector3d(centerPosition.getX(), centerY, centerPosition.getZ()));
+            pulse.soundPlayed = true;
+        }
+        if (pulse.lastVisualAt > 0L && now - pulse.lastVisualAt < PULSE_RING_STEP_MILLIS) {
+            return;
+        }
+
+        double progress = Math.max(0.0D,
+                Math.min(1.0D, (double) (now - pulse.startedAt) / (double) PULSE_RING_DURATION_MILLIS));
+        double ringRadius = PULSE_RING_START_RADIUS + ((pulse.endRadius - PULSE_RING_START_RADIUS) * progress);
+        double baseAngleOffset = progress * Math.PI * 2.0D;
+        int pointCount = resolvePulsePointCount(pulse.endRadius);
+        int layerCount = resolvePulseLayerCount(pulse.endRadius);
+        double layerSpacing = resolvePulseLayerSpacing(pulse.endRadius, layerCount);
+
+        for (int layer = 0; layer < layerCount; layer++) {
+            double layerRadius = Math.max(PULSE_RING_START_RADIUS, ringRadius - (layer * layerSpacing));
+            double angleOffset = baseAngleOffset + ((Math.PI / pointCount) * layer);
+            for (int i = 0; i < pointCount; i++) {
+            double angle = angleOffset + ((Math.PI * 2.0D * i) / pointCount);
+                Vector3d particlePosition = new Vector3d(
+                        centerPosition.getX() + (Math.cos(angle) * layerRadius),
+                        centerY,
+                        centerPosition.getZ() + (Math.sin(angle) * layerRadius));
+                spawnPulseParticle(pulse.sourceRef, particlePosition);
+            }
+        }
+
+        pulse.lastVisualAt = now;
+        if (progress >= 1.0D) {
+            ACTIVE_PULSES.remove(pulseKey);
+        }
+    }
+
+    private int resolvePulsePointCount(double targetRadius) {
+        return Math.max(PULSE_RING_MIN_POINT_COUNT,
+                Math.min(PULSE_RING_MAX_POINT_COUNT, (int) Math.ceil(targetRadius * 6.0D)));
+    }
+
+    private int resolvePulseLayerCount(double targetRadius) {
+        return Math.max(PULSE_RING_MIN_LAYER_COUNT,
+                Math.min(PULSE_RING_MAX_LAYER_COUNT, (int) Math.ceil(targetRadius / 2.5D)));
+    }
+
+    private double resolvePulseLayerSpacing(double targetRadius, int layerCount) {
+        if (layerCount <= 1) {
+            return 0.0D;
+        }
+        return Math.max(PULSE_RING_MIN_LAYER_SPACING,
+                Math.min(PULSE_RING_MAX_LAYER_SPACING, targetRadius / (layerCount * 6.0D)));
+    }
+
+    private void clearPulse(Ref<EntityStore> sourceRef, CommandBuffer<EntityStore> commandBuffer) {
+        if (sourceRef == null || commandBuffer == null) {
+            return;
+        }
+        ACTIVE_PULSES.remove(resolvePulseKey(sourceRef, commandBuffer));
+    }
+
+    private String resolvePulseKey(Ref<EntityStore> sourceRef, CommandBuffer<EntityStore> commandBuffer) {
+        PlayerRef playerRef = AugmentUtils.getPlayerRef(commandBuffer, sourceRef);
+        if (playerRef != null && playerRef.isValid() && playerRef.getUuid() != null) {
+            return playerRef.getUuid().toString();
+        }
+        return sourceRef.toString();
     }
 
     private void spawnPulseParticle(Ref<EntityStore> sourceRef, Vector3d position) {

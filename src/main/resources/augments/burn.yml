@@ -11,7 +11,7 @@ passives:
     bonus_max_hp_scaling: 0.0012 # +0.12% damage per 100 max HP
     radius: 5 # base radius in blocks
     duration: 10 # effect lasts 10 seconds
-    cooldown: 30 # effect triggers every 30 seconds
+    cooldown: 10 # effect triggers every 10 seconds
     max_damage_per_tick: 500 # flat cap on burn damage per tick (0 = no cap)
     radius_health_scaling:
       health_per_block: 400 # gain +1 block radius per 400 max HP

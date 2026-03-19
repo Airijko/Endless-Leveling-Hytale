@@ -11,7 +11,8 @@ passives:
     stolen_slow_ratio: 0.20 # 20% of applied slow is gained as movement speed per affected target
     radius: 5 # base radius in blocks
     duration: 10 # effect lasts 10 seconds
-    cooldown: 30 # effect triggers every 30 seconds
+    cooldown: 25 # effect triggers every 25 seconds
+    slow_interval: 2.5 # seconds between each slow application tick
     radius_health_scaling:
       health_per_block: 400 # gain +1 block radius per 400 max HP
 
