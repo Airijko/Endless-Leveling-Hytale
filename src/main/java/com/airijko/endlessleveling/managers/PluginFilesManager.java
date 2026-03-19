@@ -80,7 +80,8 @@ public class PluginFilesManager {
 
         seedResourceDirectoryIfEmpty("races", racesFolder);
         seedResourceDirectoryIfEmpty("classes", classesFolder);
-        exportResourceDirectory("augments", augmentsFolder, false);
+        // Seed bundled augments only when the directory is empty so per-file deletions can disable augments.
+        seedResourceDirectoryIfEmpty("augments", augmentsFolder);
         exportResourceDirectory("lang", langFolder, false);
     }
 

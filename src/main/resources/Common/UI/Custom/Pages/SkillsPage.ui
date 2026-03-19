@@ -1082,6 +1082,8 @@ $C.@PageOverlay {
                             }
                         }
 
+                        Group { Anchor: (Width: 40); }
+
                         $C.@DecoratedContainer {
                             Anchor: (Width: 300, Height: 700);
 
@@ -1095,9 +1097,109 @@ $C.@PageOverlay {
                                 LayoutMode: Top;
                                 Padding: (Horizontal: 12, Bottom: 12);
 
-                                Group {
+                                Group #ExcessPanelMain {
                                     LayoutMode: Top;
                                     Padding: (Vertical: 12);
+
+                                    Label #ExcessStatusLabel {
+                                        Text: "No excess points right now.";
+                                        Style: (TextColor: #9fe7b3, FontSize: 15, RenderBold: true);
+                                        Padding: (Horizontal: 8);
+                                    }
+
+                                    Group { Anchor: (Height: 6); }
+
+                                    Label #ExcessDescription {
+                                        Text: "If Precision or Defense goes over its effective cap, excess points are refundable here.";
+                                        Style: (TextColor: #c6d2e7, FontSize: 12, Wrap: true);
+                                        Padding: (Horizontal: 8);
+                                    }
+
+                                    Group { Anchor: (Height: 10); }
+
+                                    Group {
+                                        Anchor: (Height: 1);
+                                        Background: #2b3542;
+                                    }
+
+                                    Group { Anchor: (Height: 10); }
+
+                                    Group #ExcessPrecisionRow {
+                                        LayoutMode: Left;
+                                        Padding: (Horizontal: 8);
+
+                                        Label #ExcessPrecisionLabel {
+                                            Text: "Precision overflow:";
+                                            Style: (TextColor: #9ab0ca, FontSize: 12);
+                                            FlexWeight: 1;
+                                        }
+
+                                        Label #ExcessPrecisionValue {
+                                            Text: "0";
+                                            Style: (TextColor: #f4f9ff, FontSize: 12, RenderBold: true);
+                                        }
+                                    }
+
+                                    Group { Anchor: (Height: 6); }
+
+                                    Group #ExcessDefenseRow {
+                                        LayoutMode: Left;
+                                        Padding: (Horizontal: 8);
+
+                                        Label #ExcessDefenseLabel {
+                                            Text: "Defense overflow:";
+                                            Style: (TextColor: #9ab0ca, FontSize: 12);
+                                            FlexWeight: 1;
+                                        }
+
+                                        Label #ExcessDefenseValue {
+                                            Text: "0";
+                                            Style: (TextColor: #f4f9ff, FontSize: 12, RenderBold: true);
+                                        }
+                                    }
+
+                                    Group { Anchor: (Height: 8); }
+
+                                    Group {
+                                        Anchor: (Height: 1);
+                                        Background: #243142;
+                                    }
+
+                                    Group { Anchor: (Height: 8); }
+
+                                    Group #ExcessTotalRow {
+                                        LayoutMode: Left;
+                                        Padding: (Horizontal: 8);
+
+                                        Label #ExcessTotalLabel {
+                                            Text: "Refundable total:";
+                                            Style: (TextColor: #d5e4f7, FontSize: 13, RenderBold: true);
+                                            FlexWeight: 1;
+                                        }
+
+                                        Label #ExcessTotalValue {
+                                            Text: "0";
+                                            Style: (TextColor: #f0cf78, FontSize: 14, RenderBold: true);
+                                        }
+                                    }
+
+                                    Group { Anchor: (Height: 14); }
+
+                                    $C.@TextButton #RefundExcessSkills {
+                                        Text: "REFUND EXCESS ONLY";
+                                        Anchor: (Height: @PrimaryButtonHeight + 4, Width: 276);
+                                        Padding: (Horizontal: 8);
+                                    }
+
+                                    Group { Anchor: (Height: 6); }
+
+                                    Label #ExcessApplyHint {
+                                        Text: "This updates your pending points. Press APPLY to confirm.";
+                                        Style: (TextColor: #8ca2bd, FontSize: 11, Wrap: true);
+                                        Padding: (Horizontal: 8);
+                                    }
+
+                                    Group { Anchor: (Height: 14); }
                                 }
                             }
                         }

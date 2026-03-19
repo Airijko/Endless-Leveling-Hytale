@@ -92,6 +92,7 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 // Bind footer actions (apply / undo)
                 events.addEventBinding(Activating, "#ApplySkills", of("Action", "apply"), false);
                 events.addEventBinding(Activating, "#ResetSkills", of("Action", "reset"), false);
+                events.addEventBinding(Activating, "#RefundExcessSkills", of("Action", "refund_excess"), false);
 
                 // -----------------------------
                 // UI VALUES
@@ -183,6 +184,45 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                                         LOGGER.atInfo().log("Applied previewed skills for %s",
                                                                         playerRef.getUuid());
                                                         refreshUI = true;
+                                                } else if ("refund_excess".equalsIgnoreCase(act)) {
+                                                        ExcessRefundSnapshot refundSnapshot = computeExcessRefundSnapshot(
+                                                                        playerData);
+                                                        if (refundSnapshot.hasExcess()) {
+                                                                int precisionCurrent = getPreviewLevel(
+                                                                                SkillAttributeType.PRECISION);
+                                                                int defenseCurrent = getPreviewLevel(
+                                                                                SkillAttributeType.DEFENSE);
+
+                                                                previewLevels.put(SkillAttributeType.PRECISION,
+                                                                                Math.max(MIN_ATTRIBUTE_LEVEL,
+                                                                                                precisionCurrent
+                                                                                                                - refundSnapshot.precisionRefunded()));
+                                                                previewLevels.put(SkillAttributeType.DEFENSE,
+                                                                                Math.max(MIN_ATTRIBUTE_LEVEL,
+                                                                                                defenseCurrent
+                                                                                                                - refundSnapshot.defenseRefunded()));
+                                                                previewSkillPoints += refundSnapshot.totalRefunded();
+
+                                                                player.sendMessage(Message
+                                                                                .raw(tr("ui.skills.message.excess_refunded",
+                                                                                                "Refunded excess points: +{0} skill points (Precision -{1}, Defense -{2}). Press APPLY to confirm.",
+                                                                                                refundSnapshot.totalRefunded(),
+                                                                                                refundSnapshot.precisionRefunded(),
+                                                                                                refundSnapshot.defenseRefunded()))
+                                                                                .color("#f0cf78"));
+                                                                LOGGER.atInfo().log(
+                                                                                "Refunded excess preview points for %s (total=%d precision=%d defense=%d)",
+                                                                                playerRef.getUuid(),
+                                                                                refundSnapshot.totalRefunded(),
+                                                                                refundSnapshot.precisionRefunded(),
+                                                                                refundSnapshot.defenseRefunded());
+                                                                refreshUI = true;
+                                                        } else {
+                                                                player.sendMessage(Message
+                                                                                .raw(tr("ui.skills.error.overflow_none_available",
+                                                                                                "No excess precision or defense points are currently refundable."))
+                                                                                .color("#ff0000"));
+                                                        }
                                                 } else if (act.matches("(add|sub):(\\w+):(\\d+)")
                                                                 || act.matches("(add|sub):(\\w+)")) {
                                                         String[] parts = act.split(":");
@@ -458,6 +498,47 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 ui.set("#DisciplineLevel.Text", String.valueOf(discLevel));
                 ui.set("#DisciplineValue.Text",
                                 tr("ui.skills.value.discipline", "+{0}% XP Gain", formatNumber(discBonus)));
+
+                applyExcessPanelValues(ui, playerData);
+        }
+
+        private void applyExcessPanelValues(@Nonnull UICommandBuilder ui, @Nonnull PlayerData playerData) {
+                ExcessRefundSnapshot refundSnapshot = computeExcessRefundSnapshot(playerData);
+                int totalRefund = refundSnapshot.totalRefunded();
+
+                ui.set("#ExcessPrecisionValue.Text", String.valueOf(refundSnapshot.precisionRefunded()));
+                ui.set("#ExcessDefenseValue.Text", String.valueOf(refundSnapshot.defenseRefunded()));
+                ui.set("#ExcessTotalValue.Text", String.valueOf(totalRefund));
+
+                if (totalRefund > 0) {
+                        ui.set("#ExcessStatusLabel.Text", tr("ui.skills.excess.status.has_excess",
+                                        "Excess detected: {0} point(s)", totalRefund));
+                        ui.set("#ExcessStatusLabel.Style.TextColor", "#f0cf78");
+                        ui.set("#ExcessDescription.Text", tr("ui.skills.excess.description.has_excess",
+                                        "Precision/Defense is past effective cap. Refund the overflow points here."));
+                        ui.set("#ExcessDescription.Style.TextColor", "#f7d9a2");
+                        ui.set("#ExcessTotalValue.Style.TextColor", "#f0cf78");
+                        ui.set("#RefundExcessSkills.Text", tr("ui.skills.excess.button.has_excess",
+                                        "REFUND EXCESS ONLY (+{0})", totalRefund));
+                } else {
+                        ui.set("#ExcessStatusLabel.Text", tr("ui.skills.excess.status.none",
+                                        "No excess points right now."));
+                        ui.set("#ExcessStatusLabel.Style.TextColor", "#9fe7b3");
+                        ui.set("#ExcessDescription.Text", tr("ui.skills.excess.description.none",
+                                        "If Precision or Defense exceeds cap, overflow points become refundable here."));
+                        ui.set("#ExcessDescription.Style.TextColor", "#c6d2e7");
+                        ui.set("#ExcessTotalValue.Style.TextColor", "#a6bdd7");
+                        ui.set("#RefundExcessSkills.Text", tr("ui.skills.excess.button.none",
+                                        "REFUND EXCESS ONLY"));
+                }
+        }
+
+        private ExcessRefundSnapshot computeExcessRefundSnapshot(@Nonnull PlayerData playerData) {
+                int precisionCurrent = getPreviewLevel(SkillAttributeType.PRECISION);
+                int defenseCurrent = getPreviewLevel(SkillAttributeType.DEFENSE);
+                int precisionRefund = computeOverflowRefund(playerData, SkillAttributeType.PRECISION, precisionCurrent);
+                int defenseRefund = computeOverflowRefund(playerData, SkillAttributeType.DEFENSE, defenseCurrent);
+                return new ExcessRefundSnapshot(precisionRefund, defenseRefund);
         }
 
         private void ensurePreviewState(PlayerData playerData) {
@@ -648,6 +729,14 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                                 "Undo to revert pending tweaks, apply to lock them in."));
                 ui.set("#ResetSkills.Text", tr("ui.skills.page.undo", "UNDO"));
                 ui.set("#ApplySkills.Text", tr("ui.skills.page.apply", "APPLY"));
+                ui.set("#ExcessSkillsPanel.Text", tr("ui.skills.excess.title", "EXCESS SKILL POINTS"));
+                ui.set("#ExcessPrecisionLabel.Text", tr("ui.skills.excess.precision", "Precision overflow:"));
+                ui.set("#ExcessDefenseLabel.Text", tr("ui.skills.excess.defense", "Defense overflow:"));
+                ui.set("#ExcessTotalLabel.Text", tr("ui.skills.excess.total", "Refundable total:"));
+                ui.set("#ExcessApplyHint.Text",
+                                tr("ui.skills.excess.apply_hint",
+                                                "This updates your pending points. Press APPLY to confirm."));
+                ui.set("#RefundExcessSkills.Text", tr("ui.skills.excess.button.none", "REFUND EXCESS ONLY"));
 
                 String lv = tr("ui.skills.level_prefix", "Lv.");
                 for (AttributeTheme theme : AttributeTheme.values()) {
@@ -698,6 +787,16 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         }
 
         private record SkillBinding(String uiPrefix, String iconSelector, SkillAttributeType attribute) {
+        }
+
+        private record ExcessRefundSnapshot(int precisionRefunded, int defenseRefunded) {
+                int totalRefunded() {
+                        return Math.max(0, precisionRefunded) + Math.max(0, defenseRefunded);
+                }
+
+                boolean hasExcess() {
+                        return totalRefunded() > 0;
+                }
         }
 
 }
