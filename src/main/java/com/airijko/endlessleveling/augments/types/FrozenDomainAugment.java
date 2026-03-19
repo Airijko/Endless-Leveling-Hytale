@@ -41,7 +41,7 @@ public final class FrozenDomainAugment extends YamlAugment
     public static final String ID = "frozen_domain";
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final long SLOW_DURATION_MILLIS = 2500L;
+    private static final long SLOW_DURATION_MILLIS = 2000L;
     private static final float MIN_MOVEMENT_MULTIPLIER = 0.0001F;
     private static final String[] SLOW_EFFECT_IDS = new String[] { "slowness", "slow" };
     private static final String[] TRIGGER_PULSE_VFX_IDS = new String[] { "Impact_Blade_01" };
@@ -60,6 +60,7 @@ public final class FrozenDomainAugment extends YamlAugment
     private static final double TRIGGER_PULSE_MIN_LAYER_SPACING = 0.2D;
     private static final double TRIGGER_PULSE_MAX_LAYER_SPACING = 0.45D;
     private static final double TRIGGER_PULSE_Y_OFFSET = 0.3D;
+    private static final String PLAYER_HASTE_DEBUFF_SOURCE_PREFIX = ID + "_target_haste_debuff_";
     private static final Map<String, ActiveFrozen> ACTIVE_FROST = new ConcurrentHashMap<>();
     private static final Map<String, ActivePulse> ACTIVE_PULSES = new ConcurrentHashMap<>();
 
@@ -213,9 +214,9 @@ public final class FrozenDomainAugment extends YamlAugment
 
         long now = System.currentTimeMillis();
         var augmentState = context.getRuntimeState().getState(ID);
-        updateTriggerPulse(context.getPlayerRef(), context.getCommandBuffer(), now);
         boolean active = augmentState.getExpiresAt() > now;
         if (!active) {
+            clearTriggerPulse(context.getPlayerRef(), context.getCommandBuffer());
             if (augmentState.getStacks() > 0) {
                 PlayerRef playerRef = AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getPlayerRef());
                 if (playerRef != null && playerRef.isValid()) {
@@ -235,7 +236,9 @@ public final class FrozenDomainAugment extends YamlAugment
         AugmentUtils.setAttributeBonus(context.getRuntimeState(), ID + "_life_force", SkillAttributeType.LIFE_FORCE,
                 lifeForceFlatBonus, 0L);
 
-        if (augmentState.getLastProc() > 0L && now - augmentState.getLastProc() < slowTickIntervalMillis) {
+        updateTriggerPulse(context.getPlayerRef(), context.getCommandBuffer(), now);
+        long effectiveTickIntervalMillis = Math.max(1L, Math.min(1000L, slowTickIntervalMillis));
+        if (augmentState.getLastProc() > 0L && now - augmentState.getLastProc() < effectiveTickIntervalMillis) {
             cleanupExpired(context.getCommandBuffer(), now);
             return;
         }
@@ -343,7 +346,11 @@ public final class FrozenDomainAugment extends YamlAugment
                 return playerRef.getUuid().toString();
             }
         }
-        return ref.toString();
+        Object store = ref.getStore();
+        if (store != null) {
+            return System.identityHashCode(store) + ":" + ref.getIndex();
+        }
+        return String.valueOf(ref.getIndex());
     }
 
     private static void applySlowIfPossible(ActiveFrozen state,
@@ -401,6 +408,7 @@ public final class FrozenDomainAugment extends YamlAugment
 
         if (playerRef != null && playerRef.isValid()) {
             movementManager.update(playerRef.getPacketHandler());
+            applyPlayerHasteDebuff(state, playerRef, key);
         }
 
         // Always apply the visual slow effect in addition to the movement manager slow.
@@ -436,7 +444,41 @@ public final class FrozenDomainAugment extends YamlAugment
 
         if (playerRef != null && playerRef.isValid()) {
             movementManager.update(playerRef.getPacketHandler());
+            clearPlayerHasteDebuff(playerRef, key);
         }
+    }
+
+    private static void applyPlayerHasteDebuff(ActiveFrozen state, PlayerRef playerRef, String key) {
+        if (state == null || playerRef == null || !playerRef.isValid() || playerRef.getUuid() == null || key == null) {
+            return;
+        }
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null || plugin.getAugmentRuntimeManager() == null) {
+            return;
+        }
+
+        double debuffPercent = Math.max(0.0D, state.slowPercent) * 100.0D;
+        plugin.getAugmentRuntimeManager().getRuntimeState(playerRef.getUuid()).setAttributeBonus(
+                SkillAttributeType.HASTE,
+                PLAYER_HASTE_DEBUFF_SOURCE_PREFIX + key,
+                -debuffPercent,
+                state.expiresAt);
+    }
+
+    private static void clearPlayerHasteDebuff(PlayerRef playerRef, String key) {
+        if (playerRef == null || !playerRef.isValid() || playerRef.getUuid() == null || key == null) {
+            return;
+        }
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null || plugin.getAugmentRuntimeManager() == null) {
+            return;
+        }
+
+        plugin.getAugmentRuntimeManager().getRuntimeState(playerRef.getUuid()).setAttributeBonus(
+                SkillAttributeType.HASTE,
+                PLAYER_HASTE_DEBUFF_SOURCE_PREFIX + key,
+                0.0D,
+                0L);
     }
 
     private static void applySlowEffectFallback(ActiveFrozen state,
@@ -523,6 +565,13 @@ public final class FrozenDomainAugment extends YamlAugment
             }
         }
         return null;
+    }
+
+    private void clearTriggerPulse(Ref<EntityStore> sourceRef, CommandBuffer<EntityStore> commandBuffer) {
+        if (sourceRef == null || commandBuffer == null) {
+            return;
+        }
+        ACTIVE_PULSES.remove(keyFor(sourceRef, commandBuffer));
     }
 
     private void startTriggerPulse(Ref<EntityStore> sourceRef,
