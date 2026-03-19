@@ -177,6 +177,27 @@ public final class RagingMomentumAugment extends YamlAugment
         AugmentRuntimeState runtime = context.getRuntimeState();
         var ragingState = runtime.getState(ID);
         long now = System.currentTimeMillis();
+        PlayerRef playerRef = AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getPlayerRef());
+        decayIfNeeded(ragingState, runtime, playerRef, now);
+
+        int stacks = Math.max(0, ragingState.getStacks());
+        double strengthBonus = stacks * perStackStrength;
+        double sorceryBonus = stacks * perStackSorcery;
+        if (stacks >= maxStacks && maxStacks > 0) {
+            strengthBonus *= 2.0D;
+            sorceryBonus *= 2.0D;
+        }
+
+        AugmentUtils.setAttributeBonus(runtime,
+            ID + "_str",
+            SkillAttributeType.STRENGTH,
+            strengthBonus * 100.0D,
+            0L);
+        AugmentUtils.setAttributeBonus(runtime,
+            ID + "_sorc",
+            SkillAttributeType.SORCERY,
+            sorceryBonus * 100.0D,
+            0L);
 
         if (ragingState.getExpiresAt() > 0L && ragingState.isExpired(now)) {
             clearAura(context.getPlayerRef(), context.getCommandBuffer(), runtime.getState(AURA_STATE_ID));

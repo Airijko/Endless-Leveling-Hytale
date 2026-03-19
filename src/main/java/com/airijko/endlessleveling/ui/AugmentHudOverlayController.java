@@ -13,6 +13,8 @@ import com.airijko.endlessleveling.augments.types.FrozenDomainAugment;
 import com.airijko.endlessleveling.augments.types.OverhealAugment;
 import com.airijko.endlessleveling.augments.types.PhaseRushAugment;
 import com.airijko.endlessleveling.augments.types.ProtectiveBubbleAugment;
+import com.airijko.endlessleveling.augments.types.RagingMomentumAugment;
+import com.airijko.endlessleveling.augments.types.TankEngineAugment;
 import com.airijko.endlessleveling.augments.types.UndyingRageAugment;
 import com.airijko.endlessleveling.enums.PassiveCategory;
 import com.airijko.endlessleveling.passives.PassiveManager;
@@ -115,9 +117,13 @@ public final class AugmentHudOverlayController {
                     int stacks = Math.max(0, state.getStacks());
                     int maxStacks = resolveConfiguredMaxStacks(definition.getId(), definition.getPassives());
                     boolean nextHitTriggerIndicator = usesNextHitTriggerIndicator(definition.getId());
+                        boolean decaysOverTime = hasStackDecayMechanic(definition.getId(), definition.getPassives());
                     boolean stacksVisible = nextHitTriggerIndicator
                             ? shouldShowNextHitTrigger(definition.getId(), state, stacks, maxStacks, now)
-                            : stacks > 0 && (state.getExpiresAt() <= 0L || state.getExpiresAt() > now);
+                            : stacks > 0
+                                && (decaysOverTime
+                                    || state.getExpiresAt() <= 0L
+                                    || state.getExpiresAt() > now);
                     if (stacksVisible) {
                         boolean atMaxStacks = nextHitTriggerIndicator
                                 ? true
@@ -675,6 +681,26 @@ public final class AugmentHudOverlayController {
 
     private boolean usesNextHitTriggerIndicator(String augmentId) {
         return PhaseRushAugment.ID.equals(augmentId) || BloodthirsterAugment.ID.equals(augmentId);
+    }
+
+    private boolean hasStackDecayMechanic(String augmentId, Map<String, Object> passives) {
+        if (passives == null || passives.isEmpty()) {
+            return false;
+        }
+
+        if (RagingMomentumAugment.ID.equals(augmentId)) {
+            return AugmentValueReader.getDouble(AugmentValueReader.getMap(passives, "buffs"),
+                    "decay_per_second",
+                    0.0D) > 0.0D;
+        }
+
+        if (TankEngineAugment.ID.equals(augmentId)) {
+            return AugmentValueReader.getDouble(AugmentValueReader.getMap(passives, "stacking_health"),
+                    "decay_per_second",
+                    0.0D) > 0.0D;
+        }
+
+        return false;
     }
 
     private boolean shouldShowNextHitTrigger(String augmentId,
