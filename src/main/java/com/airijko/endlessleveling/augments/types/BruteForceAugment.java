@@ -36,10 +36,16 @@ public final class BruteForceAugment extends YamlAugment
             return;
         }
 
+        double critLockMagnitude = -Math.abs(precisionLockMagnitude);
         AugmentUtils.setAttributeBonus(context.getRuntimeState(),
                 ID + "_precision_lock",
                 SkillAttributeType.PRECISION,
-                -precisionLockMagnitude,
+                critLockMagnitude,
+                0L);
+        AugmentUtils.setAttributeBonus(context.getRuntimeState(),
+                ID + "_ferocity_lock",
+                SkillAttributeType.FEROCITY,
+                critLockMagnitude,
                 0L);
 
         // Clear first so strength/sorcery snapshots are computed without recursive

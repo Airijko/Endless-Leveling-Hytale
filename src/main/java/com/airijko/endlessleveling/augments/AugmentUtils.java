@@ -297,6 +297,18 @@ public final class AugmentUtils {
         return configuredValue;
     }
 
+    public static double normalizeConfiguredDebuffMultiplier(double configuredValue) {
+        if (!Double.isFinite(configuredValue) || configuredValue == 0.0D) {
+            return 0.0D;
+        }
+
+        double magnitude = Math.abs(configuredValue);
+        if (magnitude >= 10.0D) {
+            magnitude /= 100.0D;
+        }
+        return -magnitude;
+    }
+
     public static double resolveClassValue(Map<String, Object> classValues, String classId) {
         if (classValues == null || classValues.isEmpty() || classId == null) {
             return 0.0D;

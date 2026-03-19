@@ -68,7 +68,8 @@ public final class PredatorAugment extends YamlAugment
         this.hastePerStack = AugmentUtils.normalizeConfiguredBonusMultiplier(
                 AugmentValueReader.getNestedDouble(buffs, 0.0D, "haste", "value"));
         Map<String, Object> debuffs = AugmentValueReader.getMap(passives, "debuffs");
-        this.defensePenalty = AugmentValueReader.getNestedDouble(debuffs, 0.0D, "defense", "value");
+        this.defensePenalty = AugmentUtils.normalizeConfiguredDebuffMultiplier(
+            AugmentValueReader.getNestedDouble(debuffs, 0.0D, "defense", "value"));
         Map<String, Object> defenseDebuff = AugmentValueReader.getMap(debuffs, "defense");
         this.defensePenaltyActiveUntilMaxStacks = AugmentValueReader.getBoolean(defenseDebuff,
                 "active_until_max_stacks",

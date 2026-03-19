@@ -36,7 +36,8 @@ public final class ArcaneInstabilityAugment extends YamlAugment implements Augme
 
         var low = AugmentValueReader.getMap(debuffs, "sorcery_penalty_low");
         var lowCond = AugmentValueReader.getMap(low, "condition");
-        this.lowManaPenalty = AugmentValueReader.getDouble(low, "value", 0.0D);
+        this.lowManaPenalty = AugmentUtils
+            .normalizeConfiguredDebuffMultiplier(AugmentValueReader.getDouble(low, "value", 0.0D));
         this.lowManaThreshold = normalizePercentThreshold(
                 AugmentValueReader.getNestedDouble(lowCond, 0.0D, "max_percent"));
     }

@@ -937,12 +937,9 @@ public class SkillManager {
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.PRECISION);
         double augmentBonus = getAugmentAttributeBonus(playerData, SkillAttributeType.PRECISION)
                 - getVanguardBlockedCommonCritBonus(playerData, SkillAttributeType.PRECISION);
-        if (augmentBonus < 0.0D) {
-            augmentBonus = 0.0D;
-        }
         float skillPercent = (float) ((precisionLevel * perPointChance) + innateBonus + augmentBonus);
         float rawTotalPercent = racePercent + skillPercent;
-        float totalPercent = Math.min(100.0f, rawTotalPercent);
+        float totalPercent = Math.max(0.0f, Math.min(100.0f, rawTotalPercent));
         float critChance = totalPercent / 100.0f;
         return new PrecisionBreakdown(racePercent, skillPercent, totalPercent, critChance);
     }
@@ -979,11 +976,8 @@ public class SkillManager {
         double innateBonus = getInnateAttributeBonus(playerData, SkillAttributeType.FEROCITY);
         double augmentBonus = getAugmentAttributeBonus(playerData, SkillAttributeType.FEROCITY)
                 - getVanguardBlockedCommonCritBonus(playerData, SkillAttributeType.FEROCITY);
-        if (augmentBonus < 0.0D) {
-            augmentBonus = 0.0D;
-        }
-        float skillValue = (float) ((ferocityLevel * perPointFerocity) + innateBonus + augmentBonus);
-        return new FerocityBreakdown(raceValue, skillValue, raceValue + skillValue);
+        float skillValue = (float) Math.max(0.0D, (ferocityLevel * perPointFerocity) + innateBonus + augmentBonus);
+        return new FerocityBreakdown(raceValue, skillValue, Math.max(0.0f, raceValue + skillValue));
     }
 
     public float calculatePlayerHasteMultiplier(PlayerData playerData) {

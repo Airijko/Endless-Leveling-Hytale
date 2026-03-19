@@ -19,7 +19,8 @@ public final class SupersonicAugment extends YamlAugment implements AugmentHooks
         var buffs = AugmentValueReader.getMap(passives, "buffs");
         var debuffs = AugmentValueReader.getMap(passives, "debuffs");
         this.hasteBonus = AugmentValueReader.getNestedDouble(buffs, 0.0D, "haste", "value");
-        this.strengthPenalty = AugmentValueReader.getNestedDouble(debuffs, 0.0D, "strength", "value");
+        this.strengthPenalty = AugmentUtils.normalizeConfiguredDebuffMultiplier(
+            AugmentValueReader.getNestedDouble(debuffs, 0.0D, "strength", "value"));
     }
 
     @Override

@@ -14,6 +14,7 @@ import com.airijko.endlessleveling.augments.AugmentHooks.OnMissAugment;
 import com.airijko.endlessleveling.augments.AugmentHooks.PassiveStatAugment;
 import com.airijko.endlessleveling.augments.types.FleetFootworkAugment;
 import com.airijko.endlessleveling.augments.types.FortressAugment;
+import com.airijko.endlessleveling.augments.types.GlassCannonAugment;
 import com.airijko.endlessleveling.augments.types.GoliathAugment;
 import com.airijko.endlessleveling.augments.types.NestingDollAugment;
 import com.airijko.endlessleveling.augments.types.RaidBossAugment;
@@ -58,6 +59,7 @@ public final class AugmentExecutor {
             new HealthModifierSpec(RaidBossAugment.ID, "max_hp_bonus"),
             new HealthModifierSpec(GoliathAugment.ID, "max_hp_bonus"),
             new HealthModifierSpec(TankEngineAugment.ID, "max_hp_bonus"),
+            new HealthModifierSpec(GlassCannonAugment.ID, "max_hp_penalty"),
             new HealthModifierSpec(NestingDollAugment.ID, "max_hp_penalty"));
 
     private final AugmentManager augmentManager;

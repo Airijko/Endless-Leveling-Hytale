@@ -20,7 +20,8 @@ public final class TitansMightAugment extends YamlAugment implements AugmentHook
         this.percentOfHealthToStrength = AugmentValueReader
                 .getNestedDouble(buffs, 0.0D, "strength_from_max_health", "value");
         var debuffs = AugmentValueReader.getMap(passives, "debuffs");
-        this.hasteDebuff = AugmentValueReader.getNestedDouble(debuffs, 0.0D, "haste", "value");
+        this.hasteDebuff = AugmentUtils.normalizeConfiguredDebuffMultiplier(
+            AugmentValueReader.getNestedDouble(debuffs, 0.0D, "haste", "value"));
     }
 
     @Override
