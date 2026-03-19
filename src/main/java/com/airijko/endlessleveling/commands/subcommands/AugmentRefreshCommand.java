@@ -29,7 +29,10 @@ public class AugmentRefreshCommand extends AbstractPlayerCommand {
     private final OptionalArg<String> targetArg = this.withOptionalArg("player", "Target player name", ArgTypes.STRING);
 
     public AugmentRefreshCommand() {
-        this("augmentrefresh", "Reroll stored augment offers for a player", "augmentsrefresh", "refreshaugments");
+        this("augmentrefresh",
+                "Reroll stored augment offers for a player's active profile",
+                "augmentsrefresh",
+                "refreshaugments");
     }
 
     public AugmentRefreshCommand(String name, String description, String... aliases) {
@@ -78,13 +81,20 @@ public class AugmentRefreshCommand extends AbstractPlayerCommand {
             targetName = playerRef.getUsername();
         }
 
+        int activeProfileIndex = targetData.getActiveProfileIndex();
         augmentUnlockManager.refreshUnlocks(targetData);
 
         playerRef.sendMessage(
-                Message.raw("Refreshed augment offers for " + targetName + " (selected augments unchanged).")
+            Message.raw("Refreshed augment offers for "
+                + targetName
+                + " on active profile "
+                + activeProfileIndex
+                + " (selected augments unchanged).")
                         .color("#4fd7f7"));
         if (targetRef != null && !targetRef.getUuid().equals(playerRef.getUuid())) {
-            targetRef.sendMessage(Message.raw("An admin refreshed your augment offers.").color("#4fd7f7"));
+            targetRef.sendMessage(Message.raw("An admin refreshed your augment offers on active profile "
+                + activeProfileIndex
+                + ".").color("#4fd7f7"));
         }
     }
 }

@@ -29,7 +29,7 @@ public class ResetAugmentsCommand extends AbstractPlayerCommand {
     private final OptionalArg<String> targetArg = this.withOptionalArg("player", "Target player name", ArgTypes.STRING);
 
     public ResetAugmentsCommand() {
-        this("resetaugments", "Reset selected augments and reroll all eligible augment offers",
+        this("resetaugments", "Reset selected augments and reroll eligible offers for the active profile",
                 "augmentsreset", "resetallaugments");
     }
 
@@ -79,12 +79,21 @@ public class ResetAugmentsCommand extends AbstractPlayerCommand {
             targetName = playerRef.getUsername();
         }
 
-        augmentUnlockManager.resetAllAugmentsForAllProfiles(targetData);
+        int activeProfileIndex = targetData.getActiveProfileIndex();
+        augmentUnlockManager.resetAllAugments(targetData);
 
-        playerRef.sendMessage(Message.raw("Reset augments and rebuilt eligible offers for " + targetName + ".")
+        playerRef.sendMessage(Message
+            .raw("Reset augments and rebuilt eligible offers for "
+                + targetName
+                + " on active profile "
+                + activeProfileIndex
+                + ".")
                 .color("#4fd7f7"));
         if (targetRef != null && !targetRef.getUuid().equals(playerRef.getUuid())) {
-            targetRef.sendMessage(Message.raw("An admin reset your augments and rerolled your eligible offers.")
+            targetRef.sendMessage(Message
+                .raw("An admin reset your augments on active profile "
+                    + activeProfileIndex
+                    + " and rerolled eligible offers.")
                     .color("#4fd7f7"));
         }
     }
