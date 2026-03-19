@@ -6,7 +6,7 @@ $C.@PageOverlay {
         Anchor: (Width: 1000, Height: 700);
         #Title {
             Group {
-                $C.@Title {
+                $C.@Title #SupportTitle {
                     @Text = "ENDLESS LEVELING";
                 }
             }

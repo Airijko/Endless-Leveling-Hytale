@@ -25,7 +25,7 @@ $C.@PageOverlay {
                             Group {
                                 Padding: (Horizontal: 6, Vertical: 8);
 
-                                $C.@Title {
+                                $C.@Title #ClassPathsTitle {
                                     @Text = "ENDLESS LEVELING";
                                 }
                             }

@@ -27,7 +27,7 @@ $C.@PageOverlay {
 
                             #Title {
                                 Group {
-                                    $C.@Title #AugmentActionInfo { @Text = "ENDLESS LEVELING"; }
+                                    $C.@Title #AugmentActionInfo { @Text = "AUGMENTS"; }
                                 }
                             }
 
@@ -151,7 +151,7 @@ $C.@PageOverlay {
                                     LayoutMode: Left;
 
                                     $C.@Title #AugmentsPageTitle {
-                                        @Text = "AUGMENTS";
+                                        @Text = "ENDLESS LEVELING";
                                     }
 
                                     Group { FlexWeight: 1; }
