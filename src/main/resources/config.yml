@@ -116,6 +116,9 @@ language:
   locale: "en_US" # Active locale file from /EndlessLeveling/lang/<locale>.yml
   fallback_locale: "en_US" # Fallback locale when a key is missing
 
+# Community / support
+discord_invite_url: "https://discord.gg/hfMeu9KWsh" # Set this to a permanent (non-expiring) Discord invite
+
 # Bundled content sync / customization
 # Set these to false if you want to keep custom files instead of bundled updates.
 force_builtin_config: true # If true, overwrite config.yml with bundled defaults; if false, migrate existing config values into new template structure

@@ -34,6 +34,7 @@ import com.airijko.endlessleveling.classes.ClassManager;
 import com.airijko.endlessleveling.races.RaceManager;
 import com.airijko.endlessleveling.passives.PassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
+import com.airijko.endlessleveling.security.UiTitleIntegrityGuard;
 import com.airijko.endlessleveling.systems.BreakBlockEntitySystem;
 import com.airijko.endlessleveling.systems.ArmyOfTheDeadDeathSystem;
 import com.airijko.endlessleveling.drops.MobDropTaggingSystem;
@@ -49,6 +50,7 @@ import com.airijko.endlessleveling.systems.PlayerRaceStatSystem;
 import com.airijko.endlessleveling.systems.PeriodicSkillModifierSystem;
 import com.airijko.endlessleveling.systems.SwiftnessKillSystem;
 import com.airijko.endlessleveling.systems.HudRefreshSystem;
+import com.airijko.endlessleveling.systems.UiIntegrityAlertSystem;
 import com.airijko.endlessleveling.systems.WitherEffectSystem;
 import com.airijko.endlessleveling.leveling.XpEventSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -90,6 +92,7 @@ public class EndlessLeveling extends JavaPlugin {
     private AugmentSyncValidator augmentSyncValidator;
     private AugmentExecutor augmentExecutor;
     private MobAugmentExecutor mobAugmentExecutor;
+    private UiTitleIntegrityGuard uiTitleIntegrityGuard;
 
     // Getter for SkillManager
     public SkillManager getSkillManager() {
@@ -213,6 +216,7 @@ public class EndlessLeveling extends JavaPlugin {
         augmentManager = new AugmentManager(filesManager.getAugmentsFolder().toPath(), filesManager, configManager);
         augmentRuntimeManager = new AugmentRuntimeManager();
         mobAugmentExecutor = new MobAugmentExecutor();
+        uiTitleIntegrityGuard = new UiTitleIntegrityGuard();
         skillManager = new SkillManager(filesManager,
                 classManager,
                 playerAttributeManager,
@@ -305,6 +309,7 @@ public class EndlessLeveling extends JavaPlugin {
         mobLevelingSystem = new MobLevelingSystem();
         this.getEntityStoreRegistry().registerSystem(mobLevelingSystem);
         this.getEntityStoreRegistry().registerSystem(new HudRefreshSystem());
+        this.getEntityStoreRegistry().registerSystem(new UiIntegrityAlertSystem(uiTitleIntegrityGuard));
         this.getEntityStoreRegistry().registerSystem(new WitherEffectSystem());
 
         // Register commands

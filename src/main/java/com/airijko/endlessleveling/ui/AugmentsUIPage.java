@@ -75,7 +75,9 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull UIEventBuilder events,
             @Nonnull Store<EntityStore> store) {
         ui.append("Pages/Augments/AugmentsPage.ui");
-        NavUIHelper.applyNavVersion(ui, playerRef, "augments");
+        NavUIHelper.applyNavVersion(ui, playerRef, "augments",
+            "Common/UI/Custom/Pages/Augments/AugmentsPage.ui",
+            "#AugmentsPageTitle");
         applyStaticLabels(ui);
         ui.set("#SearchInput.Value", this.searchQuery);
         NavUIHelper.bindNavEvents(events);
@@ -88,7 +90,6 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private void applyStaticLabels(@Nonnull UICommandBuilder ui) {
-        ui.set("#AugmentActionInfo.Text", tr("ui.augments.page.brand", "ENDLESS LEVELING"));
         ui.set("#OpenAugmentsChooseButton.Text", tr("ui.augments.page.choose_button", "CHOOSE AUGMENTS"));
         ui.set("#AugmentsOverviewDescription.Text", tr("ui.augments.page.left.description",
                 "Augments are powerful passive enhancements that permanently strengthen your character. Earn them by reaching level milestones and through prestige."));
@@ -96,7 +97,6 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         ui.set("#AugmentsRerollsTitle.Text", tr("ui.augments.page.left.rerolls_title", "REROLLS USED"));
         ui.set("#AugmentsInfoText.Text",
                 tr("ui.augments.page.left.hover_hint", "Hover over an augment to preview it."));
-        ui.set("#AugmentsPageTitle.Text", tr("ui.augments.page.title", "AUGMENTS"));
         ui.set("#SearchInput.PlaceholderText", tr("ui.augments.page.search_placeholder", "Search augments..."));
         ui.set("#UnlockedHeader.Text", tr("ui.augments.page.section.unlocked", "UNLOCKED"));
         ui.set("#MythicHeader.Text", tr("ui.augments.page.section.mythic", "MYTHIC"));

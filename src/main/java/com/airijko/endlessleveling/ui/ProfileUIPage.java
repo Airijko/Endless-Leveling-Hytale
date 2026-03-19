@@ -99,7 +99,9 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         ui.append("Pages/Profile/ProfilePage.ui");
         NavUIHelper.bindNavEvents(events);
-        NavUIHelper.applyNavVersion(ui, playerRef, "profile");
+        NavUIHelper.applyNavVersion(ui, playerRef, "profile",
+            "Common/UI/Custom/Pages/Profile/ProfilePage.ui",
+            "#ProfileTitle");
 
         PlayerData playerData = resolvePlayerData();
         if (playerData == null) {

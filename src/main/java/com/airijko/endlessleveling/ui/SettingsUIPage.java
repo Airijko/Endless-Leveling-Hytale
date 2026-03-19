@@ -40,7 +40,9 @@ public class SettingsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                         @Nonnull Store<EntityStore> store) {
 
                 ui.append("Pages/SettingsPage.ui");
-                NavUIHelper.applyNavVersion(ui, playerRef, "settings");
+                NavUIHelper.applyNavVersion(ui, playerRef, "settings",
+                                "Common/UI/Custom/Pages/SettingsPage.ui",
+                                "#SettingsTitle");
 
                 // Bind navigation on the left side
                 NavUIHelper.bindNavEvents(events);

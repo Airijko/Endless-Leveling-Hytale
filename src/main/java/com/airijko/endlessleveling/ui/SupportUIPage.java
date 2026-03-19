@@ -3,6 +3,7 @@ package com.airijko.endlessleveling.ui;
 import javax.annotation.Nonnull;
 
 import com.airijko.endlessleveling.util.Lang;
+import com.airijko.endlessleveling.util.DiscordLinkResolver;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
@@ -21,8 +22,6 @@ import static com.hypixel.hytale.server.core.ui.builder.EventData.of;
  */
 public class SupportUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
-    private static final String SUPPORT_DISCORD_URL = "https://discord.gg/hfMeu9KWsh";
-
     public SupportUIPage(@Nonnull PlayerRef playerRef,
             @Nonnull CustomPageLifetime lifetime) {
         super(playerRef, lifetime, SkillsUIPage.Data.CODEC);
@@ -35,7 +34,9 @@ public class SupportUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull Store<EntityStore> store) {
 
         ui.append("Pages/SupportPage.ui");
-        NavUIHelper.applyNavVersion(ui, playerRef, "support");
+        NavUIHelper.applyNavVersion(ui, playerRef, "support",
+                "Common/UI/Custom/Pages/SupportPage.ui",
+                "#SupportTitle");
         NavUIHelper.bindNavEvents(events);
         events.addEventBinding(Activating, "#SupportDiscordButton", of("Action", "support:discord"), false);
 
@@ -74,13 +75,14 @@ public class SupportUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         }
 
         if ("support:discord".equalsIgnoreCase(data.action)) {
+            String discordInviteUrl = DiscordLinkResolver.getDiscordInviteUrl();
             playerRef.sendMessage(Message.raw(
                     Lang.tr(playerRef.getUuid(), "ui.support.discord_chat_prompt",
                             "Need help or want to report an issue? Click below to join Discord."))
                     .color("#4fd7f7"));
             playerRef.sendMessage(Message
                     .raw(Lang.tr(playerRef.getUuid(), "ui.support.discord_chat_link_label", "Endless Leveling Discord"))
-                    .link(SUPPORT_DISCORD_URL)
+                    .link(discordInviteUrl)
                     .color("#6fe3ff"));
             return;
         }

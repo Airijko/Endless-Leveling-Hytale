@@ -80,7 +80,9 @@ public class ClassPathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data>
             @Nonnull UIEventBuilder events,
             @Nonnull Store<EntityStore> store) {
         ui.append("Pages/Classes/ClassPathsPage.ui");
-        NavUIHelper.applyNavVersion(ui, playerRef, "classes");
+        NavUIHelper.applyNavVersion(ui, playerRef, "classes",
+            "Common/UI/Custom/Pages/Classes/ClassPathsPage.ui",
+            "#ClassPathsTitle");
         NavUIHelper.bindNavEvents(events);
 
         PlayerData data = loadPlayerData();
