@@ -20,7 +20,6 @@ import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
-import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
 import com.hypixel.hytale.server.core.universe.world.SoundUtil;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -37,16 +36,15 @@ public final class DeathBombAugment extends YamlAugment
         implements AugmentHooks.OnDamageTakenAugment, AugmentHooks.PassiveStatAugment {
     public static final String ID = "death_bomb";
 
-    private static final String[] TRIGGER_VFX_IDS = new String[] {
-        "Explosion_Small",
-        "Explosion_Medium"
-    };
     private static final String EXPLOSION_PARTICLE_SMALL = "Explosion_Small";
     private static final String EXPLOSION_PARTICLE_MEDIUM = "Explosion_Medium";
     private static final String EXPLOSION_PARTICLE_BIG = "Explosion_Big";
-    private static final String[] EXPLOSION_SFX_IDS = new String[] {
+    private static final String[] EXPLOSION_SFX_PRIMARY_IDS = new String[] {
         "SFX_Goblin_Lobber_Bomb_Death",
-        "SFX_Goblin_Lobber_Bomb_Miss"
+    };
+    private static final String[] EXPLOSION_SFX_LAYER_IDS = new String[] {
+        "SFX_Staff_Flame_Fireball_Impact",
+        "SFX_Goblin_Lobber_Bomb_Death"
     };
     private static final double MIN_VISUAL_BROADCAST_RADIUS = 24.0D;
     private static final double VISUAL_BROADCAST_RADIUS_MULTIPLIER = 4.0D;
@@ -62,17 +60,20 @@ public final class DeathBombAugment extends YamlAugment
 
     private static final class PendingBomb {
         final Ref<EntityStore> sourceRef;
+        final Object worldStore;
         final Vector3d position;
         final long explodeAt;
         final double damage;
         final double radius;
 
         PendingBomb(Ref<EntityStore> sourceRef,
+                Object worldStore,
                 Vector3d position,
                 long explodeAt,
                 double damage,
                 double radius) {
             this.sourceRef = sourceRef;
+            this.worldStore = worldStore;
             this.position = position;
             this.explodeAt = explodeAt;
             this.damage = Math.max(0.0D, damage);
@@ -87,23 +88,36 @@ public final class DeathBombAugment extends YamlAugment
         Map<String, Object> damage = AugmentValueReader.getMap(bomb, "damage_scaling");
 
         this.healthRatio = normalizeConfiguredRatio(
-            AugmentValueReader.getDouble(damage, "max_health_ratio", 0.50D));
+                AugmentValueReader.getDouble(damage, "max_health_ratio", 0.50D));
         this.strengthRatio = normalizeConfiguredRatio(
-            AugmentValueReader.getDouble(damage, "strength_ratio", 0.10D));
+                AugmentValueReader.getDouble(damage, "strength_ratio", 0.10D));
         this.sorceryRatio = normalizeConfiguredRatio(
-            AugmentValueReader.getDouble(damage, "sorcery_ratio", 0.10D));
+                AugmentValueReader.getDouble(damage, "sorcery_ratio", 0.10D));
         this.delayMillis = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(bomb, "delay", 3.0D));
         this.cooldownMillis = AugmentUtils.secondsToMillis(AugmentValueReader.getDouble(bomb, "cooldown", 0.0D));
         this.radius = Math.max(0.0D, AugmentValueReader.getDouble(bomb, "radius", 5.0D));
     }
 
-        private static double normalizeConfiguredRatio(double configured) {
+    private static double normalizeConfiguredRatio(double configured) {
         double ratio = configured;
         if (ratio > 1.0D && ratio <= 100.0D) {
             ratio = ratio / 100.0D;
         }
         return Math.max(0.0D, ratio);
+    }
+
+    private static Vector3d snapshotPosition(Vector3d position) {
+        if (position == null) {
+            return null;
         }
+        double x = position.getX();
+        double y = position.getY();
+        double z = position.getZ();
+        if (!Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(z)) {
+            return null;
+        }
+        return new Vector3d(x, y, z);
+    }
 
     @Override
     public float onDamageTaken(AugmentHooks.DamageTakenContext context) {
@@ -147,7 +161,7 @@ public final class DeathBombAugment extends YamlAugment
 
         TransformComponent transform = context.getCommandBuffer().getComponent(context.getDefenderRef(),
                 TransformComponent.getComponentType());
-        Vector3d position = transform != null ? transform.getPosition() : null;
+        Vector3d position = transform != null ? snapshotPosition(transform.getPosition()) : null;
         if (position == null) {
             return incoming;
         }
@@ -167,11 +181,11 @@ public final class DeathBombAugment extends YamlAugment
 
         PENDING_BOMBS.put(uuid,
                 new PendingBomb(context.getDefenderRef(),
+                context.getDefenderRef().getStore(),
                         position,
                         now + Math.max(1L, delayMillis),
                         scaledDamage,
                         radius));
-        spawnTriggerVfx(context.getDefenderRef(), position);
 
         return incoming;
     }
@@ -204,12 +218,18 @@ public final class DeathBombAugment extends YamlAugment
                 continue;
             }
 
+            long staleAt = pending.explodeAt + PENDING_BOMB_STALE_AFTER_MILLIS;
+            if (now >= staleAt) {
+                PENDING_BOMBS.remove(ownerUuid, pending);
+                continue;
+            }
+
             if (now < pending.explodeAt) {
                 continue;
             }
 
-            if (fallbackVisualRef != null && pending.sourceRef != null
-                    && fallbackVisualRef.getStore() != pending.sourceRef.getStore()) {
+            if (pending.worldStore == null || fallbackVisualRef == null || fallbackVisualRef.getStore() == null
+                    || fallbackVisualRef.getStore() != pending.worldStore) {
                 continue;
             }
 
@@ -226,6 +246,10 @@ public final class DeathBombAugment extends YamlAugment
             Ref<EntityStore> fallbackVisualRef) {
         if (pending == null || commandBuffer == null || pending.position == null
                 || pending.damage <= 0.0D || pending.radius <= 0.0D) {
+            return;
+        }
+        if (pending.worldStore == null || fallbackVisualRef == null || fallbackVisualRef.getStore() == null
+                || fallbackVisualRef.getStore() != pending.worldStore) {
             return;
         }
 
@@ -256,44 +280,50 @@ public final class DeathBombAugment extends YamlAugment
                 continue;
             }
 
-            EntityStatMap targetStats = EntityRefUtil.tryGetComponent(commandBuffer,
-                    targetRef,
-                    EntityStatMap.getComponentType());
-            EntityStatValue targetHp = targetStats == null ? null : targetStats.get(DefaultEntityStatTypes.getHealth());
-            if (targetStats == null || targetHp == null) {
-                DamageSystems.executeDamage(targetRef,
-                        commandBuffer,
-                        PlayerCombatSystem.createAugmentProcDamage(sourceRef, configuredDamage));
-                continue;
-            }
-
-            float currentHp = targetHp.get();
-            if (currentHp <= 0f) {
-                continue;
-            }
-
-            if (configuredDamage >= currentHp) {
-                markBombKill(sourceRef, targetRef, commandBuffer, targetStats);
-                continue;
-            }
-
-            float updatedHealth = Math.max(0.0f, currentHp - configuredDamage);
-            targetStats.setStatValue(DefaultEntityStatTypes.getHealth(), updatedHealth);
+            applyBombDamageToTarget(sourceRef, targetRef, commandBuffer, configuredDamage);
         }
     }
 
-    private static void spawnTriggerVfx(Ref<EntityStore> sourceRef, Vector3d position) {
-        if (!EntityRefUtil.isUsable(sourceRef) || position == null) {
+    private static void applyBombDamageToTarget(Ref<EntityStore> sourceRef,
+            Ref<EntityStore> targetRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            float configuredDamage) {
+        if (targetRef == null || commandBuffer == null || configuredDamage <= 0.0f) {
             return;
         }
 
-        for (String particleSystemId : TRIGGER_VFX_IDS) {
-            try {
-                ParticleUtil.spawnParticleEffect(particleSystemId, position, sourceRef.getStore());
-                return;
-            } catch (RuntimeException ignored) {
-            }
+        EntityStatMap targetStats = EntityRefUtil.tryGetComponent(commandBuffer,
+                targetRef,
+                EntityStatMap.getComponentType());
+        EntityStatValue hpBeforeValue = targetStats == null ? null : targetStats.get(DefaultEntityStatTypes.getHealth());
+        float hpBefore = hpBeforeValue == null ? 0.0f : hpBeforeValue.get();
+
+        DamageSystems.executeDamage(targetRef,
+                commandBuffer,
+                PlayerCombatSystem.createAugmentProcDamage(sourceRef, configuredDamage));
+
+        if (targetStats == null || hpBeforeValue == null || hpBefore <= 0.0f) {
+            return;
         }
+
+        EntityStatValue hpAfterValue = targetStats.get(DefaultEntityStatTypes.getHealth());
+        float hpAfter = hpAfterValue == null ? hpBefore : hpAfterValue.get();
+        if (hpAfter <= 0.0f) {
+            return;
+        }
+
+        float alreadyApplied = Math.max(0.0f, hpBefore - hpAfter);
+        float remaining = configuredDamage - alreadyApplied;
+        if (remaining <= 0.001f) {
+            return;
+        }
+
+        if (remaining >= hpAfter) {
+            markBombKill(sourceRef, targetRef, commandBuffer, targetStats);
+            return;
+        }
+
+        targetStats.setStatValue(DefaultEntityStatTypes.getHealth(), Math.max(0.0f, hpAfter - remaining));
     }
 
     private static void markBombKill(Ref<EntityStore> sourceRef,
@@ -328,40 +358,56 @@ public final class DeathBombAugment extends YamlAugment
         if (commandBuffer == null || pending == null || pending.position == null) {
             return;
         }
-
-        Ref<EntityStore> visualSource = EntityRefUtil.isUsable(sourceRef) ? sourceRef
-                : (EntityRefUtil.isUsable(fallbackVisualRef) ? fallbackVisualRef : null);
-        if (visualSource == null) {
+        if (pending.worldStore == null || fallbackVisualRef == null || fallbackVisualRef.getStore() == null
+                || fallbackVisualRef.getStore() != pending.worldStore) {
             return;
         }
 
-        double broadcastRadius = Math.max(MIN_VISUAL_BROADCAST_RADIUS,
-                pending.radius * VISUAL_BROADCAST_RADIUS_MULTIPLIER);
-        List<Ref<EntityStore>> nearbyPlayers = collectNearbyPlayers(commandBuffer, pending.position, broadcastRadius);
-
-        if (nearbyPlayers.isEmpty()) {
-            nearbyPlayers.add(visualSource);
-        } else if (!nearbyPlayers.contains(visualSource)) {
-            nearbyPlayers.add(visualSource);
-        }
-
-        if (nearbyPlayers.isEmpty()) {
+        Ref<EntityStore> visualSource = EntityRefUtil.isUsable(fallbackVisualRef)
+                ? fallbackVisualRef
+                : (EntityRefUtil.isUsable(sourceRef) ? sourceRef : null);
+        if (visualSource == null || visualSource.getStore() == null) {
             return;
         }
 
         playExplosionSound(visualSource, pending.position);
 
-        for (String particleSystemId : getPreferredExplosionParticleOrder(pending.radius)) {
-            try {
-                ParticleUtil.spawnParticleEffect(
-                        particleSystemId,
-                        pending.position,
-                        visualSource,
-                        nearbyPlayers,
-                        commandBuffer);
-                return;
-            } catch (RuntimeException ignored) {
+        int bigBursts = pending.radius >= 8.0D ? 3 : (pending.radius >= 5.0D ? 2 : 1);
+        boolean spawnedAny = false;
+        for (int i = 0; i < bigBursts; i++) {
+            if (trySpawnExplosionParticle(EXPLOSION_PARTICLE_BIG, pending.position, visualSource)) {
+                spawnedAny = true;
             }
+        }
+
+        if (!spawnedAny) {
+            for (String particleSystemId : getPreferredExplosionParticleOrder(pending.radius)) {
+                if (EXPLOSION_PARTICLE_BIG.equals(particleSystemId)) {
+                    continue;
+                }
+                if (trySpawnExplosionParticle(particleSystemId, pending.position, visualSource)) {
+                    return;
+                }
+            }
+            return;
+        }
+
+        if (pending.radius >= 4.0D) {
+            trySpawnExplosionParticle(EXPLOSION_PARTICLE_MEDIUM, pending.position, visualSource);
+        }
+    }
+
+    private static boolean trySpawnExplosionParticle(String particleSystemId,
+            Vector3d position,
+            Ref<EntityStore> visualSource) {
+        if (particleSystemId == null || position == null || visualSource == null || visualSource.getStore() == null) {
+            return false;
+        }
+        try {
+            ParticleUtil.spawnParticleEffect(particleSystemId, position, visualSource.getStore());
+            return true;
+        } catch (RuntimeException ignored) {
+            return false;
         }
     }
 
@@ -370,14 +416,29 @@ public final class DeathBombAugment extends YamlAugment
             return;
         }
 
-        for (String soundId : EXPLOSION_SFX_IDS) {
-            int soundIndex = resolveSoundIndex(soundId);
-            if (soundIndex == 0) {
+        int primaryIndex = resolveFirstAvailableSoundIndex(EXPLOSION_SFX_PRIMARY_IDS, 0);
+        if (primaryIndex != 0) {
+            SoundUtil.playSoundEvent3d(null, primaryIndex, position, sourceRef.getStore());
+        }
+
+        int layerIndex = resolveFirstAvailableSoundIndex(EXPLOSION_SFX_LAYER_IDS, primaryIndex);
+        if (layerIndex != 0) {
+            SoundUtil.playSoundEvent3d(null, layerIndex, position, sourceRef.getStore());
+        }
+    }
+
+    private static int resolveFirstAvailableSoundIndex(String[] ids, int excludedIndex) {
+        if (ids == null || ids.length == 0) {
+            return 0;
+        }
+        for (String id : ids) {
+            int index = resolveSoundIndex(id);
+            if (index == 0 || index == excludedIndex) {
                 continue;
             }
-            SoundUtil.playSoundEvent3d(null, soundIndex, position, sourceRef.getStore());
-            return;
+            return index;
         }
+        return 0;
     }
 
     private static int resolveSoundIndex(String id) {
@@ -385,30 +446,13 @@ public final class DeathBombAugment extends YamlAugment
         return index == Integer.MIN_VALUE ? 0 : index;
     }
 
-    private static List<Ref<EntityStore>> collectNearbyPlayers(CommandBuffer<EntityStore> commandBuffer,
-            Vector3d position,
-            double radius) {
-        List<Ref<EntityStore>> nearbyPlayers = new ArrayList<>();
-        HashSet<Integer> seen = new HashSet<>();
-
-        for (Ref<EntityStore> targetRef : TargetUtil.getAllEntitiesInSphere(position, radius, commandBuffer)) {
-            if (targetRef == null || !targetRef.isValid() || !seen.add(targetRef.getIndex())) {
-                continue;
-            }
-
-            PlayerRef sourcePlayerRef = EntityRefUtil.tryGetComponent(commandBuffer,
-                    targetRef,
-                    PlayerRef.getComponentType());
-            if (sourcePlayerRef == null || !sourcePlayerRef.isValid()) {
-                continue;
-            }
-            nearbyPlayers.add(targetRef);
-        }
-
-        return nearbyPlayers;
-    }
-
     private static String[] getPreferredExplosionParticleOrder(double explosionRadius) {
-        return new String[] { EXPLOSION_PARTICLE_BIG, EXPLOSION_PARTICLE_MEDIUM, EXPLOSION_PARTICLE_SMALL };
+        if (explosionRadius >= 7.0D) {
+            return new String[] { EXPLOSION_PARTICLE_BIG, EXPLOSION_PARTICLE_MEDIUM, EXPLOSION_PARTICLE_SMALL };
+        }
+        if (explosionRadius >= 4.0D) {
+            return new String[] { EXPLOSION_PARTICLE_MEDIUM, EXPLOSION_PARTICLE_BIG, EXPLOSION_PARTICLE_SMALL };
+        }
+        return new String[] { EXPLOSION_PARTICLE_SMALL, EXPLOSION_PARTICLE_MEDIUM, EXPLOSION_PARTICLE_BIG };
     }
 }
