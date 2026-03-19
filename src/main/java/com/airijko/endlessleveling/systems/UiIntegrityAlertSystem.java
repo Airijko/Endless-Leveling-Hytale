@@ -1,12 +1,14 @@
 package com.airijko.endlessleveling.systems;
 
 import com.airijko.endlessleveling.security.UiTitleIntegrityGuard;
+import com.airijko.endlessleveling.util.OperatorHelper;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.tick.TickingSystem;
+import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
@@ -21,14 +23,18 @@ import java.util.UUID;
  */
 public final class UiIntegrityAlertSystem extends TickingSystem<EntityStore> {
 
+    private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final Query<EntityStore> PLAYER_QUERY = Query.any();
     private static final float SCAN_INTERVAL_SECONDS = 1.0f;
+    private static final long STARTUP_CONSOLE_DELAY_MILLIS = 10_000L;
     private static final long FIRST_JOIN_ALERT_DELAY_MILLIS = 10_000L;
-    private static final long ALERT_INTERVAL_MILLIS = 10_000L;
+    private static final long ALERT_INTERVAL_MILLIS = 60_000L;
 
     private final UiTitleIntegrityGuard integrityGuard;
     private final Map<UUID, Long> nextAlertAtByPlayer = new HashMap<>();
     private float elapsedSeconds = 0.0f;
+    private long systemStartedAtMillis = -1L;
+    private boolean consoleWarningLogged = false;
 
     public UiIntegrityAlertSystem(UiTitleIntegrityGuard integrityGuard) {
         this.integrityGuard = integrityGuard;
@@ -47,8 +53,22 @@ public final class UiIntegrityAlertSystem extends TickingSystem<EntityStore> {
         elapsedSeconds = 0.0f;
 
         long now = System.currentTimeMillis();
+        if (systemStartedAtMillis < 0L) {
+            systemStartedAtMillis = now;
+        }
+
         UiTitleIntegrityGuard.IntegrityResult integrityResult = integrityGuard.evaluate();
         boolean unauthorized = integrityResult.modified();
+
+        if (!consoleWarningLogged
+                && unauthorized
+                && now - systemStartedAtMillis >= STARTUP_CONSOLE_DELAY_MILLIS) {
+            LOGGER.atSevere().log("UI integrity security warning detected: %s", String.join(" | ",
+                    integrityResult.violations().stream().map(UiTitleIntegrityGuard.TitleViolation::toLogString)
+                            .toList()));
+            consoleWarningLogged = true;
+        }
+
         Set<UUID> onlinePlayers = new HashSet<>();
 
         store.forEachChunk(PLAYER_QUERY, (ArchetypeChunk<EntityStore> chunk,
@@ -70,6 +90,12 @@ public final class UiIntegrityAlertSystem extends TickingSystem<EntityStore> {
                 }
 
                 onlinePlayers.add(uuid);
+
+                if (OperatorHelper.hasAdministrativeAccess(playerRef)) {
+                    nextAlertAtByPlayer.remove(uuid);
+                    continue;
+                }
+
                 nextAlertAtByPlayer.putIfAbsent(uuid, now + FIRST_JOIN_ALERT_DELAY_MILLIS);
 
                 if (!unauthorized) {

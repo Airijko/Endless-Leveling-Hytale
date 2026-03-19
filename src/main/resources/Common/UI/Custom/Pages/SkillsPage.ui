@@ -37,7 +37,7 @@ $C.@PageOverlay {
                             #Title {
                                 Group {
                                     $C.@Title #SkillsPageTitle {
-                                        @Text = "UR MA";
+                                        @Text = "ENDLESS LEVELING";
                                     }
                                 }
                             }
