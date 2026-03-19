@@ -6,18 +6,35 @@ import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentState;
 import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.augments.YamlAugment;
+import com.airijko.endlessleveling.util.EntityRefUtil;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.math.vector.Vector3d;
+import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
+import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageCause;
 import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
+import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
+import com.hypixel.hytale.server.core.universe.world.SoundUtil;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import java.util.Map;
 
 public final class BailoutAugment extends YamlAugment
         implements AugmentHooks.OnLowHpAugment, AugmentHooks.PassiveStatAugment, AugmentHooks.OnKillAugment {
     public static final String ID = "bailout";
+    private static final double TRIGGER_VFX_Y_OFFSET = 1.0D;
+    private static final String[] TRIGGER_VFX_IDS = new String[] {
+        "GreenOrbImpact",
+        "GreenOrbTrail"
+    };
+    private static final String[] TRIGGER_SFX_IDS = new String[] {
+        "SFX_Skeleton_Mage_Spellbook_Impact",
+        "SFX_Skeleton_Mage_Spellbook_Charge"
+    };
 
     private final long cooldownMillis;
     private final double reviveHealthPercent;
@@ -70,6 +87,8 @@ public final class BailoutAugment extends YamlAugment
         AugmentUtils.applyUnkillableThreshold(statMap, context.getIncomingDamage(), 1.0f, 1.0f);
         float revivedHealth = (float) (hp.getMax() * reviveHealthPercent);
         statMap.setStatValue(DefaultEntityStatTypes.getHealth(), Math.max(1.0f, revivedHealth));
+        playTriggerSound(context);
+        playTriggerVfx(context);
 
         AugmentState state = context.getRuntimeState() != null ? context.getRuntimeState().getState(ID) : null;
         if (state != null) {
@@ -138,6 +157,58 @@ public final class BailoutAugment extends YamlAugment
             executePlayerDeath(context);
             clearDecayState(state);
         }
+    }
+
+    private void playTriggerVfx(AugmentHooks.DamageTakenContext context) {
+        Ref<EntityStore> defenderRef = context != null ? context.getDefenderRef() : null;
+        Vector3d effectPosition = resolveEffectPosition(context, defenderRef);
+        if (effectPosition == null || defenderRef == null) {
+            return;
+        }
+
+        for (String vfxId : TRIGGER_VFX_IDS) {
+            try {
+                ParticleUtil.spawnParticleEffect(vfxId, effectPosition, defenderRef.getStore());
+                return;
+            } catch (RuntimeException ignored) {
+            }
+        }
+    }
+
+    private void playTriggerSound(AugmentHooks.DamageTakenContext context) {
+        Ref<EntityStore> defenderRef = context != null ? context.getDefenderRef() : null;
+        Vector3d effectPosition = resolveEffectPosition(context, defenderRef);
+        if (effectPosition == null || defenderRef == null) {
+            return;
+        }
+
+        for (String soundId : TRIGGER_SFX_IDS) {
+            int soundIndex = resolveSoundIndex(soundId);
+            if (soundIndex == 0) {
+                continue;
+            }
+            SoundUtil.playSoundEvent3d(null, soundIndex, effectPosition, defenderRef.getStore());
+            return;
+        }
+    }
+
+    private static int resolveSoundIndex(String id) {
+        int index = SoundEvent.getAssetMap().getIndex(id);
+        return index == Integer.MIN_VALUE ? 0 : index;
+    }
+
+    private Vector3d resolveEffectPosition(AugmentHooks.DamageTakenContext context, Ref<EntityStore> ref) {
+        if (context == null || context.getCommandBuffer() == null || !EntityRefUtil.isUsable(ref)) {
+            return null;
+        }
+        TransformComponent transform = EntityRefUtil.tryGetComponent(context.getCommandBuffer(),
+                ref,
+                TransformComponent.getComponentType());
+        if (transform == null || transform.getPosition() == null) {
+            return null;
+        }
+        Vector3d position = transform.getPosition();
+        return new Vector3d(position.getX(), position.getY() + TRIGGER_VFX_Y_OFFSET, position.getZ());
     }
 
     private void clearDecayState(AugmentState state) {

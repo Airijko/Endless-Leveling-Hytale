@@ -14,8 +14,10 @@ import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.hypixel.hytale.builtin.mounts.NPCMountComponent;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.server.core.asset.type.entityeffect.config.EntityEffect;
 import com.hypixel.hytale.server.core.asset.type.entityeffect.config.OverlapBehavior;
+import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
 import com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
@@ -25,6 +27,8 @@ import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
+import com.hypixel.hytale.server.core.universe.world.SoundUtil;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.TargetUtil;
 
@@ -37,6 +41,15 @@ public final class BurnAugment extends YamlAugment
     public static final String ID = "burn";
     private static final String[] BURN_EFFECT_IDS = new String[] { "burning", "Burning", "Burn" };
     private static final float BURN_EFFECT_DURATION_SECONDS = 1.25F;
+    private static final String[] PULSE_RING_VFX_IDS = new String[] { "Effect_Fire", "Campfire_New_Cartoon" };
+    private static final String[] PULSE_RING_SFX_IDS = new String[] {
+            "SFX_Effect_Burn_World",
+            "SFX_Staff_Flame_Fireball_Impact"
+    };
+    private static final int PULSE_RING_POINT_COUNT = 8;
+    private static final double PULSE_RING_MIN_RADIUS = 1.5D;
+    private static final double PULSE_RING_MAX_RADIUS = 3.0D;
+    private static final double PULSE_RING_Y_OFFSET = 0.15D;
 
     private final double basePercentPerSecond;
     private final double bonusScalingPer100Health;
@@ -168,6 +181,7 @@ public final class BurnAugment extends YamlAugment
 
         burnState.setLastProc(now);
         double ratioThisTick = percentPerSecond;
+        playPulseRing(sourceRef, sourceTransform.getPosition(), radius);
         EntityEffect burnEffect = resolveBurnEffect();
         UUID sourceUuid = resolveSourceUuid(context, sourceRef, commandBuffer);
         PartyManager partyManager = resolvePartyManager();
@@ -245,6 +259,52 @@ public final class BurnAugment extends YamlAugment
                 BURN_EFFECT_DURATION_SECONDS,
                 OverlapBehavior.OVERWRITE,
                 commandBuffer);
+    }
+
+    private void playPulseRing(Ref<EntityStore> sourceRef, Vector3d centerPosition, double auraRadius) {
+        if (sourceRef == null || centerPosition == null) {
+            return;
+        }
+
+        double ringRadius = Math.max(PULSE_RING_MIN_RADIUS, Math.min(PULSE_RING_MAX_RADIUS, auraRadius));
+        double centerY = centerPosition.getY() + PULSE_RING_Y_OFFSET;
+
+        for (int i = 0; i < PULSE_RING_POINT_COUNT; i++) {
+            double angle = (Math.PI * 2.0D * i) / PULSE_RING_POINT_COUNT;
+            Vector3d particlePosition = new Vector3d(
+                    centerPosition.getX() + (Math.cos(angle) * ringRadius),
+                    centerY,
+                    centerPosition.getZ() + (Math.sin(angle) * ringRadius));
+            spawnPulseParticle(sourceRef, particlePosition);
+        }
+
+        playPulseSound(sourceRef, new Vector3d(centerPosition.getX(), centerY, centerPosition.getZ()));
+    }
+
+    private void spawnPulseParticle(Ref<EntityStore> sourceRef, Vector3d position) {
+        for (String particleId : PULSE_RING_VFX_IDS) {
+            try {
+                ParticleUtil.spawnParticleEffect(particleId, position, sourceRef.getStore());
+                return;
+            } catch (RuntimeException ignored) {
+            }
+        }
+    }
+
+    private void playPulseSound(Ref<EntityStore> sourceRef, Vector3d position) {
+        for (String soundId : PULSE_RING_SFX_IDS) {
+            int soundIndex = resolveSoundIndex(soundId);
+            if (soundIndex == 0) {
+                continue;
+            }
+            SoundUtil.playSoundEvent3d(null, soundIndex, position, sourceRef.getStore());
+            return;
+        }
+    }
+
+    private static int resolveSoundIndex(String id) {
+        int index = SoundEvent.getAssetMap().getIndex(id);
+        return index == Integer.MIN_VALUE ? 0 : index;
     }
 
     private static EntityEffect resolveBurnEffect() {
