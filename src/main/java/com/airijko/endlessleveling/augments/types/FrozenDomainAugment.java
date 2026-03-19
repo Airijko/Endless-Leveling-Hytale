@@ -44,8 +44,12 @@ public final class FrozenDomainAugment extends YamlAugment
     private static final long SLOW_DURATION_MILLIS = 2500L;
     private static final float MIN_MOVEMENT_MULTIPLIER = 0.0001F;
     private static final String[] SLOW_EFFECT_IDS = new String[] { "slowness", "slow" };
-    private static final String[] TRIGGER_PULSE_VFX_IDS = new String[] { "Impact_Ice" };
-    private static final String[] TRIGGER_PULSE_SFX_IDS = new String[] { "SFX_Ice_Break", "SFX_Ice_Ball_Death" };
+    private static final String[] TRIGGER_PULSE_VFX_IDS = new String[] { "Impact_Blade_01" };
+        private static final String[] TRIGGER_PULSE_SFX_IDS = new String[] {
+            "SFX_Arrow_Frost_Miss",
+            "SFX_Arrow_Frost_Hit",
+            "SFX_Ice_Ball_Death"
+        };
     private static final long TRIGGER_PULSE_DURATION_MILLIS = 250L;
     private static final long TRIGGER_PULSE_STEP_MILLIS = 50L;
     private static final int TRIGGER_PULSE_MIN_POINT_COUNT = 8;
