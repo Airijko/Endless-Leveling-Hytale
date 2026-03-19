@@ -12,1048 +12,1093 @@ $Nav = "Nav/LeftNavPanel.ui";
 @ButtonClusterWidth = 180;
 
 $C.@PageOverlay {
-    $C.@DecoratedContainer {
-        Anchor: (Width: 1000, Height: 700);
-        #Title {
-            Group {
-                $C.@Title {
-                    @Text = "ENDLESS LEVELING";
-                }
-            }
-        }
+    Group {
+        LayoutMode: Middle;
 
-        #Content {
+        Group {
             LayoutMode: Left;
-            Padding: (Full: 0);
+            Anchor: (Width: 1680, Height: 700);
 
-            // ================= LEFT PANEL =================
-            $Nav.@LeftNavPanel {}
-            
-            // ================= RIGHT PANEL =================
-            Group #RightPanel {
-                FlexWeight: 1;
+            Group {
                 LayoutMode: Top;
-                Anchor: (Right: 7, Bottom: 7);
-
-                // -------- Title --------
-                Group #Header {
-                    LayoutMode: Left;
-                    Anchor: (Height: 60);
-                    Padding: (Horizontal: 16, Vertical: 10);
-
-                    Label #SkillsTitleLabel {
-                        Text: "Skill Attributes";
-                        Anchor: (Height: 60);
-                        Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
-                    }
-
-                    Group { FlexWeight: 1; }
-
-                    Group #SkillsIntro {
-                        LayoutMode: Left;
-                        Background: #0b141f(0.92);
-                        Anchor: (Height: 40);
-                        Padding: (Full: 8);
-
-                        Label #SkillsIntroText {
-                            Style: (TextColor: #aaccff, FontSize: 14, VerticalAlignment: Center);
-                            Text: "Allocate points to shape your combat identity.";
-                        }
-                    }
-                }
-
-                Group { Anchor: (Height: 1); Background: #2b3542; }
-
-                // -------- SKILLS --------
-                Group #Main {
-                    FlexWeight: 1;
-                    LayoutMode: TopScrolling;
-                    ScrollbarStyle: $C.@DefaultScrollbarStyle;
-                    Padding: (Full: 16);
-
-                    Group #Skills {
-                        LayoutMode: Left;
-
-                        Group #SkillsColumnLeft {
-                            FlexWeight: 1;
-                            LayoutMode: Top;
-
-                            // ---------------- LIFE FORCE ----------------
-                            Group #LifeForce {
-                                LayoutMode: Top;
-                                Background: #0b141f(0.8);
-                                Padding: (Full: 12);
-
-                                Group {
-                                    LayoutMode: Left;
-
-                                    Group {
-                                        Anchor: (Width: 56, Height: 56);
-                                        Background: #050b16(0.85);
-                                        LayoutMode: Middle;
-                                        Padding: (Full: 8);
-                                        ItemIcon #LifeForceIcon {
-                                            Anchor: (Width: 36, Height: 36);
-                                            Visible: false;
-                                        }
-                                    }
-
-                                    Group { Anchor: (Width: 12); }
-
-                                    Group {
-                                        LayoutMode: Top;
-                                        FlexWeight: 1;
-                                        
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #LifeForceLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-
-                                            Group {
-                                                LayoutMode: Left;
-
-                                                Label #LifeForceLevelPrefix {
-                                                    Text: "Lv.";
-                                                    Style: (TextColor: #94b2ff, FontSize: 13);
-                                                }
-
-                                                Group { Anchor: (Width: 2); }
-
-                                                Label #LifeForceLevel { Style: (TextColor: #94b2ff, FontSize: 13); }
-                                            }
-                                        }
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #LifeForceValue { Style: (TextColor: #6fe3ff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
-
-                                            Group #LifeForceButtons {
-                                                LayoutMode: Left;
-
-                                                $C.@TextButton #LifeForceMinus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "-1";
-                                                    Style: @CancelTextButtonStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #LifeForcePlus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+1";
-                                                    Style: @CustomStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #LifeForcePlus5 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+5";
-                                                    Style: @CustomStyle;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #LifeForceDescription {
-                                    Style: (TextColor: #c0cee5, FontSize: 12);
-                                    Text: "Boosts total health.";
-                                }
-                            }
-
-                            Group { Anchor: (Height: 12); }
-
-                            // ---------------- STRENGTH ----------------
-                            Group #Strength {
-                                LayoutMode: Top;
-                                Background: #0b141f(0.8);
-                                Padding: (Full: 12);
-
-                                Group {
-                                    LayoutMode: Left;
-                                    Group {
-                                        Anchor: (Width: 56, Height: 56);
-                                        Background: #050b16(0.85);
-                                        LayoutMode: Middle;
-                                        Padding: (Full: 8);
-                                        ItemIcon #StrengthIcon {
-                                            Anchor: (Width: 36, Height: 36);
-                                            Visible: false;
-                                        }
-                                    }
-
-                                    Group { Anchor: (Width: 12); }
-
-                                    Group {
-                                        LayoutMode: Top;
-                                        FlexWeight: 1;
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #StrengthLabel { Style: (TextColor: #ffe8d7, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-
-                                            Group {
-                                                LayoutMode: Left;
-
-                                                Label #StrengthLevelPrefix {
-                                                    Text: "Lv.";
-                                                    Style: (TextColor: #ffc49c, FontSize: 13);
-                                                }
-
-                                                Group { Anchor: (Width: 2); }
-
-                                                Label #StrengthLevel { Style: (TextColor: #ffc49c, FontSize: 13); }
-                                            }
-                                        }
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #StrengthValue { Style: (TextColor: #ffd2ac, FontSize: 13, RenderBold: true); FlexWeight: 1; }
-
-                                            Group #StrengthButtons {
-                                                LayoutMode: Left;
-
-                                                $C.@TextButton #StrengthMinus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "-1";
-                                                    Style: @CancelTextButtonStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #StrengthPlus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+1";
-                                                    Style: @CustomStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #StrengthPlus5 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+5";
-                                                    Style: @CustomStyle;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #StrengthDescription {
-                                    Style: (TextColor: #ffe0c5, FontSize: 12);
-                                    Text: "Adds damage multipliers to every hit.";
-                                }
-
-                                Group { Anchor: (Height: 6); }
-                            }
-
-                            Group { Anchor: (Height: 12); }
-
-                            // ---------------- PRECISION ----------------
-                            Group #Precision {
-                                LayoutMode: Top;
-                                Background: #0b141f(0.8);
-                                Padding: (Full: 12);
-
-                                Group {
-                                    LayoutMode: Left;
-                                    Group {
-                                        Anchor: (Width: 56, Height: 56);
-                                        Background: #050b16(0.85);
-                                        LayoutMode: Middle;
-                                        Padding: (Full: 8);
-                                        ItemIcon #PrecisionIcon {
-                                            Anchor: (Width: 36, Height: 36);
-                                            Visible: false;
-                                        }
-                                    }
-
-                                    Group { Anchor: (Width: 12); }
-
-                                    Group {
-                                        LayoutMode: Top;
-                                        FlexWeight: 1;
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #PrecisionLabel { Style: (TextColor: #dff6ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-
-                                            Group {
-                                                LayoutMode: Left;
-
-                                                Label #PrecisionLevelPrefix {
-                                                    Text: "Lv.";
-                                                    Style: (TextColor: #87dfff, FontSize: 13);
-                                                }
-
-                                                Group { Anchor: (Width: 2); }
-
-                                                Label #PrecisionLevel { Style: (TextColor: #87dfff, FontSize: 13); }
-                                            }
-                                        }
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #PrecisionValue { Style: (TextColor: #6edcff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
-
-                                            Group #PrecisionButtons {
-                                                LayoutMode: Left;
-
-                                                $C.@TextButton #PrecisionMinus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "-1";
-                                                    Style: @CancelTextButtonStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #PrecisionPlus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+1";
-                                                    Style: @CustomStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #PrecisionPlus5 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+5";
-                                                    Style: @CustomStyle;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #PrecisionDescription {
-                                    Style: (TextColor: #c3dfee, FontSize: 12);
-                                    Text: "Raises crit chance for all attacks.";
-                                }
-
-                            }
-
-                            Group { Anchor: (Height: 12); }
-                            
-                            // ---------------- HASTE ----------------
-                            Group #Haste {
-                                LayoutMode: Top;
-                                Background: #0b141f(0.8);
-                                Padding: (Full: 12);
-
-                                Group {
-                                    LayoutMode: Left;
-                                    Group {
-                                        Anchor: (Width: 56, Height: 56);
-                                        Background: #050b16(0.85);
-                                        LayoutMode: Middle;
-                                        Padding: (Full: 8);
-                                        ItemIcon #HasteIcon {
-                                            Anchor: (Width: 36, Height: 36);
-                                            Visible: false;
-                                        }
-                                    }
-
-                                    Group { Anchor: (Width: 12); }
-
-                                    Group {
-                                        LayoutMode: Top;
-                                        FlexWeight: 1;
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #HasteLabel { Style: (TextColor: #f7e2ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-
-                                            Group {
-                                                LayoutMode: Left;
-
-                                                Label #HasteLevelPrefix {
-                                                    Text: "Lv.";
-                                                    Style: (TextColor: #e0b8ff, FontSize: 13);
-                                                }
-
-                                                Group { Anchor: (Width: 2); }
-
-                                                Label #HasteLevel { Style: (TextColor: #e0b8ff, FontSize: 13); }
-                                            }
-                                        }
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #HasteValue { Style: (TextColor: #d598ff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
-
-                                            Group #HasteButtons {
-                                                LayoutMode: Left;
-
-                                                $C.@TextButton #HasteMinus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "-1";
-                                                    Style: @CancelTextButtonStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #HastePlus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+1";
-                                                    Style: @CustomStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #HastePlus5 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+5";
-                                                    Style: @CustomStyle;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #HasteDescription {
-                                    Style: (TextColor: #dccdf3, FontSize: 12);
-                                    Text: "Cranks up movement and attack speed.";
-                                }
-
-                            }
-
-                            Group { Anchor: (Height: 12); }
-
-                            // ---------------- FLOW ----------------
-                            Group #Flow {
-                                LayoutMode: Top;
-                                Background: #0b141f(0.8);
-                                Padding: (Full: 12);
-
-                                Group {
-                                    LayoutMode: Left;
-                                    Group {
-                                        Anchor: (Width: 56, Height: 56);
-                                        Background: #050b16(0.85);
-                                        LayoutMode: Middle;
-                                        Padding: (Full: 8);
-                                        ItemIcon #FlowIcon {
-                                            Anchor: (Width: 36, Height: 36);
-                                            Visible: false;
-                                        }
-                                    }
-
-                                    Group { Anchor: (Width: 12); }
-
-                                    Group {
-                                        LayoutMode: Top;
-                                        FlexWeight: 1;
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #FlowLabel { Style: (TextColor: #e1f4ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-
-                                            Group {
-                                                LayoutMode: Left;
-
-                                                Label #FlowLevelPrefix {
-                                                    Text: "Lv.";
-                                                    Style: (TextColor: #7edbff, FontSize: 13);
-                                                }
-
-                                                Group { Anchor: (Width: 2); }
-
-                                                Label #FlowLevel { Style: (TextColor: #7edbff, FontSize: 13); }
-                                            }
-                                        }
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #FlowValue { Style: (TextColor: #60d2ff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
-
-                                            Group #FlowButtons {
-                                                LayoutMode: Left;
-
-                                                $C.@TextButton #FlowMinus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "-1";
-                                                    Style: @CancelTextButtonStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #FlowPlus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+1";
-                                                    Style: @CustomStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #FlowPlus5 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+5";
-                                                    Style: @CustomStyle;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #FlowDescription {
-                                    Style: (TextColor: #c1dff5, FontSize: 12);
-                                    Text: "Feeds mana for abilities and spells.";
-                                }
-
-                            }
-                        }
-
-                        Group { Anchor: (Width: 24); }
-
-                        Group #SkillsColumnRight {
-                            FlexWeight: 1;
-                            LayoutMode: Top;
-
-                            // ---------------- DEFENSE ----------------
-                            Group #Defense {
-                                LayoutMode: Top;
-                                Background: #0b141f(0.8);
-                                Padding: (Full: 12);
-
-                                Group {
-                                    LayoutMode: Left;
-                                    Group {
-                                        Anchor: (Width: 56, Height: 56);
-                                        Background: #050b16(0.85);
-                                        LayoutMode: Middle;
-                                        Padding: (Full: 8);
-                                        ItemIcon #DefenseIcon {
-                                            Anchor: (Width: 36, Height: 36);
-                                            Visible: false;
-                                        }
-                                    }
-
-                                    Group { Anchor: (Width: 12); }
-
-                                    Group {
-                                        LayoutMode: Top;
-                                        FlexWeight: 1;
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #DefenseLabel { Style: (TextColor: #ddfff3, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-
-                                            Group {
-                                                LayoutMode: Left;
-
-                                                Label #DefenseLevelPrefix {
-                                                    Text: "Lv.";
-                                                    Style: (TextColor: #94ffe3, FontSize: 13);
-                                                }
-
-                                                Group { Anchor: (Width: 2); }
-
-                                                Label #DefenseLevel { Style: (TextColor: #94ffe3, FontSize: 13); }
-                                            }
-                                        }
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #DefenseValue { Style: (TextColor: #68f7c5, FontSize: 13, RenderBold: true); FlexWeight: 1; }
-
-                                            Group #DefenseButtons {
-                                                LayoutMode: Left;
-
-                                                $C.@TextButton #DefenseMinus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "-1";
-                                                    Style: @CancelTextButtonStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #DefensePlus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+1";
-                                                    Style: @CustomStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #DefensePlus5 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+5";
-                                                    Style: @CustomStyle;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #DefenseDescription {
-                                    Style: (TextColor: #c7ede4, FontSize: 12);
-                                    Text: "Shrugs off more incoming damage.";
-                                }
-                            }
-                            
-                            Group { Anchor: (Height: 12); }
-
-                            // ---------------- SORCERY ----------------
-                            Group #Sorcery {
-                                LayoutMode: Top;
-                                Background: #0b141f(0.8);
-                                Padding: (Full: 12);
-
-                                Group {
-                                    LayoutMode: Left;
-                                    Group {
-                                        Anchor: (Width: 56, Height: 56);
-                                        Background: #050b16(0.85);
-                                        LayoutMode: Middle;
-                                        Padding: (Full: 8);
-                                        ItemIcon #SorceryIcon {
-                                            Anchor: (Width: 36, Height: 36);
-                                            Visible: false;
-                                        }
-                                    }
-
-                                    Group { Anchor: (Width: 12); }
-
-                                    Group {
-                                        LayoutMode: Top;
-                                        FlexWeight: 1;
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #SorceryLabel { Style: (TextColor: #d7baff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-
-                                            Group {
-                                                LayoutMode: Left;
-
-                                                Label #SorceryLevelPrefix {
-                                                    Text: "Lv.";
-                                                    Style: (TextColor: #bfaaff, FontSize: 13);
-                                                }
-
-                                                Group { Anchor: (Width: 2); }
-
-                                                Label #SorceryLevel { Style: (TextColor: #bfaaff, FontSize: 13); }
-                                            }
-                                        }
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #SorceryValue { Style: (TextColor: #d7baff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
-
-                                            Group #SorceryButtons {
-                                                LayoutMode: Left;
-
-                                                $C.@TextButton #SorceryMinus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "-1";
-                                                    Style: @CancelTextButtonStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #SorceryPlus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+1";
-                                                    Style: @CustomStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #SorceryPlus5 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+5";
-                                                    Style: @CustomStyle;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #SorceryDescription {
-                                    Style: (TextColor: #bfaaff, FontSize: 13);
-                                    Text: "Sorcery increases your magic damage with staff weapons.";
-                                }
-                            }
-
-                            Group { Anchor: (Height: 12); }
-
-                            // ---------------- FEROCITY ----------------
-                            Group #Ferocity {
-                                LayoutMode: Top;
-                                Background: #0b141f(0.8);
-                                Padding: (Full: 12);
-
-                                Group {
-                                    LayoutMode: Left;
-                                    Group {
-                                        Anchor: (Width: 56, Height: 56);
-                                        Background: #050b16(0.85);
-                                        LayoutMode: Middle;
-                                        Padding: (Full: 8);
-                                        ItemIcon #FerocityIcon {
-                                            Anchor: (Width: 36, Height: 36);
-                                            Visible: false;
-                                        }
-                                    }
-
-                                    Group { Anchor: (Width: 12); }
-
-                                    Group {
-                                        LayoutMode: Top;
-                                        FlexWeight: 1;
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #FerocityLabel { Style: (TextColor: #ffdbe9, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-
-                                            Group {
-                                                LayoutMode: Left;
-
-                                                Label #FerocityLevelPrefix {
-                                                    Text: "Lv.";
-                                                    Style: (TextColor: #ff9ac0, FontSize: 13);
-                                                }
-
-                                                Group { Anchor: (Width: 2); }
-
-                                                Label #FerocityLevel { Style: (TextColor: #ff9ac0, FontSize: 13); }
-                                            }
-                                        }
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #FerocityValue { Style: (TextColor: #ffb0cd, FontSize: 13, RenderBold: true); FlexWeight: 1; }
-
-                                            Group #FerocityButtons {
-                                                LayoutMode: Left;
-
-                                                $C.@TextButton #FerocityMinus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "-1";
-                                                    Style: @CancelTextButtonStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #FerocityPlus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+1";
-                                                    Style: @CustomStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #FerocityPlus5 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+5";
-                                                    Style: @CustomStyle;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #FerocityDescription {
-                                    Style: (TextColor: #fac6da, FontSize: 12);
-                                    Text: "Stacks bonus damage onto crits.";
-                                }
-
-                            }
-
-                            Group { Anchor: (Height: 12); }
-
-                            // ---------------- STAMINA ----------------
-                            Group #Stamina {
-                                LayoutMode: Top;
-                                Background: #0b141f(0.8);
-                                Padding: (Full: 12);
-
-                                Group {
-                                    LayoutMode: Left;
-                                    Group {
-                                        Anchor: (Width: 56, Height: 56);
-                                        Background: #050b16(0.85);
-                                        LayoutMode: Middle;
-                                        Padding: (Full: 8);
-                                        ItemIcon #StaminaIcon {
-                                            Anchor: (Width: 36, Height: 36);
-                                            Visible: false;
-                                        }
-                                    }
-
-                                    Group { Anchor: (Width: 12); }
-
-                                    Group {
-                                        LayoutMode: Top;
-                                        FlexWeight: 1;
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #StaminaLabel { Style: (TextColor: #ecffd0, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-
-                                            Group {
-                                                LayoutMode: Left;
-
-                                                Label #StaminaLevelPrefix {
-                                                    Text: "Lv.";
-                                                    Style: (TextColor: #d2ff8f, FontSize: 13);
-                                                }
-
-                                                Group { Anchor: (Width: 2); }
-
-                                                Label #StaminaLevel { Style: (TextColor: #d2ff8f, FontSize: 13); }
-                                            }
-                                        }
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #StaminaValue { Style: (TextColor: #b7ff6a, FontSize: 13, RenderBold: true); FlexWeight: 1; }
-
-                                            Group #StaminaButtons {
-                                                LayoutMode: Left;
-
-                                                $C.@TextButton #StaminaMinus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "-1";
-                                                    Style: @CancelTextButtonStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #StaminaPlus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+1";
-                                                    Style: @CustomStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #StaminaPlus5 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+5";
-                                                    Style: @CustomStyle;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #StaminaDescription {
-                                    Style: (TextColor: #d8f2b0, FontSize: 12);
-                                    Text: "Extends stamina for dodges and bursts.";
-                                }
-
-                            }
-
-                            Group { Anchor: (Height: 12); }
-
-                            // ---------------- DISCIPLINE ----------------
-                            Group #Discipline {
-                                LayoutMode: Top;
-                                Background: #0b141f(0.8);
-                                Padding: (Full: 12);
-
-                                Group {
-                                    LayoutMode: Left;
-                                    Group {
-                                        Anchor: (Width: 56, Height: 56);
-                                        Background: #050b16(0.85);
-                                        LayoutMode: Middle;
-                                        Padding: (Full: 8);
-                                        ItemIcon #DisciplineIcon {
-                                            Anchor: (Width: 36, Height: 36);
-                                            Visible: false;
-                                        }
-                                    }
-
-                                    Group { Anchor: (Width: 12); }
-
-                                    Group {
-                                        LayoutMode: Top;
-                                        FlexWeight: 1;
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #DisciplineLabel { Style: (TextColor: #f4f4ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
-
-                                            Group {
-                                                LayoutMode: Left;
-
-                                                Label #DisciplineLevelPrefix {
-                                                    Text: "Lv.";
-                                                    Style: (TextColor: #d5dfff, FontSize: 13);
-                                                }
-
-                                                Group { Anchor: (Width: 2); }
-
-                                                Label #DisciplineLevel { Style: (TextColor: #d5dfff, FontSize: 13); }
-                                            }
-                                        }
-
-                                        Group {
-                                            LayoutMode: Left;
-
-                                            Label #DisciplineValue { Style: (TextColor: #9fe0ff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
-
-                                            Group #DisciplineButtons {
-                                                LayoutMode: Left;
-
-                                                $C.@TextButton #DisciplineMinus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "-1";
-                                                    Style: @CancelTextButtonStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #DisciplinePlus1 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+1";
-                                                    Style: @CustomStyle;
-                                                }
-
-                                                Group { Anchor: (Width: 4); }
-
-                                                $C.@TextButton #DisciplinePlus5 {
-                                                    Anchor: (Height: 28, Width: 46);
-                                                    Padding: (Horizontal: 12, Vertical: 4);
-                                                    Text: "+5";
-                                                    Style: @CustomStyle;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Group { Anchor: (Height: 4); }
-
-                                Label #DisciplineDescription {
-                                    Style: (TextColor: #cde8ff, FontSize: 12);
-                                    Text: "Boosts XP gain from all sources.";
-                                }
-
-                            }
-                        }
-                    }
-                }
-
-                // -------- FOOTER --------
-                Group #Footer {
-                    LayoutMode: Top;
-                    Background: #070b12;
-
-                    Group {
-                        Anchor: (Height: 2);
-                        Background: #142034;
-                    }
+                Anchor: (Width: 1680, Height: 700);
+
+                Group {
+                    LayoutMode: Middle;
+                    Anchor: (Width: 1680);
 
                     Group {
                         LayoutMode: Left;
-                        Padding: (Full: 20);
-                        Background: #0b141f(0.95);
-                        Anchor: (Height: 80);
 
-                        Group {
-                            LayoutMode: Top;
-                            FlexWeight: 1;
+                        Group { Anchor: (Width: 340); }
 
-                            Label #SKILLPOINTS {
-                                Style: (TextColor: #6fe3ff, FontSize: 22, RenderBold: true, VerticalAlignment: Center);
-                                Padding: (Bottom: 2);
-                                FlexWeight: 1;
+                        $C.@DecoratedContainer {
+                            Anchor: (Width: 1000, Height: 700);
+                            #Title {
+                                Group {
+                                    $C.@Title {
+                                        @Text = "ENDLESS LEVELING";
+                                    }
+                                }
                             }
 
-                            Label #SkillsFooterHint {
-                                Text: "Undo to revert pending tweaks, apply to lock them in.";
-                                Style: (TextColor: #c0cee5, FontSize: 12, VerticalAlignment: Center);
-                                FlexWeight: 1;
+                            #Content {
+                                LayoutMode: Left;
+                                Padding: (Full: 0);
+
+                                // ================= LEFT PANEL =================
+                                $Nav.@LeftNavPanel {}
+                                
+                                // ================= RIGHT PANEL =================
+                                Group #RightPanel {
+                                    FlexWeight: 1;
+                                    LayoutMode: Top;
+                                    Anchor: (Right: 7, Bottom: 7);
+
+                                    // -------- Title --------
+                                    Group #Header {
+                                        LayoutMode: Left;
+                                        Anchor: (Height: 60);
+                                        Padding: (Horizontal: 16, Vertical: 10);
+
+                                        Label #SkillsTitleLabel {
+                                            Text: "Skill Attributes";
+                                            Anchor: (Height: 60);
+                                            Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true, VerticalAlignment: Center);
+                                        }
+
+                                        Group { FlexWeight: 1; }
+
+                                        Group #SkillsIntro {
+                                            LayoutMode: Left;
+                                            Background: #0b141f(0.92);
+                                            Anchor: (Height: 40);
+                                            Padding: (Full: 8);
+
+                                            Label #SkillsIntroText {
+                                                Style: (TextColor: #aaccff, FontSize: 14, VerticalAlignment: Center);
+                                                Text: "Allocate points to shape your combat identity.";
+                                            }
+                                        }
+                                    }
+
+                                    Group { Anchor: (Height: 1); Background: #2b3542; }
+
+                                    // -------- SKILLS --------
+                                    Group #Main {
+                                        FlexWeight: 1;
+                                        LayoutMode: TopScrolling;
+                                        ScrollbarStyle: $C.@DefaultScrollbarStyle;
+                                        Padding: (Full: 16);
+
+                                        Group #Skills {
+                                            LayoutMode: Left;
+
+                                            Group #SkillsColumnLeft {
+                                                FlexWeight: 1;
+                                                LayoutMode: Top;
+
+                                                // ---------------- LIFE FORCE ----------------
+                                                Group #LifeForce {
+                                                    LayoutMode: Top;
+                                                    Background: #0b141f(0.8);
+                                                    Padding: (Full: 12);
+
+                                                    Group {
+                                                        LayoutMode: Left;
+
+                                                        Group {
+                                                            Anchor: (Width: 56, Height: 56);
+                                                            Background: #050b16(0.85);
+                                                            LayoutMode: Middle;
+                                                            Padding: (Full: 8);
+                                                            ItemIcon #LifeForceIcon {
+                                                                Anchor: (Width: 36, Height: 36);
+                                                                Visible: false;
+                                                            }
+                                                        }
+
+                                                        Group { Anchor: (Width: 12); }
+
+                                                        Group {
+                                                            LayoutMode: Top;
+                                                            FlexWeight: 1;
+                                                            
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #LifeForceLabel { Style: (TextColor: #f4f9ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group {
+                                                                    LayoutMode: Left;
+
+                                                                    Label #LifeForceLevelPrefix {
+                                                                        Text: "Lv.";
+                                                                        Style: (TextColor: #94b2ff, FontSize: 13);
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 2); }
+
+                                                                    Label #LifeForceLevel { Style: (TextColor: #94b2ff, FontSize: 13); }
+                                                                }
+                                                            }
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #LifeForceValue { Style: (TextColor: #6fe3ff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group #LifeForceButtons {
+                                                                    LayoutMode: Left;
+
+                                                                    $C.@TextButton #LifeForceMinus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "-1";
+                                                                        Style: @CancelTextButtonStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #LifeForcePlus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+1";
+                                                                        Style: @CustomStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #LifeForcePlus5 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+5";
+                                                                        Style: @CustomStyle;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 4); }
+
+                                                    Label #LifeForceDescription {
+                                                        Style: (TextColor: #c0cee5, FontSize: 12);
+                                                        Text: "Boosts total health.";
+                                                    }
+                                                }
+
+                                                Group { Anchor: (Height: 12); }
+
+                                                // ---------------- STRENGTH ----------------
+                                                Group #Strength {
+                                                    LayoutMode: Top;
+                                                    Background: #0b141f(0.8);
+                                                    Padding: (Full: 12);
+
+                                                    Group {
+                                                        LayoutMode: Left;
+                                                        Group {
+                                                            Anchor: (Width: 56, Height: 56);
+                                                            Background: #050b16(0.85);
+                                                            LayoutMode: Middle;
+                                                            Padding: (Full: 8);
+                                                            ItemIcon #StrengthIcon {
+                                                                Anchor: (Width: 36, Height: 36);
+                                                                Visible: false;
+                                                            }
+                                                        }
+
+                                                        Group { Anchor: (Width: 12); }
+
+                                                        Group {
+                                                            LayoutMode: Top;
+                                                            FlexWeight: 1;
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #StrengthLabel { Style: (TextColor: #ffe8d7, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group {
+                                                                    LayoutMode: Left;
+
+                                                                    Label #StrengthLevelPrefix {
+                                                                        Text: "Lv.";
+                                                                        Style: (TextColor: #ffc49c, FontSize: 13);
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 2); }
+
+                                                                    Label #StrengthLevel { Style: (TextColor: #ffc49c, FontSize: 13); }
+                                                                }
+                                                            }
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #StrengthValue { Style: (TextColor: #ffd2ac, FontSize: 13, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group #StrengthButtons {
+                                                                    LayoutMode: Left;
+
+                                                                    $C.@TextButton #StrengthMinus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "-1";
+                                                                        Style: @CancelTextButtonStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #StrengthPlus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+1";
+                                                                        Style: @CustomStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #StrengthPlus5 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+5";
+                                                                        Style: @CustomStyle;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 4); }
+
+                                                    Label #StrengthDescription {
+                                                        Style: (TextColor: #ffe0c5, FontSize: 12);
+                                                        Text: "Adds damage multipliers to every hit.";
+                                                    }
+
+                                                    Group { Anchor: (Height: 6); }
+                                                }
+
+                                                Group { Anchor: (Height: 12); }
+
+                                                // ---------------- PRECISION ----------------
+                                                Group #Precision {
+                                                    LayoutMode: Top;
+                                                    Background: #0b141f(0.8);
+                                                    Padding: (Full: 12);
+
+                                                    Group {
+                                                        LayoutMode: Left;
+                                                        Group {
+                                                            Anchor: (Width: 56, Height: 56);
+                                                            Background: #050b16(0.85);
+                                                            LayoutMode: Middle;
+                                                            Padding: (Full: 8);
+                                                            ItemIcon #PrecisionIcon {
+                                                                Anchor: (Width: 36, Height: 36);
+                                                                Visible: false;
+                                                            }
+                                                        }
+
+                                                        Group { Anchor: (Width: 12); }
+
+                                                        Group {
+                                                            LayoutMode: Top;
+                                                            FlexWeight: 1;
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #PrecisionLabel { Style: (TextColor: #dff6ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group {
+                                                                    LayoutMode: Left;
+
+                                                                    Label #PrecisionLevelPrefix {
+                                                                        Text: "Lv.";
+                                                                        Style: (TextColor: #87dfff, FontSize: 13);
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 2); }
+
+                                                                    Label #PrecisionLevel { Style: (TextColor: #87dfff, FontSize: 13); }
+                                                                }
+                                                            }
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #PrecisionValue { Style: (TextColor: #6edcff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group #PrecisionButtons {
+                                                                    LayoutMode: Left;
+
+                                                                    $C.@TextButton #PrecisionMinus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "-1";
+                                                                        Style: @CancelTextButtonStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #PrecisionPlus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+1";
+                                                                        Style: @CustomStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #PrecisionPlus5 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+5";
+                                                                        Style: @CustomStyle;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 4); }
+
+                                                    Label #PrecisionDescription {
+                                                        Style: (TextColor: #c3dfee, FontSize: 12);
+                                                        Text: "Raises crit chance for all attacks.";
+                                                    }
+
+                                                }
+
+                                                Group { Anchor: (Height: 12); }
+                                                
+                                                // ---------------- HASTE ----------------
+                                                Group #Haste {
+                                                    LayoutMode: Top;
+                                                    Background: #0b141f(0.8);
+                                                    Padding: (Full: 12);
+
+                                                    Group {
+                                                        LayoutMode: Left;
+                                                        Group {
+                                                            Anchor: (Width: 56, Height: 56);
+                                                            Background: #050b16(0.85);
+                                                            LayoutMode: Middle;
+                                                            Padding: (Full: 8);
+                                                            ItemIcon #HasteIcon {
+                                                                Anchor: (Width: 36, Height: 36);
+                                                                Visible: false;
+                                                            }
+                                                        }
+
+                                                        Group { Anchor: (Width: 12); }
+
+                                                        Group {
+                                                            LayoutMode: Top;
+                                                            FlexWeight: 1;
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #HasteLabel { Style: (TextColor: #f7e2ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group {
+                                                                    LayoutMode: Left;
+
+                                                                    Label #HasteLevelPrefix {
+                                                                        Text: "Lv.";
+                                                                        Style: (TextColor: #e0b8ff, FontSize: 13);
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 2); }
+
+                                                                    Label #HasteLevel { Style: (TextColor: #e0b8ff, FontSize: 13); }
+                                                                }
+                                                            }
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #HasteValue { Style: (TextColor: #d598ff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group #HasteButtons {
+                                                                    LayoutMode: Left;
+
+                                                                    $C.@TextButton #HasteMinus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "-1";
+                                                                        Style: @CancelTextButtonStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #HastePlus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+1";
+                                                                        Style: @CustomStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #HastePlus5 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+5";
+                                                                        Style: @CustomStyle;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 4); }
+
+                                                    Label #HasteDescription {
+                                                        Style: (TextColor: #dccdf3, FontSize: 12);
+                                                        Text: "Cranks up movement and attack speed.";
+                                                    }
+
+                                                }
+
+                                                Group { Anchor: (Height: 12); }
+
+                                                // ---------------- FLOW ----------------
+                                                Group #Flow {
+                                                    LayoutMode: Top;
+                                                    Background: #0b141f(0.8);
+                                                    Padding: (Full: 12);
+
+                                                    Group {
+                                                        LayoutMode: Left;
+                                                        Group {
+                                                            Anchor: (Width: 56, Height: 56);
+                                                            Background: #050b16(0.85);
+                                                            LayoutMode: Middle;
+                                                            Padding: (Full: 8);
+                                                            ItemIcon #FlowIcon {
+                                                                Anchor: (Width: 36, Height: 36);
+                                                                Visible: false;
+                                                            }
+                                                        }
+
+                                                        Group { Anchor: (Width: 12); }
+
+                                                        Group {
+                                                            LayoutMode: Top;
+                                                            FlexWeight: 1;
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #FlowLabel { Style: (TextColor: #e1f4ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group {
+                                                                    LayoutMode: Left;
+
+                                                                    Label #FlowLevelPrefix {
+                                                                        Text: "Lv.";
+                                                                        Style: (TextColor: #7edbff, FontSize: 13);
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 2); }
+
+                                                                    Label #FlowLevel { Style: (TextColor: #7edbff, FontSize: 13); }
+                                                                }
+                                                            }
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #FlowValue { Style: (TextColor: #60d2ff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group #FlowButtons {
+                                                                    LayoutMode: Left;
+
+                                                                    $C.@TextButton #FlowMinus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "-1";
+                                                                        Style: @CancelTextButtonStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #FlowPlus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+1";
+                                                                        Style: @CustomStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #FlowPlus5 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+5";
+                                                                        Style: @CustomStyle;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 4); }
+
+                                                    Label #FlowDescription {
+                                                        Style: (TextColor: #c1dff5, FontSize: 12);
+                                                        Text: "Feeds mana for abilities and spells.";
+                                                    }
+
+                                                }
+                                            }
+
+                                            Group { Anchor: (Width: 24); }
+
+                                            Group #SkillsColumnRight {
+                                                FlexWeight: 1;
+                                                LayoutMode: Top;
+
+                                                // ---------------- DEFENSE ----------------
+                                                Group #Defense {
+                                                    LayoutMode: Top;
+                                                    Background: #0b141f(0.8);
+                                                    Padding: (Full: 12);
+
+                                                    Group {
+                                                        LayoutMode: Left;
+                                                        Group {
+                                                            Anchor: (Width: 56, Height: 56);
+                                                            Background: #050b16(0.85);
+                                                            LayoutMode: Middle;
+                                                            Padding: (Full: 8);
+                                                            ItemIcon #DefenseIcon {
+                                                                Anchor: (Width: 36, Height: 36);
+                                                                Visible: false;
+                                                            }
+                                                        }
+
+                                                        Group { Anchor: (Width: 12); }
+
+                                                        Group {
+                                                            LayoutMode: Top;
+                                                            FlexWeight: 1;
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #DefenseLabel { Style: (TextColor: #ddfff3, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group {
+                                                                    LayoutMode: Left;
+
+                                                                    Label #DefenseLevelPrefix {
+                                                                        Text: "Lv.";
+                                                                        Style: (TextColor: #94ffe3, FontSize: 13);
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 2); }
+
+                                                                    Label #DefenseLevel { Style: (TextColor: #94ffe3, FontSize: 13); }
+                                                                }
+                                                            }
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #DefenseValue { Style: (TextColor: #68f7c5, FontSize: 13, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group #DefenseButtons {
+                                                                    LayoutMode: Left;
+
+                                                                    $C.@TextButton #DefenseMinus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "-1";
+                                                                        Style: @CancelTextButtonStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #DefensePlus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+1";
+                                                                        Style: @CustomStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #DefensePlus5 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+5";
+                                                                        Style: @CustomStyle;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 4); }
+
+                                                    Label #DefenseDescription {
+                                                        Style: (TextColor: #c7ede4, FontSize: 12);
+                                                        Text: "Shrugs off more incoming damage.";
+                                                    }
+                                                }
+                                                
+                                                Group { Anchor: (Height: 12); }
+
+                                                // ---------------- SORCERY ----------------
+                                                Group #Sorcery {
+                                                    LayoutMode: Top;
+                                                    Background: #0b141f(0.8);
+                                                    Padding: (Full: 12);
+
+                                                    Group {
+                                                        LayoutMode: Left;
+                                                        Group {
+                                                            Anchor: (Width: 56, Height: 56);
+                                                            Background: #050b16(0.85);
+                                                            LayoutMode: Middle;
+                                                            Padding: (Full: 8);
+                                                            ItemIcon #SorceryIcon {
+                                                                Anchor: (Width: 36, Height: 36);
+                                                                Visible: false;
+                                                            }
+                                                        }
+
+                                                        Group { Anchor: (Width: 12); }
+
+                                                        Group {
+                                                            LayoutMode: Top;
+                                                            FlexWeight: 1;
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #SorceryLabel { Style: (TextColor: #d7baff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group {
+                                                                    LayoutMode: Left;
+
+                                                                    Label #SorceryLevelPrefix {
+                                                                        Text: "Lv.";
+                                                                        Style: (TextColor: #bfaaff, FontSize: 13);
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 2); }
+
+                                                                    Label #SorceryLevel { Style: (TextColor: #bfaaff, FontSize: 13); }
+                                                                }
+                                                            }
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #SorceryValue { Style: (TextColor: #d7baff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group #SorceryButtons {
+                                                                    LayoutMode: Left;
+
+                                                                    $C.@TextButton #SorceryMinus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "-1";
+                                                                        Style: @CancelTextButtonStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #SorceryPlus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+1";
+                                                                        Style: @CustomStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #SorceryPlus5 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+5";
+                                                                        Style: @CustomStyle;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 4); }
+
+                                                    Label #SorceryDescription {
+                                                        Style: (TextColor: #bfaaff, FontSize: 13);
+                                                        Text: "Sorcery increases your magic damage with staff weapons.";
+                                                    }
+                                                }
+
+                                                Group { Anchor: (Height: 12); }
+
+                                                // ---------------- FEROCITY ----------------
+                                                Group #Ferocity {
+                                                    LayoutMode: Top;
+                                                    Background: #0b141f(0.8);
+                                                    Padding: (Full: 12);
+
+                                                    Group {
+                                                        LayoutMode: Left;
+                                                        Group {
+                                                            Anchor: (Width: 56, Height: 56);
+                                                            Background: #050b16(0.85);
+                                                            LayoutMode: Middle;
+                                                            Padding: (Full: 8);
+                                                            ItemIcon #FerocityIcon {
+                                                                Anchor: (Width: 36, Height: 36);
+                                                                Visible: false;
+                                                            }
+                                                        }
+
+                                                        Group { Anchor: (Width: 12); }
+
+                                                        Group {
+                                                            LayoutMode: Top;
+                                                            FlexWeight: 1;
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #FerocityLabel { Style: (TextColor: #ffdbe9, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group {
+                                                                    LayoutMode: Left;
+
+                                                                    Label #FerocityLevelPrefix {
+                                                                        Text: "Lv.";
+                                                                        Style: (TextColor: #ff9ac0, FontSize: 13);
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 2); }
+
+                                                                    Label #FerocityLevel { Style: (TextColor: #ff9ac0, FontSize: 13); }
+                                                                }
+                                                            }
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #FerocityValue { Style: (TextColor: #ffb0cd, FontSize: 13, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group #FerocityButtons {
+                                                                    LayoutMode: Left;
+
+                                                                    $C.@TextButton #FerocityMinus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "-1";
+                                                                        Style: @CancelTextButtonStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #FerocityPlus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+1";
+                                                                        Style: @CustomStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #FerocityPlus5 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+5";
+                                                                        Style: @CustomStyle;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 4); }
+
+                                                    Label #FerocityDescription {
+                                                        Style: (TextColor: #fac6da, FontSize: 12);
+                                                        Text: "Stacks bonus damage onto crits.";
+                                                    }
+
+                                                }
+
+                                                Group { Anchor: (Height: 12); }
+
+                                                // ---------------- STAMINA ----------------
+                                                Group #Stamina {
+                                                    LayoutMode: Top;
+                                                    Background: #0b141f(0.8);
+                                                    Padding: (Full: 12);
+
+                                                    Group {
+                                                        LayoutMode: Left;
+                                                        Group {
+                                                            Anchor: (Width: 56, Height: 56);
+                                                            Background: #050b16(0.85);
+                                                            LayoutMode: Middle;
+                                                            Padding: (Full: 8);
+                                                            ItemIcon #StaminaIcon {
+                                                                Anchor: (Width: 36, Height: 36);
+                                                                Visible: false;
+                                                            }
+                                                        }
+
+                                                        Group { Anchor: (Width: 12); }
+
+                                                        Group {
+                                                            LayoutMode: Top;
+                                                            FlexWeight: 1;
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #StaminaLabel { Style: (TextColor: #ecffd0, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group {
+                                                                    LayoutMode: Left;
+
+                                                                    Label #StaminaLevelPrefix {
+                                                                        Text: "Lv.";
+                                                                        Style: (TextColor: #d2ff8f, FontSize: 13);
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 2); }
+
+                                                                    Label #StaminaLevel { Style: (TextColor: #d2ff8f, FontSize: 13); }
+                                                                }
+                                                            }
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #StaminaValue { Style: (TextColor: #b7ff6a, FontSize: 13, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group #StaminaButtons {
+                                                                    LayoutMode: Left;
+
+                                                                    $C.@TextButton #StaminaMinus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "-1";
+                                                                        Style: @CancelTextButtonStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #StaminaPlus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+1";
+                                                                        Style: @CustomStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #StaminaPlus5 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+5";
+                                                                        Style: @CustomStyle;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 4); }
+
+                                                    Label #StaminaDescription {
+                                                        Style: (TextColor: #d8f2b0, FontSize: 12);
+                                                        Text: "Extends stamina for dodges and bursts.";
+                                                    }
+
+                                                }
+
+                                                Group { Anchor: (Height: 12); }
+
+                                                // ---------------- DISCIPLINE ----------------
+                                                Group #Discipline {
+                                                    LayoutMode: Top;
+                                                    Background: #0b141f(0.8);
+                                                    Padding: (Full: 12);
+
+                                                    Group {
+                                                        LayoutMode: Left;
+                                                        Group {
+                                                            Anchor: (Width: 56, Height: 56);
+                                                            Background: #050b16(0.85);
+                                                            LayoutMode: Middle;
+                                                            Padding: (Full: 8);
+                                                            ItemIcon #DisciplineIcon {
+                                                                Anchor: (Width: 36, Height: 36);
+                                                                Visible: false;
+                                                            }
+                                                        }
+
+                                                        Group { Anchor: (Width: 12); }
+
+                                                        Group {
+                                                            LayoutMode: Top;
+                                                            FlexWeight: 1;
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #DisciplineLabel { Style: (TextColor: #f4f4ff, FontSize: 16, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group {
+                                                                    LayoutMode: Left;
+
+                                                                    Label #DisciplineLevelPrefix {
+                                                                        Text: "Lv.";
+                                                                        Style: (TextColor: #d5dfff, FontSize: 13);
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 2); }
+
+                                                                    Label #DisciplineLevel { Style: (TextColor: #d5dfff, FontSize: 13); }
+                                                                }
+                                                            }
+
+                                                            Group {
+                                                                LayoutMode: Left;
+
+                                                                Label #DisciplineValue { Style: (TextColor: #9fe0ff, FontSize: 13, RenderBold: true); FlexWeight: 1; }
+
+                                                                Group #DisciplineButtons {
+                                                                    LayoutMode: Left;
+
+                                                                    $C.@TextButton #DisciplineMinus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "-1";
+                                                                        Style: @CancelTextButtonStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #DisciplinePlus1 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+1";
+                                                                        Style: @CustomStyle;
+                                                                    }
+
+                                                                    Group { Anchor: (Width: 4); }
+
+                                                                    $C.@TextButton #DisciplinePlus5 {
+                                                                        Anchor: (Height: 28, Width: 46);
+                                                                        Padding: (Horizontal: 12, Vertical: 4);
+                                                                        Text: "+5";
+                                                                        Style: @CustomStyle;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Group { Anchor: (Height: 4); }
+
+                                                    Label #DisciplineDescription {
+                                                        Style: (TextColor: #cde8ff, FontSize: 12);
+                                                        Text: "Boosts XP gain from all sources.";
+                                                    }
+
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // -------- FOOTER --------
+                                    Group #Footer {
+                                        LayoutMode: Top;
+                                        Background: #070b12;
+
+                                        Group {
+                                            Anchor: (Height: 2);
+                                            Background: #142034;
+                                        }
+
+                                        Group {
+                                            LayoutMode: Left;
+                                            Padding: (Full: 20);
+                                            Background: #0b141f(0.95);
+                                            Anchor: (Height: 80);
+
+                                            Group {
+                                                LayoutMode: Top;
+                                                FlexWeight: 1;
+
+                                                Label #SKILLPOINTS {
+                                                    Style: (TextColor: #6fe3ff, FontSize: 22, RenderBold: true, VerticalAlignment: Center);
+                                                    Padding: (Bottom: 2);
+                                                    FlexWeight: 1;
+                                                }
+
+                                                Label #SkillsFooterHint {
+                                                    Text: "Undo to revert pending tweaks, apply to lock them in.";
+                                                    Style: (TextColor: #c0cee5, FontSize: 12, VerticalAlignment: Center);
+                                                    FlexWeight: 1;
+                                                }
+                                            }
+
+                                            Group { Anchor: (Width: 20); }
+
+                                            Group {
+                                                LayoutMode: Left;
+                                                Anchor: (Width: 280);
+
+                                                $C.@CancelTextButton #ResetSkills {
+                                                    Text: "UNDO";
+                                                    Anchor: (Height: @PrimaryButtonHeight + 4, Width: 130);
+                                                    Padding: (Horizontal: @ButtonPadding);
+                                                }
+
+                                                Group { Anchor: (Width: 12); }
+
+                                                $C.@TextButton #ApplySkills {
+                                                    Text: "APPLY";
+                                                    Anchor: (Height: @PrimaryButtonHeight + 4, Width: 130);
+                                                    Padding: (Horizontal: @ButtonPadding);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 
-                        Group { Anchor: (Width: 20); }
+                        $C.@DecoratedContainer {
+                            Anchor: (Width: 300, Height: 700);
 
-                        Group {
-                            LayoutMode: Left;
-                            Anchor: (Width: 280);
-
-                            $C.@CancelTextButton #ResetSkills {
-                                Text: "UNDO";
-                                Anchor: (Height: @PrimaryButtonHeight + 4, Width: 130);
-                                Padding: (Horizontal: @ButtonPadding);
+                            #Title {
+                                Group {
+                                    $C.@Title #ExcessSkillsPanel { @Text = "EXCESS SKILL POINTS"; }
+                                }
                             }
 
-                            Group { Anchor: (Width: 12); }
+                            #Content {
+                                LayoutMode: Top;
+                                Padding: (Horizontal: 12, Bottom: 12);
 
-                            $C.@TextButton #ApplySkills {
-                                Text: "APPLY";
-                                Anchor: (Height: @PrimaryButtonHeight + 4, Width: 130);
-                                Padding: (Horizontal: @ButtonPadding);
+                                Group {
+                                    LayoutMode: Top;
+                                    Padding: (Vertical: 12);
+                                }
                             }
                         }
                     }
