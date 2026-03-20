@@ -7,16 +7,21 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Kills grant stacking Haste and Strength while a Defense penalty persists until fully stacked."
+    - title: "Buffs"
+      body: |
+        Value: +12%
+        Value: +6%
+        Max stacks: +4
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
+    - title: "Debuffs"
+      body: "Value: -10%"
+      color: "#ff9a9a"
+    - title: "Rules"
+      body: "Active Until Max Stacks: Yes"
+      color: "#ffb86b"
+    - title: "Duration"
+      body: "Seconds: +10"
       color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
 passives:
   buffs:
     haste:

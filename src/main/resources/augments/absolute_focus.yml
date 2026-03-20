@@ -7,16 +7,17 @@ enabled: true
 
 ui:
   sections:
-    - title: "Core Effect"
-      body: "Periodically guarantees your next attack is a critical strike."
+    - title: "Buffs"
+      body: |
+        Critical Chance: +100%
+        Conversion ratio: 1x
       color: "#8adf9e"
-    - title: "Scaling"
-      body: "Any critical chance above 100% is converted into bonus damage."
-      color: "#9ecbff"
-    - title: "Timing"
-      body: "Activates once every 8 seconds."
+    - title: "Rules"
+      body: "Stat: crit_chance"
+      color: "#ffb86b"
+    - title: "Cooldown"
+      body: "Cooldown: +8"
       color: "#ffd56b"
-
 passives:
   guaranteed_crit:
     cooldown: 8 # every 8 seconds

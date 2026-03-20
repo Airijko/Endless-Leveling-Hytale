@@ -7,16 +7,20 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Cheat death briefly and rapidly decay unless you secure a kill."
+    - title: "Buffs"
+      body: |
+        Revive Health Percent: +75%
+        Drain Max Hp Percent Per Second: +25%
+        Missing Health Heal: +25%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
+    - title: "Rules"
+      body: |
+        Drains To Zero: Yes
+        Cancel On Kill: Yes
+      color: "#ffb86b"
+    - title: "Cooldown"
+      body: "Cooldown: +45"
       color: "#ffd56b"
-
 passives:
   death_prevention:
     cooldown: 45 # seconds

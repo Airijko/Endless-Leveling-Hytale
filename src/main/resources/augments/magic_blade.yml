@@ -7,16 +7,16 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Your magical power empowers your weapons, converting Sorcery into weapon damage and empowering swords."
+    - title: "Buffs"
+      body: |
+        Conversion Percent: +75%
+        Bonus Damage: +20%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
+    - title: "Rules"
+      body: |
+        Stat: sorcery
+        Weapon Type: sword
+      color: "#ffb86b"
 passives:
   sorcery_weapon_conversion:
     stat: sorcery

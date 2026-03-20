@@ -7,16 +7,20 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Gain Sorcery while high on Mana and suffer a Sorcery penalty when Mana is low."
+    - title: "Buffs"
+      body: |
+        Value: +40%
+        Min Percent: +75%
+        Max Percent: +25%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
+    - title: "Debuffs"
+      body: "Value: -25%"
+      color: "#ff9a9a"
+    - title: "Rules"
+      body: |
+        Resource: MANA
+        Resource: MANA
+      color: "#ffb86b"
 passives:
   buffs:
     sorcery_bonus_high:

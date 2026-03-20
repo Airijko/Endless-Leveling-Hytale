@@ -7,16 +7,29 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Your strikes grow stronger while healthy and sustain you when wounded."
+    - title: "Buffs"
+      body: |
+        Hit Counter: +3
+        Hit Counter Duration: 5x
+        Above 50% Health:
+        Value: +80%
+        Below 50% Health:
+        Missing Health Heal: +10%
+        Healing Ratio from Strength: +10%
+        Healing Ratio from Sorcery: +10%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
+    - title: "Debuffs"
+      body: |
+        Above 50% Health:
+        Self Damage: +10%
+      color: "#ff9a9a"
+    - title: "Rules"
+      body: |
+        Above 50% Health:
+        Health Threshold Above: +50%
+        Below 50% Health:
+        Health Threshold Below: +50%
+      color: "#ffb86b"
 passives:
   hit_counter: 3
   hit_counter_duration: 5 # seconds to complete the shared hit counter before it resets

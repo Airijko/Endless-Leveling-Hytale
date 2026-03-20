@@ -7,16 +7,21 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Your presence scorches nearby enemies, dealing damage over time that scales with your maximum health and expanding in size as you grow stronger."
+    - title: "Buffs"
+      body: |
+        Base Max Hp Percent Per Second: +1%
+        Bonus Max Hp Scaling: +0.12%
+        Radius: +5
+        Max Damage Per Tick: +500%
+        Health Per Block: +400%
+        Value: +100
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
+    - title: "Duration"
+      body: "Duration: 10x"
       color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
+    - title: "Cooldown"
+      body: "Cooldown: +10"
       color: "#ffd56b"
-
 passives:
   aura_burn:
     base_max_hp_percent_per_second: 0.01 # deals 1% of target max HP per second

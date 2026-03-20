@@ -7,16 +7,14 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Your crit chance grants damage reduction, but only when your defense crits. Reduction scales with your crit chance, up to a maximum of 25% damage reduction at 100% crit chance."
+    - title: "Buffs"
+      body: "Value: +25%"
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
+    - title: "Rules"
+      body: |
+        Scaling Stat: crit_rate
+        Category: ON_DAMAGE_TAKEN
+      color: "#ffb86b"
 passives:
   crit_defense:
     value: 0.25 # max 25% damage reduction

@@ -7,16 +7,17 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "On death, prime a delayed explosion that scales from your vitality and combat stats."
+    - title: "Buffs"
+      body: |
+        Delay: +3
+        Radius: +5
+        Max Health Ratio: 0.5x
+        Strength Ratio: 0.1x
+        Sorcery Ratio: 0.1x
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
+    - title: "Cooldown"
+      body: "Cooldown: 0%"
       color: "#ffd56b"
-
 passives:
   death_bomb:
     delay: 3 # seconds after dying before detonation

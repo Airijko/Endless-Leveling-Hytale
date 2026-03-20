@@ -7,16 +7,17 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Periodically empower your next strike to heal you and grant a burst of speed."
+    - title: "Buffs"
+      body: |
+        Heal Percent Of Damage: +25%
+        Value: +50%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
+    - title: "Duration"
+      body: "Duration: 3x"
       color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
+    - title: "Cooldown"
+      body: "Cooldown: +8"
       color: "#ffd56b"
-
 passives:
   empowered_hit:
     cooldown: 8 # seconds before the effect can trigger again

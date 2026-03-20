@@ -7,16 +7,21 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "At the brink of death you gain a brief shielded immobile phase, then a follow-up window of protection and empowered stats."
+    - title: "Buffs"
+      body: |
+        Min Health Hp: +100%
+        Value: +15%
+        Value: +50%
+        Value: +50%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
+    - title: "Duration"
+      body: |
+        Duration: 5x
+        Duration: 15x
       color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
+    - title: "Cooldown"
+      body: "Cooldown: +100"
       color: "#ffd56b"
-
 passives:
   shield_phase:
     min_health_hp: 1 # flat HP trigger/floor

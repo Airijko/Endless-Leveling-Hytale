@@ -7,16 +7,12 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Trade all critical potential for overwhelming raw power."
+    - title: "Buffs"
+      body: |
+        Precision Lock Value: +10000%
+        Strength Multiplier: +250%
+        Sorcery Multiplier: +250%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
 passives:
   brute_force:
     precision_lock_value: 10000 # effectively disables crit and prevents crit gain

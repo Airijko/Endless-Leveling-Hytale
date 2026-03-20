@@ -7,16 +7,14 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Cheat death at low health with a large heal on a long cooldown."
+    - title: "Buffs"
+      body: |
+        Value: +50%
+        Min Health Hp: +100%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
+    - title: "Cooldown"
+      body: "Cooldown: +100"
       color: "#ffd56b"
-
 passives:
   heal_on_trigger:
     value: 0.5 # heals 50% of max HP

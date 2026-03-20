@@ -7,16 +7,16 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Stack Strength and Sorcery that ramps up, doubles at cap, and decays over time."
+    - title: "Buffs"
+      body: |
+        Value: +2.5%
+        Value: +2.5%
+        Max stacks: +20
+        Decay Per Second: +2
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
+    - title: "Duration"
+      body: "Duration Per Stack: 8x"
       color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
 passives:
   buffs:
     strength:

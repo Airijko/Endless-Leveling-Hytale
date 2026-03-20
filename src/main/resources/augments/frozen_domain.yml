@@ -7,16 +7,21 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Create a freezing aura that slows nearby enemies, steals part of that speed, and fortifies your life force."
+    - title: "Buffs"
+      body: |
+        Slow Percent: +30%
+        Stolen Slow Ratio: 0.2x
+        Radius: +5
+        Slow Interval: +100%
+        Health Per Block: +400%
+        Value: +100
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
+    - title: "Duration"
+      body: "Duration: 10x"
       color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
+    - title: "Cooldown"
+      body: "Cooldown: +25"
       color: "#ffd56b"
-
 passives:
   aura_frozen_domain:
     slow_percent: 0.30 # slows targets by 30% of their total movement speed

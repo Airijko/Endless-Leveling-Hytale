@@ -7,16 +7,12 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Gain bonus Mana equal to a portion of your Sorcery."
+    - title: "Buffs"
+      body: "Value: +10%"
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
+    - title: "Rules"
+      body: "Scaling Stat: SORCERY"
+      color: "#ffb86b"
 passives:
   buffs:
     mana_from_sorcery:

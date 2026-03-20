@@ -7,16 +7,15 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Each death weakens you temporarily, but you can revive multiple times before truly falling."
+    - title: "Buffs"
+      body: |
+        Max Deaths: +3
+        Restore After Seconds: +30
+        Max Health Regen Percent Per Second: +2%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
+    - title: "Rules"
+      body: "Health Penalty Per Death: 1/3"
+      color: "#ffb86b"
 passives:
   death_stacks:
     max_deaths: 3

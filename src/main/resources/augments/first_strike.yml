@@ -7,16 +7,15 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Your opening hit after a cooldown delivers a powerful burst."
+    - title: "Buffs"
+      body: "Value: +1.75"
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
+    - title: "Rules"
+      body: "Category: ON_HIT"
+      color: "#ffb86b"
+    - title: "Cooldown"
+      body: "Cooldown: +25"
       color: "#ffd56b"
-
 passives:
   bonus_damage_on_hit:
     value: 1.75 # +175% damage on first hit

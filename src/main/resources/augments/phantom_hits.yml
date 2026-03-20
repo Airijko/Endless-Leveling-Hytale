@@ -7,16 +7,15 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Your attacks fire additional phantom strikes that scale with both Strength and Sorcery."
+    - title: "Buffs"
+      body: |
+        Flat Damage: +20%
+        Healing Ratio from Strength: +10%
+        Healing Ratio from Sorcery: +10%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
+    - title: "Rules"
+      body: "Can Crit: Yes"
+      color: "#ffb86b"
 passives:
   phantom_damage:
     flat_damage: 20 # base additional damage

@@ -8,16 +8,29 @@ enabled: true
 
 ui:
   sections:
-    - title: "What You Get"
-      body: "Common augments roll a single stat boost from the list below."
+    - title: "Buffs"
+      body: |
+        Min Value: +5
+        Max Value: +20
+        Min Value: +100%
+        Max Value: +4
+        Min Value: +100%
+        Max Value: +4
+        Min Value: +75%
+        Max Value: +3
+        Min Value: +100%
+        Max Value: +4
+        Min Value: +50%
+        Max Value: +1.5
+        Min Value: +75%
+        Max Value: +2.5
+        Min Value: +2
+        Max Value: +6
+        Min Value: +2
+        Max Value: +6
+        Min Value: +2
+        Max Value: +6
       color: "#8adf9e"
-    - title: "Roll Range"
-      body: "The rolled value is chosen between each stat's minimum and maximum value."
-      color: "#9ecbff"
-    - title: "Tip"
-      body: "Use rerolls to chase better values for your build."
-      color: "#ffd56b"
-
 passives:
   buffs:
     life_force:

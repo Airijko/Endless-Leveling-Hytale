@@ -7,16 +7,15 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Gain Strength based on your total max Health, but lose some Haste."
+    - title: "Buffs"
+      body: "Value: +15%"
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
+    - title: "Debuffs"
+      body: "Value: -15%"
+      color: "#ff9a9a"
+    - title: "Rules"
+      body: "Scaling Stat: MAX_HEALTH"
+      color: "#ffb86b"
 passives:
   buffs:
     strength_from_max_health:

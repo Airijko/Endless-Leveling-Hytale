@@ -7,16 +7,13 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Deal significantly increased damage to high-health enemies."
+    - title: "Buffs"
+      body: |
+        Target Health Percent Above: +80%
+        Value: +50%
+        Target Health Percent Above: +60%
+        Value: +25%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
 passives:
   bonus_damage_vs_high_hp:
     thresholds:

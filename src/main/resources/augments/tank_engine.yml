@@ -7,16 +7,20 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Sustained combat massively increases your maximum health."
+    - title: "Buffs"
+      body: |
+        Flat Health Per Stack: +500%
+        Max Health Multiplier At Max Stacks: +200%
+        Percent Max Health Per Stack: +4%
+        Max stacks: +25
+        Decay Per Second: +5
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
+    - title: "Rules"
+      body: "Exclude Flat From Percent Scaling: Yes"
+      color: "#ffb86b"
+    - title: "Duration"
+      body: "Duration: 8x"
       color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
 passives:
   stacking_health:
     flat_health_per_stack: 5 # +5 HP per stack

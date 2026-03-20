@@ -7,16 +7,14 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Critical hits heal you, limited by an internal cooldown."
+    - title: "Buffs"
+      body: |
+        Value: +25%
+        Value: +15%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
+    - title: "Cooldown"
+      body: "Trigger Cooldown: +2"
       color: "#ffd56b"
-
 passives:
   heal_on_crit:
     value: 0.25 # 25% of damage dealt as healing

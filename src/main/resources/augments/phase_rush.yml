@@ -7,16 +7,18 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Rapid attacks accelerate your combat tempo and convert speed into power."
+    - title: "Buffs"
+      body: |
+        Value: +50%
+        Hits Required: +5
+        Multiplier: +2
+        Conversion Percent: +50%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
+    - title: "Duration"
+      body: |
+        Duration: 5x
+        Duration: 3x
       color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
 passives:
   buffs:
     haste:

@@ -7,16 +7,23 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "For a short window you cannot drop below a sliver of health and hit harder as you get lower."
+    - title: "Buffs"
+      body: |
+        Min Health Hp: +100%
+        Max Bonus Ferocity: +125%
+        Value: +15%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
+    - title: "Rules"
+      body: |
+        Scaling Stat: missing_health_percent
+        Full Value Threshold: +5%
+      color: "#ffb86b"
+    - title: "Duration"
+      body: "Duration: 10x"
       color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
+    - title: "Cooldown"
+      body: "Cooldown: +100"
       color: "#ffd56b"
-
 passives:
   rage:
     duration: 10 # lasts 10 seconds

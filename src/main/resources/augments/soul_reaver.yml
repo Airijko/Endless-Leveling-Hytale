@@ -7,16 +7,12 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Slain enemies heal you based on their max health, gated by a short cooldown."
+    - title: "Buffs"
+      body: "Value: +20%"
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
+    - title: "Cooldown"
+      body: "Cooldown: +7"
       color: "#ffd56b"
-
 passives:
   heal_on_kill:
     value: 0.2 # heals 20% of the enemy's max HP

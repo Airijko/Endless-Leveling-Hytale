@@ -7,16 +7,11 @@ enabled: true
 
 ui:
   sections:
-    - title: "Overview"
-      body: "Killing enemies reduces the cooldown of all your augments and passives."
+    - title: "Buffs"
+      body: |
+        Flat Seconds: +100%
+        Percent Remaining: +7.5%
       color: "#8adf9e"
-    - title: "Effects"
-      body: "Review the sections below for exact buff, debuff, duration, and cooldown details."
-      color: "#9ecbff"
-    - title: "Build Tip"
-      body: "Pair this augment with stats and passives that amplify its strongest scaling."
-      color: "#ffd56b"
-
 passives:
   cooldown_reduction:
     flat_seconds: 1 # reduces cooldown by 1 second
