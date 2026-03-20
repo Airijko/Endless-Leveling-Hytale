@@ -9,12 +9,13 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Precision Lock Value: 0
         Strength Multiplier: 2.5x
         Sorcery Multiplier: 2.5x
-      color: "#8adf9e"
+    - title: "Debuffs"
+      body: "Precision Lock Value: 0 (no crits or crit gain)"
+      color: "#ff9a9a"
 passives:
   brute_force:
-    precision_lock_value: 10000 # effectively disables crit and prevents crit gain
+    precision_lock_value: 0 # locks crit-related stats at 0 (no crits or crit gain)
     strength_multiplier: 2.5 # 2.5x effective strength
     sorcery_multiplier: 2.5 # 2.5x effective sorcery

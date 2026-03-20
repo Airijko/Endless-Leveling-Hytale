@@ -1,7 +1,6 @@
 package com.airijko.endlessleveling.augments.types;
 
 import com.airijko.endlessleveling.augments.Augment;
-
 import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentHooks;
 import com.airijko.endlessleveling.augments.AugmentUtils;
@@ -14,7 +13,6 @@ public final class BruteForceAugment extends Augment
         implements AugmentHooks.PassiveStatAugment, AugmentHooks.OnHitAugment {
     public static final String ID = "brute_force";
 
-    private final double precisionLockMagnitude;
     private final double strengthMultiplier;
     private final double sorceryMultiplier;
 
@@ -23,8 +21,6 @@ public final class BruteForceAugment extends Augment
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> bruteForce = AugmentValueReader.getMap(passives, "brute_force");
 
-        this.precisionLockMagnitude = Math.max(0.0D,
-                AugmentValueReader.getDouble(bruteForce, "precision_lock_value", 10000.0D));
         this.strengthMultiplier = Math.max(0.0D,
                 AugmentValueReader.getDouble(bruteForce, "strength_multiplier", 1.75D));
         this.sorceryMultiplier = Math.max(0.0D,
@@ -37,7 +33,7 @@ public final class BruteForceAugment extends Augment
             return;
         }
 
-        double critLockMagnitude = -Math.abs(precisionLockMagnitude);
+                double critLockMagnitude = 0.0D;
         AugmentUtils.setAttributeBonus(context.getRuntimeState(),
                 ID + "_precision_lock",
                 SkillAttributeType.PRECISION,

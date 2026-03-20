@@ -1,5 +1,6 @@
 package com.airijko.endlessleveling.combat;
 
+import com.airijko.endlessleveling.augments.AugmentDispatch;
 import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.augments.types.ExecutionerAugment;
 import com.airijko.endlessleveling.augments.types.FirstStrikeAugment;
@@ -195,7 +196,7 @@ public final class CombatHookProcessor {
         }
         double augmentTrueDamageBonus = 0.0D;
         if (augmentExecutor != null) {
-            AugmentExecutor.OnHitResult onHitResult = augmentExecutor.applyOnHit(playerData,
+            AugmentDispatch.OnHitResult onHitResult = augmentExecutor.applyOnHit(playerData,
                     ctx.attackerRef(),
                     ctx.targetRef(),
                     ctx.commandBuffer(),

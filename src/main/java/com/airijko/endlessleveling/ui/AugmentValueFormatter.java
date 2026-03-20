@@ -187,9 +187,9 @@ public final class AugmentValueFormatter {
             }
         } else {
             Double precisionLockValue = toDouble(bruteForce.get("precision_lock_value"));
-            if (precisionLockValue != null && precisionLockValue > 0.0D) {
+            if (precisionLockValue != null) {
                 lines.add(formatBuffEntry("precision_lock_value",
-                        -Math.abs(precisionLockValue),
+                        0.0D,
                         null,
                         "precision_lock_value",
                         null));

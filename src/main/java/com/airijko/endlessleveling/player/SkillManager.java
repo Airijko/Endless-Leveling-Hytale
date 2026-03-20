@@ -47,6 +47,8 @@ public class SkillManager {
     private static final double DEFAULT_DISCIPLINE_XP_BONUS_PER_LEVEL_PERCENT = 0.5D;
     private static final double DEFAULT_FLOW_PER_LEVEL = 0.5D;
     private static final String COMMON_AUGMENT_SOURCE_PREFIX = "common_";
+    private static final String BRUTE_FORCE_PRECISION_LOCK_SOURCE = "brute_force_precision_lock";
+    private static final String BRUTE_FORCE_FEROCITY_LOCK_SOURCE = "brute_force_ferocity_lock";
     private static final String VANGUARD_BASE_CLASS_ID = "vanguard";
     private static final String CLASS_INNATE_CAPS_PATH = "classes.innate_attribute_gain_level_caps";
     private static final String DEFENSE_CAPS_PATH = "defense_caps";
@@ -404,6 +406,19 @@ public class SkillManager {
             return 0.0D;
         }
         return getCommonAugmentAttributeBonus(playerData, attributeType);
+    }
+
+    private boolean hasAugmentAttributeSource(PlayerData playerData,
+            SkillAttributeType attributeType,
+            String sourcePrefix) {
+        if (augmentRuntimeManager == null || playerData == null || attributeType == null || sourcePrefix == null) {
+            return false;
+        }
+        var runtime = augmentRuntimeManager.getRuntimeState(playerData.getUuid());
+        if (runtime == null) {
+            return false;
+        }
+        return runtime.hasAttributeBonusSourceByPrefix(attributeType, System.currentTimeMillis(), sourcePrefix);
     }
 
     public boolean isVanguardCritAttributeLocked(PlayerData playerData, SkillAttributeType attributeType) {
@@ -927,6 +942,9 @@ public class SkillManager {
         if (playerData == null) {
             return new PrecisionBreakdown(0.0f, 0.0f, 0.0f, 0.0f);
         }
+        boolean bruteForceLocked = hasAugmentAttributeSource(playerData,
+            SkillAttributeType.PRECISION,
+            BRUTE_FORCE_PRECISION_LOCK_SOURCE);
         boolean critLocked = isVanguardCritAttributeLocked(playerData, SkillAttributeType.PRECISION);
         int precisionLevel = critLocked
                 ? 0
@@ -938,6 +956,9 @@ public class SkillManager {
         double augmentBonus = getAugmentAttributeBonus(playerData, SkillAttributeType.PRECISION)
                 - getVanguardBlockedCommonCritBonus(playerData, SkillAttributeType.PRECISION);
         float skillPercent = (float) ((precisionLevel * perPointChance) + innateBonus + augmentBonus);
+        if (bruteForceLocked) {
+            return new PrecisionBreakdown(racePercent, skillPercent, 0.0f, 0.0f);
+        }
         float rawTotalPercent = racePercent + skillPercent;
         float totalPercent = Math.max(0.0f, Math.min(100.0f, rawTotalPercent));
         float critChance = totalPercent / 100.0f;
@@ -966,6 +987,9 @@ public class SkillManager {
         if (playerData == null) {
             return new FerocityBreakdown(0.0f, 0.0f, 0.0f);
         }
+        boolean bruteForceLocked = hasAugmentAttributeSource(playerData,
+            SkillAttributeType.FEROCITY,
+            BRUTE_FORCE_FEROCITY_LOCK_SOURCE);
         boolean critLocked = isVanguardCritAttributeLocked(playerData, SkillAttributeType.FEROCITY);
         int ferocityLevel = critLocked
                 ? 0
@@ -977,6 +1001,9 @@ public class SkillManager {
         double augmentBonus = getAugmentAttributeBonus(playerData, SkillAttributeType.FEROCITY)
                 - getVanguardBlockedCommonCritBonus(playerData, SkillAttributeType.FEROCITY);
         float skillValue = (float) Math.max(0.0D, (ferocityLevel * perPointFerocity) + innateBonus + augmentBonus);
+        if (bruteForceLocked) {
+            return new FerocityBreakdown(raceValue, skillValue, 0.0f);
+        }
         return new FerocityBreakdown(raceValue, skillValue, Math.max(0.0f, raceValue + skillValue));
     }
 

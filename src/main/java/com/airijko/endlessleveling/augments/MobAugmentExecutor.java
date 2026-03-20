@@ -4,8 +4,6 @@ import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
-import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
-import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import java.util.ArrayList;
@@ -37,9 +35,6 @@ public final class MobAugmentExecutor {
     private static final String CATEGORY_PASSIVE_STAT = "PASSIVE_STAT";
 
     public MobAugmentExecutor() {
-    }
-
-    public record OnHitResult(float damage, double trueDamageBonus) {
     }
 
     /**
@@ -88,7 +83,7 @@ public final class MobAugmentExecutor {
     /**
      * Apply on-hit effects for a mob attacker.
      */
-    public OnHitResult applyOnHit(
+    public AugmentDispatch.OnHitResult applyOnHit(
             UUID entityId,
             Ref<EntityStore> attackerRef,
             Ref<EntityStore> targetRef,
@@ -99,7 +94,7 @@ public final class MobAugmentExecutor {
 
         MobAugmentInstance instance = mobAugments.get(entityId);
         if (instance == null || instance.augments.isEmpty()) {
-            return new OnHitResult(startingDamage, 0.0D);
+            return new AugmentDispatch.OnHitResult(startingDamage, 0.0D);
         }
 
         applyPassiveHooks(entityId, instance, attackerRef, commandBuffer, attackerStats);
@@ -118,7 +113,7 @@ public final class MobAugmentExecutor {
                 false,
                 null);
 
-        if (isMiss(context)) {
+        if (AugmentDispatch.isMiss(context)) {
             for (Augment augment : instance.augments) {
                 if (augment instanceof AugmentHooks.OnMissAugment onMiss) {
                     try {
@@ -139,7 +134,7 @@ public final class MobAugmentExecutor {
                     }
                 }
             }
-            return new OnHitResult(Math.max(0.0f, context.getDamage()), Math.max(0.0D, context.getTrueDamageBonus()));
+            return new AugmentDispatch.OnHitResult(Math.max(0.0f, context.getDamage()), Math.max(0.0D, context.getTrueDamageBonus()));
         }
 
         for (Augment augment : instance.augments) {
@@ -201,7 +196,7 @@ public final class MobAugmentExecutor {
             }
         }
 
-        return new OnHitResult(Math.max(0.0f, context.getDamage()), Math.max(0.0D, context.getTrueDamageBonus()));
+        return new AugmentDispatch.OnHitResult(Math.max(0.0f, context.getDamage()), Math.max(0.0D, context.getTrueDamageBonus()));
     }
 
     /**
@@ -234,22 +229,9 @@ public final class MobAugmentExecutor {
                 incomingDamage);
 
         float damage = incomingDamage;
-        List<Augment> lowHpAugments = new ArrayList<>();
 
-        // Collect low HP augments in priority order
-        for (Augment augment : instance.augments) {
-            if (augment instanceof AugmentHooks.OnLowHpAugment) {
-                lowHpAugments.add(augment);
-            }
-        }
-
-        // Sort by priority (rebirth first)
-        lowHpAugments.sort((left, right) -> Integer.compare(
-                lowHpPriority(left),
-                lowHpPriority(right)));
-
-        // Execute augments in order
-        for (Augment augment : lowHpAugments) {
+        // Execute low-HP augments in priority order
+        for (Augment augment : AugmentDispatch.resolveLowHpTriggerOrder(instance.augments)) {
             AugmentHooks.OnLowHpAugment lowHpHandler = (AugmentHooks.OnLowHpAugment) augment;
             try {
                 float beforeDamage = context.getIncomingDamage();
@@ -390,25 +372,6 @@ public final class MobAugmentExecutor {
         return mobAugments.containsKey(entityId);
     }
 
-    private boolean isMiss(AugmentHooks.HitContext context) {
-        if (context == null || context.getDamage() <= 0.0f) {
-            return true;
-        }
-        Ref<EntityStore> targetRef = context.getTargetRef();
-        if (targetRef == null || !targetRef.isValid()) {
-            return true;
-        }
-        EntityStatMap targetStats = context.getTargetStats();
-        if (targetStats == null) {
-            return true;
-        }
-        EntityStatValue hp = targetStats.get(DefaultEntityStatTypes.getHealth());
-        if (hp == null || hp.getMax() <= 0f || hp.get() <= 0f) {
-            return true;
-        }
-        return context.getAttackerRef() != null && context.getAttackerRef().equals(context.getTargetRef());
-    }
-
     private void applyPassiveHooks(UUID entityId,
             MobAugmentInstance instance,
             Ref<EntityStore> mobRef,
@@ -533,23 +496,6 @@ public final class MobAugmentExecutor {
             return 0.1D;
         }
         return Math.min(1.0D, deltaSeconds);
-    }
-
-    private int lowHpPriority(Augment augment) {
-        String id = augment != null ? augment.getId() : null;
-        if (id == null) {
-            return Integer.MAX_VALUE;
-        }
-
-        id = id.trim().toLowerCase();
-        return switch (id) {
-            case "rebirth" -> 0;
-            case "fortress" -> 1;
-            case "undying_rage" -> 2;
-            case "nesting_doll" -> 3;
-            case "bailout" -> 4;
-            default -> Integer.MAX_VALUE;
-        };
     }
 
     /**

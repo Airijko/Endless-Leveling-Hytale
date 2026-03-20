@@ -22,9 +22,7 @@ import com.airijko.endlessleveling.util.PlayerChatNotifier;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
-import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -46,11 +44,7 @@ public final class AugmentExecutor {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final String COMMON_AUGMENT_ID = "common";
     private static final String FLEET_FOOTWORK_ID = "fleet_footwork";
-    private static final String REBIRTH_ID = "rebirth";
-    private static final String FORTRESS_ID = "fortress";
-    private static final String UNDYING_RAGE_ID = "undying_rage";
     private static final String NESTING_DOLL_ID = "nesting_doll";
-    private static final String BAILOUT_ID = "bailout";
     private static final List<HealthModifierSpec> PASSIVE_HEALTH_MODIFIERS = List.of(
             new HealthModifierSpec("raid_boss", "max_hp_bonus"),
             new HealthModifierSpec("goliath", "max_hp_bonus"),
@@ -70,7 +64,7 @@ public final class AugmentExecutor {
         this.skillManager = Objects.requireNonNull(skillManager, "skillManager");
     }
 
-    public OnHitResult applyOnHit(@Nonnull PlayerData playerData,
+    public AugmentDispatch.OnHitResult applyOnHit(@Nonnull PlayerData playerData,
             Ref<EntityStore> attackerRef,
             Ref<EntityStore> targetRef,
             CommandBuffer<EntityStore> commandBuffer,
@@ -82,20 +76,20 @@ public final class AugmentExecutor {
             ClassWeaponType weaponType) {
         List<Augment> augments = resolve(playerData);
         if (augments.isEmpty()) {
-            return new OnHitResult(startingDamage, 0.0D);
+            return new AugmentDispatch.OnHitResult(startingDamage, 0.0D);
         }
         var runtime = runtimeManager.getRuntimeState(playerData.getUuid());
         notifyCooldowns(playerData, runtime, commandBuffer, attackerRef, augments);
         HitContext context = new HitContext(playerData, runtime, skillManager, attackerRef, targetRef, commandBuffer,
                 attackerStats, targetStats, startingDamage, critical, ranged, weaponType);
 
-        if (isMiss(context)) {
+        if (AugmentDispatch.isMiss(context)) {
             for (Augment augment : augments) {
                 if (augment instanceof OnMissAugment missHandler) {
                     missHandler.onMiss(context);
                 }
             }
-            return new OnHitResult(context.getDamage(), context.getTrueDamageBonus());
+            return new AugmentDispatch.OnHitResult(context.getDamage(), context.getTrueDamageBonus());
         }
 
         for (Augment augment : augments) {
@@ -111,34 +105,7 @@ public final class AugmentExecutor {
                 context.setDamage(updated);
             }
         }
-        return new OnHitResult(context.getDamage(), context.getTrueDamageBonus());
-    }
-
-    public record OnHitResult(float damage, double trueDamageBonus) {
-    }
-
-    private boolean isMiss(@Nonnull HitContext context) {
-        if (context.getDamage() <= 0.0f) {
-            return true;
-        }
-        if (context.getTargetRef() == null || !context.getTargetRef().isValid()) {
-            return true;
-        }
-        EntityStatMap targetStats = context.getTargetStats();
-        if (targetStats == null) {
-            return true;
-        }
-        EntityStatValue targetHp = targetStats.get(DefaultEntityStatTypes.getHealth());
-        if (targetHp == null) {
-            return true;
-        }
-        if (targetHp.getMax() <= 0f || targetHp.get() <= 0f) {
-            return true;
-        }
-        if (context.getAttackerRef() != null && context.getAttackerRef().equals(context.getTargetRef())) {
-            return true;
-        }
-        return false;
+        return new AugmentDispatch.OnHitResult(context.getDamage(), context.getTrueDamageBonus());
     }
 
     public float applyOnDamageTaken(@Nonnull PlayerData defender,
@@ -170,7 +137,7 @@ public final class AugmentExecutor {
             return 0f;
         }
 
-        for (Augment augment : resolveLowHpTriggerOrder(augments)) {
+        for (Augment augment : AugmentDispatch.resolveLowHpTriggerOrder(augments)) {
             LOGGER.atFine().log("[AUGMENT] Checking low HP trigger for: %s", augment.getId());
             OnLowHpAugment lowHp = (OnLowHpAugment) augment;
             damage = lowHp.onLowHp(context);
@@ -266,34 +233,7 @@ public final class AugmentExecutor {
         return Math.max(0f, updated);
     }
 
-    private List<Augment> resolveLowHpTriggerOrder(List<Augment> augments) {
-        List<Augment> lowHpAugments = new ArrayList<>();
-        for (Augment augment : augments) {
-            if (augment instanceof OnLowHpAugment) {
-                lowHpAugments.add(augment);
-            }
-        }
-        if (lowHpAugments.size() <= 1) {
-            return lowHpAugments;
-        }
-        lowHpAugments.sort((left, right) -> Integer.compare(lowHpPriority(left), lowHpPriority(right)));
-        return lowHpAugments;
-    }
 
-    private int lowHpPriority(Augment augment) {
-        String augmentId = augment == null ? null : augment.getId();
-        if (augmentId == null) {
-            return Integer.MAX_VALUE;
-        }
-        return switch (augmentId.trim().toLowerCase()) {
-            case REBIRTH_ID -> 0;
-            case FORTRESS_ID -> 1;
-            case UNDYING_RAGE_ID -> 2;
-            case NESTING_DOLL_ID -> 3;
-            case BAILOUT_ID -> 4;
-            default -> Integer.MAX_VALUE;
-        };
-    }
 
     public void handleKill(@Nonnull PlayerData killer,
             Ref<EntityStore> killerRef,
