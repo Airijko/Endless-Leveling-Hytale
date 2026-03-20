@@ -9,14 +9,14 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Min Health Hp: +100%
         Max Bonus Ferocity: +125%
         Value: +15%
       color: "#8adf9e"
     - title: "Rules"
       body: |
+        Min Health Hp: 1
         Scaling Stat: missing_health_percent
-        Full Value Threshold: +5%
+        Full Crit Damage Value Threshold: +5%
       color: "#ffb86b"
     - title: "Duration"
       body: "Duration: 10s"

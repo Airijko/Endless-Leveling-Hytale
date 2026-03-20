@@ -9,15 +9,12 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Flat Health Per Stack: +500%
-        Max Health Multiplier At Max Stacks: +200%
+        Flat Health Per Stack: +5
+        Max Health Multiplier At Max Stacks: 2x
         Percent Max Health Per Stack: +4%
         Max stacks: +25
         Decay Per Second: +5
       color: "#8adf9e"
-    - title: "Rules"
-      body: "Exclude Flat From Percent Scaling: Yes"
-      color: "#ffb86b"
     - title: "Duration"
       body: "Duration: 8s"
       color: "#9ecbff"

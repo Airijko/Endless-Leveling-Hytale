@@ -7,7 +7,7 @@ enabled: true
 
 ui:
   sections:
-    - title: "Rules"
+    - title: "On-Hit Passive"
       body: |
         3-Hit Passive
         Hit Counter Duration: 5s
@@ -16,7 +16,7 @@ ui:
       body: |
         Value: +80%
       color: "#8adf9e"
-    - title: "Above 50%"
+    - title: ""
       body: |
         Self Damage: +10%
       color: "#ff9a9a"

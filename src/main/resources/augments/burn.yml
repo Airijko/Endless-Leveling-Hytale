@@ -12,7 +12,7 @@ ui:
         Base Max Hp Percent Per Second: +1%
         Bonus Max Hp Scaling: +0.12%
         Radius: +5
-        Max Damage Per Tick: +500%
+        Max Damage Per Tick: 500
         Health Per Block: +400%
         Value: +100
       color: "#8adf9e"

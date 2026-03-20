@@ -7,7 +7,7 @@ enabled: true
 
 ui:
   sections:
-    - title: "Rules"
+    - title: "On-Hit Passive"
       body: |
         5-Hit Passive
         Hit Counter Duration: 5s
