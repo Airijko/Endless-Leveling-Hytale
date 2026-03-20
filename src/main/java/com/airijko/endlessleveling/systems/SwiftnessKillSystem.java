@@ -8,9 +8,9 @@ import com.airijko.endlessleveling.player.PlayerDataManager;
 import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
-import com.airijko.endlessleveling.passives.type.FirstStrikePassive;
+import com.airijko.endlessleveling.passives.type.FocusedStrikePassive;
 import com.airijko.endlessleveling.passives.settings.SwiftnessSettings;
-import com.airijko.endlessleveling.passives.type.ExecutionerPassive;
+import com.airijko.endlessleveling.passives.type.FinalIncantationPassive;
 import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
@@ -95,8 +95,8 @@ public class SwiftnessKillSystem extends DeathSystems.OnDeathSystem {
                 ? archetypePassiveManager.getSnapshot(playerData)
                 : ArchetypePassiveSnapshot.empty();
 
-        FirstStrikePassive.fromSnapshot(snapshot).resetCooldownOnKill(runtimeState);
-        ExecutionerPassive.fromSnapshot(snapshot).reduceCooldownOnKill(runtimeState);
+        FocusedStrikePassive.fromSnapshot(snapshot).resetCooldownOnKill(runtimeState);
+        FinalIncantationPassive.fromSnapshot(snapshot).reduceCooldownOnKill(runtimeState);
 
         SwiftnessSettings settings = SwiftnessSettings.fromSnapshot(snapshot);
         if (!settings.enabled()) {

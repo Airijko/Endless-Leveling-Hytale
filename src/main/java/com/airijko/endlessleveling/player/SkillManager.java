@@ -7,11 +7,11 @@ import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
-import com.airijko.endlessleveling.passives.settings.ArcaneDominanceSettings;
-import com.airijko.endlessleveling.passives.settings.BladeDanceSettings;
-import com.airijko.endlessleveling.passives.settings.FirstStrikeSettings;
-import com.airijko.endlessleveling.passives.settings.PrimalDominanceSettings;
 import com.airijko.endlessleveling.passives.settings.SwiftnessSettings;
+import com.airijko.endlessleveling.passives.type.ArcaneDominancePassive;
+import com.airijko.endlessleveling.passives.type.BladeDancePassive;
+import com.airijko.endlessleveling.passives.type.FocusedStrikePassive;
+import com.airijko.endlessleveling.passives.type.PrimalDominancePassive;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.component.ComponentAccessor;
 import com.hypixel.hytale.component.Ref;
@@ -1059,7 +1059,7 @@ public class SkillManager {
             return 0.0D;
         }
         ArchetypePassiveSnapshot snapshot = archetypePassiveManager.getSnapshot(playerData);
-        FirstStrikeSettings settings = FirstStrikeSettings.fromSnapshot(snapshot);
+        FocusedStrikePassive settings = FocusedStrikePassive.fromSnapshot(snapshot);
         if (!settings.enabled()) {
             return 0.0D;
         }
@@ -1305,7 +1305,7 @@ public class SkillManager {
             return 1.0F;
         }
         ArchetypePassiveSnapshot snapshot = archetypePassiveManager.getSnapshot(playerData);
-        BladeDanceSettings settings = BladeDanceSettings.fromSnapshot(snapshot);
+        BladeDancePassive settings = BladeDancePassive.fromSnapshot(snapshot);
         if (!settings.enabled()) {
             return 1.0F;
         }
@@ -1409,7 +1409,7 @@ public class SkillManager {
             return 0.0D;
         }
         ArchetypePassiveSnapshot snapshot = archetypePassiveManager.getSnapshot(playerData);
-        PrimalDominanceSettings settings = PrimalDominanceSettings.fromSnapshot(snapshot);
+        PrimalDominancePassive settings = PrimalDominancePassive.fromSnapshot(snapshot);
         if (!settings.enabled()) {
             return 0.0D;
         }
@@ -1425,7 +1425,7 @@ public class SkillManager {
             return 0.0D;
         }
         ArchetypePassiveSnapshot snapshot = archetypePassiveManager.getSnapshot(playerData);
-        ArcaneDominanceSettings settings = ArcaneDominanceSettings.fromSnapshot(snapshot);
+        ArcaneDominancePassive settings = ArcaneDominancePassive.fromSnapshot(snapshot);
         if (!settings.enabled()) {
             return 0.0D;
         }

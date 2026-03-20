@@ -23,7 +23,7 @@ import com.airijko.endlessleveling.passives.PassiveCooldownRegistry;
 import com.airijko.endlessleveling.passives.PassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.player.PlayerData;
-import com.airijko.endlessleveling.passives.type.PartyShieldingAuraPassive;
+import com.airijko.endlessleveling.passives.type.ShieldingAuraPassive;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -447,7 +447,7 @@ public final class AugmentHudOverlayController {
             return BarState.hidden();
         }
 
-        PartyShieldingAuraPassive.cleanupExpiredShield(passiveRuntimeState, now);
+        ShieldingAuraPassive.cleanupExpiredShield(passiveRuntimeState, now);
         double currentShield = Math.max(0.0D, passiveRuntimeState.getShieldingAuraShieldAmount());
         double maxShield = Math.max(0.0D, passiveRuntimeState.getShieldingAuraShieldMaxAmount());
         long expiresAt = passiveRuntimeState.getShieldingAuraShieldExpiresAt();

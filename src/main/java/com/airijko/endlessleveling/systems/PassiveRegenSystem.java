@@ -17,11 +17,11 @@ import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.passives.settings.AdrenalineSettings;
-import com.airijko.endlessleveling.passives.settings.ArcaneWisdomSettings;
+import com.airijko.endlessleveling.passives.type.ArcaneWisdomPassive;
 import com.airijko.endlessleveling.passives.type.ArmyOfTheDeadPassive;
-import com.airijko.endlessleveling.passives.type.PartyBuffingAuraPassive;
-import com.airijko.endlessleveling.passives.type.PartyMendingAuraPassive;
-import com.airijko.endlessleveling.passives.type.PartyShieldingAuraPassive;
+import com.airijko.endlessleveling.passives.type.BuffingAuraPassive;
+import com.airijko.endlessleveling.passives.type.HealingAuraPassive;
+import com.airijko.endlessleveling.passives.type.ShieldingAuraPassive;
 import com.airijko.endlessleveling.passives.type.SecondWindPassive;
 import com.airijko.endlessleveling.util.ChatMessageTemplate;
 import com.airijko.endlessleveling.util.PlayerChatNotifier;
@@ -362,7 +362,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
     private void applyArcaneWisdom(@Nonnull EntityStatMap statMap,
             @Nonnull ArchetypePassiveSnapshot archetypeSnapshot,
             @Nonnull PassiveRuntimeState runtimeState) {
-        ArcaneWisdomSettings settings = ArcaneWisdomSettings.fromSnapshot(archetypeSnapshot);
+        ArcaneWisdomPassive settings = ArcaneWisdomPassive.fromSnapshot(archetypeSnapshot);
         if (!settings.enabled()) {
             applyArcaneWisdomManaMultiplier(statMap, 1.0D);
             runtimeState.setLastManaRatio(Float.NaN);
@@ -771,7 +771,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             @Nonnull EntityStatMap statMap,
             @Nonnull ArchetypePassiveSnapshot archetypeSnapshot,
             @Nonnull PassiveRuntimeState runtimeState) {
-        PartyMendingAuraPassive.pulse(playerData,
+        HealingAuraPassive.pulse(playerData,
                 ref,
                 commandBuffer,
                 statMap,
@@ -785,13 +785,13 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             @Nonnull EntityStatMap statMap,
             @Nonnull ArchetypePassiveSnapshot archetypeSnapshot,
             @Nonnull PassiveRuntimeState runtimeState) {
-        PartyShieldingAuraPassive.pulse(playerData,
+        ShieldingAuraPassive.pulse(playerData,
                 ref,
                 commandBuffer,
                 statMap,
                 archetypeSnapshot,
                 runtimeState);
-        PartyShieldingAuraPassive.cleanupExpiredShield(runtimeState, System.currentTimeMillis());
+        ShieldingAuraPassive.cleanupExpiredShield(runtimeState, System.currentTimeMillis());
     }
 
     private void applyPartyBuffingAura(@Nonnull PlayerData playerData,
@@ -800,13 +800,13 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             @Nonnull EntityStatMap statMap,
             @Nonnull ArchetypePassiveSnapshot archetypeSnapshot,
             @Nonnull PassiveRuntimeState runtimeState) {
-        PartyBuffingAuraPassive.pulse(playerData,
+        BuffingAuraPassive.pulse(playerData,
                 ref,
                 commandBuffer,
                 statMap,
                 archetypeSnapshot,
                 runtimeState);
-        PartyBuffingAuraPassive.cleanupExpiredBonus(runtimeState, System.currentTimeMillis());
+        BuffingAuraPassive.cleanupExpiredBonus(runtimeState, System.currentTimeMillis());
     }
 
     private void applyArmyOfTheDead(@Nonnull PlayerData playerData,

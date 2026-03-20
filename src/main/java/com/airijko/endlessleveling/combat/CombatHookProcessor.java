@@ -21,18 +21,18 @@ import com.airijko.endlessleveling.passives.type.AbsorbPassive;
 import com.airijko.endlessleveling.passives.type.ArcaneDominancePassive;
 import com.airijko.endlessleveling.passives.type.ArmyOfTheDeadPassive;
 import com.airijko.endlessleveling.passives.type.BerzerkerPassive;
-import com.airijko.endlessleveling.passives.type.ExecutionerPassive;
-import com.airijko.endlessleveling.passives.type.FirstStrikePassive;
+import com.airijko.endlessleveling.passives.type.FinalIncantationPassive;
+import com.airijko.endlessleveling.passives.type.FocusedStrikePassive;
 import com.airijko.endlessleveling.passives.type.HealingTouchPassive;
-import com.airijko.endlessleveling.passives.type.PartyBuffingAuraPassive;
-import com.airijko.endlessleveling.passives.type.PartyShieldingAuraPassive;
+import com.airijko.endlessleveling.passives.type.BuffingAuraPassive;
+import com.airijko.endlessleveling.passives.type.BladeDancePassive;
+import com.airijko.endlessleveling.passives.type.ShieldingAuraPassive;
 import com.airijko.endlessleveling.passives.type.PrimalDominancePassive;
 import com.airijko.endlessleveling.passives.type.RavenousStrikePassive;
 import com.airijko.endlessleveling.passives.type.RetaliationPassive;
 import com.airijko.endlessleveling.passives.type.SecondWindPassive;
 import com.airijko.endlessleveling.passives.util.PassiveContributionBlueprint;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
-import com.airijko.endlessleveling.passives.settings.BladeDanceSettings;
 import com.airijko.endlessleveling.passives.settings.SwiftnessSettings;
 import com.airijko.endlessleveling.util.ChatMessageTemplate;
 import com.airijko.endlessleveling.util.EntityRefUtil;
@@ -106,14 +106,14 @@ public final class CombatHookProcessor {
                         ? archetypePassiveManager.getSnapshot(playerData)
                         : ArchetypePassiveSnapshot.empty();
 
-        FirstStrikePassive firstStrikePassive = FirstStrikePassive.fromSnapshot(archetypeSnapshot);
+        FocusedStrikePassive firstStrikePassive = FocusedStrikePassive.fromSnapshot(archetypeSnapshot);
         BerzerkerPassive berzerkerPassive = BerzerkerPassive.fromSnapshot(archetypeSnapshot);
-        ExecutionerPassive executionerPassive = ExecutionerPassive.fromSnapshot(archetypeSnapshot);
+        FinalIncantationPassive executionerPassive = FinalIncantationPassive.fromSnapshot(archetypeSnapshot);
         RetaliationPassive retaliationPassive = RetaliationPassive.fromSnapshot(archetypeSnapshot);
         PrimalDominancePassive primalDominancePassive = PrimalDominancePassive.fromSnapshot(archetypeSnapshot);
         ArcaneDominancePassive arcaneDominancePassive = ArcaneDominancePassive.fromSnapshot(archetypeSnapshot);
         SwiftnessSettings swiftnessSettings = SwiftnessSettings.fromSnapshot(archetypeSnapshot);
-        BladeDanceSettings bladeDanceSettings = BladeDanceSettings.fromSnapshot(archetypeSnapshot);
+        BladeDancePassive bladeDancePassive = BladeDancePassive.fromSnapshot(archetypeSnapshot);
         HealingTouchPassive healingTouchPassive = HealingTouchPassive.fromSnapshot(archetypeSnapshot);
 
         String weaponCategoryKey = ClassWeaponResolver.resolveCategoryKey(ctx.weapon());
@@ -136,8 +136,8 @@ public final class CombatHookProcessor {
         double passiveTrueDamageBonus = 0.0D;
 
         if (runtimeState != null && firstStrikePassive.enabled()) {
-            FirstStrikePassive.TriggerResult firstStrikeResult = firstStrikePassive.apply(runtimeState,
-                    ctx.attackerPlayerRef(),
+                FocusedStrikePassive.TriggerResult firstStrikeResult = firstStrikePassive.apply(runtimeState,
+            ctx.attackerPlayerRef(),
                     critDamage,
                     this::sendPassiveMessage);
             float bonusDamage = firstStrikeResult.bonusDamage();
@@ -204,8 +204,8 @@ public final class CombatHookProcessor {
         }
 
         int bladeDanceStacks = resolveActiveBladeDanceStacks(runtimeState);
-        if (bladeDanceSettings.enabled() && bladeDanceStacks > 0) {
-            double bladeDanceDamageMultiplier = bladeDanceSettings.damageMultiplierForStacks(bladeDanceStacks);
+        if (bladeDancePassive.enabled() && bladeDanceStacks > 0) {
+            double bladeDanceDamageMultiplier = bladeDancePassive.damageMultiplierForStacks(bladeDanceStacks);
             if (bladeDanceDamageMultiplier > 0.0D && Math.abs(bladeDanceDamageMultiplier - 1.0D) > 0.0001D) {
                 finalDamage = (float) (finalDamage * bladeDanceDamageMultiplier);
             }
@@ -236,7 +236,7 @@ public final class CombatHookProcessor {
         }
 
         if (runtimeState != null) {
-            double auraDamageBonus = PartyBuffingAuraPassive.currentDamageBonus(runtimeState,
+                double auraDamageBonus = BuffingAuraPassive.currentDamageBonus(runtimeState,
                     System.currentTimeMillis());
             if (auraDamageBonus > 0.0D) {
                 float beforeAura = finalDamage;
@@ -283,8 +283,8 @@ public final class CombatHookProcessor {
             refreshMovementSpeed(ctx.attackerRef(), ctx.commandBuffer(), playerData);
         }
 
-        if (runtimeState != null && bladeDanceSettings.enabled() && bladeDanceSettings.triggerOnHit()) {
-            applyBladeDanceOnHit(runtimeState, bladeDanceSettings);
+        if (runtimeState != null && bladeDancePassive.enabled() && bladeDancePassive.triggerOnHit()) {
+            applyBladeDanceOnHit(runtimeState, bladeDancePassive);
             refreshMovementSpeed(ctx.attackerRef(), ctx.commandBuffer(), playerData);
         }
 
@@ -338,7 +338,7 @@ public final class CombatHookProcessor {
         return Math.max(0, runtimeState.getSwiftnessStacks());
     }
 
-    private void applyBladeDanceOnHit(PassiveRuntimeState runtimeState, BladeDanceSettings settings) {
+    private void applyBladeDanceOnHit(PassiveRuntimeState runtimeState, BladeDancePassive settings) {
         if (runtimeState == null || settings == null || !settings.enabled()) {
             return;
         }
@@ -508,10 +508,8 @@ public final class CombatHookProcessor {
                         ? archetypePassiveManager.getSnapshot(defender)
                         : ArchetypePassiveSnapshot.empty();
 
-        FirstStrikePassive firstStrikePassive = FirstStrikePassive.fromSnapshot(archetypeSnapshot);
+        FocusedStrikePassive firstStrikePassive = FocusedStrikePassive.fromSnapshot(archetypeSnapshot);
         RetaliationPassive retaliationPassive = RetaliationPassive.fromSnapshot(archetypeSnapshot);
-        PrimalDominancePassive primalDominancePassive = PrimalDominancePassive.fromSnapshot(archetypeSnapshot);
-        ArcaneDominancePassive arcaneDominancePassive = ArcaneDominancePassive.fromSnapshot(archetypeSnapshot);
         AbsorbPassive absorbPassive = AbsorbPassive.fromSnapshot(archetypeSnapshot);
         SecondWindPassive secondWindPassive = SecondWindPassive.fromSnapshot(archetypeSnapshot);
         float originalAmount = damage.getAmount();
@@ -532,7 +530,7 @@ public final class CombatHookProcessor {
         }
 
         if (runtimeState != null && postAugmentAmount > 0f) {
-            postAugmentAmount = PartyShieldingAuraPassive.absorbIncomingDamage(runtimeState, postAugmentAmount);
+            postAugmentAmount = ShieldingAuraPassive.absorbIncomingDamage(runtimeState, postAugmentAmount);
         }
 
         if (runtimeState != null) {

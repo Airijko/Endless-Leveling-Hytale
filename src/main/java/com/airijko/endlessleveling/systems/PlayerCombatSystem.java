@@ -12,13 +12,13 @@ import com.airijko.endlessleveling.classes.ClassManager;
 import com.airijko.endlessleveling.leveling.MobLevelingManager;
 import com.airijko.endlessleveling.passives.PassiveManager;
 import com.airijko.endlessleveling.passives.PassiveManager.PassiveRuntimeState;
-import com.airijko.endlessleveling.passives.settings.TrueBoltsSettings;
-import com.airijko.endlessleveling.passives.settings.TrueEdgeSettings;
 import com.airijko.endlessleveling.player.PlayerDataManager;
 import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.passives.type.ArmyOfTheDeadPassive;
+import com.airijko.endlessleveling.passives.type.TrueBoltsPassive;
+import com.airijko.endlessleveling.passives.type.TrueEdgePassive;
 import com.airijko.endlessleveling.leveling.XpKillCreditTracker;
 import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.hypixel.hytale.component.ArchetypeChunk;
@@ -586,7 +586,7 @@ public class PlayerCombatSystem extends DamageEventSystem {
             return TrueDamageSettings.disabled();
         }
 
-        TrueBoltsSettings trueBolts = TrueBoltsSettings.fromSnapshot(snapshot);
+        TrueBoltsPassive trueBolts = TrueBoltsPassive.fromSnapshot(snapshot);
         if (trueBolts.enabled()) {
             return new TrueDamageSettings(
                     ArchetypePassiveType.TRUE_BOLTS,
@@ -597,7 +597,7 @@ public class PlayerCombatSystem extends DamageEventSystem {
                     trueBolts.monsterTrueDamageCap());
         }
 
-        TrueEdgeSettings trueEdge = TrueEdgeSettings.fromSnapshot(snapshot);
+        TrueEdgePassive trueEdge = TrueEdgePassive.fromSnapshot(snapshot);
         if (trueEdge.enabled()) {
             return new TrueDamageSettings(
                     ArchetypePassiveType.TRUE_EDGE,
