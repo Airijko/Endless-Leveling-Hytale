@@ -9,9 +9,9 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Value: +20%
-        Value: +7.5%
-        Value: +7.5%
+        +20% Maximum Health
+        +7.5% Strength
+        +7.5% Sorcery
       color: "#8adf9e"
 passives:
   buffs:

@@ -8,7 +8,7 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "Value: +12.5%"
+      body: "+12.5% Life Steal"
       color: "#8adf9e"
     - title: "Rules"
       body: "Category: LIFESTEAL"

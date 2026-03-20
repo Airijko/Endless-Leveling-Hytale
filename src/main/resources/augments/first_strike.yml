@@ -8,13 +8,13 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "Value: +1.75"
+      body: "175% Bonus Damage on first hit after cooldown"
       color: "#8adf9e"
     - title: "Rules"
       body: "Category: ON_HIT"
       color: "#ffb86b"
     - title: "Cooldown"
-      body: "Cooldown: +25"
+      body: "Cooldown: 25s"
       color: "#ffd56b"
 passives:
   bonus_damage_on_hit:

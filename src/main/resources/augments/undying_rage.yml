@@ -9,8 +9,8 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Max Bonus Ferocity: +125%
-        Value: +15%
+        +0-125% Bonus Critical Damage
+        +15% Precision
       color: "#8adf9e"
     - title: "Rules"
       body: |

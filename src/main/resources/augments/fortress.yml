@@ -9,18 +9,17 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Min Health Hp: +100%
-        Value: +15%
-        Value: +50%
-        Value: +50%
+        Min Health Hp: +1%
+        +15% Damage Reduction
+        +50% Strength & Sorcery
       color: "#8adf9e"
     - title: "Duration"
       body: |
-        Duration: 5s
-        Duration: 15s
+        5s Shielded Phase
+        15s Buff Phase
       color: "#9ecbff"
     - title: "Cooldown"
-      body: "Cooldown: +100"
+      body: "Cooldown: 100s"
       color: "#ffd56b"
 passives:
   shield_phase:

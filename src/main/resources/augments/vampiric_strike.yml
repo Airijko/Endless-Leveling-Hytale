@@ -9,11 +9,11 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Value: +25%
-        Value: +15%
+        +25% Life Steal on Crit
+        +15% Precision
       color: "#8adf9e"
     - title: "Cooldown"
-      body: "Trigger Cooldown: +2"
+      body: "Trigger Cooldown: 2s"
       color: "#ffd56b"
 passives:
   heal_on_crit:

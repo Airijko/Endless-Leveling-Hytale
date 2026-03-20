@@ -10,7 +10,7 @@ ui:
     - title: "Buffs"
       body: |
         Critical Chance: +100%
-        Conversion ratio: 1x
+        Conversion ratio: 1:1
       color: "#8adf9e"
     - title: "Rules"
       body: "Stat: crit_chance"

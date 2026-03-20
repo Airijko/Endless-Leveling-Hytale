@@ -8,10 +8,10 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "Value: +1.5%"
+      body: "+1.5% Max Health as damage per second"
       color: "#8adf9e"
     - title: "Debuffs"
-      body: "Value: -20%"
+      body: "-20% Haste"
       color: "#ff9a9a"
     - title: "Rules"
       body: "Category: ON_HIT"

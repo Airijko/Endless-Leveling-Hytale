@@ -8,15 +8,15 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "Max Bonus Damage: +100%"
+      body: "Bonus Damage: +0-100%"
       color: "#8adf9e"
     - title: "Debuffs"
-      body: "Self Damage: +5%"
+      body: "Self Damage: +5% Current HP per hit"
       color: "#ff9a9a"
     - title: "Rules"
       body: |
         Scaling Stat: missing_health_percent
-        Full Value Threshold: +25%
+        Full Value Threshold: 25% Player Health
       color: "#ffb86b"
 passives:
   bonus_damage:

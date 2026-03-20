@@ -9,10 +9,14 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Value: +2.5%
-        Value: +2.5%
+        +2.5% Strength and Sorcery per stack
         Max stacks: +20
         Decay Per Second: +2
+      color: "#8adf9e"
+    - title: "Max Stacks Bonus"
+      body: |
+        At max stacks, gain double the bonus 
+        (100% Strength and Sorcery bonus instead of 50%)
       color: "#8adf9e"
     - title: "Duration"
       body: "Duration: 8s"

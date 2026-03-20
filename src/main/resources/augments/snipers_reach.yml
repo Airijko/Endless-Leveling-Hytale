@@ -8,12 +8,12 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "Max Value: +1.5"
+      body: "Max Value: 0-150% Bonus Damage at 30 blocks"
       color: "#8adf9e"
     - title: "Rules"
       body: |
-        Min Distance: +5
-        Max Distance: +30
+        Min Distance: 5 blocks
+        Max Distance: 30 blocks
         Scaling Type: linear
         Attack Type: RANGED
       color: "#ffb86b"

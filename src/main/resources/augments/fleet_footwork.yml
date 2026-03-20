@@ -9,14 +9,14 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Heal Percent Of Damage: +25%
-        Value: +50%
+        +25% of damage dealt is returned as healing on hit
+        +50% Haste for 3s on hit
       color: "#8adf9e"
     - title: "Duration"
       body: "Duration: 3s"
       color: "#9ecbff"
     - title: "Cooldown"
-      body: "Cooldown: +8"
+      body: "Cooldown: 8s"
       color: "#ffd56b"
 passives:
   empowered_hit:

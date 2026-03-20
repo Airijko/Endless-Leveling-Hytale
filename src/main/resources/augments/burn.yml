@@ -10,11 +10,11 @@ ui:
     - title: "Buffs"
       body: |
         Base Max Hp Percent Per Second: +1%
-        Bonus Max Hp Scaling: +0.12%
+        Bonus Max Hp Scaling: +0.15%
+        Max Damage Per Tick Against Monsters: 500
         Radius: +5
-        Max Damage Per Tick: 500
-        Health Per Block: +400%
-        Value: +100
+        Gain +1 Block Radius per 400 Max HP
+        +100 Life Force
       color: "#8adf9e"
     - title: "Duration"
       body: "Duration: 10s"
@@ -25,7 +25,7 @@ ui:
 passives:
   aura_burn:
     base_max_hp_percent_per_second: 0.01 # deals 1% of target max HP per second
-    bonus_max_hp_scaling: 0.0012 # +0.12% damage per 100 max HP
+    bonus_max_hp_scaling: 0.0015 # +0.15% damage per 100 max HP
     radius: 5 # base radius in blocks
     duration: 10 # effect lasts 10 seconds
     cooldown: 10 # effect triggers every 10 seconds

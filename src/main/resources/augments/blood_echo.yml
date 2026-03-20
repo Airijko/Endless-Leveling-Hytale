@@ -9,8 +9,8 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Value: +5%
-        Value: +15%
+        +5% Lifesteal
+        +15% of healing converted to damage
       color: "#8adf9e"
 passives:
   buffs:

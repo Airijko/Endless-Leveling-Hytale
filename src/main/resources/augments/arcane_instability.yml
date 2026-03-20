@@ -9,16 +9,13 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Value: +40%
-        Min Percent: +75%
-        Max Percent: +25%
+        +40% Sorcery when above 75% Mana
       color: "#8adf9e"
     - title: "Debuffs"
-      body: "Value: -25%"
+      body: "-25% Sorcery when below 25% Mana"
       color: "#ff9a9a"
     - title: "Rules"
       body: |
-        Resource: MANA
         Resource: MANA
       color: "#ffb86b"
 passives:

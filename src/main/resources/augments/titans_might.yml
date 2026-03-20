@@ -8,10 +8,10 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "Value: +15%"
+      body: "+15% Strength based on total max Health"
       color: "#8adf9e"
     - title: "Debuffs"
-      body: "Value: -15%"
+      body: "-15% Haste"
       color: "#ff9a9a"
     - title: "Rules"
       body: "Scaling Stat: MAX_HEALTH"

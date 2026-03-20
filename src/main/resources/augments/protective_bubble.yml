@@ -7,11 +7,11 @@ enabled: true
 
 ui:
   sections:
-    - title: "Buffs"
-      body: "Immunity Window: +25%"
+    - title: "Shield"
+      body: "Negate one incoming attack and gain brief immunity."
       color: "#8adf9e"
     - title: "Cooldown"
-      body: "Cooldown: +30"
+      body: "Cooldown: 30s"
       color: "#ffd56b"
 passives:
   immunity_bubble:

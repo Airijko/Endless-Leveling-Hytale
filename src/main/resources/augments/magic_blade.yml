@@ -9,8 +9,8 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Conversion Percent: +75%
-        Bonus Damage: +20%
+        +75% of Sorcery applies to all weapon damage
+        +20% bonus damage when using swords
       color: "#8adf9e"
     - title: "Rules"
       body: |

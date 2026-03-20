@@ -8,13 +8,13 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "Value: +10%"
+      body: "+10% of target's current HP as bonus damage"
       color: "#8adf9e"
     - title: "Rules"
       body: "Target Stat: CURRENT_HP"
       color: "#ffb86b"
     - title: "Cooldown"
-      body: "Cooldown: +100%"
+      body: "Cooldown: 1s"
       color: "#ffd56b"
 passives:
   bonus_damage_on_hit:

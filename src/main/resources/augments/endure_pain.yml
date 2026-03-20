@@ -9,13 +9,13 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Value: +30%
-        Value: +50%
+        30% of incoming damage is deferred as Bleed and applied over 3 seconds
+        Heal for 50% of execute damage dealt on kill
       color: "#8adf9e"
     - title: "Rules"
       body: "Reset On Kill: Yes"
       color: "#ffb86b"
-    - title: "Duration"
+    - title: "Bleed Duration"
       body: "Duration: 3s"
       color: "#9ecbff"
 passives:

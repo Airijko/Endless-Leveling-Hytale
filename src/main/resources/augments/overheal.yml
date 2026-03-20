@@ -9,9 +9,9 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Max Shield Percent: +15%
+        +15% Overheal Shield (15% of max health)
         Decay Duration: 8s
-        Value: +5%
+        +5% Life Steal
       color: "#8adf9e"
 passives:
   overheal_shield:

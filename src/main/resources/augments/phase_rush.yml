@@ -13,10 +13,12 @@ ui:
         Hit Counter Duration: 5s
     - title: "Buffs"
       body: |
-        Value: +50%
-        Hits Required: +5
-        Multiplier: +2
+        +50% Haste
         Conversion Percent: +50%
+      color: "#8adf9e"
+    - title: "Phase Rush Bonus"
+      body: |
+        Double your Haste Bonus for 3s after hitting 5 times
       color: "#8adf9e"
     - title: "Buff Duration"
       body: |

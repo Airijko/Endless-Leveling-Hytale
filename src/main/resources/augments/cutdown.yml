@@ -9,10 +9,8 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Target Health Percent Above: +80%
-        Value: +50%
-        Target Health Percent Above: +60%
-        Value: +25%
+        +50% Bonus Damage when target HP > 80%
+        +25% Bonus Damage when target HP > 60%
       color: "#8adf9e"
 passives:
   bonus_damage_vs_high_hp:

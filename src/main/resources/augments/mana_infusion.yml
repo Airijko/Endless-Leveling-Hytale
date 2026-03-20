@@ -8,7 +8,7 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "Value: +20%"
+      body: "+20% Sorcery based on current Mana"
       color: "#8adf9e"
     - title: "Rules"
       body: "Scaling Stat: MANA"

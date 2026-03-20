@@ -9,12 +9,12 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Value: +12%
-        Value: +6%
-        Max stacks: +4
+        +12% Haste per stack
+        +6% Strength per stack
+        Max stacks: 4
       color: "#8adf9e"
     - title: "Debuffs"
-      body: "Value: -10%"
+      body: "-10% Defense until max stacks reached"
       color: "#ff9a9a"
     - title: "Rules"
       body: "Active Until Max Stacks: Yes"

@@ -9,11 +9,11 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Delay: +3
+        Delay: 3s
         Radius: +5
-        Max Health Ratio: 0.5x
-        Strength Ratio: 0.1x
-        Sorcery Ratio: 0.1x
+        Max Health Ratio: 50%
+        Strength Ratio: 10%
+        Sorcery Ratio: 10%
       color: "#8adf9e"
     - title: "Cooldown"
       body: "Cooldown: 0%"

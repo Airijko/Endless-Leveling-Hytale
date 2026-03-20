@@ -9,8 +9,7 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Flat Seconds: +100%
-        Percent Remaining: +7.5%
+        Reduce Cooldowns by 1 + (7.5% of remaining) second on kill
       color: "#8adf9e"
 passives:
   cooldown_reduction:

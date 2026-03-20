@@ -9,8 +9,8 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Value: +50%
-        Value: +50%
+        +50% Haste
+        +50% Damage
       color: "#8adf9e"
     - title: "Debuffs"
       body: "Max Health Percent: -20%"
@@ -20,7 +20,7 @@ passives:
     max_health_percent: -0.20 # lose 20% max HP
 
   buffs:
-    movement_speed:
-      value: 0.50 # +50% movement speed
+    haste:
+      value: 0.50 # +50% Haste
     bonus_damage:
       value: 0.50 # +50% damage

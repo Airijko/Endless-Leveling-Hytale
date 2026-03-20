@@ -10,26 +10,16 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Min Value: +5
-        Max Value: +20
-        Min Value: +100%
-        Max Value: +4
-        Min Value: +100%
-        Max Value: +4
-        Min Value: +75%
-        Max Value: +3
-        Min Value: +100%
-        Max Value: +4
-        Min Value: +50%
-        Max Value: +1.5
-        Min Value: +75%
-        Max Value: +2.5
-        Min Value: +2
-        Max Value: +6
-        Min Value: +2
-        Max Value: +6
-        Min Value: +2
-        Max Value: +6
+        5-20 Life Force
+        1-4 Strength
+        1-4 Sorcery
+        0.75-3 Defense
+        1-4 Haste
+        0.5-1.5 Precision
+        0.75-2.5 Ferocity
+        2-6 Discipline
+        2-6 Flow
+        2-6 Stamina
       color: "#8adf9e"
 passives:
   buffs:

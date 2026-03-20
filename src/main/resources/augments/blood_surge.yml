@@ -9,8 +9,8 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Max Value: +40%
-        Healing Ratio: +30%
+        +0-40% Life Steal
+        +30% of healing converted to damage
       color: "#8adf9e"
     - title: "Rules"
       body: "Full Value Threshold: +20%"

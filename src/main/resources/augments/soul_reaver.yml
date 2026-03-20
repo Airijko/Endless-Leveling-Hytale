@@ -8,10 +8,10 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "Value: +20%"
+      body: "+20% Heal on Kill based on enemy's max HP"
       color: "#8adf9e"
     - title: "Cooldown"
-      body: "Cooldown: +7"
+      body: "Cooldown: 7s"
       color: "#ffd56b"
 passives:
   heal_on_kill:

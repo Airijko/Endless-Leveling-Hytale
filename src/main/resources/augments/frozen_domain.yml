@@ -11,10 +11,10 @@ ui:
       body: |
         Slow Percent: +30%
         Stolen Slow Ratio: 0.2x
-        Radius: +5
         Slow Interval: +100%
-        Health Per Block: +400%
-        Value: +100
+        Radius: +5
+        +1 Block Radius per 400 Max HP
+        +100 Life Force
       color: "#8adf9e"
     - title: "Duration"
       body: "Duration: 10s"

@@ -8,16 +8,16 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "Value: +2.5"
+      body: "250% Bonus Damage to targets below 15% HP"
       color: "#8adf9e"
     - title: "Rules"
-      body: "Threshold: +15%"
+      body: "Threshold: 15% HP"
       color: "#ffb86b"
     - title: "Cooldown"
-      body: "Cooldown: +45"
+      body: "Cooldown: 45s"
       color: "#ffd56b"
 passives:
   bonus_damage_on_hit:
-    value: 2.50 # +300% damage to targets below the threshold
-    threshold: 0.15 # Applies when target is below 20% HP or this hit drops them to/below 20%
+    value: 2.50 # +250% damage to targets below the threshold
+    threshold: 0.15 # Applies when target is below 15% HP or this hit drops them to/below 15%
     cooldown: 45 # Seconds between executioner procs

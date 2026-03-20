@@ -9,13 +9,12 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Value: +4%
-        Value: +5%
-        Max stacks: +8
+        +4% Haste per stack
+        +5% Critical Damage per stack
+        Max stacks: 8
       color: "#8adf9e"
     - title: "Rules"
       body: |
-        On Miss: Yes
         On Damage Taken: Yes
       color: "#ffb86b"
     - title: "Duration"
@@ -33,5 +32,4 @@ passives:
     seconds: 8 # stack duration; refreshed on each hit
 
   stack_loss_conditions:
-    on_miss: true # lose a stack when an attack misses
     on_damage_taken: true # lose a stack when taking damage

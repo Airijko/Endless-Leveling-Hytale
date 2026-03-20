@@ -8,10 +8,10 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "Value: +50%"
+      body: "+50% Haste"
       color: "#8adf9e"
     - title: "Debuffs"
-      body: "Value: -10%"
+      body: "-10% Strength"
       color: "#ff9a9a"
 passives:
   buffs:

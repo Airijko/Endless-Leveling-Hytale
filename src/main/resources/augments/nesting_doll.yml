@@ -9,7 +9,7 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Max Deaths: +3
+        Revive Count: +2
         Restore After Seconds: +30
         Max Health Regen Percent Per Second: +2%
       color: "#8adf9e"

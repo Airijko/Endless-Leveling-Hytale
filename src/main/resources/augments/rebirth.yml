@@ -9,11 +9,10 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Value: +50%
-        Min Health Hp: +100%
+        +50% Heal when fatal damage is taken
       color: "#8adf9e"
     - title: "Cooldown"
-      body: "Cooldown: +100"
+      body: "Cooldown: 100s"
       color: "#ffd56b"
 passives:
   heal_on_trigger:

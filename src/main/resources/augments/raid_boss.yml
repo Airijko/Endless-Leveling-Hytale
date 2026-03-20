@@ -9,8 +9,8 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Value: +50%
-        Value: +15%
+        +50% Max Health
+        +15% Bonus Damage
       color: "#8adf9e"
 passives:
   buffs:

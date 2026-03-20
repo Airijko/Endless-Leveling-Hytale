@@ -9,9 +9,9 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Precision Lock Value: +10000%
-        Strength Multiplier: +250%
-        Sorcery Multiplier: +250%
+        Precision Lock Value: 0
+        Strength Multiplier: 2.5x
+        Sorcery Multiplier: 2.5x
       color: "#8adf9e"
 passives:
   brute_force:

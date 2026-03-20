@@ -9,9 +9,7 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Flat Damage: +20%
-        Healing Ratio from Strength: +10%
-        Healing Ratio from Sorcery: +10%
+        +20 + (+10% of Strength & Sorcery)
       color: "#8adf9e"
     - title: "Rules"
       body: "Can Crit: Yes"
