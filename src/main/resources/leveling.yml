@@ -1,13 +1,15 @@
 # Leveling formula used to calculate XP required for the next level.
 default:
   expression: "base * ((log(level)+1) * (sqrt(level)))^1.75"
-  base: 50
+  # LOG10 (default) or LN
+  log_mode: LOG10
+  base: 100
 
 # If you change these values, resync player skill points with "/el resetskillpointsall".
 baseSkillPoints: 12
 skillPointsPerLevel: 5
 
-player_level_cap: 75
+player_level_cap: 100
 
 # Party XP sharing (simple shared model).
 # - Killer always receives 100% of kill XP (solo logic/bonuses still apply).
@@ -34,10 +36,10 @@ classes:
 augments:
   unlocks:
     - tier: COMMON
-      levels: [5, 15, 40, 55, 65]
+      levels: [5, 15, 35, 45]
     - tier: COMMON
       required_player_level: 10
-      level_interval: 20
+      level_interval: 10
       max_unlocks: -1
     - tier: ELITE
       levels: [15]
@@ -47,8 +49,8 @@ augments:
 prestige:
   enabled: true
   prestige_level_cap: ENDLESS # ENDLESS = no prestige cap; set an integer to cap prestige levels
-  level_cap_increase_per_prestige: 25
-  base_xp_increase_per_prestige: 10
+  level_cap_increase_per_prestige: 10
+  base_xp_increase_per_prestige: 20
   # Prestige augment milestone slots by tier.
   # Each entry requires both a prestige condition and an optional player level gate (required_player_level).
   # - Use prestige_levels: [1, 2, ...] for explicit milestones.
@@ -58,10 +60,10 @@ prestige:
       prestige_levels: ["*"] # one COMMON slot every prestige level
       required_player_level: 1 # grant prestige COMMON slot immediately at level 1
     - tier: ELITE
-      prestige_levels: [2, 4, 6, 8] # one ELITE slot every 2 prestige levels
+      prestige_levels: [1, 4, 7, 10]
       required_player_level: 15
     - tier: MYTHIC
-      prestige_levels: [10]
+      prestige_levels: [15]
       required_player_level: 50
 
   # Prestige reroll milestone grants by tier.

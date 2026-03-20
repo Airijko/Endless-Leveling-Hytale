@@ -67,6 +67,7 @@ public class LevelingManager {
     private Integer prestigeCap;
     private int prestigeLevelCapIncrease;
     private double prestigeBaseXpIncrease;
+    private LogMode logMode;
 
     public LevelingManager(PlayerDataManager playerDataManager, PluginFilesManager filesManager,
             SkillManager skillManager, ArchetypePassiveManager archetypePassiveManager,
@@ -94,6 +95,7 @@ public class LevelingManager {
         baseXp = getDouble("default.base", 50.0D);
         multiplier = parseMultiplier((String) configManager.get("default.expression",
                 "base * ((log(level)+1) * sqrt(level))^1.5"), 1.5);
+        logMode = LogMode.fromString(getString("default.log_mode", "LOG10"));
         int configuredCap = getInt("player_level_cap", 100);
         levelCap = Math.max(1, configuredCap);
         prestigeEnabled = getBoolean("prestige.enabled", true);
@@ -126,9 +128,10 @@ public class LevelingManager {
         xpScalingMinMultiplier = clampMultiplier(getDouble("Mob_Leveling.Experience.Scaling.MinMultiplier", 0.1));
 
         LOGGER.atInfo().log(
-                "Leveling config loaded: base=%f, multiplier=%f, cap=%d, prestigeEnabled=%s, prestigeCap=%s, cap+%d/base+%.2f",
+            "Leveling config loaded: base=%f, multiplier=%f, logMode=%s, cap=%d, prestigeEnabled=%s, prestigeCap=%s, cap+%d/base+%.2f",
                 baseXp,
                 multiplier,
+            logMode,
                 levelCap,
                 prestigeEnabled,
                 prestigeCap == null ? "ENDLESS" : prestigeCap,
@@ -235,7 +238,7 @@ public class LevelingManager {
         if (level >= getLevelCap()) {
             return Double.POSITIVE_INFINITY;
         }
-        return baseXp * Math.pow((Math.log(level) + 1) * Math.sqrt(level), multiplier);
+        return baseXp * computeLevelCurve(level);
     }
 
     public double getXpForNextLevel(PlayerData player, int level) {
@@ -245,7 +248,16 @@ public class LevelingManager {
         }
         int prestigeLevel = player != null ? Math.max(0, player.getPrestigeLevel()) : 0;
         double effectiveBaseXp = getBaseXpForPrestige(prestigeLevel);
-        return effectiveBaseXp * Math.pow((Math.log(level) + 1) * Math.sqrt(level), multiplier);
+        return effectiveBaseXp * computeLevelCurve(level);
+    }
+
+    private double computeLevelCurve(int level) {
+        int safeLevel = Math.max(1, level);
+        double logValue = switch (logMode) {
+            case LN -> Math.log(safeLevel);
+            case LOG10 -> Math.log10(safeLevel);
+        };
+        return Math.pow((logValue + 1.0D) * Math.sqrt(safeLevel), multiplier);
     }
 
     private void levelUp(PlayerData player) {
@@ -707,6 +719,22 @@ public class LevelingManager {
     private enum XpSuppressionReason {
         PLAYER_TOO_HIGH,
         PLAYER_TOO_LOW
+    }
+
+    private enum LogMode {
+        LOG10,
+        LN;
+
+        static LogMode fromString(String value) {
+            if (value == null) {
+                return LOG10;
+            }
+            return switch (value.trim().toUpperCase(Locale.ROOT)) {
+                case "LN", "NATURAL", "NATURAL_LOG", "LOG_E" -> LN;
+                case "LOG10", "LOG_10", "BASE10", "10" -> LOG10;
+                default -> LOG10;
+            };
+        }
     }
 
     public enum PrestigeResult {
