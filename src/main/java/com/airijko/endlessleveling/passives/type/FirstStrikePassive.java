@@ -73,9 +73,7 @@ public final class FirstStrikePassive {
 
         if (messenger != null) {
             messenger.accept(playerRef,
-                    String.format("Focused Strike triggered! +%.0f flat, +%.0f%% bonus, +%.0f true.",
-                            flatBonusDamage,
-                            bonusPercent * 100.0D,
+                    String.format("Focused Strike triggered! +%.0f true damage.",
                             trueDamageTotal));
         }
         return new TriggerResult(bonusDamage, trueDamageTotal);

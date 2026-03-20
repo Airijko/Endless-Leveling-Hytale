@@ -1031,6 +1031,9 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         Map<String, Object> props = passive.properties() == null ? Map.of() : passive.properties();
 
         Double threshold = getDoubleProp(props, "threshold");
+        if (threshold == null) {
+            threshold = getDoubleProp(props, "threshold_percent");
+        }
         Double duration = getDoubleProp(props, "duration");
         if (duration == null) {
             duration = getDoubleProp(props, "target_haste_slow_duration");
@@ -1095,6 +1098,29 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (selfBuffEffectiveness == null) {
             selfBuffEffectiveness = getDoubleProp(props, "self_buff_ratio");
         }
+        Double restorePercent = getDoubleProp(props, "restore_percent");
+        if (restorePercent == null) {
+            restorePercent = getDoubleProp(props, "restore_ratio");
+        }
+        Double flatBonusDamage = getDoubleProp(props, "flat_bonus_damage");
+        Double trueDamageFlatBonus = getDoubleProp(props, "true_damage_flat_bonus");
+        Double trueDamageConversionPercent = getDoubleProp(props, "true_damage_conversion_percent");
+        Double damageBonusPerStack = getDoubleProp(props, "damage_bonus_per_stack");
+        if (damageBonusPerStack == null) {
+            damageBonusPerStack = getDoubleProp(props, "damage_bonus_percent_per_stack");
+        }
+        if (damageBonusPerStack == null) {
+            damageBonusPerStack = getDoubleProp(props, "damage_bonus_percent");
+        }
+        Boolean triggerOnHit = getBooleanProp(props, "trigger_on_hit");
+        Double strengthFromTotalHealthPercent = getDoubleProp(props, "strength_from_total_health_percent");
+        if (strengthFromTotalHealthPercent == null) {
+            strengthFromTotalHealthPercent = value;
+        }
+        Double sorceryFromTotalHealthPercent = getDoubleProp(props, "sorcery_from_total_health_percent");
+        if (sorceryFromTotalHealthPercent == null) {
+            sorceryFromTotalHealthPercent = value;
+        }
         String activation = getStringProp(props, "activation");
         String scalingStat = getStringProp(props, "scaling_stat");
         String sourceAttribute = getStringProp(props, "source_attribute");
@@ -1108,9 +1134,21 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case HEALTH_REGEN -> tr("ui.races.passive.desc.health_regen", "{0} HP/5s", formatPercentValue(value));
             case MANA_REGEN -> tr("ui.races.passive.desc.mana_regen", "{0} mana/5s", formatPercentValue(value));
             case MANA_REGEN_FLAT -> tr("ui.races.passive.desc.mana_regen_flat", "{0} mana/s", formatSigned(value));
-                case ARCANE_WISDOM -> appendDetails(
-                    tr("ui.races.passive.desc.arcane_wisdom", "{0} max mana", formatPercentValue(value)),
-                    formatThresholdDetail(threshold, tr("ui.races.passive.scope.mana", "mana")));
+                case ARCANE_WISDOM -> appendLines(
+                    tr("ui.classes.passive.pretty.arcane_wisdom.title", "Arcane Wisdom"),
+                    tr("ui.classes.passive.pretty.arcane_wisdom.max_mana",
+                        "- Max mana bonus: {0}",
+                        formatPercentValue(value)),
+                    restorePercent == null
+                        ? null
+                        : threshold == null
+                            ? tr("ui.classes.passive.pretty.arcane_wisdom.restore_only",
+                                "- Emergency restore: {0} mana",
+                                formatPercentValue(restorePercent))
+                            : tr("ui.classes.passive.pretty.arcane_wisdom.restore_threshold",
+                                "- Emergency restore: {0} mana when below {1}",
+                                formatPercentValue(restorePercent),
+                                formatThresholdPercent(threshold, "mana")));
                 case TRUE_EDGE -> appendLines(
                     tr("ui.classes.passive.pretty.true_edge.title", "Defense-piercing strikes"),
                     flatTrueDamage == null || flatTrueDamage <= 0.0D
@@ -1245,9 +1283,31 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     formatThresholdDetail(threshold, tr("ui.races.passive.scope.hp", "HP")),
                     formatDurationDetail(duration),
                     formatCooldownDetail(cooldown));
-                case FOCUSED_STRIKE -> appendDetails(
-                    tr("ui.races.passive.desc.first_strike", "{0} opener", formatPercentValue(value)),
-                    formatCooldownDetail(cooldown));
+                case FOCUSED_STRIKE -> appendLines(
+                    tr("ui.classes.passive.pretty.focused_strike.title", "Focused Strike"),
+                    tr("ui.classes.passive.pretty.focused_strike.bonus",
+                        "- First-hit bonus: {0} bonus damage",
+                        formatPercentValue(value)),
+                    flatBonusDamage == null || flatBonusDamage <= 0.0D
+                        ? null
+                        : tr("ui.classes.passive.pretty.focused_strike.flat",
+                            "- Flat bonus damage: {0}",
+                            formatSigned(flatBonusDamage)),
+                    trueDamageFlatBonus == null || trueDamageFlatBonus <= 0.0D
+                        ? null
+                        : tr("ui.classes.passive.pretty.focused_strike.true_flat",
+                            "- Bonus true damage: {0}",
+                            formatSigned(trueDamageFlatBonus)),
+                    trueDamageConversionPercent == null || trueDamageConversionPercent <= 0.0D
+                        ? null
+                        : tr("ui.classes.passive.pretty.focused_strike.true_conversion",
+                            "- True-damage conversion: {0} of hit damage",
+                            formatPercentValue(trueDamageConversionPercent)),
+                    cooldown == null
+                        ? null
+                        : tr("ui.classes.passive.pretty.focused_strike.cooldown",
+                            "- Cooldown: {0}s",
+                            formatNumber(cooldown)));
             case INNATE_ATTRIBUTE_GAIN -> formatInnatePreview(passive, playerData);
             case ADRENALINE -> appendDetails(
                     tr("ui.races.passive.desc.adrenaline", "{0} stamina", formatPercentValue(value)),
@@ -1261,34 +1321,84 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     tr("ui.races.passive.desc.retaliation", "{0} reflect", formatPercentValue(value)),
                     formatWindowDetail(window),
                     formatCooldownDetail(cooldown));
-                case PRIMAL_DOMINANCE -> appendDetails(
-                    tr("ui.classes.passive.desc.primal_dominance",
-                        "{0} Strength from total health",
-                        formatPercentValue(value)),
-                    formatSlowDetail(slowPercent),
-                    formatDurationDetail(duration));
-                case ARCANE_DOMINANCE -> appendDetails(
-                    tr("ui.classes.passive.desc.arcane_dominance",
-                        "{0} Sorcery from total health",
-                        formatPercentValue(value)),
-                    formatSlowDetail(slowPercent),
-                    formatDurationDetail(duration));
+                case PRIMAL_DOMINANCE -> appendLines(
+                    tr("ui.classes.passive.pretty.primal_dominance.title", "Primal Dominance"),
+                    tr("ui.classes.passive.pretty.primal_dominance.scaling",
+                        "- Strength bonus: {0} of total health",
+                        formatPercentValue(strengthFromTotalHealthPercent)),
+                    slowPercent == null
+                        ? null
+                        : tr("ui.classes.passive.pretty.primal_dominance.slow",
+                            "- On-hit debuff: -{0} haste",
+                            formatPercentMagnitude(slowPercent)),
+                    duration == null
+                        ? null
+                        : tr("ui.classes.passive.pretty.primal_dominance.duration",
+                            "- Debuff duration: {0}s",
+                            formatNumber(duration)));
+                case ARCANE_DOMINANCE -> appendLines(
+                    tr("ui.classes.passive.pretty.arcane_dominance.title", "Arcane Dominance"),
+                    tr("ui.classes.passive.pretty.arcane_dominance.scaling",
+                        "- Sorcery bonus: {0} of total health",
+                        formatPercentValue(sorceryFromTotalHealthPercent)),
+                    slowPercent == null
+                        ? null
+                        : tr("ui.classes.passive.pretty.arcane_dominance.slow",
+                            "- On-hit debuff: -{0} haste",
+                            formatPercentMagnitude(slowPercent)),
+                    duration == null
+                        ? null
+                        : tr("ui.classes.passive.pretty.arcane_dominance.duration",
+                            "- Debuff duration: {0}s",
+                            formatNumber(duration)));
             case ABSORB -> appendDetails(
                     tr("ui.races.passive.desc.absorb", "{0} dmg reduction", formatPercentValue(value)),
                     formatCooldownDetail(cooldown));
-            case FINAL_INCANTATION -> appendDetails(
-                    tr("ui.races.passive.desc.executioner", "Final Incantation: +{0} bonus damage",
+                case FINAL_INCANTATION -> appendLines(
+                    tr("ui.classes.passive.pretty.final_incantation.title", "Final Incantation"),
+                    tr("ui.classes.passive.pretty.final_incantation.bonus",
+                        "- Bonus damage: {0} to low-health targets",
                         formatPercentValue(value)),
-                    formatThresholdDetail(threshold, tr("ui.races.passive.scope.target_hp", "target HP")),
-                    formatCooldownDetail(cooldown));
+                    threshold == null
+                        ? null
+                        : tr("ui.classes.passive.pretty.final_incantation.threshold",
+                            "- Trigger: target below {0}",
+                            formatThresholdPercent(threshold, "target HP")),
+                    cooldown == null
+                        ? null
+                        : tr("ui.classes.passive.pretty.final_incantation.cooldown",
+                            "- Cooldown: {0}s",
+                            formatNumber(cooldown)));
             case SWIFTNESS -> appendDetails(
                     tr("ui.races.passive.desc.swiftness", "{0} speed", formatPercentValue(value)),
                     formatDurationDetail(duration),
                     formatStacksDetail(stacks));
-                case BLADE_DANCE -> appendDetails(
-                    tr("ui.races.passive.desc.swiftness", "{0} speed", formatPercentValue(value)),
-                    formatDurationDetail(duration),
-                    formatStacksDetail(stacks));
+                case BLADE_DANCE -> appendLines(
+                    tr("ui.classes.passive.pretty.blade_dance.title", "Blade Dance"),
+                    tr("ui.classes.passive.pretty.blade_dance.speed",
+                        "- Move speed per stack: {0}",
+                        formatPercentValue(value)),
+                    damageBonusPerStack == null || damageBonusPerStack <= 0.0D
+                        ? null
+                        : tr("ui.classes.passive.pretty.blade_dance.damage",
+                            "- Damage per stack: {0}",
+                            formatPercentValue(damageBonusPerStack)),
+                    stacks == null
+                        ? null
+                        : tr("ui.classes.passive.pretty.blade_dance.stacks",
+                            "- Max stacks: {0}",
+                            formatNumber(stacks)),
+                    duration == null
+                        ? null
+                        : tr("ui.classes.passive.pretty.blade_dance.duration",
+                            "- Stack duration: {0}s",
+                            formatNumber(duration)),
+                    triggerOnHit == null
+                        ? null
+                        : triggerOnHit
+                            ? tr("ui.classes.passive.pretty.blade_dance.trigger_hit", "- Trigger: on hit")
+                            : tr("ui.classes.passive.pretty.blade_dance.trigger_other",
+                                "- Trigger: passive events"));
             case WITHER -> appendDetails(
                     tr("ui.races.passive.desc.wither", "{0} max HP/sec", formatPercentValue(value)),
                     formatDurationDetail(duration),
@@ -1319,6 +1429,26 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (raw instanceof String str) {
             String trimmed = str.trim();
             return trimmed.isEmpty() ? null : trimmed;
+        }
+        return null;
+    }
+
+    private Boolean getBooleanProp(Map<String, Object> props, String key) {
+        Object raw = props.get(key);
+        if (raw instanceof Boolean bool) {
+            return bool;
+        }
+        if (raw instanceof Number number) {
+            return number.intValue() != 0;
+        }
+        if (raw instanceof String str) {
+            String trimmed = str.trim();
+            if (trimmed.equalsIgnoreCase("true") || trimmed.equalsIgnoreCase("yes") || trimmed.equals("1")) {
+                return Boolean.TRUE;
+            }
+            if (trimmed.equalsIgnoreCase("false") || trimmed.equalsIgnoreCase("no") || trimmed.equals("0")) {
+                return Boolean.FALSE;
+            }
         }
         return null;
     }
@@ -1437,7 +1567,35 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (ratio == null) {
             return null;
         }
-        return tr("ui.classes.passive.detail.threshold", "<{0}% {1}", formatNumber(ratio * 100.0D), scope);
+        return tr("ui.classes.passive.detail.threshold",
+                "<{0}% {1}",
+                formatNumber(normalizePercentRatio(ratio) * 100.0D),
+                scope);
+    }
+
+    private String formatThresholdPercent(Double ratio, String scope) {
+        if (ratio == null) {
+            return null;
+        }
+        return formatNumber(normalizePercentRatio(ratio) * 100.0D) + "% " + scope;
+    }
+
+    private String formatPercentMagnitude(Double ratio) {
+        if (ratio == null) {
+            return "0%";
+        }
+        return formatNumber(normalizePercentRatio(ratio) * 100.0D) + "%";
+    }
+
+    private double normalizePercentRatio(Double ratio) {
+        if (ratio == null) {
+            return 0.0D;
+        }
+        double normalized = Math.abs(ratio);
+        if (normalized > 1.0D) {
+            normalized = normalized / 100.0D;
+        }
+        return normalized;
     }
 
     private String formatDurationDetail(Double seconds) {
