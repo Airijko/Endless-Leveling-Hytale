@@ -9,7 +9,7 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        +20 + (+10% of Strength & Sorcery)
+        +20 + (10% of Strength & Sorcery)
       color: "#8adf9e"
     - title: "Rules"
       body: "Can Crit: Yes"

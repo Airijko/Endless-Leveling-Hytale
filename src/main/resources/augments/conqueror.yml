@@ -9,12 +9,12 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        Value: +5%
+        +5% Bonus Damage per stack
         Max stacks: +8
       color: "#8adf9e"
     - title: "Max Stacks Bonus"
       body: |
-        True Damage: 25 + (+15% Damage Dealt)
+        True Damage: 25 + (15% Damage Dealt)
       color: "#8adf9e"
     - title: "Duration"
       body: "Duration: 8s"
