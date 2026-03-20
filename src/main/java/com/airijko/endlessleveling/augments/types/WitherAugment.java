@@ -242,13 +242,24 @@ public final class WitherAugment extends Augment implements AugmentHooks.OnHitAu
 
         // Validate entity is still usable before applying damage (entity may have
         // become invisible)
-        if (!EntityRefUtil.isUsable(ref)) {
-            LOGGER.atFine().log("Wither damage skipped: entity no longer usable key=%s target=%s", key, ref);
-            return;
-        }
-
-        DamageSystems.executeDamage(ref, commandBuffer, witherTickDamage);
-        state.nextTickAt = now + TICK_INTERVAL_MILLIS;
+            if (!EntityRefUtil.isUsable(ref)) {
+                LOGGER.atFine().log("Wither damage skipped: entity no longer usable key=%s target=%s", key, ref);
+                return;
+            }
+            // Additional check for entity visibility if available
+            try {
+                if (ref.getStore() == null || !ref.isValid()) {
+                    LOGGER.atFine().log("Wither damage skipped: entity not valid or store missing key=%s target=%s", key, ref);
+                    return;
+                }
+                // If EntityStore or entity has isVisible/isAlive, check here
+                // Example: if (ref.getStore().isVisible(ref) == false) return;
+            } catch (Exception e) {
+                LOGGER.atFine().log("Wither damage skipped: exception during visibility check key=%s target=%s error=%s", key, ref, e);
+                return;
+            }
+            DamageSystems.executeDamage(ref, commandBuffer, witherTickDamage);
+            state.nextTickAt = now + TICK_INTERVAL_MILLIS;
     }
 
     public static void purgeExpiredStates(long now) {
