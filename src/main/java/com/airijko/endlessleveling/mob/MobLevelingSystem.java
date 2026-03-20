@@ -1,5 +1,3 @@
-    // Tracks max health snapshots for each entity using composite key
-    private final Map<Long, Float> entityMaxHealthSnapshots = new ConcurrentHashMap<>();
 package com.airijko.endlessleveling.mob;
 
 import com.airijko.endlessleveling.EndlessLeveling;
@@ -70,6 +68,9 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     private final Map<Integer, Long> summonNameplateLogTimes = new ConcurrentHashMap<>();
     private final AtomicBoolean fullMobRescaleRequested = new AtomicBoolean(false);
     private long systemTimeMillis = 0L;
+
+    // Tracks max health snapshots for each entity using composite key
+    private final Map<Long, Float> entityMaxHealthSnapshots = new ConcurrentHashMap<>();
 
     private static final class EntityRuntimeState {
         private int appliedLevel;
