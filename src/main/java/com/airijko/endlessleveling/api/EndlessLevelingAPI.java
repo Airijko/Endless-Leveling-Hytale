@@ -7,30 +7,22 @@ import com.airijko.endlessleveling.augments.AugmentManager;
 import com.airijko.endlessleveling.classes.CharacterClassDefinition;
 import com.airijko.endlessleveling.classes.ClassManager;
 import com.airijko.endlessleveling.player.PlayerData;
-import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.leveling.LevelingManager;
 import com.airijko.endlessleveling.leveling.MobLevelingManager;
-import com.airijko.endlessleveling.passives.PassiveManager;
 import com.airijko.endlessleveling.player.PlayerAttributeManager;
 import com.airijko.endlessleveling.player.PlayerDataManager;
 import com.airijko.endlessleveling.leveling.PartyManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
-import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSource;
 import com.airijko.endlessleveling.races.RaceDefinition;
-import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.races.RaceManager;
 import com.airijko.endlessleveling.player.SkillManager;
-import com.airijko.endlessleveling.shared.SharedEffectAdapters;
-import com.airijko.endlessleveling.shared.SharedEffectDefinition;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -356,57 +348,6 @@ public final class EndlessLevelingAPI {
     }
 
     /**
-     * Returns a unified effect snapshot for the player, including innate passives,
-     * archetype passives, and selected augments.
-     */
-    public List<SharedEffectDefinition> getSharedEffects(UUID playerUuid) {
-        PlayerData data = getData(playerUuid);
-        if (data == null) {
-            return List.of();
-        }
-
-        List<SharedEffectDefinition> effects = new ArrayList<>();
-
-        PassiveManager passiveManager = passiveManager();
-        if (passiveManager != null) {
-            for (PassiveType type : PassiveType.values()) {
-                PassiveManager.PassiveSnapshot snapshot = passiveManager.getSnapshot(data, type);
-                if (snapshot == null || !snapshot.isUnlocked()) {
-                    continue;
-                }
-                effects.add(SharedEffectAdapters.fromInnate(type, snapshot.level(), snapshot.value(), true));
-            }
-        }
-
-        ArchetypePassiveManager archetypeManager = archetypePassiveManager();
-        if (archetypeManager != null) {
-            ArchetypePassiveSnapshot archetypeSnapshot = archetypeManager.getSnapshot(data);
-            for (List<RacePassiveDefinition> definitions : archetypeSnapshot.definitions().values()) {
-                for (RacePassiveDefinition definition : definitions) {
-                    if (definition != null) {
-                        effects.add(SharedEffectAdapters.fromArchetype(definition));
-                    }
-                }
-            }
-        }
-
-        AugmentManager augmentManager = augmentManager();
-        if (augmentManager != null) {
-            for (String augmentId : data.getSelectedAugmentsSnapshot().values()) {
-                if (augmentId == null || augmentId.isBlank()) {
-                    continue;
-                }
-                AugmentDefinition definition = augmentManager.getAugment(augmentId.trim().toLowerCase(Locale.ROOT));
-                if (definition != null) {
-                    effects.add(SharedEffectAdapters.fromAugment(definition));
-                }
-            }
-        }
-
-        return List.copyOf(effects);
-    }
-
-    /**
      * Register a custom augment definition backed by EndlessLeveling's default
      * augment fallback unless a custom factory is also registered.
      */
@@ -600,11 +541,6 @@ public final class EndlessLevelingAPI {
     private PartyManager partyManager() {
         EndlessLeveling plugin = plugin();
         return plugin != null ? plugin.getPartyManager() : null;
-    }
-
-    private PassiveManager passiveManager() {
-        EndlessLeveling plugin = plugin();
-        return plugin != null ? plugin.getPassiveManager() : null;
     }
 
     private AugmentManager augmentManager() {

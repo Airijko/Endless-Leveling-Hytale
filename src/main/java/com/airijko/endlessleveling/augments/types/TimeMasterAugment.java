@@ -12,6 +12,8 @@ import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.passives.PassiveManager;
 import com.airijko.endlessleveling.passives.PassiveManager.PassiveRuntimeState;
+import com.airijko.endlessleveling.cooldowns.CooldownMath;
+import com.airijko.endlessleveling.passives.PassiveCooldownRegistry;
 
 import java.util.Map;
 
@@ -56,7 +58,11 @@ public final class TimeMasterAugment extends Augment implements AugmentHooks.OnK
                 continue;
             }
             long previousExpiresAt = cooldown.getExpiresAt();
-            long updatedExpiresAt = reduceExpiresAt(previousExpiresAt, now);
+            long updatedExpiresAt = CooldownMath.reduceExpiresAt(
+                    previousExpiresAt,
+                    now,
+                    flatReductionMillis,
+                    percentRemainingReduction);
             if (updatedExpiresAt >= previousExpiresAt) {
                 continue;
             }
@@ -88,35 +94,7 @@ public final class TimeMasterAugment extends Augment implements AugmentHooks.OnK
             return;
         }
 
-        long secondWind = reduceExpiresAt(state.getSecondWindCooldownExpiresAt(), now);
-        if (secondWind < state.getSecondWindCooldownExpiresAt()) {
-            state.setSecondWindCooldownExpiresAt(secondWind);
-            state.setSecondWindReadyNotified(false);
-        }
-
-        long firstStrike = reduceExpiresAt(state.getFirstStrikeCooldownExpiresAt(), now);
-        if (firstStrike < state.getFirstStrikeCooldownExpiresAt()) {
-            state.setFirstStrikeCooldownExpiresAt(firstStrike);
-            state.setFirstStrikeReadyNotified(false);
-        }
-
-        long adrenaline = reduceExpiresAt(state.getAdrenalineCooldownExpiresAt(), now);
-        if (adrenaline < state.getAdrenalineCooldownExpiresAt()) {
-            state.setAdrenalineCooldownExpiresAt(adrenaline);
-            state.setAdrenalineReadyNotified(false);
-        }
-
-        long executioner = reduceExpiresAt(state.getExecutionerCooldownExpiresAt(), now);
-        if (executioner < state.getExecutionerCooldownExpiresAt()) {
-            state.setExecutionerCooldownExpiresAt(executioner);
-            state.setExecutionerReadyNotified(false);
-        }
-
-        long retaliation = reduceExpiresAt(state.getRetaliationCooldownExpiresAt(), now);
-        if (retaliation < state.getRetaliationCooldownExpiresAt()) {
-            state.setRetaliationCooldownExpiresAt(retaliation);
-            state.setRetaliationReadyNotified(false);
-        }
+        PassiveCooldownRegistry.reduceCooldowns(state, now, flatReductionMillis, percentRemainingReduction);
     }
 
     private void reduceInternalAugmentCooldowns(AugmentRuntimeState runtime, long now) {
@@ -170,15 +148,4 @@ public final class TimeMasterAugment extends Augment implements AugmentHooks.OnK
                         "cooldown"));
     }
 
-    private long reduceExpiresAt(long expiresAt, long now) {
-        if (expiresAt <= now) {
-            return expiresAt;
-        }
-        long remaining = expiresAt - now;
-        long reduction = flatReductionMillis + (long) Math.floor(remaining * percentRemainingReduction);
-        if (reduction <= 0L) {
-            return expiresAt;
-        }
-        return Math.max(now, expiresAt - reduction);
-    }
 }

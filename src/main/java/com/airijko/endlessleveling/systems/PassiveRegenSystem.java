@@ -8,6 +8,7 @@ import com.airijko.endlessleveling.augments.types.OverhealAugment;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.PassiveType;
+import com.airijko.endlessleveling.passives.PassiveCooldownRegistry;
 import com.airijko.endlessleveling.passives.PassiveManager;
 import com.airijko.endlessleveling.passives.PassiveManager.PassiveRuntimeState;
 import com.airijko.endlessleveling.passives.PassiveManager.PassiveSnapshot;
@@ -22,7 +23,6 @@ import com.airijko.endlessleveling.passives.type.PartyMendingAuraPassive;
 import com.airijko.endlessleveling.passives.type.PartyShieldingAuraPassive;
 import com.airijko.endlessleveling.passives.type.SecondWindPassive;
 import com.airijko.endlessleveling.util.ChatMessageTemplate;
-import com.airijko.endlessleveling.util.ChatMessageStrings;
 import com.airijko.endlessleveling.util.PlayerChatNotifier;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
@@ -727,49 +727,16 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         }
 
         long now = System.currentTimeMillis();
-        if (!runtimeState.isSecondWindReadyNotified()
-                && runtimeState.getSecondWindCooldownExpiresAt() > 0
-                && now >= runtimeState.getSecondWindCooldownExpiresAt()) {
-            sendCooldownNotification(playerRef,
-                    PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENT_READY_AGAIN,
-                            ChatMessageStrings.Name.SECOND_WIND));
-            runtimeState.setSecondWindReadyNotified(true);
-        }
+        for (PassiveCooldownRegistry.Entry entry : PassiveCooldownRegistry.notifiableEntries()) {
+            long expiresAt = entry.expiresAt(runtimeState);
+            if (entry.isReadyNotified(runtimeState) || expiresAt <= 0L || now < expiresAt) {
+            continue;
+            }
 
-        if (!runtimeState.isFirstStrikeReadyNotified()
-                && runtimeState.getFirstStrikeCooldownExpiresAt() > 0
-                && now >= runtimeState.getFirstStrikeCooldownExpiresAt()) {
             sendCooldownNotification(playerRef,
-                    PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENT_READY_AGAIN,
-                            ChatMessageStrings.Name.FIRST_STRIKE));
-            runtimeState.setFirstStrikeReadyNotified(true);
-        }
-
-        if (!runtimeState.isAdrenalineReadyNotified()
-                && runtimeState.getAdrenalineCooldownExpiresAt() > 0
-                && now >= runtimeState.getAdrenalineCooldownExpiresAt()) {
-            sendCooldownNotification(playerRef,
-                    PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENT_READY_AGAIN,
-                            ChatMessageStrings.Name.ADRENALINE));
-            runtimeState.setAdrenalineReadyNotified(true);
-        }
-
-        if (!runtimeState.isExecutionerReadyNotified()
-                && runtimeState.getExecutionerCooldownExpiresAt() > 0
-                && now >= runtimeState.getExecutionerCooldownExpiresAt()) {
-            sendCooldownNotification(playerRef,
-                    PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENT_READY_AGAIN,
-                            ChatMessageStrings.Name.EXECUTIONER));
-            runtimeState.setExecutionerReadyNotified(true);
-        }
-
-        if (!runtimeState.isRetaliationReadyNotified()
-                && runtimeState.getRetaliationCooldownExpiresAt() > 0
-                && now >= runtimeState.getRetaliationCooldownExpiresAt()) {
-            sendCooldownNotification(playerRef,
-                    PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENT_READY_AGAIN,
-                            ChatMessageStrings.Name.RETALIATION));
-            runtimeState.setRetaliationReadyNotified(true);
+                PlayerChatNotifier.text(playerRef, ChatMessageTemplate.AUGMENT_READY_AGAIN,
+                    entry.displayName()));
+            entry.setReadyNotified(runtimeState, true);
         }
     }
 

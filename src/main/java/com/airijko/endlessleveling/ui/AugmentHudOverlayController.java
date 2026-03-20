@@ -1,5 +1,6 @@
 package com.airijko.endlessleveling.ui;
 
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentManager;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager;
@@ -16,9 +17,14 @@ import com.airijko.endlessleveling.augments.types.ProtectiveBubbleAugment;
 import com.airijko.endlessleveling.augments.types.RagingMomentumAugment;
 import com.airijko.endlessleveling.augments.types.TankEngineAugment;
 import com.airijko.endlessleveling.augments.types.UndyingRageAugment;
+import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.PassiveCategory;
+import com.airijko.endlessleveling.passives.PassiveCooldownRegistry;
 import com.airijko.endlessleveling.passives.PassiveManager;
+import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.passives.type.PartyShieldingAuraPassive;
+import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
@@ -30,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class AugmentHudOverlayController {
@@ -83,8 +90,12 @@ public final class AugmentHudOverlayController {
         PassiveManager.PassiveRuntimeState passiveRuntimeState = passiveManager != null
                 ? passiveManager.getRuntimeState(uuid)
                 : null;
+        ArchetypePassiveSnapshot archetypeSnapshot = resolveArchetypeSnapshot(uuid);
         EntityStatMap statMap = resolveStatMap(playerRef);
-        List<StackingHudState> stackingSlots = resolveStackingHudStates(runtimeState, now);
+        List<StackingHudState> stackingSlots = resolveStackingHudStates(runtimeState,
+                passiveRuntimeState,
+                archetypeSnapshot,
+                now);
 
         return new HudOverlayState(resolveDurationBar(runtimeState, now),
                 resolveShieldBar(runtimeState, passiveRuntimeState, statMap, now),
@@ -92,73 +103,79 @@ public final class AugmentHudOverlayController {
     }
 
     private List<StackingHudState> resolveStackingHudStates(AugmentRuntimeManager.AugmentRuntimeState runtimeState,
+            PassiveManager.PassiveRuntimeState passiveRuntimeState,
+            ArchetypePassiveSnapshot archetypeSnapshot,
             long now) {
-        if (runtimeState == null || augmentManager == null) {
-            return emptyStackingLayout();
-        }
-
-        List<String> selectedAugmentIds = resolveSelectedAugmentIds(runtimeState);
-        if (selectedAugmentIds.isEmpty()) {
+        if (runtimeState == null && passiveRuntimeState == null) {
             return emptyStackingLayout();
         }
 
         List<StackingHudState> leftSlots = new ArrayList<>();
         List<StackingHudState> rightSlots = new ArrayList<>();
 
-        for (String augmentId : selectedAugmentIds) {
-            AugmentDefinition definition = augmentManager.getAugment(augmentId);
-            if (definition == null) {
-                continue;
-            }
+        if (runtimeState != null && augmentManager != null) {
+            List<String> selectedAugmentIds = resolveSelectedAugmentIds(runtimeState);
+            for (String augmentId : selectedAugmentIds) {
+                AugmentDefinition definition = augmentManager.getAugment(augmentId);
+                if (definition == null) {
+                    continue;
+                }
 
-            if (leftSlots.size() < STACKING_LEFT_SLOT_COUNT && hasStackingMechanic(definition)) {
-                AugmentRuntimeManager.AugmentState state = runtimeState.getState(augmentId);
-                if (state != null) {
-                    int stacks = Math.max(0, state.getStacks());
-                    int maxStacks = resolveConfiguredMaxStacks(definition.getId(), definition.getPassives());
-                    boolean nextHitTriggerIndicator = usesNextHitTriggerIndicator(definition.getId());
+                if (leftSlots.size() < STACKING_LEFT_SLOT_COUNT && hasStackingMechanic(definition)) {
+                    AugmentRuntimeManager.AugmentState state = runtimeState.getState(augmentId);
+                    if (state != null) {
+                        int stacks = Math.max(0, state.getStacks());
+                        int maxStacks = resolveConfiguredMaxStacks(definition.getId(), definition.getPassives());
+                        boolean nextHitTriggerIndicator = usesNextHitTriggerIndicator(definition.getId());
                         boolean decaysOverTime = hasStackDecayMechanic(definition.getId(), definition.getPassives());
-                    boolean stacksVisible = nextHitTriggerIndicator
-                            ? shouldShowNextHitTrigger(definition.getId(), state, stacks, maxStacks, now)
-                            : stacks > 0
-                                && (decaysOverTime
-                                    || state.getExpiresAt() <= 0L
-                                    || state.getExpiresAt() > now);
-                    if (stacksVisible) {
-                        boolean atMaxStacks = nextHitTriggerIndicator
-                                ? true
-                                : maxStacks > 0 && stacks >= maxStacks;
-                        leftSlots.add(new StackingHudState(
-                                true,
-                                stacks,
-                                atMaxStacks,
-                                resolveCategoryIconItemId(definition),
-                                !nextHitTriggerIndicator));
+                        boolean stacksVisible = nextHitTriggerIndicator
+                                ? shouldShowNextHitTrigger(definition.getId(), state, stacks, maxStacks, now)
+                                : stacks > 0
+                                        && (decaysOverTime
+                                                || state.getExpiresAt() <= 0L
+                                                || state.getExpiresAt() > now);
+                        if (stacksVisible) {
+                            boolean atMaxStacks = nextHitTriggerIndicator
+                                    ? true
+                                    : maxStacks > 0 && stacks >= maxStacks;
+                            leftSlots.add(new StackingHudState(
+                                    true,
+                                    stacks,
+                                    atMaxStacks,
+                                    resolveCategoryIconItemId(definition),
+                                    !nextHitTriggerIndicator));
+                        }
                     }
                 }
-            }
 
-            if (rightSlots.size() >= STACKING_RIGHT_SLOT_COUNT) {
-                continue;
-            }
+                if (rightSlots.size() >= STACKING_RIGHT_SLOT_COUNT) {
+                    continue;
+                }
 
-            AugmentRuntimeManager.CooldownState cooldownState = runtimeState.getCooldown(augmentId);
-            boolean tracksCooldown = cooldownState != null || hasCooldownMechanic(definition.getPassives());
-            if (!tracksCooldown) {
-                continue;
-            }
+                AugmentRuntimeManager.CooldownState cooldownState = runtimeState.getCooldown(augmentId);
+                boolean tracksCooldown = cooldownState != null || hasCooldownMechanic(definition.getPassives());
+                if (!tracksCooldown) {
+                    continue;
+                }
 
-            boolean available = cooldownState == null || cooldownState.getExpiresAt() <= now;
-            if (!available) {
-                continue;
-            }
+                boolean available = cooldownState == null || cooldownState.getExpiresAt() <= now;
+                if (!available) {
+                    continue;
+                }
 
-            rightSlots.add(new StackingHudState(
-                    true,
-                    0,
-                    false,
-                    resolveCategoryIconItemId(definition),
-                    false));
+                rightSlots.add(new StackingHudState(
+                        true,
+                        0,
+                        false,
+                        resolveCategoryIconItemId(definition),
+                        false));
+            }
+        }
+
+        appendArchetypePassiveCooldownIndicators(passiveRuntimeState, archetypeSnapshot, rightSlots, now);
+
+        if (leftSlots.isEmpty() && rightSlots.isEmpty()) {
+            return emptyStackingLayout();
         }
 
         List<StackingHudState> layout = new ArrayList<>(STACKING_TOTAL_SLOT_COUNT);
@@ -176,6 +193,85 @@ public final class AugmentHudOverlayController {
             layout.add(rightIndex < rightVisibleCount ? rightSlots.get(rightIndex) : StackingHudState.hidden());
         }
         return layout;
+    }
+
+    private ArchetypePassiveSnapshot resolveArchetypeSnapshot(UUID playerUuid) {
+        if (playerUuid == null) {
+            return ArchetypePassiveSnapshot.empty();
+        }
+
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null || plugin.getPlayerDataManager() == null || plugin.getArchetypePassiveManager() == null) {
+            return ArchetypePassiveSnapshot.empty();
+        }
+
+        PlayerData playerData = plugin.getPlayerDataManager().get(playerUuid);
+        if (playerData == null) {
+            return ArchetypePassiveSnapshot.empty();
+        }
+
+        return plugin.getArchetypePassiveManager().getSnapshot(playerData);
+    }
+
+    private void appendArchetypePassiveCooldownIndicators(PassiveManager.PassiveRuntimeState passiveRuntimeState,
+            ArchetypePassiveSnapshot archetypeSnapshot,
+            List<StackingHudState> rightSlots,
+            long now) {
+        if (passiveRuntimeState == null || archetypeSnapshot == null || archetypeSnapshot.isEmpty()) {
+            return;
+        }
+
+        for (PassiveCooldownRegistry.Entry entry : PassiveCooldownRegistry.entries()) {
+            if (rightSlots.size() >= STACKING_RIGHT_SLOT_COUNT) {
+                return;
+            }
+
+            ArchetypePassiveType passiveType = entry.archetypeType();
+            if (!hasArchetypePassive(archetypeSnapshot, passiveType)) {
+                continue;
+            }
+
+            if (entry.expiresAt(passiveRuntimeState) > now) {
+                continue;
+            }
+
+            rightSlots.add(new StackingHudState(
+                    true,
+                    0,
+                    false,
+                    resolveArchetypePassiveIconItemId(archetypeSnapshot, entry),
+                    false));
+        }
+    }
+
+    private boolean hasArchetypePassive(ArchetypePassiveSnapshot archetypeSnapshot, ArchetypePassiveType passiveType) {
+        if (archetypeSnapshot == null || archetypeSnapshot.isEmpty() || passiveType == null) {
+            return false;
+        }
+        if (!archetypeSnapshot.getDefinitions(passiveType).isEmpty()) {
+            return true;
+        }
+        return archetypeSnapshot.getValue(passiveType) > EPSILON;
+    }
+
+    private String resolveArchetypePassiveIconItemId(ArchetypePassiveSnapshot archetypeSnapshot,
+            PassiveCooldownRegistry.Entry entry) {
+        if (archetypeSnapshot == null || entry == null || entry.archetypeType() == null) {
+            return STACKING_ICON_FALLBACK;
+        }
+
+        for (RacePassiveDefinition definition : archetypeSnapshot.getDefinitions(entry.archetypeType())) {
+            if (definition == null) {
+                continue;
+            }
+            PassiveCategory category = definition.category();
+            if (category != null && category.getIconItemId() != null && !category.getIconItemId().isBlank()) {
+                return category.getIconItemId();
+            }
+        }
+
+        String fallback = entry.fallbackIconItemId();
+        return fallback == null || fallback.isBlank() ? STACKING_ICON_FALLBACK : fallback;
     }
 
     private List<String> resolveSelectedAugmentIds(AugmentRuntimeManager.AugmentRuntimeState runtimeState) {
