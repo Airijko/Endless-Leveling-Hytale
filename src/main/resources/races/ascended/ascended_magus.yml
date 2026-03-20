@@ -38,7 +38,7 @@ passives:
     value: 1.15 # +115% faster special charge
   - type: MANA_REGEN
     value: 0.018 # Restore 1.8% of max mana every 5 seconds
-  - type: EXECUTIONER
+  - type: FINAL_INCANTATION
     value: 1.9 # +190% executioner scaling descriptor
     flat_bonus_damage: 22 # Flat bonus damage when threshold condition is met
     threshold: 20 # Only applies to targets below 20% HP

@@ -40,7 +40,7 @@ passives:
     value: 0.13 # Passive +13% movement speed applied after haste
     duration: 5 # Seconds after killing a target to maintain swiftness bonus
     max_stacks: 9 # Can stack up to 9 times after killing a target
-  - type: EXECUTIONER
+  - type: FINAL_INCANTATION
     value: 2.4 # +240% executioner scaling descriptor
     flat_bonus_damage: 32 # Flat bonus damage when threshold condition is met
     threshold: 22 # Only applies to targets below 22% HP

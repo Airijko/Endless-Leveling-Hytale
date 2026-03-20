@@ -47,23 +47,32 @@ public enum PassiveStackingStyle {
             return ADDITIVE;
         }
         return switch (type) {
-            case XP_BONUS, HEALING_BONUS, RETALIATION -> ADDITIVE;
+            case XP_BONUS, HEALING_BONUS -> ADDITIVE;
             case HEALTH_REGEN,
                     MANA_REGEN,
                     MANA_REGEN_FLAT,
                     REGENERATION,
                     SPECIAL_CHARGE_BONUS,
                     RAVENOUS_STRIKE,
-                    SECOND_WIND,
-                    ABSORB,
-                    BERZERKER,
-                    SWIFTNESS ->
+                    SECOND_WIND ->
                 DIMINISHING;
-            case FIRST_STRIKE, EXECUTIONER -> UNIQUE;
-            case HEALING_TOUCH -> ADDITIVE;
-            case HEALING_AURA -> ADDITIVE;
-            case SHIELDING_AURA -> ADDITIVE;
-            case BUFFING_AURA -> ADDITIVE;
+            case TRUE_EDGE,
+                    TRUE_BOLTS,
+                    ARCANE_WISDOM,
+                    FOCUSED_STRIKE,
+                    FINAL_INCANTATION,
+                    BERZERKER,
+                    RETALIATION,
+                    PRIMAL_DOMINANCE,
+                    ARCANE_DOMINANCE,
+                    ABSORB,
+                    SWIFTNESS,
+                    BLADE_DANCE,
+                    HEALING_AURA,
+                    SHIELDING_AURA,
+                    BUFFING_AURA,
+                    HEALING_TOUCH,
+                    ARMY_OF_THE_DEAD -> UNIQUE;
             case WITHER, CRIT_DEFENSE -> ADDITIVE;
             default -> ADDITIVE;
         };

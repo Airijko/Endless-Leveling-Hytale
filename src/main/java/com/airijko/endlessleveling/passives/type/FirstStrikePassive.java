@@ -36,14 +36,6 @@ public final class FirstStrikePassive {
         return settings.cooldownMillis();
     }
 
-    public boolean allowAugmentStacking() {
-        return settings.allowAugmentStacking();
-    }
-
-    public boolean shouldSuppressOnHit() {
-        return settings.suppressOnHit();
-    }
-
     public double hasteBonusPercent() {
         return Math.max(0.0D, settings.hasteBonusPercent());
     }
@@ -51,7 +43,6 @@ public final class FirstStrikePassive {
     public TriggerResult apply(PassiveRuntimeState runtimeState,
             PlayerRef playerRef,
             float currentDamage,
-            boolean outOfCombatReady,
             BiConsumer<PlayerRef, String> messenger) {
         if (runtimeState == null || !settings.enabled() || currentDamage <= 0f) {
             return TriggerResult.none();
@@ -64,11 +55,6 @@ public final class FirstStrikePassive {
 
         long now = System.currentTimeMillis();
         if (now < runtimeState.getFirstStrikeCooldownExpiresAt()) {
-            return TriggerResult.none();
-        }
-
-        boolean killResetReady = runtimeState.isFirstStrikeKillResetReady();
-        if (settings.requireOutOfCombatCooldown() && !killResetReady && !outOfCombatReady) {
             return TriggerResult.none();
         }
 
@@ -93,21 +79,6 @@ public final class FirstStrikePassive {
                             trueDamageTotal));
         }
         return new TriggerResult(bonusDamage, trueDamageTotal);
-    }
-
-    public void suppressOnHit(PassiveRuntimeState runtimeState) {
-        if (runtimeState == null || !settings.enabled() || settings.cooldownMillis() <= 0L || !settings.suppressOnHit()) {
-            return;
-        }
-
-        long now = System.currentTimeMillis();
-        if (now < runtimeState.getFirstStrikeCooldownExpiresAt()) {
-            return;
-        }
-
-        runtimeState.setFirstStrikeCooldownExpiresAt(now + settings.cooldownMillis());
-        runtimeState.setFirstStrikeKillResetReady(false);
-        runtimeState.setFirstStrikeReadyNotified(false);
     }
 
     public void resetCooldownOnKill(PassiveRuntimeState runtimeState) {

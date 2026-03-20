@@ -21,19 +21,23 @@ public enum ArchetypePassiveType {
     HEALING_BONUS("HEALING_BONUS"),
     LIFE_STEAL("LIFE_STEAL"),
     TRUE_EDGE("TRUE_EDGE"),
+    TRUE_BOLTS("TRUE_BOLTS"),
     RAVENOUS_STRIKE("RAVENOUS_STRIKE"),
     SPECIAL_CHARGE_BONUS("SPECIAL_CHARGE_BONUS"),
     STAMINA_GAIN_BONUS("STAMINA_GAIN_BONUS"),
     LUCK("LUCK"),
     SECOND_WIND("SECOND_WIND"),
-    FIRST_STRIKE("FIRST_STRIKE"),
+    FOCUSED_STRIKE("FOCUSED_STRIKE"),
     INNATE_ATTRIBUTE_GAIN("INNATE_ATTRIBUTE_GAIN"),
     ADRENALINE("ADRENALINE"),
     BERZERKER("BERZERKER"),
     RETALIATION("RETALIATION"),
+    PRIMAL_DOMINANCE("PRIMAL_DOMINANCE"),
+    ARCANE_DOMINANCE("ARCANE_DOMINANCE"),
     ABSORB("ABSORB"),
-    EXECUTIONER("EXECUTIONER"),
+    FINAL_INCANTATION("FINAL_INCANTATION"),
     SWIFTNESS("SWIFTNESS"),
+    BLADE_DANCE("BLADE_DANCE"),
     WITHER("WITHER"),
     CRIT_DEFENSE("CRIT_DEFENSE");
 
@@ -61,6 +65,12 @@ public enum ArchetypePassiveType {
         }
         if ("HEAL_TOUCH".equals(normalized)) {
             return HEALING_TOUCH;
+        }
+        if ("FIRST_STRIKE".equals(normalized)) {
+            return FOCUSED_STRIKE;
+        }
+        if ("EXECUTIONER".equals(normalized)) {
+            return FINAL_INCANTATION;
         }
         for (ArchetypePassiveType type : values()) {
             if (type.configKey.equals(normalized)) {

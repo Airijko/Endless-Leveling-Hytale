@@ -173,8 +173,9 @@ public class ArchetypePassiveManager {
         if (scaledValue == 0.0D) {
             return;
         }
+        PassiveStackingStyle stackingStyle = passive.effectiveStackingStyle();
         ArchetypePassiveSource.StackAccumulator accumulator = totals.computeIfAbsent(passive.type(),
-                key -> new ArchetypePassiveSource.StackAccumulator(passive.effectiveStackingStyle()));
+            key -> new ArchetypePassiveSource.StackAccumulator(stackingStyle));
         accumulator.addValue(scaledValue);
 
         Map<String, Object> effectiveProperties = new LinkedHashMap<>(passive.properties());
@@ -195,6 +196,20 @@ public class ArchetypePassiveManager {
                 passive.stackingStyle(),
                 passive.tier(),
                 passive.classValues());
-        grouped.computeIfAbsent(passive.type(), key -> new ArrayList<>()).add(effectiveDefinition);
+        List<RacePassiveDefinition> definitions = grouped.computeIfAbsent(passive.type(), key -> new ArrayList<>());
+        if (stackingStyle == PassiveStackingStyle.UNIQUE) {
+            if (definitions.isEmpty()) {
+                definitions.add(effectiveDefinition);
+                return;
+            }
+
+            RacePassiveDefinition current = definitions.get(0);
+            if (effectiveDefinition.value() > current.value()) {
+                definitions.set(0, effectiveDefinition);
+            }
+            return;
+        }
+
+        definitions.add(effectiveDefinition);
     }
 }

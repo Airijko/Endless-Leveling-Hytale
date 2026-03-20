@@ -7,6 +7,7 @@ import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.passives.settings.BladeDanceSettings;
 import com.airijko.endlessleveling.passives.settings.FirstStrikeSettings;
 import com.airijko.endlessleveling.passives.settings.SwiftnessSettings;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
@@ -747,7 +748,9 @@ public class SkillManager {
         HasteBreakdown hasteBreakdown = getHasteBreakdown(playerData);
         float requestedMultiplier = hasteBreakdown.totalMultiplier();
         float swiftnessMultiplier = getSwiftnessMultiplier(playerData);
+        float bladeDanceMultiplier = getBladeDanceMultiplier(playerData);
         requestedMultiplier *= swiftnessMultiplier;
+        requestedMultiplier *= bladeDanceMultiplier;
 
         float clampedMultiplier = requestedMultiplier;
         if (settings.maxSpeedMultiplier > 0.0F) {
@@ -1273,6 +1276,37 @@ public class SkillManager {
                     stacks = runtimeState.getSwiftnessStacks();
                 } else {
                     runtimeState.clearSwiftness();
+                }
+            }
+        }
+
+        if (stacks <= 0) {
+            return 1.0F;
+        }
+
+        double multiplier = settings.multiplierForStacks(stacks);
+        return multiplier > 0.0D ? (float) multiplier : 1.0F;
+    }
+
+    private float getBladeDanceMultiplier(PlayerData playerData) {
+        if (playerData == null || archetypePassiveManager == null) {
+            return 1.0F;
+        }
+        ArchetypePassiveSnapshot snapshot = archetypePassiveManager.getSnapshot(playerData);
+        BladeDanceSettings settings = BladeDanceSettings.fromSnapshot(snapshot);
+        if (!settings.enabled()) {
+            return 1.0F;
+        }
+
+        int stacks = 0;
+        if (passiveManager != null) {
+            PassiveManager.PassiveRuntimeState runtimeState = passiveManager.getRuntimeState(playerData.getUuid());
+            if (runtimeState != null && runtimeState.getBladeDanceStacks() > 0) {
+                long activeUntil = runtimeState.getBladeDanceActiveUntil();
+                if (activeUntil > 0L && System.currentTimeMillis() <= activeUntil) {
+                    stacks = runtimeState.getBladeDanceStacks();
+                } else {
+                    runtimeState.clearBladeDance();
                 }
             }
         }

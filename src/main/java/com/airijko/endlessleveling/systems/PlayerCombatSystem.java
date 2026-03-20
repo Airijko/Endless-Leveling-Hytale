@@ -12,13 +12,14 @@ import com.airijko.endlessleveling.classes.ClassManager;
 import com.airijko.endlessleveling.leveling.MobLevelingManager;
 import com.airijko.endlessleveling.passives.PassiveManager;
 import com.airijko.endlessleveling.passives.PassiveManager.PassiveRuntimeState;
+import com.airijko.endlessleveling.passives.settings.TrueBoltsSettings;
+import com.airijko.endlessleveling.passives.settings.TrueEdgeSettings;
 import com.airijko.endlessleveling.player.PlayerDataManager;
 import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.passives.type.ArmyOfTheDeadPassive;
 import com.airijko.endlessleveling.leveling.XpKillCreditTracker;
-import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
@@ -46,7 +47,6 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -56,7 +56,6 @@ import java.util.UUID;
 public class PlayerCombatSystem extends DamageEventSystem {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final long TRUE_EDGE_DEFAULT_INTERNAL_COOLDOWN_MILLIS = 400L;
     public static final MetaKey<Boolean> AUGMENT_DOT_DAMAGE = Damage.META_REGISTRY
             .registerMetaObject(data -> Boolean.FALSE);
     public static final MetaKey<Boolean> AUGMENT_PROC_DAMAGE = Damage.META_REGISTRY
@@ -184,14 +183,14 @@ public class PlayerCombatSystem extends DamageEventSystem {
         PlayerRef targetPlayer = EntityRefUtil.tryGetComponent(commandBuffer, targetRef, PlayerRef.getComponentType());
         boolean targetIsPlayer = targetPlayer != null && targetPlayer.isValid();
         long now = System.currentTimeMillis();
-        TrueEdgeSettings trueEdgeSettings = resolveTrueEdgeSettings(archetypeSnapshot);
-        boolean trueEdgeReady = isTrueEdgeOffCooldown(runtimeState, now, trueEdgeSettings.internalCooldownMillis());
+        TrueDamageSettings trueDamageSettings = resolveTrueDamageSettings(archetypeSnapshot);
+        boolean trueEdgeReady = isTrueEdgeOffCooldown(runtimeState, now, trueDamageSettings);
 
         TrueEdgeComputation trueEdge = (!bypassOutgoingAugmentMath && trueEdgeReady)
                 ? computeTrueEdgeConversion(
                         targetRef,
                         commandBuffer,
-                        trueEdgeSettings,
+                        trueDamageSettings,
                         incomingBeforeDefense,
                         playerLevel,
                         reduction,
@@ -225,7 +224,7 @@ public class PlayerCombatSystem extends DamageEventSystem {
                 ? computeTrueEdgeConversion(
                         targetRef,
                         commandBuffer,
-                        trueEdgeSettings,
+                        trueDamageSettings,
                         incomingBeforeDefense,
                         playerLevel,
                         reduction,
@@ -235,8 +234,10 @@ public class PlayerCombatSystem extends DamageEventSystem {
                 && trueEdgeReady
                 && trueEdge.triggered()
                 && runtimeState != null
-                && trueEdgeSettings.internalCooldownMillis() > 0L) {
-            runtimeState.setTrueEdgeCooldownExpiresAt(now + trueEdgeSettings.internalCooldownMillis());
+                && trueDamageSettings.internalCooldownMillis() > 0L) {
+            setTrueEdgeCooldownExpiresAt(runtimeState,
+                    trueDamageSettings,
+                    now + trueDamageSettings.internalCooldownMillis());
         }
         double reducedAugmentTrueDamage = bypassOutgoingAugmentMath
                 ? 0.0D
@@ -491,7 +492,7 @@ public class PlayerCombatSystem extends DamageEventSystem {
 
     private TrueEdgeComputation computeTrueEdgeConversion(Ref<EntityStore> targetRef,
             CommandBuffer<EntityStore> commandBuffer,
-            TrueEdgeSettings settings,
+            TrueDamageSettings settings,
             float outgoingDamageBeforeDefense,
             int attackerLevel,
             double mobReduction,
@@ -552,78 +553,62 @@ public class PlayerCombatSystem extends DamageEventSystem {
         return Math.max(0.0D, hp.getMax()) * maxHealthTrueDamagePercent;
     }
 
-    private boolean isTrueEdgeOffCooldown(PassiveRuntimeState runtimeState, long now, long cooldownMillis) {
-        if (cooldownMillis <= 0L) {
+    private boolean isTrueEdgeOffCooldown(PassiveRuntimeState runtimeState,
+            long now,
+            TrueDamageSettings settings) {
+        if (settings == null || settings.internalCooldownMillis() <= 0L) {
             return true;
         }
         if (runtimeState == null) {
             return true;
         }
-        return now >= runtimeState.getTrueEdgeCooldownExpiresAt();
+        long cooldownExpiresAt = settings.sourceType() == ArchetypePassiveType.TRUE_BOLTS
+                ? runtimeState.getTrueBoltsCooldownExpiresAt()
+                : runtimeState.getTrueEdgeCooldownExpiresAt();
+        return now >= cooldownExpiresAt;
     }
 
-    private TrueEdgeSettings resolveTrueEdgeSettings(ArchetypePassiveSnapshot snapshot) {
+    private void setTrueEdgeCooldownExpiresAt(PassiveRuntimeState runtimeState,
+            TrueDamageSettings settings,
+            long expiresAt) {
+        if (runtimeState == null || settings == null) {
+            return;
+        }
+        if (settings.sourceType() == ArchetypePassiveType.TRUE_BOLTS) {
+            runtimeState.setTrueBoltsCooldownExpiresAt(expiresAt);
+            return;
+        }
+        runtimeState.setTrueEdgeCooldownExpiresAt(expiresAt);
+    }
+
+    private TrueDamageSettings resolveTrueDamageSettings(ArchetypePassiveSnapshot snapshot) {
         if (snapshot == null) {
-            return TrueEdgeSettings.disabled();
+            return TrueDamageSettings.disabled();
         }
 
-        List<RacePassiveDefinition> definitions = snapshot.getDefinitions(ArchetypePassiveType.TRUE_EDGE);
-        if (definitions.isEmpty()) {
-            return TrueEdgeSettings.disabled();
+        TrueBoltsSettings trueBolts = TrueBoltsSettings.fromSnapshot(snapshot);
+        if (trueBolts.enabled()) {
+            return new TrueDamageSettings(
+                    ArchetypePassiveType.TRUE_BOLTS,
+                    trueBolts.flatTrueDamage(),
+                    trueBolts.trueDamagePercent(),
+                    trueBolts.maxHealthTrueDamagePercent(),
+                    trueBolts.internalCooldownMillis(),
+                    trueBolts.monsterTrueDamageCap());
         }
 
-        double flatTrueDamage = 0.0D;
-        double trueDamagePercent = 0.0D;
-        double maxHealthTrueDamagePercent = 0.0D;
-        long internalCooldownMillis = TRUE_EDGE_DEFAULT_INTERNAL_COOLDOWN_MILLIS;
-        double monsterTrueDamageCap = 0.0D;
-        for (RacePassiveDefinition definition : definitions) {
-            if (definition == null) {
-                continue;
-            }
-
-            Map<String, Object> props = definition.properties();
-
-            double flat = Math.max(0.0D, definition.value());
-            double explicitFlat = parsePositiveDouble(props == null ? null : props.get("flat_true_damage"));
-            if (explicitFlat > 0.0D) {
-                flat = explicitFlat;
-            }
-            flatTrueDamage += flat;
-
-            trueDamagePercent += parsePercent(props == null ? null : props.get("true_damage_percent"));
-
-            maxHealthTrueDamagePercent += parsePercent(props == null
-                    ? null
-                    : firstNonNull(
-                            props.get("max_health_true_damage_percent"),
-                            props.get("max_health_true_damage")));
-
-            long cooldownCandidate = parseInternalCooldownMillis(props);
-            if (cooldownCandidate >= 0L) {
-                internalCooldownMillis = cooldownCandidate;
-            }
-
-            double capCandidate = parsePositiveDouble(props == null
-                    ? null
-                    : firstNonNull(
-                            props.get("monster_true_damage_cap"),
-                            props.get("monster_cap"),
-                            props.get("max_true_damage_vs_monsters")));
-            if (capCandidate > 0.0D) {
-                monsterTrueDamageCap = capCandidate;
-            }
+        TrueEdgeSettings trueEdge = TrueEdgeSettings.fromSnapshot(snapshot);
+        if (trueEdge.enabled()) {
+            return new TrueDamageSettings(
+                    ArchetypePassiveType.TRUE_EDGE,
+                    trueEdge.flatTrueDamage(),
+                    trueEdge.trueDamagePercent(),
+                    trueEdge.maxHealthTrueDamagePercent(),
+                    trueEdge.internalCooldownMillis(),
+                    trueEdge.monsterTrueDamageCap());
         }
 
-        if (flatTrueDamage <= 0.0D && trueDamagePercent <= 0.0D && maxHealthTrueDamagePercent <= 0.0D) {
-            return TrueEdgeSettings.disabled();
-        }
-        return new TrueEdgeSettings(
-                flatTrueDamage,
-                trueDamagePercent,
-                maxHealthTrueDamagePercent,
-                Math.max(0L, internalCooldownMillis),
-                monsterTrueDamageCap);
+        return TrueDamageSettings.disabled();
     }
 
     private double resolveTrueEdgeReduction(Ref<EntityStore> targetRef,
@@ -686,61 +671,6 @@ public class PlayerCombatSystem extends DamageEventSystem {
         targetStats.setStatValue(DefaultEntityStatTypes.getHealth(), 0.0f);
     }
 
-    private double parsePositiveDouble(Object raw) {
-        if (raw instanceof Number number) {
-            double value = number.doubleValue();
-            return value > 0.0D ? value : 0.0D;
-        }
-        if (raw instanceof String stringValue) {
-            try {
-                double value = Double.parseDouble(stringValue.trim());
-                return value > 0.0D ? value : 0.0D;
-            } catch (NumberFormatException ignored) {
-            }
-        }
-        return 0.0D;
-    }
-
-    private double parsePercent(Object raw) {
-        double value = parsePositiveDouble(raw);
-        if (value <= 0.0D) {
-            return 0.0D;
-        }
-        return value > 1.0D ? value / 100.0D : value;
-    }
-
-    private long parseInternalCooldownMillis(Map<String, Object> props) {
-        if (props == null || props.isEmpty()) {
-            return -1L;
-        }
-
-        double explicitMillis = parsePositiveDouble(props.get("internal_cooldown_ms"));
-        if (explicitMillis > 0.0D) {
-            return Math.round(explicitMillis);
-        }
-
-        double seconds = parsePositiveDouble(firstNonNull(
-                props.get("internal_cooldown_seconds"),
-                props.get("internal_cooldown")));
-        if (seconds > 0.0D) {
-            return Math.round(seconds * 1000.0D);
-        }
-
-        return -1L;
-    }
-
-    private Object firstNonNull(Object... values) {
-        if (values == null) {
-            return null;
-        }
-        for (Object value : values) {
-            if (value != null) {
-                return value;
-            }
-        }
-        return null;
-    }
-
     private double clampDefenseReduction(double value) {
         if (Double.isNaN(value) || Double.isInfinite(value)) {
             return 0.0D;
@@ -748,14 +678,15 @@ public class PlayerCombatSystem extends DamageEventSystem {
         return Math.max(-1.0D, Math.min(1.0D, value));
     }
 
-    private record TrueEdgeSettings(double flatTrueDamage,
+    private record TrueDamageSettings(ArchetypePassiveType sourceType,
+            double flatTrueDamage,
             double trueDamagePercent,
             double maxHealthTrueDamagePercent,
             long internalCooldownMillis,
             double monsterTrueDamageCap) {
-        private static final TrueEdgeSettings DISABLED = new TrueEdgeSettings(0.0D, 0.0D, 0.0D, 0L, 0.0D);
+        private static final TrueDamageSettings DISABLED = new TrueDamageSettings(null, 0.0D, 0.0D, 0.0D, 0L, 0.0D);
 
-        private static TrueEdgeSettings disabled() {
+        private static TrueDamageSettings disabled() {
             return DISABLED;
         }
 

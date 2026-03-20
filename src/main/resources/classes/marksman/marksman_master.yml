@@ -15,7 +15,7 @@ weapons:
     damage: 1.05
 
 passives:
-  - type: TRUE_EDGE
+  - type: TRUE_BOLTS
     value: 0 # True Bolts uses max-health true damage instead of flat true damage
     max_health_true_damage_percent: 0.075 # +7.5% of target max health as true damage
     internal_cooldown_seconds: 4

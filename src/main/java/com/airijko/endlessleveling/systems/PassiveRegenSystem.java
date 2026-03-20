@@ -132,6 +132,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
                         applyAdrenalineStamina(playerRef, statMap, deltaSeconds, archetypeSnapshot, runtimeState);
                         applyStaminaGainBonus(playerData, statMap, archetypeSnapshot, runtimeState);
                         expireSwiftnessIfNeeded(playerRef, ref, commandBuffer, playerData, runtimeState);
+                        expireBladeDanceIfNeeded(ref, commandBuffer, playerData, runtimeState);
                         applySignatureGainBonus(playerData, statMap, archetypeSnapshot, runtimeState);
                         applyHealingBonus(statMap, archetypeSnapshot, runtimeState);
                         applyPartyMendingAura(playerData,
@@ -181,6 +182,25 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
         if (System.currentTimeMillis() > activeUntil) {
             runtimeState.clearSwiftness();
             sendSwiftnessExpiredMessage(playerRef);
+            refreshMovementSpeed(ref, commandBuffer, playerData);
+        }
+    }
+
+    private void expireBladeDanceIfNeeded(Ref<EntityStore> ref,
+            CommandBuffer<EntityStore> commandBuffer,
+            PlayerData playerData,
+            PassiveRuntimeState runtimeState) {
+        if (runtimeState == null || runtimeState.getBladeDanceStacks() <= 0) {
+            return;
+        }
+        long activeUntil = runtimeState.getBladeDanceActiveUntil();
+        if (activeUntil <= 0L) {
+            runtimeState.clearBladeDance();
+            refreshMovementSpeed(ref, commandBuffer, playerData);
+            return;
+        }
+        if (System.currentTimeMillis() > activeUntil) {
+            runtimeState.clearBladeDance();
             refreshMovementSpeed(ref, commandBuffer, playerData);
         }
     }

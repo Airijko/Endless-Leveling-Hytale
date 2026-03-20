@@ -20,7 +20,8 @@ passives:
   - type: BERZERKER
     value: 0.297
     threshold: 0.4
-  - type: RETALIATION
+  - type: ARCANE_DOMINANCE
+    display_name: "Arcane Dominance"
     value: 0.17
     window: 4
     cooldown: 30

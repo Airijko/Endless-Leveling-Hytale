@@ -40,7 +40,7 @@ passives:
     max_stacks: 6 # Can stack up to 6 times for a total of +156% movement speed
   - type: SPECIAL_CHARGE_BONUS
     value: 2.0 # +200% faster special charge
-  - type: EXECUTIONER
+  - type: FINAL_INCANTATION
     value: 1.7 # +170% executioner scaling descriptor
     flat_bonus_damage: 16 # Flat bonus damage when threshold condition is met
     threshold: 20 # Only applies to targets below 20% HP

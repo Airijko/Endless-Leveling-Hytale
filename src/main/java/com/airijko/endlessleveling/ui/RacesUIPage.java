@@ -1100,6 +1100,15 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private String buildPassiveLabel(@Nonnull RacePassiveDefinition passive) {
+        Map<String, Object> props = passive.properties() == null ? Map.of() : passive.properties();
+        String customName = getStringProp(props, "display_name");
+        if (customName == null) {
+            customName = getStringProp(props, "name");
+        }
+        if (customName != null && !customName.isBlank()) {
+            return customName;
+        }
+
         ArchetypePassiveType type = passive.type();
         if (type == null) {
             return tr("ui.races.passive.default_name", "Passive");
@@ -1248,7 +1257,10 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     formatThresholdDetail(threshold, tr("ui.races.passive.scope.hp", "HP")),
                     formatDurationDetail(duration),
                     formatCooldownDetail(cooldown));
-            case FIRST_STRIKE -> appendDetails(
+                case TRUE_BOLTS -> appendDetails(
+                    tr("ui.races.passive.desc.first_strike", "{0} opener", formatPercentValue(value)),
+                    formatCooldownDetail(cooldown));
+                case FOCUSED_STRIKE -> appendDetails(
                     tr("ui.races.passive.desc.first_strike", "{0} opener", formatPercentValue(value)),
                     formatCooldownDetail(cooldown));
             case INNATE_ATTRIBUTE_GAIN -> formatInnatePreview(passive, playerData);
@@ -1264,15 +1276,27 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     tr("ui.races.passive.desc.retaliation", "{0} reflect", formatPercentValue(value)),
                     formatWindowDetail(window),
                     formatCooldownDetail(cooldown));
+                case PRIMAL_DOMINANCE -> appendDetails(
+                    tr("ui.races.passive.desc.retaliation", "{0} reflect", formatPercentValue(value)),
+                    formatWindowDetail(window),
+                    formatCooldownDetail(cooldown));
+                case ARCANE_DOMINANCE -> appendDetails(
+                    tr("ui.races.passive.desc.retaliation", "{0} reflect", formatPercentValue(value)),
+                    formatWindowDetail(window),
+                    formatCooldownDetail(cooldown));
             case ABSORB -> appendDetails(
                     tr("ui.races.passive.desc.absorb", "{0} dmg reduction", formatPercentValue(value)),
                     formatCooldownDetail(cooldown));
-            case EXECUTIONER -> appendDetails(
+            case FINAL_INCANTATION -> appendDetails(
                     tr("ui.races.passive.desc.executioner", "Final Incantation: +{0} bonus damage",
                         formatPercentValue(value)),
                     formatThresholdDetail(threshold, tr("ui.races.passive.scope.target_hp", "target HP")),
                     formatCooldownDetail(cooldown));
             case SWIFTNESS -> appendDetails(
+                    tr("ui.races.passive.desc.swiftness", "{0} speed", formatPercentValue(value)),
+                    formatDurationDetail(duration),
+                    formatStacksDetail(stacks));
+                case BLADE_DANCE -> appendDetails(
                     tr("ui.races.passive.desc.swiftness", "{0} speed", formatPercentValue(value)),
                     formatDurationDetail(duration),
                     formatStacksDetail(stacks));

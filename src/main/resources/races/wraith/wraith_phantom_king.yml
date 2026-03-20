@@ -48,7 +48,7 @@ passives:
     threshold: 0.25 # Trigger below 25% stamina
     duration: 3 # Seconds to spread stamina recovery over
     cooldown: 30 # Seconds between adrenaline bursts
-  - type: EXECUTIONER
+  - type: FINAL_INCANTATION
     value: 2.9 # +290% executioner scaling descriptor
     flat_bonus_damage: 42 # Flat bonus damage when threshold condition is met
     threshold: 25 # Only applies to targets below 25% HP

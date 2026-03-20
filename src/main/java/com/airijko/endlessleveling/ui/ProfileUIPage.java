@@ -478,7 +478,9 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     continue;
                 }
                 AggregatedPassiveProps props = aggregatePassiveProperties(snapshot.getDefinitions(type));
-                String label = toDisplay(type.name());
+                String label = props.displayName() != null && !props.displayName().isBlank()
+                        ? props.displayName()
+                        : toDisplay(type.name());
                 String valueText = formatAggregatedPassiveValue(type, totalValue, props);
                 passiveEntries.add(new PassiveEntry(label, valueText));
             }
@@ -677,7 +679,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
     private AggregatedPassiveProps aggregatePassiveProperties(@Nonnull List<RacePassiveDefinition> definitions) {
         if (definitions.isEmpty()) {
-            return new AggregatedPassiveProps(null, null, null, null, null, null, null);
+            return new AggregatedPassiveProps(null, null, null, null, null, null, null, null);
         }
         Double threshold = averageProperty(definitions, "threshold");
         Double duration = averageProperty(definitions, "duration");
@@ -686,7 +688,18 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         Double stacks = averageProperty(definitions, "max_stacks");
         Double slowPercent = averageProperty(definitions, "slow_percent");
         String scalingStat = firstStringProperty(definitions, "scaling_stat");
-        return new AggregatedPassiveProps(threshold, duration, cooldown, window, stacks, slowPercent, scalingStat);
+        String displayName = firstStringProperty(definitions, "display_name");
+        if (displayName == null || displayName.isBlank()) {
+            displayName = firstStringProperty(definitions, "name");
+        }
+        return new AggregatedPassiveProps(threshold,
+                duration,
+                cooldown,
+                window,
+                stacks,
+                slowPercent,
+                scalingStat,
+                displayName);
     }
 
     private Double averageProperty(@Nonnull List<RacePassiveDefinition> definitions, @Nonnull String key) {
@@ -995,6 +1008,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         private final Double stacks;
         private final Double slowPercent;
         private final String scalingStat;
+        private final String displayName;
 
         private AggregatedPassiveProps(Double threshold,
                 Double duration,
@@ -1002,7 +1016,8 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 Double window,
                 Double stacks,
                 Double slowPercent,
-                String scalingStat) {
+                String scalingStat,
+                String displayName) {
             this.threshold = threshold;
             this.duration = duration;
             this.cooldown = cooldown;
@@ -1010,6 +1025,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             this.stacks = stacks;
             this.slowPercent = slowPercent;
             this.scalingStat = scalingStat;
+            this.displayName = displayName;
         }
 
         private Double threshold() {
@@ -1038,6 +1054,10 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         private String scalingStat() {
             return scalingStat;
+        }
+
+        private String displayName() {
+            return displayName;
         }
     }
 
@@ -1082,7 +1102,10 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     formatThresholdDetail(props.threshold(), tr("ui.races.passive.scope.hp", "HP")),
                     formatDurationDetail(props.duration()),
                     formatCooldownDetail(props.cooldown()));
-            case FIRST_STRIKE -> appendDetails(
+                case TRUE_BOLTS -> appendDetails(
+                    tr("ui.races.passive.desc.first_strike", "{0} opener", formatPercentValue(value)),
+                    formatCooldownDetail(props.cooldown()));
+                case FOCUSED_STRIKE -> appendDetails(
                     tr("ui.races.passive.desc.first_strike", "{0} opener", formatPercentValue(value)),
                     formatCooldownDetail(props.cooldown()));
             case ADRENALINE -> appendDetails(
@@ -1097,12 +1120,24 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     tr("ui.races.passive.desc.retaliation", "{0} reflect", formatPercentValue(value)),
                     formatWindowDetail(props.window()),
                     formatCooldownDetail(props.cooldown()));
-            case EXECUTIONER -> appendDetails(
+                case PRIMAL_DOMINANCE -> appendDetails(
+                    tr("ui.races.passive.desc.retaliation", "{0} reflect", formatPercentValue(value)),
+                    formatWindowDetail(props.window()),
+                    formatCooldownDetail(props.cooldown()));
+                case ARCANE_DOMINANCE -> appendDetails(
+                    tr("ui.races.passive.desc.retaliation", "{0} reflect", formatPercentValue(value)),
+                    formatWindowDetail(props.window()),
+                    formatCooldownDetail(props.cooldown()));
+            case FINAL_INCANTATION -> appendDetails(
                     tr("ui.races.passive.desc.executioner", "Final Incantation: +{0} bonus damage",
                         formatPercentValue(value)),
                     formatThresholdDetail(props.threshold(), tr("ui.races.passive.scope.target_hp", "target HP")),
                     formatCooldownDetail(props.cooldown()));
             case SWIFTNESS -> appendDetails(
+                    tr("ui.races.passive.desc.swiftness", "{0} speed", formatPercentValue(value)),
+                    formatDurationDetail(props.duration()),
+                    formatStacksDetail(props.stacks()));
+                case BLADE_DANCE -> appendDetails(
                     tr("ui.races.passive.desc.swiftness", "{0} speed", formatPercentValue(value)),
                     formatDurationDetail(props.duration()),
                     formatStacksDetail(props.stacks()));

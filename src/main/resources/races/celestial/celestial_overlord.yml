@@ -36,7 +36,7 @@ attributes:
 passives:
   - type: SPECIAL_CHARGE_BONUS
     value: 1.4 # +140% faster special charge
-  - type: EXECUTIONER
+  - type: FINAL_INCANTATION
     value: 2.2 # +220% executioner scaling descriptor
     flat_bonus_damage: 30 # Flat bonus damage when threshold condition is met
     threshold: 22 # Only applies to targets below 22% HP

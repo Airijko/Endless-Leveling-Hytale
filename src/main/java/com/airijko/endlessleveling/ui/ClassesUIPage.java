@@ -1000,6 +1000,15 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private String buildPassiveLabel(RacePassiveDefinition passive) {
+        Map<String, Object> props = passive.properties() == null ? Map.of() : passive.properties();
+        String customName = getStringProp(props, "display_name");
+        if (customName == null) {
+            customName = getStringProp(props, "name");
+        }
+        if (customName != null && !customName.isBlank()) {
+            return customName;
+        }
+
         ArchetypePassiveType type = passive.type();
         if (type == null) {
             return tr("ui.races.passive.default_name", "Passive");
@@ -1031,6 +1040,10 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             flatTrueDamage = value;
         }
         Double trueDamagePercent = getDoubleProp(props, "true_damage_percent");
+        Double maxHealthTrueDamage = getDoubleProp(props, "max_health_true_damage_percent");
+        if (maxHealthTrueDamage == null) {
+            maxHealthTrueDamage = getDoubleProp(props, "max_health_true_damage");
+        }
         Double baseSummonAmount = getDoubleProp(props, "base_summon_amount");
         if (baseSummonAmount == null) {
             baseSummonAmount = getDoubleProp(props, "base_summons");
@@ -1092,7 +1105,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 case ARCANE_WISDOM -> appendDetails(
                     tr("ui.races.passive.desc.arcane_wisdom", "{0} max mana", formatPercentValue(value)),
                     formatThresholdDetail(threshold, tr("ui.races.passive.scope.mana", "mana")));
-            case TRUE_EDGE -> appendLines(
+                case TRUE_EDGE -> appendLines(
                     tr("ui.classes.passive.pretty.true_edge.title", "Defense-piercing strikes"),
                     flatTrueDamage == null || flatTrueDamage <= 0.0D
                             ? null
@@ -1106,6 +1119,25 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                     formatPercentValue(trueDamagePercent)),
                     tr("ui.classes.passive.pretty.true_edge.note",
                             "- Applies as direct health loss after the hit"));
+                            case TRUE_BOLTS -> appendLines(
+                                tr("ui.classes.passive.pretty.true_bolts.title", "True Bolts"),
+                                flatTrueDamage == null || flatTrueDamage <= 0.0D
+                                    ? null
+                                    : tr("ui.classes.passive.pretty.true_edge.flat",
+                                        "- Flat true damage: {0} per hit",
+                                        formatSigned(flatTrueDamage)),
+                                trueDamagePercent == null || trueDamagePercent <= 0.0D
+                                    ? null
+                                    : tr("ui.classes.passive.pretty.true_edge.ratio",
+                                        "- Damage conversion: {0} of dealt damage as true damage",
+                                        formatPercentValue(trueDamagePercent)),
+                                maxHealthTrueDamage == null || maxHealthTrueDamage <= 0.0D
+                                    ? null
+                                    : tr("ui.classes.passive.pretty.true_bolts.max_health",
+                                        "- Bonus true damage: {0} of target max health",
+                                        formatPercentValue(maxHealthTrueDamage)),
+                                tr("ui.classes.passive.pretty.true_edge.note",
+                                    "- Applies as direct health loss after the hit"));
             case ARMY_OF_THE_DEAD -> appendLines(
                     tr("ui.classes.passive.pretty.army_of_the_dead.title", "Undead summon command"),
                     baseSummonAmount == null
@@ -1207,7 +1239,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     formatThresholdDetail(threshold, tr("ui.races.passive.scope.hp", "HP")),
                     formatDurationDetail(duration),
                     formatCooldownDetail(cooldown));
-            case FIRST_STRIKE -> appendDetails(
+                case FOCUSED_STRIKE -> appendDetails(
                     tr("ui.races.passive.desc.first_strike", "{0} opener", formatPercentValue(value)),
                     formatCooldownDetail(cooldown));
             case INNATE_ATTRIBUTE_GAIN -> formatInnatePreview(passive, playerData);
@@ -1223,15 +1255,27 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     tr("ui.races.passive.desc.retaliation", "{0} reflect", formatPercentValue(value)),
                     formatWindowDetail(window),
                     formatCooldownDetail(cooldown));
+                case PRIMAL_DOMINANCE -> appendDetails(
+                    tr("ui.races.passive.desc.retaliation", "{0} reflect", formatPercentValue(value)),
+                    formatWindowDetail(window),
+                    formatCooldownDetail(cooldown));
+                case ARCANE_DOMINANCE -> appendDetails(
+                    tr("ui.races.passive.desc.retaliation", "{0} reflect", formatPercentValue(value)),
+                    formatWindowDetail(window),
+                    formatCooldownDetail(cooldown));
             case ABSORB -> appendDetails(
                     tr("ui.races.passive.desc.absorb", "{0} dmg reduction", formatPercentValue(value)),
                     formatCooldownDetail(cooldown));
-            case EXECUTIONER -> appendDetails(
+            case FINAL_INCANTATION -> appendDetails(
                     tr("ui.races.passive.desc.executioner", "Final Incantation: +{0} bonus damage",
                         formatPercentValue(value)),
                     formatThresholdDetail(threshold, tr("ui.races.passive.scope.target_hp", "target HP")),
                     formatCooldownDetail(cooldown));
             case SWIFTNESS -> appendDetails(
+                    tr("ui.races.passive.desc.swiftness", "{0} speed", formatPercentValue(value)),
+                    formatDurationDetail(duration),
+                    formatStacksDetail(stacks));
+                case BLADE_DANCE -> appendDetails(
                     tr("ui.races.passive.desc.swiftness", "{0} speed", formatPercentValue(value)),
                     formatDurationDetail(duration),
                     formatStacksDetail(stacks));

@@ -15,7 +15,8 @@ weapons:
     damage: 1.05
 
 passives:
-  - type: SWIFTNESS
+  - type: BLADE_DANCE
+    display_name: "Blade Dance"
     value: 0.10
     duration: 5
     max_stacks: 5

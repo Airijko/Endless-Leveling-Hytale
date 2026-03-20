@@ -15,7 +15,8 @@ weapons:
     damage: 1.365
 
 passives:
-  - type: RETALIATION
+  - type: PRIMAL_DOMINANCE
+    display_name: "Primal Dominance"
     value: 0.325 # Reflect 25% of damage taken in the window
     window: 5 # Collect damage for 5 seconds before retaliating
     cooldown: 25 # Seconds between retaliations

@@ -19,10 +19,7 @@ public record FirstStrikeSettings(boolean enabled,
     double trueDamageConversionPercent,
     double hasteBonusPercent,
     boolean normalBonusDamage,
-    boolean suppressOnHit,
-    boolean allowAugmentStacking,
-    boolean resetOnKill,
-    boolean requireOutOfCombatCooldown) {
+    boolean resetOnKill) {
 
     private static final double DEFAULT_COOLDOWN_SECONDS = 30.0D;
     private static final double DEFAULT_FLAT_BONUS_DAMAGE = 25.0D;
@@ -31,22 +28,19 @@ public record FirstStrikeSettings(boolean enabled,
         if (snapshot == null) {
             return disabled();
         }
-        List<RacePassiveDefinition> definitions = snapshot.getDefinitions(ArchetypePassiveType.FIRST_STRIKE);
+        List<RacePassiveDefinition> definitions = snapshot.getDefinitions(ArchetypePassiveType.FOCUSED_STRIKE);
         if (definitions.isEmpty()) {
             return disabled();
         }
 
-        double bonusPercent = Math.max(0.0D, snapshot.getValue(ArchetypePassiveType.FIRST_STRIKE));
+        double bonusPercent = Math.max(0.0D, snapshot.getValue(ArchetypePassiveType.FOCUSED_STRIKE));
         double cooldownSum = 0.0D;
         int cooldownSources = 0;
         double resolvedFlatBonusDamage = 0.0D;
         double resolvedTrueDamageFlatBonus = 0.0D;
         double resolvedTrueDamageConversionPercent = 0.0D;
         double resolvedHasteBonusPercent = 0.0D;
-        boolean suppressOnHit = true;
-        boolean allowAugmentStacking = false;
         boolean resetOnKill = false;
-        boolean requireOutOfCombatCooldown = false;
         boolean normalBonusDamage = true;
 
         for (RacePassiveDefinition definition : definitions) {
@@ -57,7 +51,7 @@ public record FirstStrikeSettings(boolean enabled,
 
             double flatCandidate = parsePositiveDouble(props != null ? props.get("flat_bonus_damage") : null);
             if (flatCandidate > 0) {
-                // FIRST_STRIKE stacks as UNIQUE, so keep the highest configured flat bonus.
+                // Focused Strike stacks as UNIQUE, so keep the highest configured flat bonus.
                 resolvedFlatBonusDamage = Math.max(resolvedFlatBonusDamage, flatCandidate);
             }
 
@@ -81,18 +75,10 @@ public record FirstStrikeSettings(boolean enabled,
                 resolvedHasteBonusPercent = Math.max(resolvedHasteBonusPercent, hasteCandidate * 100.0D);
             }
 
-            suppressOnHit &= parseBoolean(props != null ? props.get("suppress_on_hit") : null, true);
             normalBonusDamage &= parseBoolean(props != null
                     ? firstNonNull(props.get("normal_bonus_damage"), props.get("enable_normal_bonus_damage"))
                     : null, true);
-            allowAugmentStacking |= parseBoolean(props != null
-                    ? firstNonNull(props.get("allow_augment_stacking"), props.get("stack_with_first_strike_augment"))
-                    : null, false);
             resetOnKill |= parseBoolean(props != null ? props.get("reset_on_kill") : null, false);
-            requireOutOfCombatCooldown |= parseBoolean(props != null
-                    ? firstNonNull(props.get("out_of_combat_cooldown"), props.get("require_out_of_combat"))
-                    : null,
-                    false);
 
             double candidate = parsePositiveDouble(props != null ? props.get("cooldown") : null);
             if (candidate > 0) {
@@ -126,10 +112,7 @@ public record FirstStrikeSettings(boolean enabled,
                 resolvedTrueDamageConversionPercent,
                 resolvedHasteBonusPercent,
                 normalBonusDamage,
-                suppressOnHit,
-                allowAugmentStacking,
-                resetOnKill,
-                requireOutOfCombatCooldown);
+                resetOnKill);
     }
 
     public static FirstStrikeSettings disabled() {
@@ -141,9 +124,6 @@ public record FirstStrikeSettings(boolean enabled,
             0.0D,
             0.0D,
             true,
-            true,
-            false,
-            false,
             false);
     }
 

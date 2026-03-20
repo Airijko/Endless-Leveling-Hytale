@@ -49,7 +49,12 @@ public final class PassiveDefinitionParser {
             return DamageLayer.BONUS;
         }
         return switch (type) {
-            case FIRST_STRIKE, BERZERKER, EXECUTIONER, RETALIATION -> DamageLayer.BONUS;
+            case FOCUSED_STRIKE,
+                    BERZERKER,
+                    FINAL_INCANTATION,
+                    RETALIATION,
+                    PRIMAL_DOMINANCE,
+                    ARCANE_DOMINANCE -> DamageLayer.BONUS;
             default -> DamageLayer.BONUS;
         };
     }

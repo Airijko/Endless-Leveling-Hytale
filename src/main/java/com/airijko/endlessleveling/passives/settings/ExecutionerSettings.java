@@ -32,7 +32,7 @@ public record ExecutionerSettings(List<Entry> entries,
             return new ExecutionerSettings(List.of(), DEFAULT_COOLDOWN, DEFAULT_COOLDOWN_REDUCTION_ON_KILL);
         }
 
-        List<RacePassiveDefinition> definitions = snapshot.getDefinitions(ArchetypePassiveType.EXECUTIONER);
+        List<RacePassiveDefinition> definitions = snapshot.getDefinitions(ArchetypePassiveType.FINAL_INCANTATION);
         if (definitions.isEmpty()) {
             return new ExecutionerSettings(List.of(), DEFAULT_COOLDOWN, DEFAULT_COOLDOWN_REDUCTION_ON_KILL);
         }

@@ -398,6 +398,8 @@ public class PassiveManager {
         private boolean adrenalineReadyNotified = true;
         private boolean executionerReadyNotified = true;
         private boolean retaliationReadyNotified = true;
+        private boolean primalDominanceReadyNotified = true;
+        private boolean arcaneDominanceReadyNotified = true;
         private double secondWindHealPerSecond;
         private double secondWindHealRemaining;
         private long adrenalineCooldownExpiresAt;
@@ -407,11 +409,20 @@ public class PassiveManager {
         private long retaliationCooldownExpiresAt;
         private long retaliationWindowExpiresAt;
         private double retaliationDamageStored;
+        private long primalDominanceCooldownExpiresAt;
+        private long primalDominanceWindowExpiresAt;
+        private double primalDominanceDamageStored;
+        private long arcaneDominanceCooldownExpiresAt;
+        private long arcaneDominanceWindowExpiresAt;
+        private double arcaneDominanceDamageStored;
         private long absorbCooldownExpiresAt;
         private long executionerCooldownExpiresAt;
         private long trueEdgeCooldownExpiresAt;
+        private long trueBoltsCooldownExpiresAt;
         private long swiftnessActiveUntil;
         private int swiftnessStacks;
+        private long bladeDanceActiveUntil;
+        private int bladeDanceStacks;
         private long lastMobKillMillis;
         private long partyMendingLastPulseMillis;
         private boolean healingAuraPaused;
@@ -566,6 +577,22 @@ public class PassiveManager {
             this.retaliationReadyNotified = retaliationReadyNotified;
         }
 
+        public boolean isPrimalDominanceReadyNotified() {
+            return primalDominanceReadyNotified;
+        }
+
+        public void setPrimalDominanceReadyNotified(boolean primalDominanceReadyNotified) {
+            this.primalDominanceReadyNotified = primalDominanceReadyNotified;
+        }
+
+        public boolean isArcaneDominanceReadyNotified() {
+            return arcaneDominanceReadyNotified;
+        }
+
+        public void setArcaneDominanceReadyNotified(boolean arcaneDominanceReadyNotified) {
+            this.arcaneDominanceReadyNotified = arcaneDominanceReadyNotified;
+        }
+
         public double getSecondWindHealPerSecond() {
             return secondWindHealPerSecond;
         }
@@ -592,6 +619,8 @@ public class PassiveManager {
             this.adrenalineReadyNotified = true;
             this.executionerReadyNotified = true;
             this.retaliationReadyNotified = true;
+            this.primalDominanceReadyNotified = true;
+            this.arcaneDominanceReadyNotified = true;
             this.secondWindHealPerSecond = 0.0D;
             this.secondWindHealRemaining = 0.0D;
             this.adrenalineCooldownExpiresAt = 0L;
@@ -601,11 +630,20 @@ public class PassiveManager {
             this.retaliationCooldownExpiresAt = 0L;
             this.retaliationWindowExpiresAt = 0L;
             this.retaliationDamageStored = 0.0D;
+            this.primalDominanceCooldownExpiresAt = 0L;
+            this.primalDominanceWindowExpiresAt = 0L;
+            this.primalDominanceDamageStored = 0.0D;
+            this.arcaneDominanceCooldownExpiresAt = 0L;
+            this.arcaneDominanceWindowExpiresAt = 0L;
+            this.arcaneDominanceDamageStored = 0.0D;
             this.absorbCooldownExpiresAt = 0L;
             this.executionerCooldownExpiresAt = 0L;
             this.trueEdgeCooldownExpiresAt = 0L;
+            this.trueBoltsCooldownExpiresAt = 0L;
             this.swiftnessActiveUntil = 0L;
             this.swiftnessStacks = 0;
+            this.bladeDanceActiveUntil = 0L;
+            this.bladeDanceStacks = 0;
             this.lastHealingSample = Float.NaN;
             this.lastStaminaSample = Float.NaN;
             this.lastManaRatio = Float.NaN;
@@ -681,6 +719,54 @@ public class PassiveManager {
             this.retaliationDamageStored = Math.max(0.0D, retaliationDamageStored);
         }
 
+        public long getPrimalDominanceCooldownExpiresAt() {
+            return primalDominanceCooldownExpiresAt;
+        }
+
+        public void setPrimalDominanceCooldownExpiresAt(long primalDominanceCooldownExpiresAt) {
+            this.primalDominanceCooldownExpiresAt = primalDominanceCooldownExpiresAt;
+        }
+
+        public long getPrimalDominanceWindowExpiresAt() {
+            return primalDominanceWindowExpiresAt;
+        }
+
+        public void setPrimalDominanceWindowExpiresAt(long primalDominanceWindowExpiresAt) {
+            this.primalDominanceWindowExpiresAt = primalDominanceWindowExpiresAt;
+        }
+
+        public double getPrimalDominanceDamageStored() {
+            return primalDominanceDamageStored;
+        }
+
+        public void setPrimalDominanceDamageStored(double primalDominanceDamageStored) {
+            this.primalDominanceDamageStored = Math.max(0.0D, primalDominanceDamageStored);
+        }
+
+        public long getArcaneDominanceCooldownExpiresAt() {
+            return arcaneDominanceCooldownExpiresAt;
+        }
+
+        public void setArcaneDominanceCooldownExpiresAt(long arcaneDominanceCooldownExpiresAt) {
+            this.arcaneDominanceCooldownExpiresAt = arcaneDominanceCooldownExpiresAt;
+        }
+
+        public long getArcaneDominanceWindowExpiresAt() {
+            return arcaneDominanceWindowExpiresAt;
+        }
+
+        public void setArcaneDominanceWindowExpiresAt(long arcaneDominanceWindowExpiresAt) {
+            this.arcaneDominanceWindowExpiresAt = arcaneDominanceWindowExpiresAt;
+        }
+
+        public double getArcaneDominanceDamageStored() {
+            return arcaneDominanceDamageStored;
+        }
+
+        public void setArcaneDominanceDamageStored(double arcaneDominanceDamageStored) {
+            this.arcaneDominanceDamageStored = Math.max(0.0D, arcaneDominanceDamageStored);
+        }
+
         public long getAbsorbCooldownExpiresAt() {
             return absorbCooldownExpiresAt;
         }
@@ -703,6 +789,14 @@ public class PassiveManager {
 
         public void setTrueEdgeCooldownExpiresAt(long trueEdgeCooldownExpiresAt) {
             this.trueEdgeCooldownExpiresAt = trueEdgeCooldownExpiresAt;
+        }
+
+        public long getTrueBoltsCooldownExpiresAt() {
+            return trueBoltsCooldownExpiresAt;
+        }
+
+        public void setTrueBoltsCooldownExpiresAt(long trueBoltsCooldownExpiresAt) {
+            this.trueBoltsCooldownExpiresAt = trueBoltsCooldownExpiresAt;
         }
 
         public long getSwiftnessActiveUntil() {
@@ -730,6 +824,33 @@ public class PassiveManager {
         public void clearSwiftness() {
             this.swiftnessActiveUntil = 0L;
             this.swiftnessStacks = 0;
+        }
+
+        public long getBladeDanceActiveUntil() {
+            return bladeDanceActiveUntil;
+        }
+
+        public void setBladeDanceActiveUntil(long bladeDanceActiveUntil) {
+            this.bladeDanceActiveUntil = bladeDanceActiveUntil;
+            if (bladeDanceActiveUntil <= 0L) {
+                this.bladeDanceStacks = 0;
+            }
+        }
+
+        public int getBladeDanceStacks() {
+            return bladeDanceStacks;
+        }
+
+        public void setBladeDanceStacks(int bladeDanceStacks) {
+            this.bladeDanceStacks = Math.max(0, bladeDanceStacks);
+            if (this.bladeDanceStacks == 0) {
+                this.bladeDanceActiveUntil = 0L;
+            }
+        }
+
+        public void clearBladeDance() {
+            this.bladeDanceActiveUntil = 0L;
+            this.bladeDanceStacks = 0;
         }
 
         public long getLastMobKillMillis() {

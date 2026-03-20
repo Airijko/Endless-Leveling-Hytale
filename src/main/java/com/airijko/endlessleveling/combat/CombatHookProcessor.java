@@ -3,7 +3,6 @@ package com.airijko.endlessleveling.combat;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentDispatch;
 import com.airijko.endlessleveling.augments.AugmentExecutor;
-import com.airijko.endlessleveling.augments.types.FirstStrikeAugment;
 import com.airijko.endlessleveling.classes.ClassWeaponResolver;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
@@ -19,6 +18,7 @@ import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.passives.type.AbsorbPassive;
+import com.airijko.endlessleveling.passives.type.ArcaneDominancePassive;
 import com.airijko.endlessleveling.passives.type.ArmyOfTheDeadPassive;
 import com.airijko.endlessleveling.passives.type.BerzerkerPassive;
 import com.airijko.endlessleveling.passives.type.ExecutionerPassive;
@@ -26,11 +26,13 @@ import com.airijko.endlessleveling.passives.type.FirstStrikePassive;
 import com.airijko.endlessleveling.passives.type.HealingTouchPassive;
 import com.airijko.endlessleveling.passives.type.PartyBuffingAuraPassive;
 import com.airijko.endlessleveling.passives.type.PartyShieldingAuraPassive;
+import com.airijko.endlessleveling.passives.type.PrimalDominancePassive;
 import com.airijko.endlessleveling.passives.type.RavenousStrikePassive;
 import com.airijko.endlessleveling.passives.type.RetaliationPassive;
 import com.airijko.endlessleveling.passives.type.SecondWindPassive;
 import com.airijko.endlessleveling.passives.util.PassiveContributionBlueprint;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
+import com.airijko.endlessleveling.passives.settings.BladeDanceSettings;
 import com.airijko.endlessleveling.passives.settings.SwiftnessSettings;
 import com.airijko.endlessleveling.util.ChatMessageTemplate;
 import com.airijko.endlessleveling.util.EntityRefUtil;
@@ -108,11 +110,11 @@ public final class CombatHookProcessor {
         BerzerkerPassive berzerkerPassive = BerzerkerPassive.fromSnapshot(archetypeSnapshot);
         ExecutionerPassive executionerPassive = ExecutionerPassive.fromSnapshot(archetypeSnapshot);
         RetaliationPassive retaliationPassive = RetaliationPassive.fromSnapshot(archetypeSnapshot);
+        PrimalDominancePassive primalDominancePassive = PrimalDominancePassive.fromSnapshot(archetypeSnapshot);
+        ArcaneDominancePassive arcaneDominancePassive = ArcaneDominancePassive.fromSnapshot(archetypeSnapshot);
         SwiftnessSettings swiftnessSettings = SwiftnessSettings.fromSnapshot(archetypeSnapshot);
+        BladeDanceSettings bladeDanceSettings = BladeDanceSettings.fromSnapshot(archetypeSnapshot);
         HealingTouchPassive healingTouchPassive = HealingTouchPassive.fromSnapshot(archetypeSnapshot);
-
-        boolean firstStrikeAugmentSelected = hasSelectedAugment(playerData, FirstStrikeAugment.ID);
-        boolean firstStrikeStacksWithAugment = firstStrikePassive.allowAugmentStacking();
 
         String weaponCategoryKey = ClassWeaponResolver.resolveCategoryKey(ctx.weapon());
         ClassWeaponType weaponType = ClassWeaponResolver.resolve(ctx.weapon());
@@ -133,20 +135,15 @@ public final class CombatHookProcessor {
         float prospectiveDamage = critDamage;
         double passiveTrueDamageBonus = 0.0D;
 
-        if (runtimeState != null
-            && firstStrikePassive.enabled()
-            && (!firstStrikeAugmentSelected || firstStrikeStacksWithAugment)) {
-            boolean outOfCombatReady = passiveManager == null
-                || passiveManager.isOutOfCombat(playerData.getUuid(), firstStrikePassive.cooldownMillis());
+        if (runtimeState != null && firstStrikePassive.enabled()) {
             FirstStrikePassive.TriggerResult firstStrikeResult = firstStrikePassive.apply(runtimeState,
                     ctx.attackerPlayerRef(),
                     critDamage,
-                outOfCombatReady,
                     this::sendPassiveMessage);
             float bonusDamage = firstStrikeResult.bonusDamage();
             if (bonusDamage > 0f) {
                 registerLayerBonus(layerBuffer,
-                        resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.FIRST_STRIKE),
+                        resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.FOCUSED_STRIKE),
                         bonusDamage,
                         critDamage);
                 prospectiveDamage += bonusDamage;
@@ -176,6 +173,28 @@ public final class CombatHookProcessor {
                         critDamage);
                 prospectiveDamage += retaliationBonus;
             }
+
+            float primalDominanceBonus = primalDominancePassive.consumeBonus(runtimeState,
+                    ctx.attackerPlayerRef(),
+                    this::sendPassiveMessage);
+            if (primalDominanceBonus > 0f) {
+                registerLayerBonus(layerBuffer,
+                        resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.PRIMAL_DOMINANCE),
+                        primalDominanceBonus,
+                        critDamage);
+                prospectiveDamage += primalDominanceBonus;
+            }
+
+            float arcaneDominanceBonus = arcaneDominancePassive.consumeBonus(runtimeState,
+                    ctx.attackerPlayerRef(),
+                    this::sendPassiveMessage);
+            if (arcaneDominanceBonus > 0f) {
+                registerLayerBonus(layerBuffer,
+                        resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.ARCANE_DOMINANCE),
+                        arcaneDominanceBonus,
+                        critDamage);
+                prospectiveDamage += arcaneDominanceBonus;
+            }
         }
 
         float executionerBonus = executionerPassive.apply(runtimeState,
@@ -186,7 +205,7 @@ public final class CombatHookProcessor {
             this::sendPassiveMessage);
         if (executionerBonus > 0f) {
             registerLayerBonus(layerBuffer,
-                    resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.EXECUTIONER),
+                    resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.FINAL_INCANTATION),
                     executionerBonus,
                     critDamage);
             prospectiveDamage += executionerBonus;
@@ -203,6 +222,14 @@ public final class CombatHookProcessor {
             double swiftnessDamageMultiplier = swiftnessSettings.damageMultiplierForStacks(swiftnessStacks);
             if (swiftnessDamageMultiplier > 0.0D && Math.abs(swiftnessDamageMultiplier - 1.0D) > 0.0001D) {
                 finalDamage = (float) (finalDamage * swiftnessDamageMultiplier);
+            }
+        }
+
+        int bladeDanceStacks = resolveActiveBladeDanceStacks(runtimeState);
+        if (bladeDanceSettings.enabled() && bladeDanceStacks > 0) {
+            double bladeDanceDamageMultiplier = bladeDanceSettings.damageMultiplierForStacks(bladeDanceStacks);
+            if (bladeDanceDamageMultiplier > 0.0D && Math.abs(bladeDanceDamageMultiplier - 1.0D) > 0.0001D) {
+                finalDamage = (float) (finalDamage * bladeDanceDamageMultiplier);
             }
         }
 
@@ -278,10 +305,26 @@ public final class CombatHookProcessor {
             refreshMovementSpeed(ctx.attackerRef(), ctx.commandBuffer(), playerData);
         }
 
+        if (runtimeState != null && bladeDanceSettings.enabled() && bladeDanceSettings.triggerOnHit()) {
+            applyBladeDanceOnHit(runtimeState, bladeDanceSettings);
+            refreshMovementSpeed(ctx.attackerRef(), ctx.commandBuffer(), playerData);
+        }
+
         applyRetaliationTargetSlowOnHit(retaliationPassive,
                 ctx.targetRef(),
                 ctx.commandBuffer(),
-                ctx.attackerPlayerRef());
+                ctx.attackerPlayerRef(),
+                "retaliation");
+        applyRetaliationTargetSlowOnHit(primalDominancePassive,
+                ctx.targetRef(),
+                ctx.commandBuffer(),
+                ctx.attackerPlayerRef(),
+                "primal_dominance");
+        applyRetaliationTargetSlowOnHit(arcaneDominancePassive,
+                ctx.targetRef(),
+                ctx.commandBuffer(),
+                ctx.attackerPlayerRef(),
+                "arcane_dominance");
 
         return new OutgoingResult(finalDamage, critResult.isCrit, passiveTrueDamageBonus + augmentTrueDamageBonus);
     }
@@ -317,6 +360,37 @@ public final class CombatHookProcessor {
         return Math.max(0, runtimeState.getSwiftnessStacks());
     }
 
+    private void applyBladeDanceOnHit(PassiveRuntimeState runtimeState, BladeDanceSettings settings) {
+        if (runtimeState == null || settings == null || !settings.enabled()) {
+            return;
+        }
+
+        long durationMillis = settings.durationMillis();
+        if (durationMillis <= 0L) {
+            return;
+        }
+
+        int activeStacks = resolveActiveBladeDanceStacks(runtimeState);
+        int maxStacks = Math.max(1, settings.maxStacks());
+        int newStacks = Math.min(maxStacks, activeStacks + 1);
+        runtimeState.setBladeDanceStacks(newStacks);
+        runtimeState.setBladeDanceActiveUntil(System.currentTimeMillis() + durationMillis);
+    }
+
+    private int resolveActiveBladeDanceStacks(PassiveRuntimeState runtimeState) {
+        if (runtimeState == null || runtimeState.getBladeDanceStacks() <= 0) {
+            return 0;
+        }
+
+        long activeUntil = runtimeState.getBladeDanceActiveUntil();
+        if (activeUntil <= 0L || System.currentTimeMillis() > activeUntil) {
+            runtimeState.clearBladeDance();
+            return 0;
+        }
+
+        return Math.max(0, runtimeState.getBladeDanceStacks());
+    }
+
     private void refreshMovementSpeed(Ref<EntityStore> entityRef,
             CommandBuffer<EntityStore> commandBuffer,
             PlayerData playerData) {
@@ -332,7 +406,8 @@ public final class CombatHookProcessor {
     private void applyRetaliationTargetSlowOnHit(RetaliationPassive retaliationPassive,
             Ref<EntityStore> targetRef,
             CommandBuffer<EntityStore> commandBuffer,
-            PlayerRef attackerPlayerRef) {
+            PlayerRef attackerPlayerRef,
+            String sourceKeyPrefix) {
         if (retaliationPassive == null
                 || !retaliationPassive.enabled()
                 || targetRef == null
@@ -340,8 +415,61 @@ public final class CombatHookProcessor {
             return;
         }
 
-        double slowPercent = retaliationPassive.targetHasteSlowOnHitPercent();
-        long slowDurationMillis = retaliationPassive.targetHasteSlowDurationMillis();
+        applyTargetHasteSlowOnHit(retaliationPassive.targetHasteSlowOnHitPercent(),
+                retaliationPassive.targetHasteSlowDurationMillis(),
+                targetRef,
+                commandBuffer,
+                attackerPlayerRef,
+                sourceKeyPrefix);
+    }
+
+    private void applyRetaliationTargetSlowOnHit(PrimalDominancePassive primalDominancePassive,
+            Ref<EntityStore> targetRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            PlayerRef attackerPlayerRef,
+            String sourceKeyPrefix) {
+        if (primalDominancePassive == null
+                || !primalDominancePassive.enabled()
+                || targetRef == null
+                || commandBuffer == null) {
+            return;
+        }
+
+        applyTargetHasteSlowOnHit(primalDominancePassive.targetHasteSlowOnHitPercent(),
+                primalDominancePassive.targetHasteSlowDurationMillis(),
+                targetRef,
+                commandBuffer,
+                attackerPlayerRef,
+                sourceKeyPrefix);
+    }
+
+    private void applyRetaliationTargetSlowOnHit(ArcaneDominancePassive arcaneDominancePassive,
+            Ref<EntityStore> targetRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            PlayerRef attackerPlayerRef,
+            String sourceKeyPrefix) {
+        if (arcaneDominancePassive == null
+                || !arcaneDominancePassive.enabled()
+                || targetRef == null
+                || commandBuffer == null) {
+            return;
+        }
+
+        applyTargetHasteSlowOnHit(arcaneDominancePassive.targetHasteSlowOnHitPercent(),
+                arcaneDominancePassive.targetHasteSlowDurationMillis(),
+                targetRef,
+                commandBuffer,
+                attackerPlayerRef,
+                sourceKeyPrefix);
+    }
+
+    private void applyTargetHasteSlowOnHit(double slowPercent,
+            long slowDurationMillis,
+            Ref<EntityStore> targetRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            PlayerRef attackerPlayerRef,
+            String sourceKeyPrefix) {
+
         if (slowPercent <= 0.0D || slowDurationMillis <= 0L) {
             return;
         }
@@ -359,7 +487,7 @@ public final class CombatHookProcessor {
         long expiresAt = System.currentTimeMillis() + slowDurationMillis;
         plugin.getAugmentRuntimeManager().getRuntimeState(targetPlayer.getUuid()).setAttributeBonus(
                 SkillAttributeType.HASTE,
-                "retaliation_target_haste_slow_" + resolveAttackerKey(attackerPlayerRef),
+                sourceKeyPrefix + "_target_haste_slow_" + resolveAttackerKey(attackerPlayerRef),
                 -(slowPercent * 100.0D),
                 expiresAt);
 
@@ -404,10 +532,10 @@ public final class CombatHookProcessor {
 
         FirstStrikePassive firstStrikePassive = FirstStrikePassive.fromSnapshot(archetypeSnapshot);
         RetaliationPassive retaliationPassive = RetaliationPassive.fromSnapshot(archetypeSnapshot);
+        PrimalDominancePassive primalDominancePassive = PrimalDominancePassive.fromSnapshot(archetypeSnapshot);
+        ArcaneDominancePassive arcaneDominancePassive = ArcaneDominancePassive.fromSnapshot(archetypeSnapshot);
         AbsorbPassive absorbPassive = AbsorbPassive.fromSnapshot(archetypeSnapshot);
         SecondWindPassive secondWindPassive = SecondWindPassive.fromSnapshot(archetypeSnapshot);
-        boolean firstStrikeAugmentSelected = hasSelectedAugment(defender, FirstStrikeAugment.ID);
-
         float originalAmount = damage.getAmount();
         float resistance = skillManager != null ? skillManager.calculatePlayerDefense(defender) : 0f;
         resistance = Math.max(-0.95f, Math.min(0.95f, resistance));
@@ -466,12 +594,8 @@ public final class CombatHookProcessor {
         if (runtimeState != null) {
             runtimeState.setLastDamageTakenMillis(System.currentTimeMillis());
             retaliationPassive.onDamageTaken(runtimeState, adjustedAmount);
-        }
-
-        if (runtimeState != null
-            && firstStrikePassive.shouldSuppressOnHit()
-            && (!firstStrikeAugmentSelected || firstStrikePassive.allowAugmentStacking())) {
-            firstStrikePassive.suppressOnHit(runtimeState);
+            primalDominancePassive.onDamageTaken(runtimeState, adjustedAmount);
+            arcaneDominancePassive.onDamageTaken(runtimeState, adjustedAmount);
         }
 
         if (passiveManager != null) {
