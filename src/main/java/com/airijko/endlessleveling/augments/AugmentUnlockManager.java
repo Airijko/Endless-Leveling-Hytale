@@ -8,8 +8,6 @@ import com.airijko.endlessleveling.managers.ConfigManager;
 import com.airijko.endlessleveling.player.PlayerDataManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
-import com.airijko.endlessleveling.augments.types.ExecutionerAugment;
-import com.airijko.endlessleveling.augments.types.FirstStrikeAugment;
 import com.airijko.endlessleveling.augments.types.CommonAugment;
 import com.hypixel.hytale.logger.HytaleLogger;
 
@@ -792,18 +790,6 @@ public class AugmentUnlockManager {
             return blocked;
         }
 
-        if (!snapshot.getDefinitions(ArchetypePassiveType.FIRST_STRIKE).isEmpty()) {
-            String normalized = normalizeAugmentId(FirstStrikeAugment.ID);
-            if (normalized != null) {
-                blocked.add(normalized);
-            }
-        }
-        if (!snapshot.getDefinitions(ArchetypePassiveType.EXECUTIONER).isEmpty()) {
-            String normalized = normalizeAugmentId(ExecutionerAugment.ID);
-            if (normalized != null) {
-                blocked.add(normalized);
-            }
-        }
         return blocked;
     }
 

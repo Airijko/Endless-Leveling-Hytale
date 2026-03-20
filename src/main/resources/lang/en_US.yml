@@ -418,7 +418,7 @@ ui:
         adrenaline: Adrenaline
         berzerker: Berzerker
         retaliation: Retaliation
-        executioner: Executioner
+        executioner: Final Incantation
         swiftness: Swiftness
         wither: Wither
         army_of_the_dead: Army of the Dead
@@ -444,7 +444,7 @@ ui:
         adrenaline: "{0} stamina"
         berzerker: "{0} damage"
         retaliation: "{0} reflect"
-        executioner: "{0} finisher"
+        executioner: "Final Incantation: +{0} bonus damage"
         swiftness: "{0} speed"
         wither: "{0} max HP/sec"
         crit_defense: "{0} dmg reduction"

@@ -1164,6 +1164,9 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case HEALTH_REGEN -> tr("ui.races.passive.desc.health_regen", "{0} HP/5s", formatPercentValue(value));
             case MANA_REGEN -> tr("ui.races.passive.desc.mana_regen", "{0} mana/5s", formatPercentValue(value));
             case MANA_REGEN_FLAT -> tr("ui.races.passive.desc.mana_regen_flat", "{0} mana/s", formatSigned(value));
+                case ARCANE_WISDOM -> appendDetails(
+                    tr("ui.races.passive.desc.arcane_wisdom", "{0} max mana", formatPercentValue(value)),
+                    formatThresholdDetail(threshold, tr("ui.races.passive.scope.mana", "mana")));
             case HEALING_TOUCH -> appendLines(
                     tr("ui.classes.passive.pretty.healing_touch.title", "On-hit burst heal"),
                     tr("ui.classes.passive.pretty.healing_touch.amount", "- Heal: {0} of source",
@@ -1265,7 +1268,8 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     tr("ui.races.passive.desc.absorb", "{0} dmg reduction", formatPercentValue(value)),
                     formatCooldownDetail(cooldown));
             case EXECUTIONER -> appendDetails(
-                    tr("ui.races.passive.desc.executioner", "{0} finisher", formatPercentValue(value)),
+                    tr("ui.races.passive.desc.executioner", "Final Incantation: +{0} bonus damage",
+                        formatPercentValue(value)),
                     formatThresholdDetail(threshold, tr("ui.races.passive.scope.target_hp", "target HP")),
                     formatCooldownDetail(cooldown));
             case SWIFTNESS -> appendDetails(

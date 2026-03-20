@@ -11,8 +11,10 @@ import java.util.Map;
  */
 public record SwiftnessSettings(boolean enabled,
         double stackBonusPercent,
+    double damageBonusPerStack,
         double durationSeconds,
-        int maxStacks) {
+    int maxStacks,
+    boolean triggerOnHit) {
 
     private static final double DEFAULT_DURATION_SECONDS = 5.0D;
     private static final int DEFAULT_MAX_STACKS = 1;
@@ -31,6 +33,8 @@ public record SwiftnessSettings(boolean enabled,
         double durationSum = 0.0D;
         int durationSources = 0;
         int maxStacks = DEFAULT_MAX_STACKS;
+        double damageBonusPerStack = 0.0D;
+        boolean triggerOnHit = false;
 
         for (RacePassiveDefinition definition : definitions) {
             if (definition == null) {
@@ -43,6 +47,15 @@ public record SwiftnessSettings(boolean enabled,
                 durationSources++;
             }
             maxStacks = Math.max(maxStacks, parsePositiveInt(props, "max_stacks", maxStacks));
+            damageBonusPerStack = Math.max(damageBonusPerStack,
+                    parsePercent(props,
+                            "damage_bonus_per_stack",
+                            "bonus_damage_per_stack",
+                            "stack_damage_bonus"));
+            triggerOnHit |= parseBoolean(props,
+                    "trigger_on_hit",
+                    "on_hit",
+                    "apply_on_hit");
         }
 
         if (maxStacks <= 0) {
@@ -50,7 +63,11 @@ public record SwiftnessSettings(boolean enabled,
         }
 
         double duration = durationSources > 0 ? durationSum / durationSources : DEFAULT_DURATION_SECONDS;
-        return new SwiftnessSettings(true, bonusPercent, duration, maxStacks);
+        boolean enabled = bonusPercent > 0.0D || damageBonusPerStack > 0.0D;
+        if (!enabled) {
+            return disabled();
+        }
+        return new SwiftnessSettings(true, bonusPercent, damageBonusPerStack, duration, maxStacks, triggerOnHit);
     }
 
     private static double resolveBonusPercent(ArchetypePassiveSnapshot snapshot,
@@ -78,6 +95,14 @@ public record SwiftnessSettings(boolean enabled,
 
     public double totalBonusPercent(int stacks) {
         return multiplierForStacks(stacks) - 1.0D;
+    }
+
+    public double damageMultiplierForStacks(int stacks) {
+        if (!enabled || stacks <= 0 || damageBonusPerStack <= 0.0D) {
+            return 1.0D;
+        }
+        int cappedStacks = Math.min(stacks, Math.max(1, maxStacks));
+        return 1.0D + (damageBonusPerStack * cappedStacks);
     }
 
     public long durationMillis() {
@@ -122,7 +147,47 @@ public record SwiftnessSettings(boolean enabled,
         return fallback;
     }
 
+    private static double parsePercent(Map<String, Object> props, String... keys) {
+        if (props == null || keys == null) {
+            return 0.0D;
+        }
+        for (String key : keys) {
+            double value = parsePositiveDouble(props, key, 0.0D);
+            if (value > 0.0D) {
+                return value > 1.0D ? value / 100.0D : value;
+            }
+        }
+        return 0.0D;
+    }
+
+    private static boolean parseBoolean(Map<String, Object> props, String... keys) {
+        if (props == null || keys == null) {
+            return false;
+        }
+        for (String key : keys) {
+            Object raw = props.get(key);
+            if (raw instanceof Boolean bool) {
+                return bool;
+            }
+            if (raw instanceof Number number) {
+                return number.intValue() != 0;
+            }
+            if (raw instanceof String string) {
+                String normalized = string.trim().toLowerCase(java.util.Locale.ROOT);
+                if ("true".equals(normalized) || "yes".equals(normalized) || "on".equals(normalized)
+                        || "1".equals(normalized)) {
+                    return true;
+                }
+                if ("false".equals(normalized) || "no".equals(normalized) || "off".equals(normalized)
+                        || "0".equals(normalized)) {
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
     public static SwiftnessSettings disabled() {
-        return new SwiftnessSettings(false, 0.0D, 0.0D, 0);
+        return new SwiftnessSettings(false, 0.0D, 0.0D, 0.0D, 0, false);
     }
 }

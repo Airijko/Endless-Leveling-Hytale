@@ -1,14 +1,15 @@
 package com.airijko.endlessleveling.combat;
 
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentDispatch;
 import com.airijko.endlessleveling.augments.AugmentExecutor;
-import com.airijko.endlessleveling.augments.types.ExecutionerAugment;
 import com.airijko.endlessleveling.augments.types.FirstStrikeAugment;
 import com.airijko.endlessleveling.classes.ClassWeaponResolver;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.ClassWeaponType;
 import com.airijko.endlessleveling.enums.DamageLayer;
+import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.classes.ClassManager;
 import com.airijko.endlessleveling.leveling.MobLevelingManager;
 import com.airijko.endlessleveling.passives.PassiveManager;
@@ -30,6 +31,7 @@ import com.airijko.endlessleveling.passives.type.RetaliationPassive;
 import com.airijko.endlessleveling.passives.type.SecondWindPassive;
 import com.airijko.endlessleveling.passives.util.PassiveContributionBlueprint;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
+import com.airijko.endlessleveling.passives.settings.SwiftnessSettings;
 import com.airijko.endlessleveling.util.ChatMessageTemplate;
 import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.airijko.endlessleveling.util.PlayerChatNotifier;
@@ -46,6 +48,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Centralized combat hook processing so listeners share ordering between
@@ -105,10 +108,11 @@ public final class CombatHookProcessor {
         BerzerkerPassive berzerkerPassive = BerzerkerPassive.fromSnapshot(archetypeSnapshot);
         ExecutionerPassive executionerPassive = ExecutionerPassive.fromSnapshot(archetypeSnapshot);
         RetaliationPassive retaliationPassive = RetaliationPassive.fromSnapshot(archetypeSnapshot);
+        SwiftnessSettings swiftnessSettings = SwiftnessSettings.fromSnapshot(archetypeSnapshot);
         HealingTouchPassive healingTouchPassive = HealingTouchPassive.fromSnapshot(archetypeSnapshot);
 
         boolean firstStrikeAugmentSelected = hasSelectedAugment(playerData, FirstStrikeAugment.ID);
-        boolean executionerAugmentSelected = hasSelectedAugment(playerData, ExecutionerAugment.ID);
+        boolean firstStrikeStacksWithAugment = firstStrikePassive.allowAugmentStacking();
 
         String weaponCategoryKey = ClassWeaponResolver.resolveCategoryKey(ctx.weapon());
         ClassWeaponType weaponType = ClassWeaponResolver.resolve(ctx.weapon());
@@ -127,18 +131,28 @@ public final class CombatHookProcessor {
 
         DamageLayerBuffer layerBuffer = new DamageLayerBuffer();
         float prospectiveDamage = critDamage;
+        double passiveTrueDamageBonus = 0.0D;
 
-        if (runtimeState != null && firstStrikePassive.enabled() && !firstStrikeAugmentSelected) {
-            float bonusDamage = firstStrikePassive.apply(runtimeState,
+        if (runtimeState != null
+            && firstStrikePassive.enabled()
+            && (!firstStrikeAugmentSelected || firstStrikeStacksWithAugment)) {
+            boolean outOfCombatReady = passiveManager == null
+                || passiveManager.isOutOfCombat(playerData.getUuid(), firstStrikePassive.cooldownMillis());
+            FirstStrikePassive.TriggerResult firstStrikeResult = firstStrikePassive.apply(runtimeState,
                     ctx.attackerPlayerRef(),
                     critDamage,
+                outOfCombatReady,
                     this::sendPassiveMessage);
+            float bonusDamage = firstStrikeResult.bonusDamage();
             if (bonusDamage > 0f) {
                 registerLayerBonus(layerBuffer,
                         resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.FIRST_STRIKE),
                         bonusDamage,
                         critDamage);
                 prospectiveDamage += bonusDamage;
+            }
+            if (firstStrikeResult.trueDamageBonus() > 0.0D) {
+                passiveTrueDamageBonus += firstStrikeResult.trueDamageBonus();
             }
         }
 
@@ -164,14 +178,12 @@ public final class CombatHookProcessor {
             }
         }
 
-        float executionerBonus = executionerAugmentSelected
-                ? 0f
-                : executionerPassive.apply(runtimeState,
-                        ctx.attackerPlayerRef(),
-                        ctx.targetRef(),
-                        ctx.commandBuffer(),
-                        prospectiveDamage,
-                        this::sendPassiveMessage);
+        float executionerBonus = executionerPassive.apply(runtimeState,
+            ctx.attackerPlayerRef(),
+            ctx.targetRef(),
+            ctx.commandBuffer(),
+            prospectiveDamage,
+            this::sendPassiveMessage);
         if (executionerBonus > 0f) {
             registerLayerBonus(layerBuffer,
                     resolveBlueprint(archetypeSnapshot, ArchetypePassiveType.EXECUTIONER),
@@ -184,6 +196,14 @@ public final class CombatHookProcessor {
         float finalDamage = damageBeforeWeapon;
         if (weaponMultiplier > 0f && Math.abs(weaponMultiplier - 1.0f) > 0.0001f) {
             finalDamage *= weaponMultiplier;
+        }
+
+        int swiftnessStacks = resolveActiveSwiftnessStacks(runtimeState);
+        if (swiftnessSettings.enabled() && swiftnessStacks > 0) {
+            double swiftnessDamageMultiplier = swiftnessSettings.damageMultiplierForStacks(swiftnessStacks);
+            if (swiftnessDamageMultiplier > 0.0D && Math.abs(swiftnessDamageMultiplier - 1.0D) > 0.0001D) {
+                finalDamage = (float) (finalDamage * swiftnessDamageMultiplier);
+            }
         }
 
         EntityStatMap attackerStats = ctx.attackerStats();
@@ -253,7 +273,110 @@ public final class CombatHookProcessor {
             passiveManager.markCombat(playerData.getUuid());
         }
 
-        return new OutgoingResult(finalDamage, critResult.isCrit, augmentTrueDamageBonus);
+        if (runtimeState != null && swiftnessSettings.enabled() && swiftnessSettings.triggerOnHit()) {
+            applySwiftnessOnHit(runtimeState, swiftnessSettings);
+            refreshMovementSpeed(ctx.attackerRef(), ctx.commandBuffer(), playerData);
+        }
+
+        applyRetaliationTargetSlowOnHit(retaliationPassive,
+                ctx.targetRef(),
+                ctx.commandBuffer(),
+                ctx.attackerPlayerRef());
+
+        return new OutgoingResult(finalDamage, critResult.isCrit, passiveTrueDamageBonus + augmentTrueDamageBonus);
+    }
+
+    private void applySwiftnessOnHit(PassiveRuntimeState runtimeState, SwiftnessSettings settings) {
+        if (runtimeState == null || settings == null || !settings.enabled()) {
+            return;
+        }
+
+        long durationMillis = settings.durationMillis();
+        if (durationMillis <= 0L) {
+            return;
+        }
+
+        int activeStacks = resolveActiveSwiftnessStacks(runtimeState);
+        int maxStacks = Math.max(1, settings.maxStacks());
+        int newStacks = Math.min(maxStacks, activeStacks + 1);
+        runtimeState.setSwiftnessStacks(newStacks);
+        runtimeState.setSwiftnessActiveUntil(System.currentTimeMillis() + durationMillis);
+    }
+
+    private int resolveActiveSwiftnessStacks(PassiveRuntimeState runtimeState) {
+        if (runtimeState == null || runtimeState.getSwiftnessStacks() <= 0) {
+            return 0;
+        }
+
+        long activeUntil = runtimeState.getSwiftnessActiveUntil();
+        if (activeUntil <= 0L || System.currentTimeMillis() > activeUntil) {
+            runtimeState.clearSwiftness();
+            return 0;
+        }
+
+        return Math.max(0, runtimeState.getSwiftnessStacks());
+    }
+
+    private void refreshMovementSpeed(Ref<EntityStore> entityRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            PlayerData playerData) {
+        if (skillManager == null || entityRef == null || commandBuffer == null || playerData == null) {
+            return;
+        }
+        try {
+            skillManager.applyMovementSpeedModifier(entityRef, commandBuffer, playerData);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void applyRetaliationTargetSlowOnHit(RetaliationPassive retaliationPassive,
+            Ref<EntityStore> targetRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            PlayerRef attackerPlayerRef) {
+        if (retaliationPassive == null
+                || !retaliationPassive.enabled()
+                || targetRef == null
+                || commandBuffer == null) {
+            return;
+        }
+
+        double slowPercent = retaliationPassive.targetHasteSlowOnHitPercent();
+        long slowDurationMillis = retaliationPassive.targetHasteSlowDurationMillis();
+        if (slowPercent <= 0.0D || slowDurationMillis <= 0L) {
+            return;
+        }
+
+        PlayerRef targetPlayer = EntityRefUtil.tryGetComponent(commandBuffer, targetRef, PlayerRef.getComponentType());
+        if (targetPlayer == null || !targetPlayer.isValid() || targetPlayer.getUuid() == null) {
+            return;
+        }
+
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null || plugin.getAugmentRuntimeManager() == null) {
+            return;
+        }
+
+        long expiresAt = System.currentTimeMillis() + slowDurationMillis;
+        plugin.getAugmentRuntimeManager().getRuntimeState(targetPlayer.getUuid()).setAttributeBonus(
+                SkillAttributeType.HASTE,
+                "retaliation_target_haste_slow_" + resolveAttackerKey(attackerPlayerRef),
+                -(slowPercent * 100.0D),
+                expiresAt);
+
+        if (playerDataManager != null) {
+            PlayerData targetData = playerDataManager.get(targetPlayer.getUuid());
+            if (targetData != null) {
+                refreshMovementSpeed(targetRef, commandBuffer, targetData);
+            }
+        }
+    }
+
+    private String resolveAttackerKey(PlayerRef attackerPlayerRef) {
+        if (attackerPlayerRef == null || attackerPlayerRef.getUuid() == null) {
+            return "unknown";
+        }
+        UUID uuid = attackerPlayerRef.getUuid();
+        return uuid.toString();
     }
 
     /**
@@ -345,7 +468,9 @@ public final class CombatHookProcessor {
             retaliationPassive.onDamageTaken(runtimeState, adjustedAmount);
         }
 
-        if (runtimeState != null && !firstStrikeAugmentSelected) {
+        if (runtimeState != null
+            && firstStrikePassive.shouldSuppressOnHit()
+            && (!firstStrikeAugmentSelected || firstStrikePassive.allowAugmentStacking())) {
             firstStrikePassive.suppressOnHit(runtimeState);
         }
 

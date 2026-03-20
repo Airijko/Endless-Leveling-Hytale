@@ -39,7 +39,7 @@ public final class ChatMessageStrings {
         public static final String SECOND_WIND = "Second Wind";
         public static final String FIRST_STRIKE = "First Strike";
         public static final String ADRENALINE = "Adrenaline";
-        public static final String EXECUTIONER = "Executioner";
+        public static final String EXECUTIONER = "Final Incantation";
         public static final String RETALIATION = "Retaliation";
 
         private Name() {

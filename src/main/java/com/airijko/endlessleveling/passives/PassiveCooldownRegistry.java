@@ -47,7 +47,7 @@ public final class PassiveCooldownRegistry {
                     PassiveRuntimeState::setAdrenalineReadyNotified),
             Entry.notifiable(
                     "executioner",
-                    "Executioner",
+                    "Final Incantation",
                     ArchetypePassiveType.EXECUTIONER,
                     PassiveCategory.ON_HIT.getIconItemId(),
                     PassiveRuntimeState::getExecutionerCooldownExpiresAt,

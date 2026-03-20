@@ -24,9 +24,12 @@ passives:
     value: 0.2
     window: 4
     cooldown: 30
+    target_haste_slow_on_hit: 0.20
+    target_haste_slow_duration: 2
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: sorcery
     value: 1.35
+    total_health_scaling_percent: 0.05
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: life_force
     value: 2.25

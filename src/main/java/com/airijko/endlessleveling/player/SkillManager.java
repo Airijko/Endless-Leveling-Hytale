@@ -7,6 +7,7 @@ import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.passives.settings.FirstStrikeSettings;
 import com.airijko.endlessleveling.passives.settings.SwiftnessSettings;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.hypixel.hytale.component.ComponentAccessor;
@@ -1031,9 +1032,23 @@ public class SkillManager {
         double innateRatio = innatePercent / 100.0D;
         double augmentPercent = getAugmentAttributeBonus(playerData, SkillAttributeType.HASTE);
         double augmentRatio = augmentPercent / 100.0D;
-        float skillBonus = (float) ((hasteLevel * perPointValue) + innateRatio + augmentRatio);
+        double focusedStrikeHastePercent = getFocusedStrikeHasteBonusPercent(playerData);
+        double focusedStrikeHasteRatio = focusedStrikeHastePercent / 100.0D;
+        float skillBonus = (float) ((hasteLevel * perPointValue) + innateRatio + augmentRatio + focusedStrikeHasteRatio);
         float total = (float) (raceMultiplier * (1.0D + skillBonus));
         return new HasteBreakdown((float) raceMultiplier, skillBonus, total);
+    }
+
+    private double getFocusedStrikeHasteBonusPercent(PlayerData playerData) {
+        if (playerData == null || archetypePassiveManager == null) {
+            return 0.0D;
+        }
+        ArchetypePassiveSnapshot snapshot = archetypePassiveManager.getSnapshot(playerData);
+        FirstStrikeSettings settings = FirstStrikeSettings.fromSnapshot(snapshot);
+        if (!settings.enabled()) {
+            return 0.0D;
+        }
+        return Math.max(0.0D, settings.hasteBonusPercent());
     }
 
     /**
@@ -1284,6 +1299,7 @@ public class SkillManager {
         }
         double classPerLevelValue = 0.0D;
         double uncappedPerLevelValue = 0.0D;
+        double totalHealthScalingPercent = 0.0D;
         for (RacePassiveDefinition definition : definitions) {
             if (definition == null) {
                 continue;
@@ -1293,20 +1309,85 @@ public class SkillManager {
             }
             double candidate = Math.max(0.0D, definition.value());
             if (candidate == 0.0D) {
-                continue;
+                // Continue parsing properties in case this innate entry only provides
+                // health-scaling bonuses.
             }
             if (isClassInnateDefinition(definition)) {
                 classPerLevelValue += candidate;
             } else {
                 uncappedPerLevelValue += candidate;
             }
+
+            if (attributeType != SkillAttributeType.LIFE_FORCE) {
+                double scalingCandidate = parsePercentProperty(definition.properties(),
+                        "total_health_scaling_percent",
+                        "health_scaling_percent",
+                        "health_to_attribute_percent",
+                        "from_total_health_percent");
+                totalHealthScalingPercent += scalingCandidate;
+            }
         }
-        if (classPerLevelValue == 0.0D && uncappedPerLevelValue == 0.0D) {
+        if (classPerLevelValue == 0.0D && uncappedPerLevelValue == 0.0D && totalHealthScalingPercent == 0.0D) {
             return 0.0D;
         }
         int playerLevel = Math.max(1, playerData.getLevel());
         int classEffectiveLevels = applyClassInnateAttributeLevelCap(attributeType, playerLevel);
-        return (uncappedPerLevelValue * playerLevel) + (classPerLevelValue * classEffectiveLevels);
+        double perLevelBonus = (uncappedPerLevelValue * playerLevel) + (classPerLevelValue * classEffectiveLevels);
+        if (totalHealthScalingPercent <= 0.0D) {
+            return perLevelBonus;
+        }
+
+        double totalHealth = resolveTotalHealthForScaling(playerData);
+        return perLevelBonus + (totalHealth * totalHealthScalingPercent);
+    }
+
+    private double resolveTotalHealthForScaling(PlayerData playerData) {
+        if (playerData == null) {
+            return PlayerAttributeManager.AttributeSlot.LIFE_FORCE.vanillaBase();
+        }
+
+        double healthSkillBonus = calculatePlayerHealth(playerData);
+        if (attributeManager == null) {
+            return Math.max(0.0D, PlayerAttributeManager.AttributeSlot.LIFE_FORCE.vanillaBase() + healthSkillBonus);
+        }
+
+        double combined = attributeManager.combineAttribute(playerData,
+                SkillAttributeType.LIFE_FORCE,
+                healthSkillBonus,
+                PlayerAttributeManager.AttributeSlot.LIFE_FORCE.vanillaBase());
+        return Math.max(0.0D, combined);
+    }
+
+    private double parsePercentProperty(Map<String, Object> props, String... keys) {
+        if (props == null || keys == null) {
+            return 0.0D;
+        }
+        for (String key : keys) {
+            double value = parsePositiveDoubleProperty(props, key);
+            if (value > 0.0D) {
+                return value > 1.0D ? value / 100.0D : value;
+            }
+        }
+        return 0.0D;
+    }
+
+    private double parsePositiveDoubleProperty(Map<String, Object> props, String key) {
+        if (props == null || key == null) {
+            return 0.0D;
+        }
+        Object raw = props.get(key);
+        if (raw instanceof Number number) {
+            double value = number.doubleValue();
+            return value > 0.0D ? value : 0.0D;
+        }
+        if (raw instanceof String text) {
+            try {
+                double value = Double.parseDouble(text.trim());
+                return value > 0.0D ? value : 0.0D;
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return 0.0D;
     }
 
     public void clearAugmentAttributeBonuses(PlayerData playerData) {

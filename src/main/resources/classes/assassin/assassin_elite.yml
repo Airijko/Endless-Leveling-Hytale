@@ -16,9 +16,16 @@ weapons:
 
 passives:
   - type: FIRST_STRIKE
-    value: 1.275 # +150% first-strike bonus descriptor
-    flat_bonus_damage: 50 # Flat bonus damage on first hit
-    cooldown: 25 # seconds between first-strike windows
+    value: 0.2 # +20% true-damage conversion descriptor
+    normal_bonus_damage: false # Disables legacy first-strike bonus damage
+    true_damage_flat_bonus: 20 # Flat true damage on hit
+    true_damage_conversion: 0.20 # Convert 20% of hit damage to true damage
+    haste_bonus: 50 # +50% haste while this passive is active
+    cooldown: 10 # 10s out-of-combat cooldown
+    out_of_combat_cooldown: true
+    reset_on_kill: true
+    allow_augment_stacking: true
+    suppress_on_hit: false
   - type: EXECUTIONER
     value: 1.7 # +200% executioner scaling descriptor
     flat_bonus_damage: 25 # Flat bonus damage when threshold condition is met

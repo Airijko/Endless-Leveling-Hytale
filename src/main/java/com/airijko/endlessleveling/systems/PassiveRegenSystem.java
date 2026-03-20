@@ -17,6 +17,7 @@ import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.passives.settings.AdrenalineSettings;
+import com.airijko.endlessleveling.passives.settings.ArcaneWisdomSettings;
 import com.airijko.endlessleveling.passives.type.ArmyOfTheDeadPassive;
 import com.airijko.endlessleveling.passives.type.PartyBuffingAuraPassive;
 import com.airijko.endlessleveling.passives.type.PartyMendingAuraPassive;
@@ -35,6 +36,9 @@ import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
+import com.hypixel.hytale.server.core.modules.entitystats.modifier.Modifier.ModifierTarget;
+import com.hypixel.hytale.server.core.modules.entitystats.modifier.StaticModifier;
+import com.hypixel.hytale.server.core.modules.entitystats.modifier.StaticModifier.CalculationType;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.NotificationUtil;
@@ -50,6 +54,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
 
     private static final long HEALTH_REGEN_COOLDOWN_MS = TimeUnit.SECONDS.toMillis(10);
     public static final double RESOURCE_REGEN_DIVISOR = 5.0D;
+    private static final String ARCANE_WISDOM_MANA_BONUS_KEY = "EL_arcane_wisdom_mana_bonus";
     private static final Query<EntityStore> PLAYER_QUERY = Query.any();
 
     private final PlayerDataManager playerDataManager;
@@ -122,6 +127,7 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
                                 runtimeState,
                                 archetypeSnapshot);
                         applyArchetypeHealthRegeneration(playerData, statMap, deltaSeconds, archetypeSnapshot);
+                        applyArcaneWisdom(statMap, archetypeSnapshot, runtimeState);
                         applyManaRegeneration(playerData, statMap, deltaSeconds, archetypeSnapshot);
                         applyAdrenalineStamina(playerRef, statMap, deltaSeconds, archetypeSnapshot, runtimeState);
                         applyStaminaGainBonus(playerData, statMap, archetypeSnapshot, runtimeState);
@@ -331,6 +337,81 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             return;
         }
         addResource(statMap, DefaultEntityStatTypes.getMana(), perSecond, deltaSeconds);
+    }
+
+    private void applyArcaneWisdom(@Nonnull EntityStatMap statMap,
+            @Nonnull ArchetypePassiveSnapshot archetypeSnapshot,
+            @Nonnull PassiveRuntimeState runtimeState) {
+        ArcaneWisdomSettings settings = ArcaneWisdomSettings.fromSnapshot(archetypeSnapshot);
+        if (!settings.enabled()) {
+            applyArcaneWisdomManaMultiplier(statMap, 1.0D);
+            runtimeState.setLastManaRatio(Float.NaN);
+            return;
+        }
+
+        applyArcaneWisdomManaMultiplier(statMap, settings.manaMultiplier());
+
+        EntityStatValue manaStat = statMap.get(DefaultEntityStatTypes.getMana());
+        if (manaStat == null || manaStat.getMax() <= 0f) {
+            runtimeState.setLastManaRatio(Float.NaN);
+            return;
+        }
+
+        float current = Math.max(0.0f, manaStat.get());
+        float max = manaStat.getMax();
+        double currentRatio = Math.max(0.0D, Math.min(1.0D, current / max));
+        float lastRatioSample = runtimeState.getLastManaRatio();
+
+        if (!Float.isNaN(lastRatioSample)
+                && lastRatioSample > settings.thresholdPercent()
+                && currentRatio <= settings.thresholdPercent()) {
+            double restoreAmount = Math.max(0.0D, max * settings.restorePercent());
+            if (restoreAmount > 0.0D && current < max) {
+                float restored = (float) Math.min(max, current + restoreAmount);
+                statMap.setStatValue(DefaultEntityStatTypes.getMana(), restored);
+                current = restored;
+                currentRatio = Math.max(0.0D, Math.min(1.0D, current / max));
+            }
+        }
+
+        runtimeState.setLastManaRatio((float) currentRatio);
+    }
+
+    private void applyArcaneWisdomManaMultiplier(@Nonnull EntityStatMap statMap, double multiplier) {
+        EntityStatValue manaBefore = statMap.get(DefaultEntityStatTypes.getMana());
+        if (manaBefore == null || manaBefore.getMax() <= 0f) {
+            return;
+        }
+
+        float previousMax = manaBefore.getMax();
+        float previousCurrent = manaBefore.get();
+
+        statMap.removeModifier(DefaultEntityStatTypes.getMana(), ARCANE_WISDOM_MANA_BONUS_KEY);
+        statMap.update();
+
+        EntityStatValue manaBaseline = statMap.get(DefaultEntityStatTypes.getMana());
+        if (manaBaseline == null || manaBaseline.getMax() <= 0f) {
+            return;
+        }
+
+        double safeMultiplier = Math.max(1.0D, multiplier);
+        double bonus = manaBaseline.getMax() * (safeMultiplier - 1.0D);
+        if (bonus > 0.0001D) {
+            statMap.putModifier(DefaultEntityStatTypes.getMana(),
+                    ARCANE_WISDOM_MANA_BONUS_KEY,
+                    new StaticModifier(ModifierTarget.MAX, CalculationType.ADDITIVE, (float) bonus));
+            statMap.update();
+        }
+
+        EntityStatValue manaUpdated = statMap.get(DefaultEntityStatTypes.getMana());
+        if (manaUpdated == null || manaUpdated.getMax() <= 0f) {
+            return;
+        }
+
+        float newMax = manaUpdated.getMax();
+        float ratio = previousMax > 0.01f ? previousCurrent / previousMax : 1.0f;
+        float adjustedCurrent = Math.max(0.0f, Math.min(newMax, ratio * newMax));
+        statMap.setStatValue(DefaultEntityStatTypes.getMana(), adjustedCurrent);
     }
 
     private void applyStaminaGainBonus(@Nonnull PlayerData playerData,

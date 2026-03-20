@@ -26,6 +26,14 @@ public final class RetaliationPassive {
         return settings.enabled();
     }
 
+    public double targetHasteSlowOnHitPercent() {
+        return Math.max(0.0D, settings.targetHasteSlowOnHitPercent());
+    }
+
+    public long targetHasteSlowDurationMillis() {
+        return Math.max(0L, settings.targetHasteSlowDurationMillis());
+    }
+
     public float consumeBonus(PassiveRuntimeState runtimeState,
             PlayerRef playerRef,
             BiConsumer<PlayerRef, String> messenger) {

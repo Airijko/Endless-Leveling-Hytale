@@ -19,6 +19,8 @@ passives:
     value: 0.25 # Reflect 25% of damage taken in the window
     window: 5 # Collect damage for 5 seconds before retaliating
     cooldown: 25 # Seconds between retaliations
+    target_haste_slow_on_hit: 0.20 # On-hit applies -20% haste to the target
+    target_haste_slow_duration: 2 # Slow lasts 2 seconds
   - type: HEALTH_REGEN
     value: 0.04 # Heal 4% of max HP every 5 seconds
   - type: INNATE_ATTRIBUTE_GAIN
@@ -27,6 +29,7 @@ passives:
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: strength
     value: 2
+    total_health_scaling_percent: 0.05 # Gain extra Strength equal to 5% of total health
 
 ascension:
   id: class_juggernaut_master

@@ -15,10 +15,11 @@ weapons:
     damage: 1.05
 
 passives:
-  - type: FIRST_STRIKE
-    value: 1.5 # +150% first-strike bonus descriptor
-    flat_bonus_damage: 25 # Flat bonus damage on first hit
-    cooldown: 15
+  - type: TRUE_EDGE
+    value: 0 # True Bolts uses max-health true damage instead of flat true damage
+    max_health_true_damage_percent: 0.075 # +7.5% of target max health as true damage
+    internal_cooldown_seconds: 4
+    monster_true_damage_cap: 1000
   - type: SWIFTNESS
     value: 0.075
     duration: 5

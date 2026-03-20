@@ -16,9 +16,11 @@ weapons:
 
 passives:
   - type: SWIFTNESS
-    value: 0.075
+    value: 0.10
     duration: 5
-    max_stacks: 8
+    max_stacks: 5
+    damage_bonus_per_stack: 0.05
+    trigger_on_hit: true
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: haste
     value: 0.4

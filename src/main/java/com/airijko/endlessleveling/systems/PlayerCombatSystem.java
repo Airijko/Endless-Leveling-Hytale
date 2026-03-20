@@ -56,7 +56,7 @@ import java.util.UUID;
 public class PlayerCombatSystem extends DamageEventSystem {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final long TRUE_EDGE_INTERNAL_COOLDOWN_MILLIS = 400L;
+    private static final long TRUE_EDGE_DEFAULT_INTERNAL_COOLDOWN_MILLIS = 400L;
     public static final MetaKey<Boolean> AUGMENT_DOT_DAMAGE = Damage.META_REGISTRY
             .registerMetaObject(data -> Boolean.FALSE);
     public static final MetaKey<Boolean> AUGMENT_PROC_DAMAGE = Damage.META_REGISTRY
@@ -185,7 +185,7 @@ public class PlayerCombatSystem extends DamageEventSystem {
         boolean targetIsPlayer = targetPlayer != null && targetPlayer.isValid();
         long now = System.currentTimeMillis();
         TrueEdgeSettings trueEdgeSettings = resolveTrueEdgeSettings(archetypeSnapshot);
-        boolean trueEdgeReady = isTrueEdgeOffCooldown(runtimeState, now);
+        boolean trueEdgeReady = isTrueEdgeOffCooldown(runtimeState, now, trueEdgeSettings.internalCooldownMillis());
 
         TrueEdgeComputation trueEdge = (!bypassOutgoingAugmentMath && trueEdgeReady)
                 ? computeTrueEdgeConversion(
@@ -231,8 +231,12 @@ public class PlayerCombatSystem extends DamageEventSystem {
                         reduction,
                         targetIsPlayer)
                 : TrueEdgeComputation.none();
-        if (!bypassOutgoingAugmentMath && trueEdgeReady && trueEdge.triggered() && runtimeState != null) {
-            runtimeState.setTrueEdgeCooldownExpiresAt(now + TRUE_EDGE_INTERNAL_COOLDOWN_MILLIS);
+        if (!bypassOutgoingAugmentMath
+                && trueEdgeReady
+                && trueEdge.triggered()
+                && runtimeState != null
+                && trueEdgeSettings.internalCooldownMillis() > 0L) {
+            runtimeState.setTrueEdgeCooldownExpiresAt(now + trueEdgeSettings.internalCooldownMillis());
         }
         double reducedAugmentTrueDamage = bypassOutgoingAugmentMath
                 ? 0.0D
@@ -502,7 +506,14 @@ public class PlayerCombatSystem extends DamageEventSystem {
         }
 
         double convertedDamageFromNormal = Math.min(baseOutgoing, baseOutgoing * settings.trueDamagePercent());
-        double rawTrueDamage = settings.flatTrueDamage() + convertedDamageFromNormal;
+        double maxHealthTrueDamage = computeMaxHealthTrueDamage(
+                targetRef,
+                commandBuffer,
+                settings.maxHealthTrueDamagePercent());
+        double rawTrueDamage = settings.flatTrueDamage() + convertedDamageFromNormal + maxHealthTrueDamage;
+        if (!targetIsPlayer && settings.monsterTrueDamageCap() > 0.0D) {
+            rawTrueDamage = Math.min(rawTrueDamage, settings.monsterTrueDamageCap());
+        }
         if (rawTrueDamage <= 0.0D) {
             return TrueEdgeComputation.none();
         }
@@ -521,7 +532,30 @@ public class PlayerCombatSystem extends DamageEventSystem {
         return new TrueEdgeComputation(convertedDamageFromNormal, reducedTrueDamage);
     }
 
-    private boolean isTrueEdgeOffCooldown(PassiveRuntimeState runtimeState, long now) {
+    private double computeMaxHealthTrueDamage(Ref<EntityStore> targetRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            double maxHealthTrueDamagePercent) {
+        if (maxHealthTrueDamagePercent <= 0.0D || targetRef == null || commandBuffer == null) {
+            return 0.0D;
+        }
+
+        EntityStatMap targetStats = commandBuffer.getComponent(targetRef, EntityStatMap.getComponentType());
+        if (targetStats == null) {
+            return 0.0D;
+        }
+
+        EntityStatValue hp = targetStats.get(DefaultEntityStatTypes.getHealth());
+        if (hp == null || hp.getMax() <= 0f) {
+            return 0.0D;
+        }
+
+        return Math.max(0.0D, hp.getMax()) * maxHealthTrueDamagePercent;
+    }
+
+    private boolean isTrueEdgeOffCooldown(PassiveRuntimeState runtimeState, long now, long cooldownMillis) {
+        if (cooldownMillis <= 0L) {
+            return true;
+        }
         if (runtimeState == null) {
             return true;
         }
@@ -540,6 +574,9 @@ public class PlayerCombatSystem extends DamageEventSystem {
 
         double flatTrueDamage = 0.0D;
         double trueDamagePercent = 0.0D;
+        double maxHealthTrueDamagePercent = 0.0D;
+        long internalCooldownMillis = TRUE_EDGE_DEFAULT_INTERNAL_COOLDOWN_MILLIS;
+        double monsterTrueDamageCap = 0.0D;
         for (RacePassiveDefinition definition : definitions) {
             if (definition == null) {
                 continue;
@@ -555,12 +592,38 @@ public class PlayerCombatSystem extends DamageEventSystem {
             flatTrueDamage += flat;
 
             trueDamagePercent += parsePercent(props == null ? null : props.get("true_damage_percent"));
+
+            maxHealthTrueDamagePercent += parsePercent(props == null
+                    ? null
+                    : firstNonNull(
+                            props.get("max_health_true_damage_percent"),
+                            props.get("max_health_true_damage")));
+
+            long cooldownCandidate = parseInternalCooldownMillis(props);
+            if (cooldownCandidate >= 0L) {
+                internalCooldownMillis = cooldownCandidate;
+            }
+
+            double capCandidate = parsePositiveDouble(props == null
+                    ? null
+                    : firstNonNull(
+                            props.get("monster_true_damage_cap"),
+                            props.get("monster_cap"),
+                            props.get("max_true_damage_vs_monsters")));
+            if (capCandidate > 0.0D) {
+                monsterTrueDamageCap = capCandidate;
+            }
         }
 
-        if (flatTrueDamage <= 0.0D && trueDamagePercent <= 0.0D) {
+        if (flatTrueDamage <= 0.0D && trueDamagePercent <= 0.0D && maxHealthTrueDamagePercent <= 0.0D) {
             return TrueEdgeSettings.disabled();
         }
-        return new TrueEdgeSettings(flatTrueDamage, trueDamagePercent);
+        return new TrueEdgeSettings(
+                flatTrueDamage,
+                trueDamagePercent,
+                maxHealthTrueDamagePercent,
+                Math.max(0L, internalCooldownMillis),
+                monsterTrueDamageCap);
     }
 
     private double resolveTrueEdgeReduction(Ref<EntityStore> targetRef,
@@ -646,6 +709,38 @@ public class PlayerCombatSystem extends DamageEventSystem {
         return value > 1.0D ? value / 100.0D : value;
     }
 
+    private long parseInternalCooldownMillis(Map<String, Object> props) {
+        if (props == null || props.isEmpty()) {
+            return -1L;
+        }
+
+        double explicitMillis = parsePositiveDouble(props.get("internal_cooldown_ms"));
+        if (explicitMillis > 0.0D) {
+            return Math.round(explicitMillis);
+        }
+
+        double seconds = parsePositiveDouble(firstNonNull(
+                props.get("internal_cooldown_seconds"),
+                props.get("internal_cooldown")));
+        if (seconds > 0.0D) {
+            return Math.round(seconds * 1000.0D);
+        }
+
+        return -1L;
+    }
+
+    private Object firstNonNull(Object... values) {
+        if (values == null) {
+            return null;
+        }
+        for (Object value : values) {
+            if (value != null) {
+                return value;
+            }
+        }
+        return null;
+    }
+
     private double clampDefenseReduction(double value) {
         if (Double.isNaN(value) || Double.isInfinite(value)) {
             return 0.0D;
@@ -653,15 +748,19 @@ public class PlayerCombatSystem extends DamageEventSystem {
         return Math.max(-1.0D, Math.min(1.0D, value));
     }
 
-    private record TrueEdgeSettings(double flatTrueDamage, double trueDamagePercent) {
-        private static final TrueEdgeSettings DISABLED = new TrueEdgeSettings(0.0D, 0.0D);
+    private record TrueEdgeSettings(double flatTrueDamage,
+            double trueDamagePercent,
+            double maxHealthTrueDamagePercent,
+            long internalCooldownMillis,
+            double monsterTrueDamageCap) {
+        private static final TrueEdgeSettings DISABLED = new TrueEdgeSettings(0.0D, 0.0D, 0.0D, 0L, 0.0D);
 
         private static TrueEdgeSettings disabled() {
             return DISABLED;
         }
 
         private boolean enabled() {
-            return flatTrueDamage > 0.0D || trueDamagePercent > 0.0D;
+            return flatTrueDamage > 0.0D || trueDamagePercent > 0.0D || maxHealthTrueDamagePercent > 0.0D;
         }
     }
 

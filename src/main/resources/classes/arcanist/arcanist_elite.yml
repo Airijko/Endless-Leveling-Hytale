@@ -16,10 +16,11 @@ passives:
   - type: MANA_REGEN
     value: 0.025
   - type: EXECUTIONER
-    value: 1.7 # +200% executioner scaling descriptor
-    flat_bonus_damage: 25 # Flat bonus damage when threshold condition is met
-    threshold: 15 # Only applies to targets below 15% HP
-    cooldown: 45 # Seconds between executioner procs
+    value: 2.0 # +200% bonus damage scaling
+    flat_bonus_damage: 50 # Flat bonus damage when threshold condition is met
+    threshold: 15 # Triggers below 15% HP or if this hit pushes target to 15%
+    cooldown: 30 # Seconds between Final Incantation procs
+    cooldown_reduction_on_kill: 5 # Seconds reduced per kill
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: flow
     value: 0.34

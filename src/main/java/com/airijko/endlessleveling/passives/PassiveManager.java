@@ -388,9 +388,11 @@ public class PassiveManager {
         private int luckMobDropStacks;
         private float lastHealingSample = Float.NaN;
         private float lastStaminaSample = Float.NaN;
+        private float lastManaRatio = Float.NaN;
         private long secondWindCooldownExpiresAt;
         private long secondWindActiveUntil;
         private long firstStrikeCooldownExpiresAt;
+        private boolean firstStrikeKillResetReady;
         private boolean secondWindReadyNotified = true;
         private boolean firstStrikeReadyNotified = true;
         private boolean adrenalineReadyNotified = true;
@@ -484,6 +486,14 @@ public class PassiveManager {
             this.lastStaminaSample = lastStaminaSample;
         }
 
+        public float getLastManaRatio() {
+            return lastManaRatio;
+        }
+
+        public void setLastManaRatio(float lastManaRatio) {
+            this.lastManaRatio = lastManaRatio;
+        }
+
         public long getSecondWindCooldownExpiresAt() {
             return secondWindCooldownExpiresAt;
         }
@@ -506,6 +516,14 @@ public class PassiveManager {
 
         public void setFirstStrikeCooldownExpiresAt(long firstStrikeCooldownExpiresAt) {
             this.firstStrikeCooldownExpiresAt = firstStrikeCooldownExpiresAt;
+        }
+
+        public boolean isFirstStrikeKillResetReady() {
+            return firstStrikeKillResetReady;
+        }
+
+        public void setFirstStrikeKillResetReady(boolean firstStrikeKillResetReady) {
+            this.firstStrikeKillResetReady = firstStrikeKillResetReady;
         }
 
         public boolean isSecondWindReadyNotified() {
@@ -568,6 +586,7 @@ public class PassiveManager {
             this.secondWindCooldownExpiresAt = 0L;
             this.secondWindActiveUntil = 0L;
             this.firstStrikeCooldownExpiresAt = 0L;
+            this.firstStrikeKillResetReady = false;
             this.secondWindReadyNotified = true;
             this.firstStrikeReadyNotified = true;
             this.adrenalineReadyNotified = true;
@@ -589,6 +608,7 @@ public class PassiveManager {
             this.swiftnessStacks = 0;
             this.lastHealingSample = Float.NaN;
             this.lastStaminaSample = Float.NaN;
+            this.lastManaRatio = Float.NaN;
             this.lastMobKillMillis = 0L;
             this.partyMendingLastPulseMillis = 0L;
             this.healingAuraPaused = false;
