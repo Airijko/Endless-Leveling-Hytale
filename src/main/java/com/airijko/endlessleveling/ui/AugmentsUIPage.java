@@ -291,12 +291,22 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         ui.set("#AugmentInfoDivider.Visible", true);
 
-        String desc = def.getDescription();
-        boolean hasDesc = desc != null && !desc.isBlank();
-        ui.set("#AugmentInfoDescription.Text", hasDesc ? desc : "");
-        ui.set("#AugmentInfoDescription.Visible", hasDesc);
-
-        applyInfoSections(ui, buildYamlInfoSections(def));
+        // If this is a common augment, show only the individual stat and its rolled value
+        if (presentation.commonStatOffer() != null && CommonAugment.ID.equalsIgnoreCase(def.getId())) {
+            CommonAugment.CommonStatOffer statOffer = presentation.commonStatOffer();
+            String statName = augmentPresentationMapper.formatCommonStatDisplayName(statOffer.attributeKey());
+            double value = statOffer.rolledValue();
+            String statValueStr = (value == (long) value) ? String.format(Locale.ROOT, "%d", (long) value) : String.format(Locale.ROOT, "%s", value);
+            String statLine = statName + ": " + statValueStr;
+            applyInfoSections(ui, List.of(new InfoSection("", statLine, "#c5d4e8")));
+            ui.set("#AugmentInfoDescription.Visible", false);
+        } else {
+            String desc = def.getDescription();
+            boolean hasDesc = desc != null && !desc.isBlank();
+            ui.set("#AugmentInfoDescription.Text", hasDesc ? desc : "");
+            ui.set("#AugmentInfoDescription.Visible", hasDesc);
+            applyInfoSections(ui, buildYamlInfoSections(def));
+        }
     }
 
     private List<InfoSection> buildYamlInfoSections(@Nonnull AugmentDefinition definition) {
@@ -693,7 +703,6 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 AugmentPresentationMapper.AugmentPresentationData presentation = augmentPresentationMapper.map(
                         definition,
                         rawId);
-                String displayName = presentation.displayName();
                 String icon = presentation.iconItemId();
                 String groupKey;
 
@@ -702,15 +711,16 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                     String attributeKey = offer.attributeKey() == null ? "" : offer.attributeKey().trim();
                     groupKey = "common_stat:" + attributeKey.toLowerCase(Locale.ROOT);
                     totalCommonValueByGroup.merge(groupKey, offer.rolledValue(), Double::sum);
+                    String displayName = augmentPresentationMapper.formatCommonStatDisplayName(attributeKey);
+                    firstCardByGroup.putIfAbsent(groupKey, new OwnedAugmentCard(rawId, displayName, icon));
                 } else {
                     String canonicalId = definition.getId();
                     if (canonicalId == null || canonicalId.isBlank()) {
                         canonicalId = rawId;
                     }
                     groupKey = canonicalId.toLowerCase(Locale.ROOT);
+                    firstCardByGroup.putIfAbsent(groupKey, new OwnedAugmentCard(rawId, presentation.displayName(), icon));
                 }
-
-                firstCardByGroup.putIfAbsent(groupKey, new OwnedAugmentCard(rawId, displayName, icon));
                 countByGroup.merge(groupKey, 1, Integer::sum);
             }
         }
@@ -722,20 +732,20 @@ public class AugmentsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             int count = Math.max(1, countByGroup.getOrDefault(groupKey, 1));
 
             String infoId = baseCard.id();
+            String displayName = baseCard.displayName();
             if (groupKey.startsWith("common_stat:")) {
                 String attributeKey = groupKey.substring("common_stat:".length());
                 double totalValue = totalCommonValueByGroup.getOrDefault(groupKey, 0.0D);
                 infoId = CommonAugment.buildStatOfferId(attributeKey, totalValue);
+                // Format value string without trailing zeros
+                String statValueStr = (totalValue == (long) totalValue) ? String.format(Locale.ROOT, "%d", (long) totalValue) : String.format(Locale.ROOT, "%s", totalValue);
+                displayName = displayName + ": " + statValueStr;
             }
-
-            String displayName = baseCard.displayName();
-            if (count > 1) {
+            if (count > 1 && !groupKey.startsWith("common_stat:")) {
                 displayName = tr("ui.augments.unlocked.count_suffix", "{0} x{1}", displayName, count);
             }
-
             cards.add(new OwnedAugmentCard(infoId, displayName, baseCard.iconItemId()));
         }
-
         return cards;
     }
 

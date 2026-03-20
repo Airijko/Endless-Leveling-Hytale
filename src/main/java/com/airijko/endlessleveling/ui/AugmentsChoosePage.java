@@ -22,6 +22,7 @@ import static com.hypixel.hytale.server.core.ui.builder.EventData.of;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.Message;
+import com.airijko.endlessleveling.augments.types.CommonAugment;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -314,24 +315,42 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
         String title = presentation != null ? presentation.displayName() : augment.getName();
         ui.set(titleSelector + ".Text", title.toUpperCase(Locale.ROOT));
 
-        String description = augment.getDescription();
-        if (description == null || description.isBlank()) {
-            description = tr("ui.augments.no_description", "No description provided.");
-        }
-        ui.set(descriptionSelector + ".Text", description);
-
-        List<CardSection> sections = buildCardSections(augment);
-        for (int index = 0; index < sections.size() && index < sectionSelectors.length; index++) {
-            CardSection section = sections.get(index);
-            String body = buildCardSectionText(section);
-            if (body.isBlank()) {
-                continue;
+            // If this is a common augment, show only the individual stat and its rolled value
+            if (presentation != null && presentation.commonStatOffer() != null) {
+                CommonAugment.CommonStatOffer statOffer = presentation.commonStatOffer();
+                String statName = augmentPresentationMapper.formatCommonStatDisplayName(statOffer.attributeKey());
+                double value = statOffer.rolledValue();
+                String statValueStr = (value == (long) value) ? String.format(Locale.ROOT, "%d", (long) value) : String.format(Locale.ROOT, "%s", value);
+                String statLine = statName + ": " + statValueStr;
+                String selector = sectionSelectors[0];
+                ui.set(selector + ".Text", statLine);
+                ui.set(selector + ".Style.TextColor", normalizeColor("#8adf9e", CARD_SECTION_DEFAULT_COLORS[0]));
+                ui.set(selector + ".Visible", true);
+                // Hide other sections
+                for (int i = 1; i < sectionSelectors.length; i++) {
+                    ui.set(sectionSelectors[i] + ".Visible", false);
+                    ui.set(sectionSelectors[i] + ".Text", "");
+                }
+                ui.set(descriptionSelector + ".Text", "Small raw boost to your core stat.");
+            } else {
+                String description = augment.getDescription();
+                if (description == null || description.isBlank()) {
+                    description = tr("ui.augments.no_description", "No description provided.");
+                }
+                ui.set(descriptionSelector + ".Text", description);
+                List<CardSection> sections = buildCardSections(augment);
+                for (int index = 0; index < sections.size() && index < sectionSelectors.length; index++) {
+                    CardSection section = sections.get(index);
+                    String body = buildCardSectionText(section);
+                    if (body.isBlank()) {
+                        continue;
+                    }
+                    String selector = sectionSelectors[index];
+                    ui.set(selector + ".Text", body);
+                    ui.set(selector + ".Style.TextColor", normalizeColor(section.color(), CARD_SECTION_DEFAULT_COLORS[index]));
+                    ui.set(selector + ".Visible", true);
+                }
             }
-            String selector = sectionSelectors[index];
-            ui.set(selector + ".Text", body);
-            ui.set(selector + ".Style.TextColor", normalizeColor(section.color(), CARD_SECTION_DEFAULT_COLORS[index]));
-            ui.set(selector + ".Visible", true);
-        }
     }
 
     private String[] cardSectionSelectors(int slotIndex) {
