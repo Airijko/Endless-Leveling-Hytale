@@ -14,11 +14,11 @@ weapons:
 
 passives:
   - type: RETALIATION
-    value: 0.212
+    value: 0.45
     window: 5
-    cooldown: 25
+    cooldown: 17.5
   - type: BERZERKER
-    value: 0.297
+    value: 0.4
     threshold: 0.4
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: life_force
