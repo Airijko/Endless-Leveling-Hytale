@@ -97,7 +97,11 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             @Nonnull UIEventBuilder events,
             @Nonnull Store<EntityStore> store) {
 
-        ui.append("Pages/Profile/ProfilePage.ui");
+        boolean partnerAuthorized = EndlessLeveling.getInstance() != null
+            && EndlessLeveling.getInstance().isPartnerAddonAuthorized();
+        ui.append(partnerAuthorized
+            ? "Pages/Profile/ProfilePagePartner.ui"
+            : "Pages/Profile/ProfilePage.ui");
         NavUIHelper.bindNavEvents(events);
         NavUIHelper.applyNavVersion(ui, playerRef, "profile",
             "Common/UI/Custom/Pages/Profile/ProfilePage.ui",

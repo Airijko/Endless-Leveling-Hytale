@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
  */
 public final class PlayerChatNotifier {
 
-    private static final String PREFIX_TEXT = FixedValue.CHAT_PREFIX.value();
     private static final String PREFIX_COLOR = ChatMessageStrings.Color.PREFIX_RED;
 
     private static final Pattern LEGACY_PREFIX_PATTERN = Pattern.compile("^\\s*\\[[^\\]]+\\]\\s*");
@@ -30,7 +29,7 @@ public final class PlayerChatNotifier {
 
     @Nonnull
     public static Message prefixed(@Nonnull Message body) {
-        return Message.join(Message.raw(PREFIX_TEXT).color(PREFIX_COLOR), body);
+        return Message.join(Message.raw(FixedValue.CHAT_PREFIX.value()).color(PREFIX_COLOR), body);
     }
 
     public static void send(PlayerRef playerRef, Message body) {

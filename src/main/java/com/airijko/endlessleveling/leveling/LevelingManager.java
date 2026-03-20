@@ -10,8 +10,8 @@ import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.ui.PlayerHud;
 import com.airijko.endlessleveling.systems.PlayerRaceStatSystem;
-import com.airijko.endlessleveling.util.ChatMessageStrings;
 import com.airijko.endlessleveling.util.ChatMessageTemplate;
+import com.airijko.endlessleveling.util.FixedValue;
 import com.airijko.endlessleveling.util.PlayerChatNotifier;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
@@ -355,7 +355,7 @@ public class LevelingManager {
                 .color("#ffc300");
         var notifSecondary = Message.join(
                 Message.raw("Use ").color("#ff9d00"),
-                Message.raw(ChatMessageStrings.Command.ROOT).color("#4fd7f7"),
+            Message.raw(FixedValue.ROOT_COMMAND.value()).color("#4fd7f7"),
                 Message.raw(" to allocate your points").color("#ff9d00"));
         var icon = new ItemStack("Ingredient_Ice_Essence", 1).toPacket();
         NotificationUtil.sendNotification(playerRef.getPacketHandler(), notifPrimary, notifSecondary, icon);

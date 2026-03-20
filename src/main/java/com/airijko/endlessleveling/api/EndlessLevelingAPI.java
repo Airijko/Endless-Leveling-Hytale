@@ -229,6 +229,24 @@ public final class EndlessLevelingAPI {
         return classManager == null ? List.of() : List.copyOf(classManager.getLoadedClasses());
     }
 
+    /** Current UI and messaging brand name. */
+    public String getBrandName() {
+        EndlessLeveling plugin = plugin();
+        return plugin != null ? plugin.getBrandName() : EndlessLeveling.DEFAULT_BRAND_NAME;
+    }
+
+    /** Current chat message prefix used by EL notifications. */
+    public String getMessagePrefix() {
+        EndlessLeveling plugin = plugin();
+        return plugin != null ? plugin.getMessagePrefix() : EndlessLeveling.DEFAULT_MESSAGE_PREFIX;
+    }
+
+    /** Current root command token used in EL messaging. */
+    public String getCommandPrefix() {
+        EndlessLeveling plugin = plugin();
+        return plugin != null ? plugin.getCommandPrefix() : EndlessLeveling.DEFAULT_COMMAND_PREFIX;
+    }
+
     /**
      * Underlying per-point config value for a skill attribute (from config.yml).
      */

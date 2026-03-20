@@ -9,10 +9,14 @@ import com.airijko.endlessleveling.enums.themes.AugmentTheme;
  */
 public final class ChatMessageStrings {
 
-    public static final String PREFIX_TEXT = FixedValue.CHAT_PREFIX.value();
+    public static String prefixText() {
+        return FixedValue.CHAT_PREFIX.value();
+    }
 
     public static final class Command {
-        public static final String ROOT = FixedValue.ROOT_COMMAND.value();
+        public static String root() {
+            return FixedValue.ROOT_COMMAND.value();
+        }
 
         private Command() {
         }

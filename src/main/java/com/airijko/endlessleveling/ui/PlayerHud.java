@@ -124,7 +124,8 @@ public class PlayerHud extends CustomUIHud {
             return;
         }
 
-        uiCommandBuilder.append("Hud/EndlessPlayerHud.ui");
+        boolean partnerAuthorized = EndlessLeveling.getInstance().isPartnerAddonAuthorized();
+        uiCommandBuilder.append(partnerAuthorized ? "Hud/EndlessPlayerHudPartner.ui" : "Hud/EndlessPlayerHud.ui");
         uiCommandBuilder.append("Hud/EndlessStackingAugments.ui");
         // Avoid calling update() during build. The initial build packet should only
         // append

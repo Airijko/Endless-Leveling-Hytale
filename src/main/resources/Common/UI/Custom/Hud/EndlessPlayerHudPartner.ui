@@ -1,0 +1,156 @@
+$C = "../Common.ui";
+
+$Hotbar = "Hotbar.ui";
+
+Group #EndlessPlayerHud {
+  LayoutMode: Bottom;
+  Anchor: (Bottom: 145, Width: 634, Height: 66);
+
+  Group #ActiveAugmentPanel {
+    LayoutMode: Top;
+    Anchor: (Bottom: 48, Width: 634, Height: 16);
+    Visible: false;
+
+    Label #ActiveAugmentName {
+      Anchor: (Height: 12, Left: 0, Right: 0, Bottom: 2);
+      Style: (FontSize: 12, Alignment: Center, TextColor: #dbe4e7, RenderBold: true);
+      Text: "";
+    }
+
+    Group #ActiveAugmentBar {
+      Anchor: (Top: 1, Width: 634, Height: 12);
+      Background: "Endless_DurationBarBackground.png";
+
+      ProgressBar #ActiveAugmentProgress {
+        Anchor: (Width: 634, Height: 12);
+        BarTexturePath: "Endless_DurationBarFill.png";
+      }
+    }
+  }
+
+  Group #ShieldStatusPanel {
+    LayoutMode: Top;
+    Anchor: (Bottom: 48, Width: 634, Height: 16);
+    Visible: false;
+
+    Label #ShieldStatusName {
+      Anchor: (Height: 12, Left: 0, Right: 0, Bottom: 2);
+      Style: (FontSize: 12, Alignment: Center, TextColor: #dbe4e7, RenderBold: true);
+      Text: "";
+    }
+
+    Group #ShieldStatusBar {
+      Anchor: (Top: 1, Width: 634, Height: 12);
+      Background: "Endless_DurationBarBackground.png";
+
+      ProgressBar #ShieldStatusProgress {
+        Anchor: (Width: 634, Height: 12);
+        BarTexturePath: "Endless_ShieldFill.png";
+      }
+    }
+  }
+}
+
+Group #EndlessPlayerLevel {
+  LayoutMode: Bottom;
+  Anchor: (Bottom: 8, Width: 634, Height: 66);
+
+  Group #Content {
+    LayoutMode: Middle;
+    Anchor: (Bottom: 0, Width: 634, Height: 24);
+
+    Group #XpBar {
+      Anchor: (Left: 0, Width: 634, Height: 24);
+      Background: "Partner_XPBackground.png";
+
+      ProgressBar #ProgressBar {
+        Anchor: (Width: 634, Height: 24);
+        BarTexturePath: "Partner_XPFill.png";
+      }
+    }
+  }
+}
+
+
+// Player level, race, class info
+Group #InfoPanel {
+  LayoutMode: Top;
+  Anchor: (Bottom: 15, Left: 15, Width: 260);
+  Padding: (Full: 4);
+
+  Group { FlexWeight: 1; }
+
+  Label #Level {
+    Anchor: (Height: 18, Top: 4);
+    Text: "Level";
+    Style: (TextColor: #ffe8d7, FontSize: 12, RenderBold: true);
+  }
+
+  Group #InfoMobLevel {
+    LayoutMode: Left;
+    Anchor: (Height: 18, Top: 4);
+
+    Label #InfoMobLevelPrefix {
+      Style: (FontSize: 11, TextColor: #ffad42);
+      Text: "Local mobs: ";
+    }
+
+    Label #InfoMobLevelValue {
+      Anchor: (Left: 2);
+      Style: (FontSize: 11, TextColor: #dbe4e7);
+      Text: "--";
+    }
+  }
+
+  Group #InfoRace {
+    LayoutMode: Left;
+    Anchor: (Height: 18, Top: 4);
+
+    ItemIcon #InfoRaceIcon {
+      Anchor: (Width: 16, Height: 16, Top: 1);
+      Visible: false;
+    }
+
+    Label #InfoRacePrefix {
+      Anchor: (Left: 6);
+      Style: (FontSize: 11, TextColor: #4fd7f7);
+      Text: "Race: ";
+    }
+
+    Label #InfoRaceValue {
+      Anchor: (Left: 2);
+      Style: (FontSize: 11, TextColor: #dbe4e7);
+      Text: "--";
+    }
+  }
+
+  Group #PrimaryClassRow {
+    LayoutMode: Left;
+
+    ItemIcon #PrimaryIcon {
+      Anchor: (Width: 16, Height: 16, Top: 1);
+      Visible: false;
+    }
+
+    Label #PrimaryClass {
+      Anchor: (Height: 18, Left: 6);
+      Style: (FontSize: 11, TextColor: #dbe4e7);
+      Text: "--";
+    }
+  }
+
+  Group #SecondaryClassRow {
+    LayoutMode: Left;
+
+    ItemIcon #SecondaryIcon {
+      Anchor: (Width: 16, Height: 16, Top: 1);
+      Visible: false;
+    }
+
+    Label #SecondaryClass {
+      Anchor: (Height: 18, Left: 6);
+      Style: (FontSize: 11, TextColor: #dbe4e7);
+      Text: "--";
+    }
+  }
+}

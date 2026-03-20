@@ -24,27 +24,27 @@ import java.util.regex.Pattern;
 public final class UiTitleIntegrityGuard {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
-    private static final String EXPECTED_BRAND = "Endless Leveling";
-    private static final String ALERT_PREFIX = "[EndlessLeveling] ";
+    public static final String DEFAULT_BRAND = "Endless Leveling";
+    public static final String DEFAULT_ALERT_PREFIX = "[EndlessLeveling] ";
     private static final Pattern TEXT_PATTERN = Pattern.compile("@?Text\\s*[:=]\\s*\"([^\"]*)\"");
 
     private static final List<SelectorCheck> SELECTOR_CHECKS = List.of(
-            new SelectorCheck("Common/UI/Custom/Pages/SkillsPage.ui", "SkillsPageTitle", EXPECTED_BRAND),
-            new SelectorCheck("Common/UI/Custom/Pages/Augments/AugmentsPage.ui", "AugmentsPageTitle",
-                    EXPECTED_BRAND),
-            new SelectorCheck("Common/UI/Custom/Pages/Classes/ClassPathsPage.ui", "ClassPathsTitle",
-                    EXPECTED_BRAND),
-            new SelectorCheck("Common/UI/Custom/Pages/Leaderboards/LeaderboardsPage.ui", "LeaderboardsTitle",
-                    EXPECTED_BRAND),
-            new SelectorCheck("Common/UI/Custom/Pages/Profile/ProfilePage.ui", "ProfileTitle", EXPECTED_BRAND),
-            new SelectorCheck("Common/UI/Custom/Pages/Races/RacesPage.ui", "RacesTitle", EXPECTED_BRAND),
-            new SelectorCheck("Common/UI/Custom/Pages/SettingsPage.ui", "SettingsTitle", EXPECTED_BRAND),
-            new SelectorCheck("Common/UI/Custom/Pages/SupportPage.ui", "SupportTitle", EXPECTED_BRAND));
+        new SelectorCheck("Common/UI/Custom/Pages/SkillsPage.ui", "SkillsPageTitle"),
+        new SelectorCheck("Common/UI/Custom/Pages/Augments/AugmentsPage.ui", "AugmentsPageTitle"),
+        new SelectorCheck("Common/UI/Custom/Pages/Classes/ClassesPage.ui", "ClassTitle"),
+        new SelectorCheck("Common/UI/Custom/Pages/Classes/ClassPathsPage.ui", "ClassPathsTitle"),
+        new SelectorCheck("Common/UI/Custom/Pages/Leaderboards/LeaderboardsPage.ui", "LeaderboardsTitle"),
+        new SelectorCheck("Common/UI/Custom/Pages/Profile/ProfilePage.ui", "ProfileTitle"),
+        new SelectorCheck("Common/UI/Custom/Pages/Races/RacesPage.ui", "RacesTitle"),
+        new SelectorCheck("Common/UI/Custom/Pages/SettingsPage.ui", "SettingsTitle"),
+        new SelectorCheck("Common/UI/Custom/Pages/SupportPage.ui", "SupportTitle"));
 
     private static final String NAV_RESOURCE_PATH = "Common/UI/Custom/Pages/Nav/LeftNavPanel.ui";
     private static final String NAV_HEADER_SELECTOR = "NavHeader";
     private static final String NAV_SUB_HEADER_SELECTOR = "NavSubHeader";
 
+    private volatile String expectedBrand = DEFAULT_BRAND;
+    private volatile String alertPrefix = DEFAULT_ALERT_PREFIX;
     private volatile IntegrityResult lastResult = IntegrityResult.ok();
     private volatile String lastFingerprint = "";
 
@@ -52,22 +52,23 @@ public final class UiTitleIntegrityGuard {
     public IntegrityResult evaluate() {
         Map<String, String> resourceCache = new HashMap<>();
         List<TitleViolation> violations = new ArrayList<>();
+        String currentBrand = expectedBrand;
 
         for (SelectorCheck check : SELECTOR_CHECKS) {
             String content = loadResource(resourceCache, check.resourcePath());
             if (content == null) {
-                violations.add(TitleViolation.missingResource(check.resourcePath(), check.selector(), check.expectedText()));
+                violations.add(TitleViolation.missingResource(check.resourcePath(), check.selector(), currentBrand));
                 continue;
             }
 
             String actualText = extractSelectorText(content, check.selector());
             if (actualText == null) {
-                violations.add(TitleViolation.missingText(check.resourcePath(), check.selector(), check.expectedText()));
+                violations.add(TitleViolation.missingText(check.resourcePath(), check.selector(), currentBrand));
                 continue;
             }
 
-            if (!normalize(actualText).equals(normalize(check.expectedText()))) {
-                violations.add(TitleViolation.renamed(check.resourcePath(), check.selector(), check.expectedText(),
+            if (!normalize(actualText).equals(normalize(currentBrand))) {
+                violations.add(TitleViolation.renamed(check.resourcePath(), check.selector(), currentBrand,
                         actualText));
             }
         }
@@ -102,7 +103,7 @@ public final class UiTitleIntegrityGuard {
         // without explicit permission from the original developer.
 
         playerRef.sendMessage(Message.join(
-                Message.raw(ALERT_PREFIX).color("#ff4d4d"),
+            Message.raw(alertPrefix).color("#ff4d4d"),
                 Message.raw("Unauthorized UI title modification detected.").color("#ff4d4d")));
 
         List<String> renamedValues = new ArrayList<>();
@@ -125,7 +126,7 @@ public final class UiTitleIntegrityGuard {
         if (!renamedValues.isEmpty()) {
             String renamedSummary = String.join("\", \"", renamedValues);
             playerRef.sendMessage(Message.join(
-                Message.raw(ALERT_PREFIX).color("#ff9f43"),
+                Message.raw(alertPrefix).color("#ff9f43"),
                 Message.raw("UI branding was renamed to ").color("#ffd9a6"),
                 Message.raw("\"" + renamedSummary + "\"").color("#ff6b6b"),
                 Message.raw(".").color("#ffd9a6")));
@@ -133,24 +134,24 @@ public final class UiTitleIntegrityGuard {
 
         if (hasValidationIssues) {
             playerRef.sendMessage(Message.join(
-                Message.raw(ALERT_PREFIX).color("#ff9f43"),
+                Message.raw(alertPrefix).color("#ff9f43"),
                 Message.raw("Some UI branding fields failed validation.").color("#ffd9a6")));
         }
 
         String discordInviteUrl = DiscordLinkResolver.getDiscordInviteUrl();
 
         playerRef.sendMessage(Message.join(
-            Message.raw(ALERT_PREFIX).color("#ff4d4d"),
+            Message.raw(alertPrefix).color("#ff4d4d"),
             Message.raw("Report this in Discord:").color("#ffd166")));
 
         playerRef.sendMessage(Message.join(
-            Message.raw(ALERT_PREFIX).color("#ff4d4d"),
+            Message.raw(alertPrefix).color("#ff4d4d"),
             Message.raw("1) Click this link: ").color("#ffd166"),
             Message.raw("Endless Leveling Discord").link(discordInviteUrl).color("#6fe3ff"),
             Message.raw(".").color("#ffd166")));
 
         playerRef.sendMessage(Message.join(
-            Message.raw(ALERT_PREFIX).color("#ff4d4d"),
+            Message.raw(alertPrefix).color("#ff4d4d"),
             Message.raw("2) Ping ").color("#ffd166"),
             Message.raw("@juhjuh").color("#ff8ec7"),
             Message.raw(" (Airijko) and attach a screenshot.").color("#ffd166")));
@@ -161,7 +162,7 @@ public final class UiTitleIntegrityGuard {
         if (navContent == null) {
             violations.add(TitleViolation.missingResource(NAV_RESOURCE_PATH,
                     NAV_HEADER_SELECTOR + "+" + NAV_SUB_HEADER_SELECTOR,
-                    EXPECTED_BRAND));
+                    expectedBrand));
             return;
         }
 
@@ -178,12 +179,25 @@ public final class UiTitleIntegrityGuard {
 
         String combinedRaw = header.trim() + " " + subHeader.trim();
         String combined = normalize(header + " " + subHeader);
-        if (!combined.equals(normalize(EXPECTED_BRAND))) {
+        if (!combined.equals(normalize(expectedBrand))) {
             violations.add(TitleViolation.renamed(
                     NAV_RESOURCE_PATH,
                     NAV_HEADER_SELECTOR + "+" + NAV_SUB_HEADER_SELECTOR,
-                    EXPECTED_BRAND,
+                    expectedBrand,
                     combinedRaw));
+        }
+    }
+
+    public void updateBranding(String brand, String messagePrefix) {
+        if (brand != null && !brand.isBlank()) {
+            expectedBrand = brand;
+        } else {
+            expectedBrand = DEFAULT_BRAND;
+        }
+        if (messagePrefix != null && !messagePrefix.isBlank()) {
+            alertPrefix = messagePrefix;
+        } else {
+            alertPrefix = DEFAULT_ALERT_PREFIX;
         }
     }
 
@@ -256,7 +270,7 @@ public final class UiTitleIntegrityGuard {
         return lastResult;
     }
 
-    private record SelectorCheck(String resourcePath, String selector, String expectedText) {
+    private record SelectorCheck(String resourcePath, String selector) {
     }
 
     public record TitleViolation(String resourcePath,

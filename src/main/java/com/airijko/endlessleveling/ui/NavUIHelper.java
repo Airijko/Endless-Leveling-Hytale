@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -32,9 +33,9 @@ public final class NavUIHelper {
 
         private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
         private static final String NAV_VERSION = resolveVersion();
-        private static final String BRAND_TITLE = "ENDLESS LEVELING";
-        private static final String BRAND_NAV_HEADER = "ENDLESS";
-        private static final String BRAND_NAV_SUB_HEADER = "LEVELING";
+        private static final String BRAND_TITLE_FALLBACK = "ENDLESS LEVELING";
+        private static final String BRAND_NAV_HEADER_FALLBACK = "ENDLESS";
+        private static final String BRAND_NAV_SUB_HEADER_FALLBACK = "LEVELING";
         private static final String NAV_RESOURCE_PATH = "Common/UI/Custom/Pages/Nav/LeftNavPanel.ui";
         private static final Map<String, String> RESOURCE_TEXT_CACHE = new ConcurrentHashMap<>();
         private static final Set<String> MISSING_SELECTOR_WARNED = ConcurrentHashMap.newKeySet();
@@ -88,11 +89,54 @@ public final class NavUIHelper {
                         @Nonnull UICommandBuilder ui,
                         String pageResourcePath,
                         String pageTitleSelector) {
-                safeSetText(ui, pageResourcePath, pageTitleSelector, BRAND_TITLE);
+                RuntimeBranding branding = resolveRuntimeBranding();
+                safeSetText(ui, pageResourcePath, pageTitleSelector, branding.pageTitle());
 
                 // Nav header is split into two labels in LeftNavPanel.ui.
-                safeSetText(ui, NAV_RESOURCE_PATH, "#NavHeader", BRAND_NAV_HEADER);
-                safeSetText(ui, NAV_RESOURCE_PATH, "#NavSubHeader", BRAND_NAV_SUB_HEADER);
+                safeSetText(ui, NAV_RESOURCE_PATH, "#NavHeader", branding.navHeader());
+                safeSetText(ui, NAV_RESOURCE_PATH, "#NavSubHeader", branding.navSubHeader());
+        }
+
+        private static RuntimeBranding resolveRuntimeBranding() {
+                EndlessLeveling plugin = EndlessLeveling.getInstance();
+                String brand = plugin != null ? plugin.getBrandName() : null;
+                if (brand == null || brand.isBlank()) {
+                        return new RuntimeBranding(BRAND_TITLE_FALLBACK, BRAND_NAV_HEADER_FALLBACK,
+                                        BRAND_NAV_SUB_HEADER_FALLBACK);
+                }
+
+                String normalizedBrand = brand.trim().replaceAll("\\s+", " ").toUpperCase();
+                String headerOverride = plugin != null ? plugin.getNavHeaderOverride() : null;
+                String subHeaderOverride = plugin != null ? plugin.getNavSubHeaderOverride() : null;
+                if (headerOverride != null || subHeaderOverride != null) {
+                        String header = headerOverride == null ? "" : headerOverride.trim().replaceAll("\\s+", " ")
+                                        .toUpperCase();
+                        String subHeader = subHeaderOverride == null ? ""
+                                        : subHeaderOverride.trim().replaceAll("\\s+", " ").toUpperCase();
+                        if (header.isBlank() && subHeader.isBlank()) {
+                                return new RuntimeBranding(normalizedBrand, BRAND_NAV_HEADER_FALLBACK,
+                                                BRAND_NAV_SUB_HEADER_FALLBACK);
+                        }
+                        return new RuntimeBranding(normalizedBrand, header, subHeader);
+                }
+
+                int splitIndex = normalizedBrand.indexOf(' ');
+                if (splitIndex < 0) {
+                        return new RuntimeBranding(normalizedBrand, "", normalizedBrand);
+                }
+
+                String header = normalizedBrand.substring(0, splitIndex).trim();
+                String subHeader = normalizedBrand.substring(splitIndex + 1).trim();
+                if (header.isBlank()) {
+                        header = BRAND_NAV_HEADER_FALLBACK;
+                }
+                if (subHeader.isBlank()) {
+                        subHeader = BRAND_NAV_SUB_HEADER_FALLBACK;
+                }
+                return new RuntimeBranding(normalizedBrand, header, subHeader);
+        }
+
+        private record RuntimeBranding(String pageTitle, String navHeader, String navSubHeader) {
         }
 
         private static void safeSetText(
