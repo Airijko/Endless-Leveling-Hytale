@@ -14,17 +14,15 @@ ui:
       color: "#ffb86b"
     - title: "Above 50%"
       body: |
-        Value: +80%
+        +80% Bonus Damage
       color: "#8adf9e"
     - title: ""
       body: |
-        Self Damage: +10%
+        -10% Self Damage
       color: "#ff9a9a"
     - title: "Below 50%"
       body: |
-        Missing Health Heal: +10%
-        Healing Ratio from Strength: +10%
-        Healing Ratio from Sorcery: +10%
+        +10% + (10% of Strength & Sorcery) 
       color: "#8adf9e"
 passives:
   hit_counter: 3
