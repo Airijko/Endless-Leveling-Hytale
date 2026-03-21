@@ -101,6 +101,7 @@ public class EndlessLeveling extends JavaPlugin {
     private AugmentExecutor augmentExecutor;
     private MobAugmentExecutor mobAugmentExecutor;
     private UiTitleIntegrityGuard uiTitleIntegrityGuard;
+    private UiIntegrityAlertSystem uiIntegrityAlertSystem;
     private volatile String brandName = DEFAULT_BRAND_NAME;
     private volatile String commandPrefix = DEFAULT_COMMAND_PREFIX;
     private volatile String messagePrefix = DEFAULT_MESSAGE_PREFIX;
@@ -235,10 +236,23 @@ public class EndlessLeveling extends JavaPlugin {
         boolean partnerDomainAuthorized = PartnerBrandingAllowlist.hasAuthorizedHost(declaredServerHosts);
         partnerAddonAuthorized = premiumAddonAvailable && partnerDomainAuthorized;
 
+        // Always update authorization status on guard and alert system
+        // This ensures that invalid domains immediately disable authorization skipping
+        if (uiTitleIntegrityGuard != null) {
+            uiTitleIntegrityGuard.setAuthorizedPartner(partnerAddonAuthorized);
+        }
+        if (uiIntegrityAlertSystem != null) {
+            uiIntegrityAlertSystem.setAuthorizedPartner(partnerAddonAuthorized);
+        }
+
         boolean overrideRequest = !DEFAULT_BRAND_NAME.equals(normalizedBrandName)
                 || !DEFAULT_COMMAND_PREFIX.equals(normalizedCommandPrefix)
                 || !DEFAULT_MESSAGE_PREFIX.equals(normalizedMessagePrefix);
         if (overrideRequest && !premiumAddonAvailable) {
+            if (uiTitleIntegrityGuard != null) {
+                // Trigger integrity alerts for unauthorized override attempts.
+                uiTitleIntegrityGuard.updateBranding(normalizedBrandName, normalizedMessagePrefix);
+            }
             if (!warnedUnauthorizedBrandingOverride) {
                 warnedUnauthorizedBrandingOverride = true;
                 LOGGER.atWarning().log(
@@ -247,6 +261,10 @@ public class EndlessLeveling extends JavaPlugin {
             return;
         }
         if (overrideRequest && !partnerDomainAuthorized) {
+            if (uiTitleIntegrityGuard != null) {
+                // Trigger integrity alerts for unauthorized override attempts.
+                uiTitleIntegrityGuard.updateBranding(normalizedBrandName, normalizedMessagePrefix);
+            }
             if (!warnedUnauthorizedBrandingOverride) {
                 warnedUnauthorizedBrandingOverride = true;
                 LOGGER.atWarning().log(
@@ -264,7 +282,9 @@ public class EndlessLeveling extends JavaPlugin {
         FixedValue.ROOT_COMMAND.setValue(normalizedCommandPrefix);
         FixedValue.CHAT_PREFIX.setValue(normalizedMessagePrefix);
         if (uiTitleIntegrityGuard != null) {
-            uiTitleIntegrityGuard.updateBranding(normalizedBrandName, normalizedMessagePrefix);
+            // Core UI resources keep Endless Leveling branding and partner UI is bypassed,
+            // so the guard should validate core branding against the core default.
+            uiTitleIntegrityGuard.updateBranding(DEFAULT_BRAND_NAME, normalizedMessagePrefix);
         }
     }
 
@@ -469,7 +489,8 @@ public class EndlessLeveling extends JavaPlugin {
         mobLevelingSystem = new MobLevelingSystem();
         this.getEntityStoreRegistry().registerSystem(mobLevelingSystem);
         this.getEntityStoreRegistry().registerSystem(new HudRefreshSystem());
-        this.getEntityStoreRegistry().registerSystem(new UiIntegrityAlertSystem(uiTitleIntegrityGuard));
+        uiIntegrityAlertSystem = new UiIntegrityAlertSystem(uiTitleIntegrityGuard);
+        this.getEntityStoreRegistry().registerSystem(uiIntegrityAlertSystem);
         this.getEntityStoreRegistry().registerSystem(new WitherEffectSystem());
 
         // Register commands

@@ -114,4 +114,8 @@ public final class UiIntegrityAlertSystem extends TickingSystem<EntityStore> {
 
         nextAlertAtByPlayer.keySet().removeIf(uuid -> !onlinePlayers.contains(uuid));
     }
+
+    public void setAuthorizedPartner(boolean authorized) {
+        // No-op: kept for API compatibility with existing partner-branding flow.
+    }
 }

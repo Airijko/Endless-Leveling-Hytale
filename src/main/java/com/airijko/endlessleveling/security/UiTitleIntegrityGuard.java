@@ -8,8 +8,10 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -42,6 +44,9 @@ public final class UiTitleIntegrityGuard {
     private static final String NAV_RESOURCE_PATH = "Common/UI/Custom/Pages/Nav/LeftNavPanel.ui";
     private static final String NAV_HEADER_SELECTOR = "NavHeader";
     private static final String NAV_SUB_HEADER_SELECTOR = "NavSubHeader";
+        private static final List<String> PARTNER_RESOURCE_MARKERS = List.of(
+            "endlesslevelingpartneraddon",
+            "el-partner-addon");
 
     private volatile String expectedBrand = DEFAULT_BRAND;
     private volatile String alertPrefix = DEFAULT_ALERT_PREFIX;
@@ -50,26 +55,34 @@ public final class UiTitleIntegrityGuard {
 
     @Nonnull
     public IntegrityResult evaluate() {
-        Map<String, String> resourceCache = new HashMap<>();
+        Map<String, List<ResourceSnapshot>> resourceCache = new HashMap<>();
         List<TitleViolation> violations = new ArrayList<>();
         String currentBrand = expectedBrand;
 
         for (SelectorCheck check : SELECTOR_CHECKS) {
-            String content = loadResource(resourceCache, check.resourcePath());
-            if (content == null) {
+            List<ResourceSnapshot> resources = loadResources(resourceCache, check.resourcePath());
+            if (resources.isEmpty()) {
                 violations.add(TitleViolation.missingResource(check.resourcePath(), check.selector(), currentBrand));
                 continue;
             }
 
-            String actualText = extractSelectorText(content, check.selector());
-            if (actualText == null) {
-                violations.add(TitleViolation.missingText(check.resourcePath(), check.selector(), currentBrand));
-                continue;
-            }
+            for (ResourceSnapshot snapshot : resources) {
+                String actualText = extractSelectorText(snapshot.content(), check.selector());
+                if (actualText == null) {
+                    violations.add(TitleViolation.missingText(
+                            check.resourcePath() + " @ " + snapshot.source(),
+                            check.selector(),
+                            currentBrand));
+                    continue;
+                }
 
-            if (!normalize(actualText).equals(normalize(currentBrand))) {
-                violations.add(TitleViolation.renamed(check.resourcePath(), check.selector(), currentBrand,
-                        actualText));
+                if (!normalize(actualText).equals(normalize(currentBrand))) {
+                    violations.add(TitleViolation.renamed(
+                            check.resourcePath() + " @ " + snapshot.source(),
+                            check.selector(),
+                            currentBrand,
+                            actualText));
+                }
             }
         }
 
@@ -157,34 +170,42 @@ public final class UiTitleIntegrityGuard {
             Message.raw(" (Airijko) and attach a screenshot.").color("#ffd166")));
     }
 
-    private void validateNavSplit(Map<String, String> resourceCache, List<TitleViolation> violations) {
-        String navContent = loadResource(resourceCache, NAV_RESOURCE_PATH);
-        if (navContent == null) {
+    private void validateNavSplit(Map<String, List<ResourceSnapshot>> resourceCache, List<TitleViolation> violations) {
+        List<ResourceSnapshot> navResources = loadResources(resourceCache, NAV_RESOURCE_PATH);
+        if (navResources.isEmpty()) {
             violations.add(TitleViolation.missingResource(NAV_RESOURCE_PATH,
                     NAV_HEADER_SELECTOR + "+" + NAV_SUB_HEADER_SELECTOR,
                     expectedBrand));
             return;
         }
 
-        String header = extractSelectorText(navContent, NAV_HEADER_SELECTOR);
-        String subHeader = extractSelectorText(navContent, NAV_SUB_HEADER_SELECTOR);
-        if (header == null) {
-            violations.add(TitleViolation.missingText(NAV_RESOURCE_PATH, NAV_HEADER_SELECTOR, "Endless"));
-            return;
-        }
-        if (subHeader == null) {
-            violations.add(TitleViolation.missingText(NAV_RESOURCE_PATH, NAV_SUB_HEADER_SELECTOR, "Leveling"));
-            return;
-        }
+        for (ResourceSnapshot snapshot : navResources) {
+            String header = extractSelectorText(snapshot.content(), NAV_HEADER_SELECTOR);
+            String subHeader = extractSelectorText(snapshot.content(), NAV_SUB_HEADER_SELECTOR);
+            if (header == null) {
+                violations.add(TitleViolation.missingText(
+                        NAV_RESOURCE_PATH + " @ " + snapshot.source(),
+                        NAV_HEADER_SELECTOR,
+                        "Endless"));
+                continue;
+            }
+            if (subHeader == null) {
+                violations.add(TitleViolation.missingText(
+                        NAV_RESOURCE_PATH + " @ " + snapshot.source(),
+                        NAV_SUB_HEADER_SELECTOR,
+                        "Leveling"));
+                continue;
+            }
 
-        String combinedRaw = header.trim() + " " + subHeader.trim();
-        String combined = normalize(header + " " + subHeader);
-        if (!combined.equals(normalize(expectedBrand))) {
-            violations.add(TitleViolation.renamed(
-                    NAV_RESOURCE_PATH,
-                    NAV_HEADER_SELECTOR + "+" + NAV_SUB_HEADER_SELECTOR,
-                    expectedBrand,
-                    combinedRaw));
+            String combinedRaw = header.trim() + " " + subHeader.trim();
+            String combined = normalize(header + " " + subHeader);
+            if (!combined.equals(normalize(expectedBrand))) {
+                violations.add(TitleViolation.renamed(
+                        NAV_RESOURCE_PATH + " @ " + snapshot.source(),
+                        NAV_HEADER_SELECTOR + "+" + NAV_SUB_HEADER_SELECTOR,
+                        expectedBrand,
+                        combinedRaw));
+            }
         }
     }
 
@@ -201,28 +222,58 @@ public final class UiTitleIntegrityGuard {
         }
     }
 
-    private String loadResource(Map<String, String> resourceCache, String resourcePath) {
-        String cached = resourceCache.get(resourcePath);
+    public void setAuthorizedPartner(boolean authorized) {
+        // No-op: kept for API compatibility with existing partner-branding flow.
+    }
+
+    private List<ResourceSnapshot> loadResources(Map<String, List<ResourceSnapshot>> resourceCache, String resourcePath) {
+        List<ResourceSnapshot> cached = resourceCache.get(resourcePath);
         if (cached != null) {
             return cached;
         }
-        String loaded = readResource(resourcePath);
-        if (loaded != null) {
-            resourceCache.put(resourcePath, loaded);
-        }
+        List<ResourceSnapshot> loaded = readResources(resourcePath);
+        resourceCache.put(resourcePath, loaded);
         return loaded;
     }
 
-    private String readResource(String resourcePath) {
-        try (InputStream in = UiTitleIntegrityGuard.class.getClassLoader().getResourceAsStream(resourcePath)) {
-            if (in == null) {
-                return null;
+    private List<ResourceSnapshot> readResources(String resourcePath) {
+        List<ResourceSnapshot> resources = new ArrayList<>();
+        try {
+            Enumeration<URL> urls = UiTitleIntegrityGuard.class.getClassLoader().getResources(resourcePath);
+            while (urls.hasMoreElements()) {
+                URL url = urls.nextElement();
+                if (isPartnerAddonResource(url)) {
+                    continue;
+                }
+                try (InputStream in = url.openStream()) {
+                    resources.add(new ResourceSnapshot(url.toString(), new String(in.readAllBytes(), StandardCharsets.UTF_8)));
+                } catch (IOException e) {
+                    LOGGER.atWarning().log("Failed to read resource %s from %s: %s", resourcePath, url, e.getMessage());
+                }
             }
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            LOGGER.atWarning().log("Failed to read resource %s: %s", resourcePath, e.getMessage());
-            return null;
+            LOGGER.atWarning().log("Failed to enumerate resources for %s: %s", resourcePath, e.getMessage());
         }
+
+        if (!resources.isEmpty()) {
+            return resources;
+        }
+
+        return List.of();
+    }
+
+    private boolean isPartnerAddonResource(URL url) {
+        if (url == null) {
+            return false;
+        }
+
+        String source = url.toString().toLowerCase(Locale.ROOT);
+        for (String marker : PARTNER_RESOURCE_MARKERS) {
+            if (source.contains(marker)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String extractSelectorText(String fileContent, String selector) {
@@ -271,6 +322,9 @@ public final class UiTitleIntegrityGuard {
     }
 
     private record SelectorCheck(String resourcePath, String selector) {
+    }
+
+    private record ResourceSnapshot(String source, String content) {
     }
 
     public record TitleViolation(String resourcePath,
