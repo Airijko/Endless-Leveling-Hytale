@@ -130,10 +130,15 @@ public class MobDamageScalingSystem extends DamageEventSystem {
                 summonRef,
                 store,
                 commandBuffer);
+        double baseDamageValue = ArmyOfTheDeadPassive.getManagedSummonBaseDamage(
+            summonRef,
+            store,
+            commandBuffer);
         java.util.UUID ownerUuid = ArmyOfTheDeadPassive.getManagedSummonOwnerUuid(summonRef, store, commandBuffer);
 
         float before = Math.max(0.0f, damage.getAmount());
-        float amount = before * Math.max(0.0f, inherited.damageMultiplier());
+        float boostedBase = before + Math.max(0.0f, (float) baseDamageValue);
+        float amount = boostedBase * Math.max(0.0f, inherited.damageMultiplier());
         boolean critApplied = false;
 
         if (amount > 0.0f && inherited.critChance() > 0.0f
@@ -147,11 +152,13 @@ public class MobDamageScalingSystem extends DamageEventSystem {
 
         if (shouldLogSummonDebug(OUTGOING_DEBUG_LAST_LOG, summonRef.getIndex())) {
             LOGGER.atInfo().log(
-                    "[ARMY_OF_THE_DEAD][DEBUG-HIT][OUT] summonRef=%d owner=%s inheritance=%.3f before=%.3f after=%.3f dmgMult=%.3f critChance=%.3f critDmgMult=%.3f critApplied=%s",
+                    "[ARMY_OF_THE_DEAD][DEBUG-HIT][OUT] summonRef=%d owner=%s inheritance=%.3f before=%.3f baseDamage=%.3f boostedBase=%.3f after=%.3f dmgMult=%.3f critChance=%.3f critDmgMult=%.3f critApplied=%s",
                     summonRef.getIndex(),
                     ownerUuid,
                     inheritanceValue,
                     before,
+                    baseDamageValue,
+                    boostedBase,
                     after,
                     inherited.damageMultiplier(),
                     inherited.critChance(),

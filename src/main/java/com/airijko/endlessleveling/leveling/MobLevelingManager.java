@@ -2664,6 +2664,56 @@ public class MobLevelingManager {
         return false;
     }
 
+    /**
+     * Returns true if XP should be disabled for the resolved world id based on
+     * configured blacklist keywords.
+     */
+    public boolean isWorldXpBlacklisted(Store<EntityStore> store) {
+        String worldId = resolveWorldId(store);
+        if (worldId == null || worldId.isBlank()) {
+            return false;
+        }
+
+        List<String> keywords = getWorldXpBlacklistKeywords();
+        if (keywords.isEmpty()) {
+            return false;
+        }
+
+        String normalizedWorldId = worldId.trim().toLowerCase(Locale.ROOT);
+        for (String rawKeyword : keywords) {
+            if (rawKeyword == null || rawKeyword.isBlank()) {
+                continue;
+            }
+
+            String normalizedKeyword = rawKeyword.trim().toLowerCase(Locale.ROOT);
+            if (normalizedKeyword.isEmpty()) {
+                continue;
+            }
+
+            if (normalizedWorldId.contains(normalizedKeyword)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private List<String> getWorldXpBlacklistKeywords() {
+        // Preferred root-level section in worlds.yml
+        Object raw = worldsConfigManager.get("XP_Blacklisted_Words", null, false);
+        if (raw != null) {
+            return readStringList(raw);
+        }
+
+        // Backward/alternative placement under world overrides global node.
+        raw = worldsConfigManager.get("World_Overrides.Global.XP_Blacklisted_Words", null, false);
+        if (raw != null) {
+            return readStringList(raw);
+        }
+
+        return Collections.emptyList();
+    }
+
     /** Returns true if mob type is blacklisted (case-insensitive) */
     public boolean isMobTypeBlacklisted(String mobType) {
         if (mobType == null || mobType.isBlank())

@@ -557,32 +557,39 @@ public class AugmentUnlockManager {
         float strengthValue = Math.max(0f, skillManager.calculatePlayerStrength(playerData));
         float sorceryValue = Math.max(0f, skillManager.calculatePlayerSorcery(playerData));
 
-        // Hybrid augments support both damage paths, so do not penalize based on
-        // whichever damage stat is currently lower.
-        if (AugmentRoleWeightRules.isHybridAugment(id)) {
-            return 45 + AugmentRoleWeightRules.getRoleWeightBonus(primaryClass, id);
-        }
+        int roleBonus = AugmentRoleWeightRules.getRoleWeightBonus(primaryClass, id);
+        boolean isSorceryAugment = AugmentRoleWeightRules.isSorceryAugment(id);
+        boolean isStrengthAugment = AugmentRoleWeightRules.isStrengthAugment(id);
+        boolean isHybridAugment = AugmentRoleWeightRules.isHybridAugment(id);
 
-        // Sorcery augments get higher weight when sorcery > strength
-        if (AugmentRoleWeightRules.isSorceryAugment(id)) {
+        // Pure damage-path augments should beat hybrid augments when the player's
+        // stats support that path. Overlap is still allowed, but hybrid is now the fallback.
+        if (isSorceryAugment) {
             if (sorceryValue > strengthValue) {
-                return 60 + AugmentRoleWeightRules.getRoleWeightBonus(primaryClass, id);
-            } else {
-                return 10; // Low weight when strength is higher
+                return 70 + roleBonus;
             }
+            if (sorceryValue == strengthValue) {
+                return 40 + roleBonus;
+            }
+            return 8;
         }
 
-        // Strength augments get higher weight when strength > sorcery
-        if (AugmentRoleWeightRules.isStrengthAugment(id)) {
+        if (isStrengthAugment) {
             if (strengthValue > sorceryValue) {
-                return 60 + AugmentRoleWeightRules.getRoleWeightBonus(primaryClass, id);
-            } else {
-                return 10; // Low weight when sorcery is higher
+                return 70 + roleBonus;
             }
+            if (strengthValue == sorceryValue) {
+                return 40 + roleBonus;
+            }
+            return 8;
+        }
+
+        if (isHybridAugment) {
+            return 25 + roleBonus;
         }
 
         // Neutral/utility augments can still receive role bonuses (for example, life-force augments).
-        return 10 + AugmentRoleWeightRules.getRoleWeightBonus(primaryClass, id);
+        return 10 + roleBonus;
     }
 
     private boolean isAugmentAllowedForPrimaryClass(AugmentDefinition augment, PlayerData playerData) {

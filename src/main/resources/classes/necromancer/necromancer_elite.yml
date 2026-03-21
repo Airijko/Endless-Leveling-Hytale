@@ -24,6 +24,7 @@ passives:
     minion_lifetime_seconds: 30
     activation: on_hit
     cooldown_seconds: 18
+    base_summon_damage: 10
     summon_stat_inheritance: 0.25
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Iron
   - type: MANA_REGEN

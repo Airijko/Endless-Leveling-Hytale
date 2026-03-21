@@ -53,6 +53,7 @@ public final class ArmyOfTheDeadPassive {
 
     private static final String DEFAULT_SKELETON_TYPE = "EndlessLeveling_ArmyOfTheDead_Pet_Copper";
     private static final int DEFAULT_BASE_SUMMON_AMOUNT = 2;
+    private static final double DEFAULT_BASE_SUMMON_DAMAGE = 5.0D;
     private static final double DEFAULT_MANA_PER_SUMMON = 100.0D;
     private static final double DEFAULT_COOLDOWN_SECONDS = 15.0D;
     private static final double DEFAULT_LIFETIME_SECONDS = 30.0D;
@@ -313,6 +314,37 @@ public final class ArmyOfTheDeadPassive {
                 return 0.0D;
             }
             return Math.max(0.0D, slot.statInheritance);
+        }
+    }
+
+    public static double getManagedSummonBaseDamage(Ref<EntityStore> ref,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (!EntityRefUtil.isUsable(ref)) {
+            return 0.0D;
+        }
+
+        UUID summonUuid = resolveEntityUuid(ref, store, commandBuffer);
+        if (summonUuid == null) {
+            return 0.0D;
+        }
+
+        SummonBinding binding = SUMMON_BINDINGS.get(summonUuid);
+        if (binding == null) {
+            return 0.0D;
+        }
+
+        OwnerSummonState ownerState = OWNER_STATES.get(binding.ownerUuid());
+        if (ownerState == null) {
+            return 0.0D;
+        }
+
+        synchronized (ownerState) {
+            SummonSlot slot = ownerState.getSlot(binding.slotIndex());
+            if (slot == null) {
+                return 0.0D;
+            }
+            return Math.max(0.0D, slot.baseDamage);
         }
     }
 
@@ -696,6 +728,7 @@ public final class ArmyOfTheDeadPassive {
                 slot.activeSummonUuid = summonUuidComponent.getUuid();
                 slot.summonExpiresAt = expiresAt;
                 slot.statInheritance = Math.max(0.0D, request.config().statInheritance());
+                slot.baseDamage = Math.max(0.0D, request.config().baseDamage());
                 slot.spawnPending = false;
                 slot.postSpawnHealthNormalizePending = true;
                 slot.nextNameplateRefreshAt = now + NAMEPLATE_REFRESH_INTERVAL_MS;
@@ -1516,6 +1549,8 @@ public final class ArmyOfTheDeadPassive {
         double cooldownSeconds = parseNonNegativeDouble(props.get("cooldown_seconds"), DEFAULT_COOLDOWN_SECONDS);
         double lifetimeSeconds = parseNonNegativeDouble(firstNonNull(props.get("minion_lifetime_seconds"),
                 props.get("lifetime_seconds")), DEFAULT_LIFETIME_SECONDS);
+        double baseDamage = parseNonNegativeDouble(firstNonNull(props.get("base_summon_damage"),
+            props.get("summon_base_damage")), DEFAULT_BASE_SUMMON_DAMAGE);
         double statInheritance = parseNonNegativeDouble(firstNonNull(props.get("summon_stat_inheritance"),
                 props.get("stat_inheritance")), DEFAULT_STAT_INHERITANCE);
 
@@ -1538,6 +1573,7 @@ public final class ArmyOfTheDeadPassive {
                 manaPerSummon,
                 secondsToMillis(cooldownSeconds),
                 secondsToMillis(lifetimeSeconds),
+                baseDamage,
                 statInheritance,
                 skeletonType,
                 maxSummons);
@@ -1613,6 +1649,7 @@ public final class ArmyOfTheDeadPassive {
             double manaPerSummon,
             long cooldownMillis,
             long lifetimeMillis,
+            double baseDamage,
             double statInheritance,
             String skeletonType,
             int maxSummons) {
@@ -1623,6 +1660,7 @@ public final class ArmyOfTheDeadPassive {
                     DEFAULT_MANA_PER_SUMMON,
                     secondsToMillis(DEFAULT_COOLDOWN_SECONDS),
                     secondsToMillis(DEFAULT_LIFETIME_SECONDS),
+                DEFAULT_BASE_SUMMON_DAMAGE,
                     DEFAULT_STAT_INHERITANCE,
                     DEFAULT_SKELETON_TYPE,
                     0);
@@ -1692,6 +1730,7 @@ public final class ArmyOfTheDeadPassive {
         private long summonExpiresAt;
         private long cooldownExpiresAt;
         private long cooldownDurationMillis;
+        private double baseDamage = DEFAULT_BASE_SUMMON_DAMAGE;
         private double statInheritance = DEFAULT_STAT_INHERITANCE;
         private boolean spawnPending;
         private boolean postSpawnHealthNormalizePending;

@@ -137,6 +137,18 @@ public class XpEventSystem extends DeathSystems.OnDeathSystem {
         boolean mobIsBlacklisted = mobLevelingManager != null
                 && mobLevelingManager.isEntityBlacklisted(ref, store, commandBuffer);
 
+        boolean worldXpBlacklisted = mobLevelingManager != null
+            && mobLevelingManager.isWorldXpBlacklisted(store);
+
+        if (worldXpBlacklisted) {
+            String worldId = mobLevelingManager != null ? mobLevelingManager.resolveWorldIdentifier(store) : "unknown";
+            LOGGER.atFine().log("XP gain blocked for player %s in world %s (matched XP_Blacklisted_Words)",
+                playerUuid,
+                worldId == null ? "unknown" : worldId);
+            XpKillCreditTracker.clearTarget(ref, store, commandBuffer);
+            return;
+        }
+
         int mobLevel = mobLevelingManager != null ? mobLevelingManager.resolveMobLevel(ref, commandBuffer) : 1;
 
         float cachedMaxHealth = mobLevelingManager != null

@@ -24,6 +24,7 @@ passives:
     minion_lifetime_seconds: 50
     activation: on_hit
     cooldown_seconds: 14
+    base_summon_damage: 20
     summon_stat_inheritance: 0.35
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Mithril
   - type: MANA_REGEN

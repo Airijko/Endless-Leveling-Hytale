@@ -36,7 +36,7 @@ public final class AugmentRoleWeightRules {
     private static final Set<String> SORCERY_FAVORED_ROLES = Set.of("mage", "battlemage", "support");
     private static final Set<String> STRENGTH_FAVORED_ROLES = Set.of(
             "assassin", "diver", "skirmisher", "juggernaut", "vanguard", "marksman");
-    private static final Set<String> LIFE_FORCE_FAVORED_ROLES = Set.of("vanguard", "juggernaut", "battlemage");
+    private static final Set<String> LIFE_FORCE_FAVORED_ROLES = Set.of("vanguard", "juggernaut", "battlemage", "skirmisher");
 
     private AugmentRoleWeightRules() {
     }

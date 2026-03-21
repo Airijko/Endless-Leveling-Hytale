@@ -24,6 +24,7 @@ passives:
     minion_lifetime_seconds: 20
     activation: on_hit
     cooldown_seconds: 20 # seconds per summon after their death
+    base_summon_damage: 5
     summon_stat_inheritance: 0.2
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Copper
   - type: HEALTH_REGEN

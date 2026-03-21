@@ -24,6 +24,7 @@ passives:
     minion_lifetime_seconds: 60
     activation: on_hit
     cooldown_seconds: 12
+    base_summon_damage: 25
     summon_stat_inheritance: 0.4
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Onyxium
   - type: MANA_REGEN
