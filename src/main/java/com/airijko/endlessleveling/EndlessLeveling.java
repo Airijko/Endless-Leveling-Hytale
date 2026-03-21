@@ -409,6 +409,7 @@ public class EndlessLeveling extends JavaPlugin {
         ConfigManager levelingConfigManager = new ConfigManager(filesManager, filesManager.getLevelingFile());
         augmentUnlockManager = new AugmentUnlockManager(configManager, levelingConfigManager, augmentManager,
                 playerDataManager,
+            classManager,
                 skillManager,
                 archetypePassiveManager);
         augmentSyncValidator = new AugmentSyncValidator(playerDataManager, augmentUnlockManager);

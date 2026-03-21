@@ -1,5 +1,7 @@
 package com.airijko.endlessleveling.augments;
 
+import com.airijko.endlessleveling.classes.CharacterClassDefinition;
+import com.airijko.endlessleveling.classes.ClassManager;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
@@ -62,10 +64,15 @@ public class AugmentUnlockManager {
             "snipers_reach", "soul_reaver", "time_master", "vampiric_strike",
             "vampirism", "wither");
 
+        private static final Set<String> SORCERY_FAVORED_ROLES = Set.of("mage", "battlemage", "support");
+        private static final Set<String> STRENGTH_FAVORED_ROLES = Set.of(
+            "assassin", "diver", "skirmisher", "juggernaut", "vanguard", "marksman");
+
     private final ConfigManager configManager;
     private final ConfigManager levelingConfigManager;
     private final AugmentManager augmentManager;
     private final PlayerDataManager playerDataManager;
+    private final ClassManager classManager;
     private final ArchetypePassiveManager archetypePassiveManager;
     private final SkillManager skillManager;
     private volatile List<UnlockRule> unlockRules;
@@ -78,12 +85,14 @@ public class AugmentUnlockManager {
             @Nonnull ConfigManager levelingConfigManager,
             @Nonnull AugmentManager augmentManager,
             @Nonnull PlayerDataManager playerDataManager,
+            @Nonnull ClassManager classManager,
             @Nonnull SkillManager skillManager,
             ArchetypePassiveManager archetypePassiveManager) {
         this.configManager = Objects.requireNonNull(configManager, "configManager");
         this.levelingConfigManager = Objects.requireNonNull(levelingConfigManager, "levelingConfigManager");
         this.augmentManager = Objects.requireNonNull(augmentManager, "augmentManager");
         this.playerDataManager = Objects.requireNonNull(playerDataManager, "playerDataManager");
+        this.classManager = Objects.requireNonNull(classManager, "classManager");
         this.skillManager = Objects.requireNonNull(skillManager, "skillManager");
         this.archetypePassiveManager = archetypePassiveManager;
         this.unlockRules = List.of();
@@ -485,6 +494,7 @@ public class AugmentUnlockManager {
                             && (def.isStackable() || excludedAugmentIds == null
                                     || !excludedAugmentIds.contains(normalizedId));
                 })
+                .filter(def -> isAugmentAllowedForPrimaryClass(def, playerData))
                 .collect(Collectors.toCollection(ArrayList::new));
         if (pool.isEmpty()) {
             LOGGER.atWarning().log("No augments available for tier %s; unlock roll skipped", tier);
@@ -558,6 +568,7 @@ public class AugmentUnlockManager {
         }
 
         String id = augment.getId().toLowerCase(Locale.ROOT);
+        CharacterClassDefinition primaryClass = resolvePrimaryClass(playerData);
 
         // Get player's damage values
         float strengthValue = Math.max(0f, skillManager.calculatePlayerStrength(playerData));
@@ -566,7 +577,11 @@ public class AugmentUnlockManager {
         // Sorcery augments get higher weight when sorcery > strength
         if (SORCERY_AUGMENTS.contains(id)) {
             if (sorceryValue > strengthValue) {
-                return 60; // High weight when sorcery is higher
+                int weight = 60; // High weight when sorcery is higher
+                if (classHasAnyRole(primaryClass, SORCERY_FAVORED_ROLES)) {
+                    weight += 20;
+                }
+                return weight;
             } else {
                 return 10; // Low weight when strength is higher
             }
@@ -575,7 +590,14 @@ public class AugmentUnlockManager {
         // Strength augments get higher weight when strength > sorcery
         if (STRENGTH_AUGMENTS.contains(id)) {
             if (strengthValue > sorceryValue) {
-                return 60; // High weight when strength is higher
+                int weight = 60; // High weight when strength is higher
+                if (classHasAnyRole(primaryClass, STRENGTH_FAVORED_ROLES)) {
+                    weight += 20;
+                }
+                if ("snipers_reach".equals(id) && classHasAnyRole(primaryClass, Set.of("marksman"))) {
+                    weight += 20;
+                }
+                return weight;
             } else {
                 return 10; // Low weight when sorcery is higher
             }
@@ -584,6 +606,59 @@ public class AugmentUnlockManager {
         // Neutral/utility augments have moderate weight
         return 10;
     }
+
+    private boolean isAugmentAllowedForPrimaryClass(AugmentDefinition augment, PlayerData playerData) {
+        if (augment == null) {
+            return false;
+        }
+
+        String augmentId = normalizeAugmentId(augment.getId());
+        if (augmentId == null) {
+            return false;
+        }
+
+        // Range gate: do not offer Sniper's Reach to melee-only classes.
+        if ("snipers_reach".equals(augmentId)) {
+            CharacterClassDefinition primaryClass = resolvePrimaryClass(playerData);
+            return classSupportsRangedCombat(primaryClass);
+        }
+
+        return true;
+    }
+
+    private CharacterClassDefinition resolvePrimaryClass(PlayerData playerData) {
+        if (playerData == null || classManager == null) {
+            return null;
+        }
+        return classManager.getPlayerPrimaryClass(playerData);
+    }
+
+    private boolean classSupportsRangedCombat(CharacterClassDefinition definition) {
+        if (definition == null) {
+            return true;
+        }
+        String rangeType = definition.getRangeType();
+        if (rangeType == null || rangeType.isBlank()) {
+            return true;
+        }
+        return rangeType.toLowerCase(Locale.ROOT).contains("range");
+    }
+
+    private boolean classHasAnyRole(CharacterClassDefinition definition, Set<String> normalizedTargetRoles) {
+        if (definition == null || normalizedTargetRoles == null || normalizedTargetRoles.isEmpty()) {
+            return false;
+        }
+
+        for (String role : definition.getRoles()) {
+            if (role == null || role.isBlank()) {
+                continue;
+            }
+            String normalizedRole = role.trim().toLowerCase(Locale.ROOT);
+            if (normalizedTargetRoles.contains(normalizedRole)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private List<String> rollCommonStatOffers(PlayerData playerData) {

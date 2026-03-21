@@ -934,7 +934,9 @@ public class ClassManager {
             displayName = classId;
         }
         String description = safeString(yamlData.get("description"));
-        String role = safeString(yamlData.get("role"));
+        List<String> roles = parseClassRoles(yamlData, classId);
+        String damageType = parseClassDamageType(yamlData, classId);
+        String rangeType = parseClassRangeType(yamlData, classId);
         String category = parseClassCategory(yamlData, classId);
         boolean enabled = parseBoolean(yamlData.getOrDefault("enabled", Boolean.TRUE), true);
 
@@ -947,7 +949,9 @@ public class ClassManager {
         return new CharacterClassDefinition(classId,
                 displayName,
                 description,
-                role,
+                roles,
+                damageType,
+                rangeType,
                 category,
                 enabled,
                 iconItemId,
@@ -955,6 +959,36 @@ public class ClassManager {
                 passives,
                 passiveDefinitions,
                 ascension);
+    }
+
+    private List<String> parseClassRoles(Map<String, Object> yamlData, String classId) {
+        List<String> configuredRoles = parseStringList(yamlData.get("roles"));
+        if (!configuredRoles.isEmpty()) {
+            return configuredRoles;
+        }
+
+        String singleRole = safeString(yamlData.get("role"));
+        if (singleRole != null) {
+            return List.of(singleRole);
+        }
+
+        return inferLegacyClassRoles(classId);
+    }
+
+    private String parseClassDamageType(Map<String, Object> yamlData, String classId) {
+        String configuredDamageType = safeString(yamlData.get("damage_type"));
+        if (configuredDamageType != null) {
+            return configuredDamageType;
+        }
+        return inferLegacyDamageType(classId);
+    }
+
+    private String parseClassRangeType(Map<String, Object> yamlData, String classId) {
+        String configuredRangeType = safeString(yamlData.get("range_type"));
+        if (configuredRangeType != null) {
+            return configuredRangeType;
+        }
+        return inferLegacyRangeType(classId);
     }
 
     private String parseClassCategory(Map<String, Object> yamlData, String classId) {
@@ -983,6 +1017,53 @@ public class ClassManager {
             case "juggernaut", "vanguard" -> "tank";
             default -> "default";
         };
+    }
+
+    private List<String> inferLegacyClassRoles(String classId) {
+        String baseId = normalizeBaseClassId(classId);
+        return switch (baseId) {
+            case "mage", "arcanist", "oracle", "necromancer" -> List.of("Mage");
+            case "healer" -> List.of("Support");
+            case "assassin" -> List.of("Assassin", "Diver");
+            case "marksman" -> List.of("Marksman");
+            case "battlemage" -> List.of("BattleMage", "Mage");
+            case "duelist" -> List.of("Skirmisher", "Diver");
+            case "brawler" -> List.of("Skirmisher", "Juggernaut");
+            case "slayer" -> List.of("Diver", "Skirmisher");
+            case "juggernaut" -> List.of("Juggernaut");
+            case "vanguard" -> List.of("Vanguard");
+            default -> List.of("Skirmisher");
+        };
+    }
+
+    private String inferLegacyDamageType(String classId) {
+        String baseId = normalizeBaseClassId(classId);
+        return switch (baseId) {
+            case "mage", "arcanist", "oracle", "healer", "necromancer" -> "Magic";
+            case "vanguard", "adventurer" -> "Hybrid";
+            default -> "Physical";
+        };
+    }
+
+    private String inferLegacyRangeType(String classId) {
+        String baseId = normalizeBaseClassId(classId);
+        return switch (baseId) {
+            case "marksman", "mage", "arcanist", "oracle", "healer", "necromancer" -> "range";
+            case "adventurer" -> "melee/range";
+            default -> "melee";
+        };
+    }
+
+    private String normalizeBaseClassId(String classId) {
+        String normalized = normalizeKey(classId);
+        if (normalized == null || normalized.isBlank()) {
+            return "";
+        }
+        int firstUnderscore = normalized.indexOf('_');
+        if (firstUnderscore > 0) {
+            return normalized.substring(0, firstUnderscore);
+        }
+        return normalized;
     }
 
     private RaceAscensionDefinition parseAscensionDefinition(String classId, Object node) {
