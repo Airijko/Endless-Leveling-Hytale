@@ -426,13 +426,13 @@ World_Overrides:
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.975
             
-  instance-endgame_swamp_dungeon-*:
+  instance-endgame_golem_void-*:
     Level_Range:
       Max: "ENDLESS"
     Level_Source:
       Mode: "TIERED"
       Base_Level:
-        Level: 30-45
+        Level: 50-65
       Tiers:
         Total_Tiers: "ENDLESS"
         Levels_Per_Tier: 20
@@ -453,8 +453,8 @@ World_Overrides:
         Below_Negative_Max_Difference: 0.0
         Above_Positive_Max_Difference: 0.9
     Mob_Overrides:
-      Endgame_Hedera:
-        Level: 50
+      Endgame_Golem_Void:
+        Level: 70
         Augments: [rebirth]
         Scaling:
           Health:

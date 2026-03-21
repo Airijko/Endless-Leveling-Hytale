@@ -41,6 +41,7 @@ public class MovementHasteSystem extends TickingSystem<EntityStore> {
     private static final float DECAY_DURATION_SECONDS = 3.0f;
     private static final double BONUS_EPSILON = 0.01D;
     private static final long PROGRESS_LOG_INTERVAL_MILLIS = 500L;
+    private static final long STORE_MISMATCH_LOG_INTERVAL_MILLIS = 5000L;
 
     private final PlayerDataManager playerDataManager;
     private final SkillManager skillManager;
@@ -165,7 +166,23 @@ public class MovementHasteSystem extends TickingSystem<EntityStore> {
             return false;
         }
 
-        PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
+        MovementState state = states.computeIfAbsent(playerId, ignored -> new MovementState());
+
+        PlayerRef playerRef;
+        try {
+            playerRef = store.getComponent(ref, PlayerRef.getComponentType());
+        } catch (IllegalStateException mismatch) {
+            long now = System.currentTimeMillis();
+            if (now - state.lastStoreMismatchLogAtMillis >= STORE_MISMATCH_LOG_INTERVAL_MILLIS) {
+                LOGGER.atInfo().log(
+                        "MovementHasteSystem: skipping player %s in current store due to cross-store reference",
+                        playerId);
+                state.lastStoreMismatchLogAtMillis = now;
+            }
+            // Keep this ref tracked; it may be valid in the player's active world store.
+            return true;
+        }
+
         if (playerRef == null || !playerRef.isValid()) {
             return false;
         }
@@ -186,7 +203,6 @@ public class MovementHasteSystem extends TickingSystem<EntityStore> {
             return true;
         }
 
-        MovementState state = states.computeIfAbsent(playerId, ignored -> new MovementState());
         Vector3d position = transform.getPosition();
         boolean movedThisStep = hasMoved(state, position);
         boolean rampPaused = state.rampPauseSeconds > 0.0f;
@@ -416,5 +432,6 @@ public class MovementHasteSystem extends TickingSystem<EntityStore> {
         private boolean zeroBaseHasteLogged;
         private long lastRampLogAtMillis;
         private long lastDecayLogAtMillis;
+        private long lastStoreMismatchLogAtMillis;
     }
 }

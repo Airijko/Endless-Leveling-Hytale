@@ -16,7 +16,7 @@ public final class VersionRegistry {
     public static final int CONFIG_YML_VERSION = 37;
     public static final int LEVELING_YML_VERSION = 33;
     public static final int EVENTS_YML_VERSION = 6;
-    public static final int WORLDS_YML_VERSION = 28;
+    public static final int WORLDS_YML_VERSION = 29;
     public static final int WEAPONS_YML_VERSION = 5;
 
     public static final int PLAYERDATA_SCHEMA_VERSION = 18;
