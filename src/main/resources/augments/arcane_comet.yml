@@ -1,0 +1,24 @@
+id: arcane_comet
+name: "Arcane Comet"
+tier: LEGENDARY
+description: "Every 8 seconds, your next hit gains bonus damage scaling with Sorcery."
+category: MAGIC_ON_HIT
+enabled: true
+
+ui:
+  sections:
+    - title: "Buffs"
+      body: "+50 flat + (50% Sorcery) bonus damage on hit"
+      color: "#8adf9e"
+    - title: "Rules"
+      body: "Can Crit: No"
+      color: "#ffb86b"
+    - title: "Cooldown"
+      body: "8s"
+      color: "#ffb86b"
+passives:
+  bonus_damage_on_hit:
+    value: 50.0 # Flat bonus damage added to the triggering hit
+    sorcery_ratio: 0.5 # +50% of current Sorcery added as bonus damage
+    can_crit: false # Arcane Comet bonus damage cannot critically strike
+    cooldown: 8.0 # Seconds between Arcane Comet triggers

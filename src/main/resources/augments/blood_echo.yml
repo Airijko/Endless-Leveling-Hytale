@@ -1,7 +1,7 @@
 id: blood_echo
 name: "Blood Echo"
 tier: ELITE
-description: "Convert healing into extra damage and sustain through lifesteal."
+description: "Convert potential healing into extra damage and sustain through lifesteal."
 category: LIFESTEAL
 enabled: true
 
@@ -10,11 +10,11 @@ ui:
     - title: "Buffs"
       body: |
         +5% Lifesteal
-        +15% of healing converted to damage
+        +15% of potential healing converted to damage
       color: "#8adf9e"
 passives:
   buffs:
     lifesteal:
       value: 0.05 # 5% lifesteal
     healing_to_damage:
-      value: 0.15 # 15% of applied healing is added as bonus damage
+      value: 0.15 # 15% of potential healing is added as bonus damage

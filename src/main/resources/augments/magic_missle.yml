@@ -1,0 +1,23 @@
+id: magic_missle
+name: "Magic Missle"
+tier: ELITE
+description: "Every 2 seconds, your hits fire a magic missle that deals bonus damage based on Sorcery."
+category: MAGIC_ON_HIT
+enabled: true
+
+ui:
+  sections:
+    - title: "Buffs"
+      body: |
+        +10 + (20% Sorcery)
+      color: "#8adf9e"
+    - title: "Rules"
+      body: |
+        Cooldown: 2s
+        Can Crit: No
+      color: "#ffb86b"
+passives:
+  missile_damage:
+    flat_damage: 10.0 # Base additional damage
+    sorcery_scaling: 0.20 # +20% of Sorcery added to damage
+    cooldown: 2.0 # Seconds between Magic Missle triggers

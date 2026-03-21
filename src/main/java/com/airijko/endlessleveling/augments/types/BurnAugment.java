@@ -244,7 +244,9 @@ public final class BurnAugment extends Augment
             if (burnDamage <= 0.0D) {
                 continue;
             }
-            if (maxDamagePerTick > 0.0D && burnDamage > maxDamagePerTick) {
+            PlayerRef targetPlayer = AugmentUtils.getPlayerRef(commandBuffer, targetRef);
+            boolean targetIsMonster = targetPlayer == null || !targetPlayer.isValid();
+            if (targetIsMonster && maxDamagePerTick > 0.0D && burnDamage > maxDamagePerTick) {
                 burnDamage = maxDamagePerTick;
             }
 

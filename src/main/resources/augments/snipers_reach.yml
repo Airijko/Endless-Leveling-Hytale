@@ -1,6 +1,6 @@
 id: snipers_reach
 name: "Sniper's Reach"
-tier: MYTHIC
+tier: LEGENDARY
 description: "Ranged damage scales with distance, peaking at long range."
 category: ON_RANGED_HIT
 enabled: true

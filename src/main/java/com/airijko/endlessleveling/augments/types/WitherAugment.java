@@ -39,6 +39,7 @@ public final class WitherAugment extends Augment implements AugmentHooks.OnHitAu
     private final double durationSeconds;
     private final double movementSpeedSlowPercent;
     private final double movementSpeedSlowCap;
+    private final double maxDamagePerTick;
 
     private static final class MovementSnapshot {
         final float forwardWalk;
@@ -99,6 +100,7 @@ public final class WitherAugment extends Augment implements AugmentHooks.OnHitAu
         double percentPerSecond;
         double movementSpeedSlowPercent;
         double durationSeconds;
+        double maxDamagePerTick;
         Ref<EntityStore> sourceRef;
         MovementSnapshot movementSnapshot;
         MovementSnapshot defaultMovementSnapshot;
@@ -118,6 +120,7 @@ public final class WitherAugment extends Augment implements AugmentHooks.OnHitAu
         Map<String, Object> wither = AugmentValueReader.getMap(passives, "wither");
         this.percentPerSecond = AugmentValueReader.getDouble(wither, "value", 0.0D);
         this.durationSeconds = AugmentValueReader.getDouble(wither, "duration", 0.0D);
+        this.maxDamagePerTick = Math.max(0.0D, AugmentValueReader.getDouble(wither, "max_damage_per_tick", 0.0D));
         Map<String, Object> targetDebuff = AugmentValueReader.getMap(wither, "target_debuff");
         Map<String, Object> movementSpeed = AugmentValueReader.getMap(targetDebuff, "movement_speed");
         this.movementSpeedSlowCap = Math.max(0.0D, AugmentValueReader.getDouble(movementSpeed, "max_slow_cap", 0.0D));
@@ -163,6 +166,7 @@ public final class WitherAugment extends Augment implements AugmentHooks.OnHitAu
         state.percentPerSecond = percentPerSecond;
         state.movementSpeedSlowPercent = movementSpeedSlowPercent;
         state.durationSeconds = durationSeconds;
+        state.maxDamagePerTick = maxDamagePerTick;
         state.targetStoreIdentity = storeIdentityFor(targetRef);
         state.sourceRef = context.getAttackerRef();
         state.loggedSourceStoreMismatch = false;
@@ -232,6 +236,11 @@ public final class WitherAugment extends Augment implements AugmentHooks.OnHitAu
         long elapsedMillis = Math.max(TICK_INTERVAL_MILLIS, now - (state.nextTickAt - TICK_INTERVAL_MILLIS));
         double elapsedSeconds = elapsedMillis / 1000.0D;
         double damage = hp.getMax() * state.percentPerSecond * elapsedSeconds;
+        PlayerRef targetPlayer = AugmentUtils.getPlayerRef(commandBuffer, ref);
+        boolean targetIsMonster = targetPlayer == null || !targetPlayer.isValid();
+        if (targetIsMonster && state.maxDamagePerTick > 0.0D && damage > state.maxDamagePerTick) {
+            damage = state.maxDamagePerTick;
+        }
         if (damage <= 0.0D) {
             state.nextTickAt = now + TICK_INTERVAL_MILLIS;
             return;

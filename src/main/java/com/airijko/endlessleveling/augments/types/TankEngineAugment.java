@@ -29,7 +29,6 @@ public final class TankEngineAugment extends Augment
 
     private final double flatHealthPerStack;
     private final double percentMaxHealthPerStack;
-    private final double maxHealthMultiplierAtMaxStacks;
     private final int maxStacks;
     private final long durationMillis;
     private final double decayPerSecond;
@@ -43,8 +42,6 @@ public final class TankEngineAugment extends Augment
         this.flatHealthPerStack = Math.max(0.0D, AugmentValueReader.getDouble(stacking, "flat_health_per_stack", 0.0D));
         this.percentMaxHealthPerStack = Math.max(0.0D,
                 AugmentValueReader.getDouble(stacking, "percent_max_health_per_stack", 0.0D));
-        this.maxHealthMultiplierAtMaxStacks = Math.max(0.0D,
-                AugmentValueReader.getDouble(stacking, "max_health_multiplier_at_max_stacks", 0.0D));
         this.maxStacks = Math.max(1, AugmentValueReader.getInt(stacking, "max_stacks", 1));
         this.durationMillis = AugmentUtils
                 .secondsToMillis(AugmentValueReader.getDouble(stacking, "duration", 0.0D));
@@ -155,12 +152,6 @@ public final class TankEngineAugment extends Augment
     private double resolveHealthMultiplier(int safeStacks) {
         if (safeStacks <= 0) {
             return 1.0D;
-        }
-
-        if (maxHealthMultiplierAtMaxStacks > 0.0D) {
-            double maxMultiplier = Math.max(1.0D, maxHealthMultiplierAtMaxStacks);
-            double progress = Math.max(0.0D, Math.min(1.0D, safeStacks / (double) maxStacks));
-            return 1.0D + ((maxMultiplier - 1.0D) * progress);
         }
 
         double percentRatio = Math.max(0.0D, percentMaxHealthPerStack * safeStacks);

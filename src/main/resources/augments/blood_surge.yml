@@ -1,7 +1,7 @@
 id: blood_surge
 name: "Blood Surge"
 tier: MYTHIC
-description: "Missing health increases your Life Steal, and part of applied healing is fed into your attacks."
+description: "Missing health increases your Life Steal, and part of potential healing is fed into your attacks."
 category: LIFESTEAL
 enabled: true
 
@@ -9,14 +9,15 @@ ui:
   sections:
     - title: "Buffs"
       body: |
-        +0-40% Life Steal
-        +30% of healing converted to damage
+        +5-40% Life Steal
+        +30% of potential healing converted to damage
       color: "#8adf9e"
     - title: "Rules"
       body: "Full Value Threshold: +20%"
       color: "#ffb86b"
 passives:
   life_steal_scaling:
+    min_value: 0.05 # 5% life steal at minimum scaling
     max_value: 0.40 # 40% life steal at max missing HP
     full_value_at_health_percent: 0.2 # full life steal when player health is at or below 20%
-    healing_to_damage: 0.3 # 30% of applied life steal healing is added as extra damage
+    healing_to_damage: 0.3 # 30% of potential life steal healing is added as extra damage

@@ -11,7 +11,10 @@ ui:
       body: "+10% of target's current HP as bonus damage"
       color: "#8adf9e"
     - title: "Rules"
-      body: "Target Stat: CURRENT_HP"
+      body: |
+        Target Stat: CURRENT_HP
+        Can Crit: No
+        Max Damage Per Tick Against Monsters: 1000
       color: "#ffb86b"
     - title: "Cooldown"
       body: "Cooldown: 1s"
@@ -20,4 +23,5 @@ passives:
   bonus_damage_on_hit:
     value: 0.1 # 10% of target's current HP as bonus damage
     target_stat: CURRENT_HP # calculates based on target's current HP
+    max_damage_per_tick: 1000 # cap applies to monsters only (0 = no cap)
     cooldown: 1.0 # 1 second cooldown between procs

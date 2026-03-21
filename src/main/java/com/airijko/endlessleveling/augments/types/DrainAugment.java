@@ -8,6 +8,7 @@ import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.systems.PlayerCombatSystem;
 import com.airijko.endlessleveling.util.EntityRefUtil;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
@@ -17,13 +18,16 @@ public final class DrainAugment extends Augment implements AugmentHooks.OnHitAug
 
     private final double percent;
     private final long cooldownMillis;
+    private final double maxDamagePerTick;
 
     public DrainAugment(AugmentDefinition definition) {
         super(definition);
         var passives = definition.getPassives();
+        var bonusDamage = AugmentValueReader.getMap(passives, "bonus_damage_on_hit");
         this.percent = AugmentValueReader.getNestedDouble(passives, 0.0D, "bonus_damage_on_hit", "value") * 100.0D;
         this.cooldownMillis = AugmentUtils
                 .secondsToMillis(AugmentValueReader.getNestedDouble(passives, 0.0D, "bonus_damage_on_hit", "cooldown"));
+        this.maxDamagePerTick = Math.max(0.0D, AugmentValueReader.getDouble(bonusDamage, "max_damage_per_tick", 0.0D));
     }
 
     public double getPercent() {
@@ -59,6 +63,14 @@ public final class DrainAugment extends Augment implements AugmentHooks.OnHitAug
             return context.getDamage();
         }
 
+        PlayerRef targetPlayer = context.getCommandBuffer() == null || context.getTargetRef() == null
+                ? null
+                : AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getTargetRef());
+        boolean targetIsMonster = targetPlayer == null || !targetPlayer.isValid();
+        if (targetIsMonster && maxDamagePerTick > 0.0D && extra > maxDamagePerTick) {
+            extra = maxDamagePerTick;
+        }
+
         // Drain is a one-time proc hit, so it should use the augment proc damage path.
         if (context.getCommandBuffer() != null && context.getTargetRef() != null
                 && EntityRefUtil.isUsable(context.getTargetRef())) {
@@ -70,7 +82,6 @@ public final class DrainAugment extends Augment implements AugmentHooks.OnHitAug
             return context.getDamage();
         }
 
-        state.setLastProc(now);
-        return context.getDamage() + (float) extra;
+        return context.getDamage();
     }
 }

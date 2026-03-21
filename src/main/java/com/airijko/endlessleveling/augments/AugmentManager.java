@@ -34,6 +34,8 @@ public class AugmentManager {
 
     private static final Map<String, Function<AugmentDefinition, Augment>> BUILTIN_FACTORIES = Map.ofEntries(
             Map.entry(AbsoluteFocusAugment.ID, AbsoluteFocusAugment::new),
+            Map.entry(ArcaneCometAugment.ID, ArcaneCometAugment::new),
+            Map.entry(ArcaneCataclysmAugment.ID, ArcaneCataclysmAugment::new),
             Map.entry(ArcaneInstabilityAugment.ID, ArcaneInstabilityAugment::new),
             Map.entry(ArcaneMasteryAugment.ID, ArcaneMasteryAugment::new),
             Map.entry(BailoutAugment.ID, BailoutAugment::new),
@@ -42,6 +44,7 @@ public class AugmentManager {
             Map.entry(DeathBombAugment.ID, DeathBombAugment::new),
             Map.entry(EndurePainAugment.ID, EndurePainAugment::new),
             Map.entry(BloodFrenzyAugment.ID, BloodFrenzyAugment::new),
+            Map.entry(BloodEchoAugment.ID, BloodEchoAugment::new),
             Map.entry(BloodSurgeAugment.ID, BloodSurgeAugment::new),
             Map.entry(BloodthirsterAugment.ID, BloodthirsterAugment::new),
             Map.entry(BurnAugment.ID, BurnAugment::new),
@@ -60,6 +63,7 @@ public class AugmentManager {
             Map.entry(GiantSlayerAugment.ID, GiantSlayerAugment::new),
             Map.entry(GlassCannonAugment.ID, GlassCannonAugment::new),
             Map.entry(MagicBladeAugment.ID, MagicBladeAugment::new),
+            Map.entry(MagicMissleAugment.ID, MagicMissleAugment::new),
             Map.entry(ManaInfusionAugment.ID, ManaInfusionAugment::new),
             Map.entry(NestingDollAugment.ID, NestingDollAugment::new),
             Map.entry(OverdriveAugment.ID, OverdriveAugment::new),

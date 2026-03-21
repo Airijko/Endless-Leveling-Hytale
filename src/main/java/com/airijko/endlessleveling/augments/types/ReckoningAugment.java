@@ -23,6 +23,7 @@ public final class ReckoningAugment extends Augment implements AugmentHooks.OnHi
 
     private final double maxBonus;
     private final String bonusScalingStat;
+    private final double zeroValueAtHealthPercent;
     private final double fullValueAtHealthPercent;
     private final double selfDamagePercent;
     private final double executionThreshold;
@@ -35,11 +36,13 @@ public final class ReckoningAugment extends Augment implements AugmentHooks.OnHi
         Map<String, Object> bonus = AugmentValueReader.getMap(passives, "bonus_damage");
         this.maxBonus = AugmentUtils
                 .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(bonus, "max_bonus_damage", 0.0D));
-        this.bonusScalingStat = String.valueOf(bonus.getOrDefault("scaling_stat", "missing_health_percent"))
+        this.bonusScalingStat = String.valueOf(bonus.getOrDefault("scaling_stat", "current_health_percent"))
                 .trim()
                 .toLowerCase();
+        this.zeroValueAtHealthPercent = clamp01(
+            AugmentValueReader.getDouble(bonus, "zero_value_at_health_percent", 0.0D));
         this.fullValueAtHealthPercent = clamp01(
-                AugmentValueReader.getDouble(bonus, "full_value_at_health_percent", 0.0D));
+            AugmentValueReader.getDouble(bonus, "full_value_at_health_percent", 1.0D));
 
         Map<String, Object> selfDamage = AugmentValueReader.getMap(passives, "self_damage");
         this.selfDamagePercent = AugmentValueReader.getDouble(selfDamage, "percent_of_current_hp", 0.0D);
@@ -79,20 +82,36 @@ public final class ReckoningAugment extends Augment implements AugmentHooks.OnHi
         }
         double healthRatio = clamp01(hp.get() / hp.getMax());
 
-        if (!"missing_health_percent".equals(bonusScalingStat)) {
-            LOGGER.atFine().log("Reckoning unknown scaling_stat '%s', defaulting to missing_health_percent",
-                    bonusScalingStat);
-        }
-
         double normalized;
-        if (fullValueAtHealthPercent > 0.0D && fullValueAtHealthPercent < 1.0D) {
-            if (healthRatio <= fullValueAtHealthPercent) {
-                normalized = 1.0D;
+        if ("current_health_percent".equals(bonusScalingStat)) {
+            double minHealth = Math.min(zeroValueAtHealthPercent, fullValueAtHealthPercent);
+            double maxHealth = Math.max(zeroValueAtHealthPercent, fullValueAtHealthPercent);
+            if (maxHealth - minHealth <= 1.0E-9D) {
+                normalized = healthRatio >= maxHealth ? 1.0D : 0.0D;
             } else {
-                normalized = (1.0D - healthRatio) / (1.0D - fullValueAtHealthPercent);
+                normalized = (healthRatio - minHealth) / (maxHealth - minHealth);
+            }
+        } else if ("missing_health_percent".equals(bonusScalingStat)) {
+            // Backward-compatible path for legacy configs.
+            double missingRatio = 1.0D - healthRatio;
+            double threshold = fullValueAtHealthPercent;
+            if (threshold > 0.0D && threshold < 1.0D) {
+                normalized = missingRatio >= threshold
+                        ? 1.0D
+                        : missingRatio / Math.max(1.0E-9D, threshold);
+            } else {
+                normalized = missingRatio;
             }
         } else {
-            normalized = 1.0D - healthRatio;
+            LOGGER.atFine().log("Reckoning unknown scaling_stat '%s', defaulting to current_health_percent",
+                    bonusScalingStat);
+            double minHealth = Math.min(zeroValueAtHealthPercent, fullValueAtHealthPercent);
+            double maxHealth = Math.max(zeroValueAtHealthPercent, fullValueAtHealthPercent);
+            if (maxHealth - minHealth <= 1.0E-9D) {
+                normalized = healthRatio >= maxHealth ? 1.0D : 0.0D;
+            } else {
+                normalized = (healthRatio - minHealth) / (maxHealth - minHealth);
+            }
         }
 
         return maxBonus * clamp01(normalized);

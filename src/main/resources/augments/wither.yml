@@ -8,13 +8,17 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "+1.5% Max Health as damage per second"
+      body: |
+        +1.5% Max Health as damage per second
+        Max Damage Per Tick Against Monsters: 500
       color: "#8adf9e"
     - title: "Debuffs"
       body: "-20% Haste"
       color: "#ff9a9a"
     - title: "Rules"
-      body: "Category: ON_HIT"
+      body: |
+        Category: ON_HIT
+        Can Crit: No
       color: "#ffb86b"
     - title: "Duration"
       body: "Duration: 5s"
@@ -23,6 +27,7 @@ passives:
   wither:
     value: 0.015 # 1.5% max health per second as damage
     duration: 5 # seconds
+    max_damage_per_tick: 500 # cap applies to monsters only (0 = no cap)
     category: ON_HIT
     target_debuff:
       movement_speed:

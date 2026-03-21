@@ -11,7 +11,8 @@ ui:
       body: |
         Base Max Hp Percent Per Second: +1%
         Bonus Max Hp Scaling: +0.15%
-        Max Damage Per Tick Against Monsters: 500
+        Can Crit: No
+        Max Damage Per Tick Against Monsters: 1000
         Radius: +5
         Gain +1 Block Radius per 400 Max HP
         +100 Life Force
@@ -29,7 +30,7 @@ passives:
     radius: 5 # base radius in blocks
     duration: 10 # effect lasts 10 seconds
     cooldown: 10 # effect triggers every 10 seconds
-    max_damage_per_tick: 500 # flat cap on burn damage per tick (0 = no cap)
+    max_damage_per_tick: 1000 # flat cap on burn damage per tick (0 = no cap)
     radius_health_scaling:
       health_per_block: 400 # gain +1 block radius per 400 max HP
 

@@ -14,6 +14,9 @@ import java.util.Map;
 public final class BloodSurgeAugment extends Augment implements AugmentHooks.OnHitAugment {
     public static final String ID = "blood_surge";
 
+    private static final double DEFAULT_MIN_LIFESTEAL_PERCENT = 5.0D;
+
+    private final double minLifeStealPercent;
     private final double maxLifeStealPercent;
     private final double maxMissingPercent;
     private final double healingToDamageRatio;
@@ -40,6 +43,10 @@ public final class BloodSurgeAugment extends Augment implements AugmentHooks.OnH
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> lifeStealScaling = AugmentValueReader.getMap(passives, "life_steal_scaling");
+        this.minLifeStealPercent = normalizePercentValue(
+            AugmentValueReader.getDouble(lifeStealScaling,
+                "min_value",
+                DEFAULT_MIN_LIFESTEAL_PERCENT / 100.0D));
         this.maxLifeStealPercent = normalizePercentValue(
                 AugmentValueReader.getDouble(lifeStealScaling, "max_value", 0.0D));
         this.healingToDamageRatio = normalizeRatioValue(
@@ -74,20 +81,24 @@ public final class BloodSurgeAugment extends Augment implements AugmentHooks.OnH
         if (hp != null && hp.getMax() > 0f) {
             missingRatio = Math.min(maxMissingPercent, Math.max(0.0D, (hp.getMax() - hp.get()) / hp.getMax()));
         }
-        double lifeStealPercent = maxLifeStealPercent
-                * (maxMissingPercent <= 0.0D ? 0.0D : missingRatio / maxMissingPercent);
-        lifeStealPercent = Math.max(0.0D, Math.min(maxLifeStealPercent, lifeStealPercent));
+        double safeMinLifeSteal = Math.max(0.0D, Math.min(minLifeStealPercent, maxLifeStealPercent));
+        double safeMaxLifeSteal = Math.max(safeMinLifeSteal, maxLifeStealPercent);
+        double normalizedMissing = maxMissingPercent <= 0.0D
+                ? 0.0D
+                : Math.max(0.0D, Math.min(1.0D, missingRatio / maxMissingPercent));
+        double lifeStealPercent = safeMinLifeSteal + ((safeMaxLifeSteal - safeMinLifeSteal) * normalizedMissing);
+        lifeStealPercent = Math.max(safeMinLifeSteal, Math.min(safeMaxLifeSteal, lifeStealPercent));
         if (lifeStealPercent <= 0.0D) {
             return damage;
         }
 
         double healAmount = damage * (lifeStealPercent / 100.0D);
-        float appliedHealAmount = 0f;
         if (healAmount > 0.0D) {
-            appliedHealAmount = AugmentUtils.heal(attackerStats, healAmount);
+            // Heal normally, but bonus damage conversion uses potential healing even at full HP.
+            AugmentUtils.heal(attackerStats, healAmount);
         }
 
-        double bonusDamage = appliedHealAmount * healingToDamageRatio;
+        double bonusDamage = healAmount * healingToDamageRatio;
         if (bonusDamage > 0.0D) {
             return damage + (float) bonusDamage;
         }

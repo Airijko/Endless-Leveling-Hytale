@@ -1,0 +1,30 @@
+id: arcane_cataclysm
+name: "Arcane Cataclysm"
+tier: MYTHIC
+description: "Every fifth hit unleashes a sorcery-fueled explosion around your target."
+category: MAGIC_ON_HIT
+enabled: true
+
+ui:
+  sections:
+    - title: "5-Hit Passive"
+      body: |
+        5-Hit Passive
+        Hit Counter Duration: 5s
+      color: "#ffb86b"
+    - title: "Explosion"
+      body: |
+        Damage: 50 + (150% Sorcery)
+        Radius: 3
+        Can Crit: No
+      color: "#8adf9e"
+passives:
+  hit_counter:
+    hits_required: 5
+    duration: 5 # seconds to complete the hit counter before it resets
+
+  explosion_damage:
+    flat_damage: 50.0 # base explosion damage
+    sorcery_scaling: 1.50 # +150% of Sorcery added to explosion damage
+    radius: 3.0 # explosion radius in blocks
+    can_crit: false # explosion damage cannot critically strike

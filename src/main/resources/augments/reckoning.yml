@@ -8,21 +8,22 @@ enabled: true
 ui:
   sections:
     - title: "Buffs"
-      body: "Bonus Damage: +0-100%"
+      body: "Bonus Damage: +0-100% (higher at higher HP)"
       color: "#8adf9e"
     - title: "Debuffs"
       body: "Self Damage: +5% Current HP per hit"
       color: "#ff9a9a"
     - title: "Rules"
       body: |
-        Scaling Stat: missing_health_percent
-        Full Value Threshold: 25% Player Health
+        Scaling Stat: current_health_percent
+        0% bonus at 25% HP, 100% bonus at 100% HP
       color: "#ffb86b"
 passives:
   bonus_damage:
-    scaling_stat: missing_health_percent # scales with missing HP
-    max_bonus_damage: 1 # up to 100% bonus damage at full missing HP
-    full_value_at_health_percent: 0.25 # full bonus damage when player health is at or below 25%
+    scaling_stat: current_health_percent # scales with current HP (higher HP = higher bonus)
+    max_bonus_damage: 1 # up to 100% bonus damage at full HP
+    zero_value_at_health_percent: 0.25 # 0% bonus at or below 25% HP
+    full_value_at_health_percent: 1.0 # 100% bonus at 100% HP
 
   self_damage:
     percent_of_current_hp: 0.05 # loses 5% of current HP per hit
