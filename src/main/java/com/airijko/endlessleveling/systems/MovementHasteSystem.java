@@ -35,6 +35,7 @@ public class MovementHasteSystem extends TickingSystem<EntityStore> {
     private static final double MIN_FRACTION = 0.10D;
     private static final double MAX_FRACTION = 1.0D;
     private static final double DAMAGE_HALVE_FACTOR = 0.5D;
+    private static final float DAMAGE_RAMP_PAUSE_SECONDS = 0.5f;
     private static final float RAMP_DURATION_SECONDS = 5.0f;
     private static final float DECAY_DELAY_SECONDS = 1.0f;
     private static final float DECAY_DURATION_SECONDS = 3.0f;
@@ -76,6 +77,7 @@ public class MovementHasteSystem extends TickingSystem<EntityStore> {
         MovementState state = states.computeIfAbsent(playerId, ignored -> new MovementState());
         double previousFraction = state.currentFraction;
         state.currentFraction = Math.max(MIN_FRACTION, state.currentFraction * DAMAGE_HALVE_FACTOR);
+        state.rampPauseSeconds = DAMAGE_RAMP_PAUSE_SECONDS;
         state.decayDelaySeconds = DECAY_DELAY_SECONDS;
         state.needsApply = true;
         state.baseHasteRefreshSeconds = 0.0f;
@@ -187,6 +189,7 @@ public class MovementHasteSystem extends TickingSystem<EntityStore> {
         MovementState state = states.computeIfAbsent(playerId, ignored -> new MovementState());
         Vector3d position = transform.getPosition();
         boolean movedThisStep = hasMoved(state, position);
+        boolean rampPaused = state.rampPauseSeconds > 0.0f;
         state.lastX = position.getX();
         state.lastY = position.getY();
         state.lastZ = position.getZ();
@@ -204,7 +207,7 @@ public class MovementHasteSystem extends TickingSystem<EntityStore> {
         }
 
         if (movedThisStep) {
-            if (!state.rampLogged) {
+            if (!rampPaused && !state.rampLogged) {
                 LOGGER.atInfo().log(
                         "MovementHasteSystem: %s started ramping haste from %.3f",
                         playerData.getPlayerName(),
@@ -214,8 +217,10 @@ public class MovementHasteSystem extends TickingSystem<EntityStore> {
                 state.decayLogged = false;
             }
             state.decayDelaySeconds = DECAY_DELAY_SECONDS;
-            state.currentFraction = Math.min(MAX_FRACTION,
-                    state.currentFraction + (deltaSeconds / RAMP_DURATION_SECONDS) * (MAX_FRACTION - MIN_FRACTION));
+            if (!rampPaused) {
+                state.currentFraction = Math.min(MAX_FRACTION,
+                        state.currentFraction + (deltaSeconds / RAMP_DURATION_SECONDS) * (MAX_FRACTION - MIN_FRACTION));
+            }
         } else {
             if (state.decayDelaySeconds > 0.0f) {
                 if (!state.decayDelayLogged) {
@@ -240,6 +245,10 @@ public class MovementHasteSystem extends TickingSystem<EntityStore> {
                 state.currentFraction = Math.max(MIN_FRACTION,
                         state.currentFraction - (deltaSeconds / DECAY_DURATION_SECONDS) * (MAX_FRACTION - MIN_FRACTION));
             }
+        }
+
+        if (state.rampPauseSeconds > 0.0f) {
+            state.rampPauseSeconds = Math.max(0.0f, state.rampPauseSeconds - deltaSeconds);
         }
 
         state.currentFraction = clampFraction(state.currentFraction);
@@ -396,6 +405,7 @@ public class MovementHasteSystem extends TickingSystem<EntityStore> {
         private double appliedBonusPercent = Double.NaN;
         private double cachedBaseHastePercent = Double.NaN;
         private float decayDelaySeconds = DECAY_DELAY_SECONDS;
+        private float rampPauseSeconds;
         private float baseHasteRefreshSeconds;
         private boolean needsApply;
         private boolean rampLogged;

@@ -425,6 +425,49 @@ World_Overrides:
             At_Positive_Max_Difference: 0.9
             Below_Negative_Max_Difference: 0.0
             Above_Positive_Max_Difference: 0.975
+            
+  instance-endgame_swamp_dungeon-*:
+    Level_Range:
+      Max: "ENDLESS"
+    Level_Source:
+      Mode: "TIERED"
+      Base_Level:
+        Level: 30-45
+      Tiers:
+        Total_Tiers: "ENDLESS"
+        Levels_Per_Tier: 20
+        Player_Adaptation:
+          Enabled: true
+          Allowance_Mode: "ABOVE"
+          Range_Allowance: 10
+    Scaling:
+      Health:
+        Base_Multiplier: 3.0
+        Per_Level: 0.075
+      Damage:
+        Base_Multiplier: 1.25
+        Per_Level: 0.065
+      Defense:
+        At_Negative_Max_Difference: 0.25
+        At_Positive_Max_Difference: 0.8
+        Below_Negative_Max_Difference: 0.0
+        Above_Positive_Max_Difference: 0.9
+    Mob_Overrides:
+      Endgame_Hedera:
+        Level: 50
+        Augments: [rebirth]
+        Scaling:
+          Health:
+            Base_Multiplier: 2.0
+            Per_Level: 0.075
+          Damage:
+            Base_Multiplier: 1.0
+            Per_Level: 0.07
+          Defense:
+            At_Negative_Max_Difference: 0.35
+            At_Positive_Max_Difference: 0.9
+            Below_Negative_Max_Difference: 0.0
+            Above_Positive_Max_Difference: 0.975
 
   # ===============================
   # Tower of Shiva dungeons
