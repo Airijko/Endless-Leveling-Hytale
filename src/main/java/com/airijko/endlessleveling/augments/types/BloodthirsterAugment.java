@@ -49,7 +49,8 @@ public final class BloodthirsterAugment extends Augment implements AugmentHooks.
     private final double healthyThresholdAbove;
     private final int sharedHitCounter;
     private final long sharedHitCounterDurationMillis;
-    private final double healthyBonusDamage;
+    private final double healthyFlatDamage;
+    private final double healthyStrengthScaling;
     private final double healthySelfDamagePercentOfCurrent;
 
     private final double woundedThresholdBelow;
@@ -83,8 +84,10 @@ public final class BloodthirsterAugment extends Augment implements AugmentHooks.
                 AugmentValueReader.getDouble(healthyState, "health_threshold_above", 0.50D));
         this.sharedHitCounter = Math.max(1, configuredHitCounter > 0 ? configuredHitCounter : 3);
         this.sharedHitCounterDurationMillis = AugmentUtils.secondsToMillis(configuredDurationSeconds);
-        this.healthyBonusDamage = AugmentUtils
-                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(healthyBonus, "value", 0.0D));
+        this.healthyFlatDamage = Math.max(0.0D,
+            AugmentValueReader.getDouble(healthyBonus, "flat_damage", 0.0D));
+        this.healthyStrengthScaling = Math.max(0.0D,
+            AugmentValueReader.getDouble(healthyBonus, "strength_scaling", 0.0D));
         this.healthySelfDamagePercentOfCurrent = clampRatio(
                 AugmentValueReader.getDouble(healthySelfDamage, "percent_of_current_hp", 0.0D));
 
@@ -147,19 +150,16 @@ public final class BloodthirsterAugment extends Augment implements AugmentHooks.
         var playerRef = AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getAttackerRef());
 
         if (mode == MODE_HEALTHY) {
-            float outgoing = AugmentUtils.applyAdditiveBonusFromBase(
-                    context.getDamage(),
-                    context.getBaseDamage(),
-                    healthyBonusDamage);
+            double healthyBonusDamage = resolveHealthyBonusDamage(context);
             applyHealthySelfDamage(attackerStats, healthySelfDamagePercentOfCurrent);
             playTriggerSound(context, TRIGGER_SFX_HEALTHY);
             playTriggerVfx(context);
             if (playerRef != null && playerRef.isValid()) {
                 AugmentUtils.sendAugmentMessage(playerRef,
-                        String.format("%s activated! +%.0f%% damage (healthy state).",
-                                getName(), healthyBonusDamage * 100.0D));
+                String.format("%s activated! +%.1f bonus damage (healthy state).",
+                    getName(), healthyBonusDamage));
             }
-            return outgoing;
+            return context.getDamage() + (float) Math.max(0.0D, healthyBonusDamage);
         }
 
         double healAmount = resolveWoundedHealing(context, hp);
@@ -270,6 +270,15 @@ public final class BloodthirsterAugment extends Augment implements AugmentHooks.
         float selfDamage = (float) (current * percentOfCurrent);
         float updated = Math.max(1.0f, current - selfDamage);
         statMap.setStatValue(DefaultEntityStatTypes.getHealth(), updated);
+    }
+
+    private double resolveHealthyBonusDamage(AugmentHooks.HitContext context) {
+        double strength = 0.0D;
+        SkillManager skillManager = context == null ? null : context.getSkillManager();
+        if (skillManager != null && context.getPlayerData() != null) {
+            strength = Math.max(0.0D, skillManager.calculatePlayerStrength(context.getPlayerData()));
+        }
+        return healthyFlatDamage + (strength * healthyStrengthScaling);
     }
 
     private static boolean isStackDelayReady(AugmentRuntimeState runtime, long now) {

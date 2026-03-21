@@ -14,7 +14,7 @@ ui:
       color: "#ffb86b"
     - title: "Above 50%"
       body: |
-        +80% Bonus Damage
+        +25 Flat + (80% Strength)
       color: "#8adf9e"
     - title: ""
       body: |
@@ -31,7 +31,8 @@ passives:
   healthy_state:
     health_threshold_above: 0.50 # active when above 50% HP
     bonus_damage:
-      value: 0.8 # 80% bonus damage on every 3rd hit
+      flat_damage: 25.0 # +25 flat bonus damage on every 3rd hit
+      strength_scaling: 0.8 # +80% of Strength as bonus damage
     self_damage:
       percent_of_current_hp: 0.10 # lose 10% current HP
 
