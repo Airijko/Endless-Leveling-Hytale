@@ -24,15 +24,15 @@ ascension:
   next_paths: []
 
 attributes:
-  life_force: 290
-  strength: 1.5
-  defense: 1.38
-  haste: 1.15
-  precision: 48.0
-  ferocity: 100.0
-  stamina: 36.0
-  flow: 16.0
-  sorcery: 1.12
+  life_force: 292.5
+  strength: 1.465
+  defense: 1.37
+  haste: 1.16
+  precision: 43.5
+  ferocity: 99
+  stamina: 37
+  flow: 17.5
+  sorcery: 1.135
   discipline: 0
 
 passives:

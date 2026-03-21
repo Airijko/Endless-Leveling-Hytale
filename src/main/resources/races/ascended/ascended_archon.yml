@@ -30,7 +30,7 @@ attributes:
   ferocity: 20.0
   stamina: 18.0
   flow: 38.0
-  sorcery: 1.62
+  sorcery: 1.525
   discipline: 0
 
 passives:

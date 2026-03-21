@@ -1,11 +1,11 @@
-race_name: "Human Knight"
+race_name: "Human Conqueror"
 icon: "Ingredient_Water_Essence"
 description: "A battle-forged warleader who amplifies critical devastation through strength or sorcery mastery."
 model_scale: 1.0
 enabled: true
 
 ascension:
-  id: "human_knight"
+  id: "human_conqueror"
   stage: "tier_2"
   path: "damage"
   final_form: false
