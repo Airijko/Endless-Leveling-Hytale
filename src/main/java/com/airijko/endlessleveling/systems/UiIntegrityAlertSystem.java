@@ -12,11 +12,11 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Sends recurring alerts when unauthorized UI title modifications are detected.
@@ -31,7 +31,7 @@ public final class UiIntegrityAlertSystem extends TickingSystem<EntityStore> {
     private static final long ALERT_INTERVAL_MILLIS = 60_000L;
 
     private final UiTitleIntegrityGuard integrityGuard;
-    private final Map<UUID, Long> nextAlertAtByPlayer = new HashMap<>();
+    private final Map<UUID, Long> nextAlertAtByPlayer = new ConcurrentHashMap<>();
     private float elapsedSeconds = 0.0f;
     private long systemStartedAtMillis = -1L;
     private boolean consoleWarningLogged = false;
@@ -112,7 +112,11 @@ public final class UiIntegrityAlertSystem extends TickingSystem<EntityStore> {
             }
         });
 
-        nextAlertAtByPlayer.keySet().removeIf(uuid -> !onlinePlayers.contains(uuid));
+        for (UUID trackedPlayerId : nextAlertAtByPlayer.keySet()) {
+            if (!onlinePlayers.contains(trackedPlayerId)) {
+                nextAlertAtByPlayer.remove(trackedPlayerId);
+            }
+        }
     }
 
     public void setAuthorizedPartner(boolean authorized) {

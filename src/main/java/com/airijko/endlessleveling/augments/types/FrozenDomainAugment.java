@@ -370,14 +370,14 @@ public final class FrozenDomainAugment extends Augment
                 ref,
                 MovementManager.getComponentType());
         if (movementManager == null) {
-            if (!state.loggedMissingMovementManager) {
+            boolean fallbackApplied = applySlowEffectFallback(state, commandBuffer, ref, key);
+            if (!fallbackApplied && !state.loggedMissingMovementManager) {
                 LOGGER.atWarning().log(
-                        "Frozen Domain slow MovementManager missing; trying effect fallback key=%s target=%s",
+                        "Frozen Domain slow unavailable: MovementManager missing and fallback failed key=%s target=%s",
                         key,
                         ref);
                 state.loggedMissingMovementManager = true;
             }
-            applySlowEffectFallback(state, commandBuffer, ref, key);
             return;
         }
 
@@ -385,14 +385,14 @@ public final class FrozenDomainAugment extends Augment
         MovementSettings defaultSettings = movementManager.getDefaultSettings();
         PlayerRef playerRef = AugmentUtils.getPlayerRef(commandBuffer, ref);
         if (settings == null && defaultSettings == null) {
-            if (!state.loggedMissingMovementSettings) {
+            boolean fallbackApplied = applySlowEffectFallback(state, commandBuffer, ref, key);
+            if (!fallbackApplied && !state.loggedMissingMovementSettings) {
                 LOGGER.atWarning().log(
-                        "Frozen Domain slow movement settings missing; trying effect fallback key=%s target=%s",
+                        "Frozen Domain slow unavailable: movement settings missing and fallback failed key=%s target=%s",
                         key,
                         ref);
                 state.loggedMissingMovementSettings = true;
             }
-            applySlowEffectFallback(state, commandBuffer, ref, key);
             return;
         }
 
@@ -486,7 +486,7 @@ public final class FrozenDomainAugment extends Augment
                 0L);
     }
 
-    private static void applySlowEffectFallback(ActiveFrozen state,
+    private static boolean applySlowEffectFallback(ActiveFrozen state,
             CommandBuffer<EntityStore> commandBuffer,
             Ref<EntityStore> ref,
             String key) {
@@ -500,7 +500,7 @@ public final class FrozenDomainAugment extends Augment
                         ref);
                 state.loggedMissingEffectController = true;
             }
-            return;
+            return false;
         }
 
         EntityEffect slowEffect = resolveSlowEffect();
@@ -512,7 +512,7 @@ public final class FrozenDomainAugment extends Augment
                         ref);
                 state.loggedMissingSlowEffectAsset = true;
             }
-            return;
+            return false;
         }
 
         float remainingSeconds = Math.max(0.1F, (float) ((state.expiresAt - System.currentTimeMillis()) / 1000.0D));
@@ -521,6 +521,7 @@ public final class FrozenDomainAugment extends Augment
         if (applied) {
             state.fallbackSlowEffectApplied = true;
             state.fallbackSlowEffectId = slowEffect.getId();
+            return true;
         } else if (!state.loggedEffectApplyFailure) {
             LOGGER.atWarning().log("Frozen Domain fallback slow failed to apply key=%s target=%s effect=%s",
                     key,
@@ -528,6 +529,7 @@ public final class FrozenDomainAugment extends Augment
                     slowEffect.getId());
             state.loggedEffectApplyFailure = true;
         }
+        return false;
     }
 
     private static void clearSlowEffectFallback(ActiveFrozen state,
