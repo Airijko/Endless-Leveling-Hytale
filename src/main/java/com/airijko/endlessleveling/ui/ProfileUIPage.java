@@ -19,6 +19,7 @@ import com.airijko.endlessleveling.classes.WeaponConfig;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.player.PlayerData.PlayerProfile;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
+import com.airijko.endlessleveling.enums.PassiveTier;
 import com.airijko.endlessleveling.enums.PassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.enums.themes.AugmentTheme;
@@ -585,15 +586,18 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private int tierSortPriority(String tierLabel) {
+        return AugmentTheme.tierSortOrder(parseTierLabel(tierLabel));
+    }
+
+    private PassiveTier parseTierLabel(String tierLabel) {
         if (tierLabel == null || tierLabel.isBlank()) {
-            return 3;
+            return null;
         }
-        return switch (tierLabel.trim().toUpperCase(Locale.ROOT)) {
-            case "MYTHIC" -> 0;
-            case "ELITE" -> 1;
-            case "COMMON" -> 2;
-            default -> 3;
-        };
+        try {
+            return PassiveTier.valueOf(tierLabel.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
     }
 
     private List<SkillPassiveEntry> buildInnatePlayerPassiveEntries(@Nonnull PlayerData playerData) {
@@ -823,15 +827,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private String resolveTierColor(String tierLabel) {
-        if (tierLabel == null || tierLabel.isBlank()) {
-            return AugmentTheme.PROFILE_COMMON.color();
-        }
-        return switch (tierLabel.trim().toUpperCase(Locale.ROOT)) {
-            case "MYTHIC" -> AugmentTheme.PROFILE_MYTHIC.color();
-            case "ELITE" -> AugmentTheme.PROFILE_ELITE.color();
-            case "COMMON" -> AugmentTheme.PROFILE_COMMON.color();
-            default -> AugmentTheme.PROFILE_COMMON.color();
-        };
+        return AugmentTheme.profileTierColor(parseTierLabel(tierLabel));
     }
 
     private void populatePassiveEntries(@Nonnull UICommandBuilder ui,
@@ -879,16 +875,39 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
         int newline = value.indexOf('\n');
         String firstLine = (newline >= 0 ? value.substring(0, newline) : value).trim();
-        if (!normalizePassiveText(firstLine).equals(normalizedLabel)) {
+        String normalizedFirstLine = normalizePassiveText(firstLine);
+        if (!normalizedFirstLine.equals(normalizedLabel)
+                && !normalizedFirstLine.startsWith(normalizedLabel)) {
             return value;
         }
 
         if (newline < 0) {
-            return value;
+            String strippedInline = stripInlinePassiveHeader(firstLine, label);
+            return strippedInline.isBlank() ? value : strippedInline;
         }
 
         String remaining = value.substring(newline + 1).stripLeading();
         return remaining.isBlank() ? value : remaining;
+    }
+
+    private String stripInlinePassiveHeader(String valueLine, String label) {
+        if (valueLine == null || valueLine.isBlank() || label == null || label.isBlank()) {
+            return valueLine == null ? "" : valueLine;
+        }
+        String trimmedValue = valueLine.trim();
+        String trimmedLabel = label.trim();
+        if (!trimmedValue.regionMatches(true, 0, trimmedLabel, 0, trimmedLabel.length())) {
+            return trimmedValue;
+        }
+
+        String remainder = trimmedValue.substring(trimmedLabel.length()).stripLeading();
+        if (remainder.startsWith(":")) {
+            remainder = remainder.substring(1).stripLeading();
+        }
+        if (remainder.startsWith("-")) {
+            remainder = remainder.substring(1).stripLeading();
+        }
+        return remainder;
     }
 
     private String normalizePassiveText(String text) {
@@ -1156,24 +1175,27 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case HEALTH_REGEN -> tr("ui.races.passive.desc.health_regen", "{0} HP/5s", formatPercentValue(value));
             case MANA_REGEN -> tr("ui.races.passive.desc.mana_regen", "{0} mana/5s", formatPercentValue(value));
             case MANA_REGEN_FLAT -> tr("ui.races.passive.desc.mana_regen_flat", "{0} mana/s", formatSigned(value));
-                case ARCANE_WISDOM -> appendDetails(
-                    tr("ui.races.passive.desc.arcane_wisdom", "{0} missing mana", formatPercentValue(value)),
-                    tr("ui.classes.passive.pretty.activation.on_kill", "on kill"),
-                    formatCooldownDetail(props.cooldown()));
+            case ARCANE_WISDOM -> appendLines(
+                tr("ui.races.passive.desc.arcane_wisdom", "{0} missing mana", formatPercentValue(value)),
+                tr("ui.classes.passive.pretty.activation.on_kill", "- Activation: on kill"),
+                props.cooldown() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.focused_strike.cooldown", "- Cooldown: {0}s",
+                        formatNumber(props.cooldown())));
             case HEALING_TOUCH -> tr("ui.races.passive.desc.healing_touch", "on-hit heal: {0} of source",
                     formatPercentValue(value));
-            case HEALING_AURA -> appendDetails(
+            case HEALING_AURA -> appendLines(
                     tr("ui.races.passive.desc.party_mending_aura", "Party healing pulse"),
-                    tr("ui.races.passive.detail.party_mending_heal", "heal: 10% mana + 20% stamina"),
-                    tr("ui.races.passive.detail.party_mending_radius", "radius: 5 +1/75 mana"));
-            case SHIELDING_AURA -> appendDetails(
+                tr("ui.races.passive.detail.party_mending_heal", "- Heal: 10% mana + 20% stamina"),
+                tr("ui.races.passive.detail.party_mending_radius", "- Radius: 5 +1/75 mana"));
+            case SHIELDING_AURA -> appendLines(
                     tr("ui.races.passive.desc.shielding_aura", "Party shielding aura"),
-                    tr("ui.races.passive.detail.shielding_aura_effect", "shield: flat + stamina scaling"),
-                    tr("ui.races.passive.detail.shielding_aura_duration", "duration + cooldown, party/range only"));
-            case BUFFING_AURA -> appendDetails(
+                tr("ui.races.passive.detail.shielding_aura_effect", "- Shield: flat + stamina scaling"),
+                tr("ui.races.passive.detail.shielding_aura_duration", "- Duration/cooldown, party/range only"));
+            case BUFFING_AURA -> appendLines(
                     tr("ui.races.passive.desc.buffing_aura", "Party buffing aura"),
-                    tr("ui.races.passive.detail.buffing_aura_effect", "damage bonus from stamina (shared)"),
-                    tr("ui.races.passive.detail.buffing_aura_cap", "up to 100% per ally, self at 25%"));
+                tr("ui.races.passive.detail.buffing_aura_effect", "- Shares stamina-based damage"),
+                tr("ui.races.passive.detail.buffing_aura_cap", "- Up to 100% per ally, self at 25%"));
             case REGENERATION -> tr("ui.races.passive.desc.regeneration", "{0} HP/s", formatSigned(value));
             case HEALING_BONUS -> tr("ui.races.passive.desc.healing_bonus", "{0} healing", formatPercentValue(value));
             case LIFE_STEAL -> tr("ui.races.passive.desc.life_steal", "{0} life steal", formatPercentValue(value));
@@ -1182,61 +1204,137 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             case STAMINA_GAIN_BONUS ->
                 tr("ui.races.passive.desc.stamina_gain", "{0} stamina gain", formatPercentValue(value));
             case LUCK -> tr("ui.races.passive.desc.luck", "{0} luck", formatPercentValue(value));
-            case SECOND_WIND -> appendDetails(
+            case SECOND_WIND -> appendLines(
                     tr("ui.races.passive.desc.second_wind", "{0} heal", formatPercentValue(value)),
-                    formatThresholdDetail(props.threshold(), tr("ui.races.passive.scope.hp", "HP")),
-                    formatDurationDetail(props.duration()),
-                    formatCooldownDetail(props.cooldown()));
-                case TRUE_BOLTS -> appendDetails(
-                    tr("ui.races.passive.desc.first_strike", "{0} opener", formatPercentValue(value)),
-                    formatCooldownDetail(props.cooldown()));
-                case FOCUSED_STRIKE -> appendDetails(
-                    tr("ui.races.passive.desc.first_strike", "{0} opener", formatPercentValue(value)),
-                    formatCooldownDetail(props.cooldown()));
-            case ADRENALINE -> appendDetails(
+                props.threshold() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.final_incantation.threshold", "- Trigger: below {0}",
+                        formatThresholdPercent(props.threshold(), "HP")),
+                props.duration() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.primal_dominance.duration", "- Duration: {0}s",
+                        formatNumber(props.duration())),
+                props.cooldown() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.focused_strike.cooldown", "- Cooldown: {0}s",
+                        formatNumber(props.cooldown())));
+            case TRUE_BOLTS -> appendLines(
+                tr("ui.races.passive.desc.first_strike", "{0} opener", formatPercentValue(value)),
+                props.cooldown() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.focused_strike.cooldown", "- Cooldown: {0}s",
+                        formatNumber(props.cooldown())));
+            case FOCUSED_STRIKE -> appendLines(
+                tr("ui.races.passive.desc.first_strike", "{0} opener", formatPercentValue(value)),
+                props.cooldown() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.focused_strike.cooldown", "- Cooldown: {0}s",
+                        formatNumber(props.cooldown())));
+            case ADRENALINE -> appendLines(
                     tr("ui.races.passive.desc.adrenaline", "{0} stamina", formatPercentValue(value)),
-                    formatThresholdDetail(props.threshold(), tr("ui.races.passive.scope.stamina", "stamina")),
-                    formatDurationDetail(props.duration()),
-                    formatCooldownDetail(props.cooldown()));
-            case BERZERKER -> appendDetails(
+                props.threshold() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.final_incantation.threshold", "- Trigger: below {0}",
+                        formatThresholdPercent(props.threshold(), "stamina")),
+                props.duration() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.primal_dominance.duration", "- Duration: {0}s",
+                        formatNumber(props.duration())),
+                props.cooldown() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.focused_strike.cooldown", "- Cooldown: {0}s",
+                        formatNumber(props.cooldown())));
+            case BERZERKER -> appendLines(
                     tr("ui.races.passive.desc.berzerker", "{0} damage", formatPercentValue(value)),
-                    formatThresholdDetail(props.threshold(), tr("ui.races.passive.scope.hp", "HP")));
-            case RETALIATION -> appendDetails(
+                props.threshold() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.final_incantation.threshold", "- Trigger: below {0}",
+                        formatThresholdPercent(props.threshold(), "HP")));
+            case RETALIATION -> appendLines(
                     tr("ui.races.passive.desc.retaliation", "{0} reflect", formatPercentValue(value)),
-                    formatWindowDetail(props.window()),
-                    formatCooldownDetail(props.cooldown()));
-                case PRIMAL_DOMINANCE -> appendDetails(
-                    tr("ui.profile.passive.desc.primal_dominance",
-                        "{0} Strength from total health",
-                        formatPercentValue(value)),
-                    formatSlowDetail(props.slowPercent()),
-                    formatDurationDetail(props.duration()));
-                case ARCANE_DOMINANCE -> appendDetails(
-                    tr("ui.profile.passive.desc.arcane_dominance",
-                        "{0} Sorcery from total health",
-                        formatPercentValue(value)),
-                    formatSlowDetail(props.slowPercent()),
-                    formatDurationDetail(props.duration()));
-            case FINAL_INCANTATION -> appendDetails(
-                    tr("ui.races.passive.desc.executioner", "Final Incantation: +{0} bonus damage",
-                        formatPercentValue(value)),
-                    formatThresholdDetail(props.threshold(), tr("ui.races.passive.scope.target_hp", "target HP")),
-                    formatCooldownDetail(props.cooldown()));
-            case SWIFTNESS -> appendDetails(
+                props.window() == null
+                    ? null
+                    : tr("ui.races.passive.detail.window", "- Window: {0}s", formatNumber(props.window())),
+                props.cooldown() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.focused_strike.cooldown", "- Cooldown: {0}s",
+                        formatNumber(props.cooldown())));
+            case PRIMAL_DOMINANCE -> appendLines(
+                tr("ui.classes.passive.pretty.primal_dominance.scaling",
+                    "Strength bonus: {0} of total health",
+                    formatPercentValue(value)),
+                props.slowPercent() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.primal_dominance.slow",
+                        "- On-hit debuff: -{0} haste",
+                        formatPercentMagnitude(props.slowPercent())),
+                props.duration() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.primal_dominance.duration", "- Debuff duration: {0}s",
+                        formatNumber(props.duration())));
+            case ARCANE_DOMINANCE -> appendLines(
+                tr("ui.classes.passive.pretty.arcane_dominance.scaling",
+                    "Sorcery bonus: {0} of total health",
+                    formatPercentValue(value)),
+                props.slowPercent() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.arcane_dominance.slow",
+                        "- On-hit debuff: -{0} haste",
+                        formatPercentMagnitude(props.slowPercent())),
+                props.duration() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.arcane_dominance.duration", "- Debuff duration: {0}s",
+                        formatNumber(props.duration())));
+            case FINAL_INCANTATION -> appendLines(
+                tr("ui.classes.passive.pretty.final_incantation.bonus",
+                    "Bonus damage: {0} to low-health targets",
+                    formatPercentValue(value)),
+                props.threshold() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.final_incantation.threshold",
+                        "- Trigger: target below {0}",
+                        formatThresholdPercent(props.threshold(), "target HP")),
+                props.cooldown() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.final_incantation.cooldown", "- Cooldown: {0}s",
+                        formatNumber(props.cooldown())));
+            case SWIFTNESS -> appendLines(
                     tr("ui.races.passive.desc.swiftness", "{0} speed", formatPercentValue(value)),
-                    formatDurationDetail(props.duration()),
-                    formatStacksDetail(props.stacks()));
-                case BLADE_DANCE -> appendDetails(
-                    tr("ui.races.passive.desc.swiftness", "{0} speed", formatPercentValue(value)),
-                    formatDurationDetail(props.duration()),
-                    formatStacksDetail(props.stacks()));
-            case WITHER -> appendDetails(
+                props.duration() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.blade_dance.duration", "- Duration: {0}s",
+                        formatNumber(props.duration())),
+                props.stacks() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.blade_dance.stacks", "- Max stacks: {0}",
+                        formatNumber(props.stacks())));
+            case BLADE_DANCE -> appendLines(
+                tr("ui.classes.passive.pretty.blade_dance.speed", "Move speed per stack: {0}",
+                    formatPercentValue(value)),
+                props.duration() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.blade_dance.duration", "- Stack duration: {0}s",
+                        formatNumber(props.duration())),
+                props.stacks() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.blade_dance.stacks", "- Max stacks: {0}",
+                        formatNumber(props.stacks())));
+            case WITHER -> appendLines(
                     tr("ui.races.passive.desc.wither", "{0} max HP/sec", formatPercentValue(value)),
-                    formatDurationDetail(props.duration()),
-                    formatSlowDetail(props.slowPercent()));
-            case CRIT_DEFENSE -> appendDetails(
+                props.duration() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.primal_dominance.duration", "- Duration: {0}s",
+                        formatNumber(props.duration())),
+                props.slowPercent() == null
+                    ? null
+                    : tr("ui.classes.passive.pretty.primal_dominance.slow", "- Slow: {0}",
+                        formatPercentMagnitude(props.slowPercent())));
+            case CRIT_DEFENSE -> appendLines(
                     tr("ui.races.passive.desc.crit_defense", "{0} dmg reduction", formatPercentValue(value)),
-                    formatScalingDetail(props.scalingStat()));
+                props.scalingStat() == null
+                    ? null
+                    : tr("ui.races.passive.detail.scales_with", "- Scales with {0}",
+                        toDisplay(props.scalingStat())));
             case INNATE_ATTRIBUTE_GAIN -> formatSigned(value);
             default -> formatSigned(value);
         };
@@ -1292,7 +1390,34 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (ratio == null) {
             return null;
         }
-        return tr("ui.classes.passive.detail.threshold", "<{0}% {1}", formatNumber(ratio * 100.0D), scope);
+        return tr("ui.classes.passive.detail.threshold", "<{0}% {1}",
+                formatNumber(normalizePercentRatio(ratio) * 100.0D),
+                scope);
+    }
+
+    private String formatThresholdPercent(Double ratio, String scope) {
+        if (ratio == null) {
+            return null;
+        }
+        return formatNumber(normalizePercentRatio(ratio) * 100.0D) + "% " + scope;
+    }
+
+    private String formatPercentMagnitude(Double ratio) {
+        if (ratio == null) {
+            return "0%";
+        }
+        return formatNumber(normalizePercentRatio(ratio) * 100.0D) + "%";
+    }
+
+    private double normalizePercentRatio(Double ratio) {
+        if (ratio == null) {
+            return 0.0D;
+        }
+        double normalized = Math.abs(ratio);
+        if (normalized > 1.0D) {
+            normalized = normalized / 100.0D;
+        }
+        return normalized;
     }
 
     private String formatDurationDetail(Double seconds) {
@@ -1324,21 +1449,43 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private String appendDetails(String base, String... extra) {
-        String detail = joinDetails(extra);
+        String detail = joinDetailLines(extra);
         if (detail.isEmpty()) {
             return base;
         }
-        return base + " (" + detail + ")";
+        return base + "\n" + detail;
     }
 
-    private String joinDetails(String... parts) {
+    private String appendLines(String base, String... extra) {
+        String detail = joinLines(extra);
+        if (detail.isEmpty()) {
+            return base;
+        }
+        return base + "\n" + detail;
+    }
+
+    private String joinDetailLines(String... parts) {
         StringBuilder builder = new StringBuilder();
         for (String part : parts) {
             if (part == null || part.isBlank()) {
                 continue;
             }
             if (builder.length() > 0) {
-                builder.append(", ");
+                builder.append('\n');
+            }
+            builder.append("- ").append(part);
+        }
+        return builder.toString();
+    }
+
+    private String joinLines(String... parts) {
+        StringBuilder builder = new StringBuilder();
+        for (String part : parts) {
+            if (part == null || part.isBlank()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append('\n');
             }
             builder.append(part);
         }

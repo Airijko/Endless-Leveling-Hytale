@@ -40,6 +40,18 @@ public enum AugmentTheme {
         };
     }
 
+    public static String profileTierColor(PassiveTier tier) {
+        if (tier == null) {
+            return PROFILE_COMMON.color();
+        }
+        return switch (tier) {
+            case MYTHIC -> PROFILE_MYTHIC.color();
+            case LEGENDARY -> PROFILE_LEGENDARY.color();
+            case ELITE -> PROFILE_ELITE.color();
+            case COMMON -> PROFILE_COMMON.color();
+        };
+    }
+
     public static int tierSortOrder(PassiveTier tier) {
         if (tier == null) {
             return Integer.MAX_VALUE;

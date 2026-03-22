@@ -1,20 +1,22 @@
 Group {
-    LayoutMode: Left;
-    Anchor: (Height: 22);
-    Background: #0f1824(0.8);
-    Padding: (Left: 10, Right: 10, Top: 3, Bottom: 3);
+    LayoutMode: Top;
+    Group {
+        LayoutMode: Top;
+        Background: #0f1824(0.8);
+        Padding: (Left: 10, Right: 10, Top: 5, Bottom: 5);
 
-    Label #PassiveName {
-        Style: (FontSize: 12, TextColor: #e5c68a);
-        Text: "Race Passive";
-        Anchor: (Height: 16);
+        Label #PassiveName {
+            Style: (FontSize: 12, TextColor: #e5c68a, RenderBold: true, Wrap: true);
+            Text: "Race Passive";
+        }
+
+        Group { Anchor: (Height: 4); }
+
+        Label #PassiveValue {
+            Style: (FontSize: 11, TextColor: #ffc300, RenderBold: true, Wrap: true);
+            Text: "+0";
+        }
     }
 
-    Group { FlexWeight: 1; }
-
-    Label #PassiveValue {
-        Style: (FontSize: 12, TextColor: #ffc300, RenderBold: true);
-        Text: "+0";
-        Anchor: (Height: 16);
-    }
+    Group { Anchor: (Height: 6); }
 }

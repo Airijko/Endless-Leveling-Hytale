@@ -1,28 +1,33 @@
 Group {
-    LayoutMode: Left;
-    Anchor: (Height: 22);
-    Background: #0f1d2d(0.65);
-    Padding: (Left: 10, Right: 10, Top: 3, Bottom: 3);
+    LayoutMode: Top;
+    Group {
+        LayoutMode: Top;
+        Background: #0f1d2d(0.65);
+        Padding: (Left: 10, Right: 10, Top: 5, Bottom: 5);
 
-    Label #PassiveName {
-        Style: (FontSize: 12, TextColor: #9fb6d3);
-        Text: "Passive";
-        Anchor: (Height: 16);
+        Group {
+            LayoutMode: Left;
+
+            Label #PassiveName {
+                Style: (FontSize: 12, TextColor: #9fb6d3, RenderBold: true, Wrap: true);
+                Text: "Passive";
+            }
+
+            Group { FlexWeight: 1; }
+
+            Label #PassiveLevel {
+                Style: (FontSize: 12, TextColor: #8aa1bf, Wrap: true);
+                Text: "Lv 0";
+            }
+        }
+
+        Group { Anchor: (Height: 4); }
+
+        Label #PassiveValue {
+            Style: (FontSize: 11, TextColor: #4fd7f7, RenderBold: true, Wrap: true);
+            Text: "+0";
+        }
     }
 
-    Group { FlexWeight: 1; }
-
-    Label #PassiveValue {
-        Style: (FontSize: 12, TextColor: #4fd7f7, RenderBold: true);
-        Text: "+0";
-        Anchor: (Height: 16);
-    }
-
-    Group { Anchor: (Width: 8); }
-
-    Label #PassiveLevel {
-        Style: (FontSize: 12, TextColor: #8aa1bf);
-        Text: "Lv 0";
-        Anchor: (Height: 16);
-    }
+    Group { Anchor: (Height: 6); }
 }
