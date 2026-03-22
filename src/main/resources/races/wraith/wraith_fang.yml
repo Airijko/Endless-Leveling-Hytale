@@ -25,14 +25,14 @@ ascension:
 
 attributes:
   life_force: 56.3
-  strength: 1.12
+  strength: 1.05
   defense: 0.77
   haste: 1.16
   precision: 8.40
-  ferocity: 63.00
+  ferocity: 72.00
   stamina: 7.4
   flow: 14.7
-  sorcery: 1.12
+  sorcery: 1.05
   discipline: 0.0
 
 passives:
