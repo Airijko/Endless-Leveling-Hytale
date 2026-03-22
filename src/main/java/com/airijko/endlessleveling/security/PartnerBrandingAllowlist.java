@@ -14,13 +14,16 @@ import java.util.Set;
 public final class PartnerBrandingAllowlist {
 
     private static final List<String> PARTNER_SERVER_NAMES = List.of(
-            "Histatu");
+            "Histatu",
+            "Endless Leveling");
 
     private static final Set<String> ALLOWED_EXACT_HOSTS = Set.of(
-            "play.histatu.net");
+            "play.histatu.net",
+            "endlessleveling.net");
 
     private static final Set<String> ALLOWED_SUFFIXES = Set.of(
-            ".histatu.net");
+            ".histatu.net",
+            ".endlessleveling.net");
 
     private PartnerBrandingAllowlist() {
     }

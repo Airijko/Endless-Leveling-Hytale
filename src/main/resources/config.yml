@@ -87,6 +87,7 @@ enable_classes: true # Enable or disable the class system
 enable_secondary_class: true # Enable or disable secondary class assignments globally
 default_primary_class: "Adventurer" # Use built-in fallback default primary class
 default_secondary_class: "None" # Optional secondary class default (None disables it)
+weapon_off_class_damage_penalty: "-40%" # Damage penalty when using a weapon category not listed on your primary class (supports -40%, -0.4, or -40)
 choose_class_cooldown: 1800 # Cooldown (seconds) before changing class again
 class_max_switches: 1 # -1 = unlimited; positive values apply per slot (primary and, if enabled, secondary each get their own cap)
 

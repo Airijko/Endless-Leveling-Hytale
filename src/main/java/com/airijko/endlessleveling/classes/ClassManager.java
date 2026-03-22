@@ -52,7 +52,7 @@ public class ClassManager {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final int SWAP_CONSUME_LEVEL_THRESHOLD_DEFAULT = 10;
     private static final int SWAP_CONSUME_COUNT = 1;
-    private static final double OFF_CLASS_WEAPON_DAMAGE_MULTIPLIER = 0.60D;
+    private static final double DEFAULT_OFF_CLASS_WEAPON_DAMAGE_PENALTY = -0.40D;
 
     private final PluginFilesManager filesManager;
     private final ConfigManager configManager;
@@ -70,6 +70,7 @@ public class ClassManager {
     private String defaultPrimaryClassId = PlayerData.DEFAULT_PRIMARY_CLASS_ID;
     private boolean hasConfiguredDefaultPrimaryClass = true;
     private String defaultSecondaryClassId = null;
+    private double offClassWeaponDamageMultiplier = 1.0D + DEFAULT_OFF_CLASS_WEAPON_DAMAGE_PENALTY;
     private final double secondaryPassiveScale = 0.5D;
     private final long chooseClassCooldownSeconds;
     private final int maxClassSwitches;
@@ -81,6 +82,8 @@ public class ClassManager {
 
         this.secondaryClassEnabled = parseBoolean(configManager.get("enable_secondary_class", Boolean.TRUE, false),
                 true);
+        this.offClassWeaponDamageMultiplier = resolveOffClassWeaponDamageMultiplier(
+            configManager.get("weapon_off_class_damage_penalty", "-40%", false));
 
         Object primaryNode = configManager.get("default_primary_class", defaultPrimaryClassId, false);
         if (isNoneLiteral(primaryNode)) {
@@ -110,6 +113,8 @@ public class ClassManager {
         this.classesEnabled = parseBoolean(configManager.get("enable_classes", Boolean.TRUE, false), true);
         this.secondaryClassEnabled = parseBoolean(configManager.get("enable_secondary_class", Boolean.TRUE, false),
                 true);
+        this.offClassWeaponDamageMultiplier = resolveOffClassWeaponDamageMultiplier(
+            configManager.get("weapon_off_class_damage_penalty", "-40%", false));
         this.forceBuiltinClasses = parseBoolean(configManager.get("force_builtin_classes", Boolean.FALSE, false),
                 false);
         this.enableBuiltinClasses = parseBoolean(configManager.get("enable_builtin_classes", Boolean.TRUE, false),
@@ -519,7 +524,46 @@ public class ClassManager {
             return Math.max(0.0D, primary.getWeaponMultiplier(normalizedCategory));
         }
 
-        return OFF_CLASS_WEAPON_DAMAGE_MULTIPLIER;
+        return offClassWeaponDamageMultiplier;
+    }
+
+    private double resolveOffClassWeaponDamageMultiplier(Object rawPenalty) {
+        double penaltyFraction = parsePenaltyFraction(rawPenalty, DEFAULT_OFF_CLASS_WEAPON_DAMAGE_PENALTY);
+        return Math.max(0.0D, 1.0D + penaltyFraction);
+    }
+
+    private double parsePenaltyFraction(Object rawPenalty, double defaultPenaltyFraction) {
+        if (rawPenalty instanceof Number number) {
+            return normalizePenaltyInput(number.doubleValue(), defaultPenaltyFraction);
+        }
+        if (rawPenalty instanceof String text) {
+            String trimmed = text.trim();
+            if (trimmed.isEmpty()) {
+                return defaultPenaltyFraction;
+            }
+
+            boolean hasPercentSuffix = trimmed.endsWith("%");
+            String numeric = hasPercentSuffix ? trimmed.substring(0, trimmed.length() - 1).trim() : trimmed;
+            try {
+                double parsed = Double.parseDouble(numeric);
+                if (hasPercentSuffix) {
+                    return parsed / 100.0D;
+                }
+                return normalizePenaltyInput(parsed, defaultPenaltyFraction);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return defaultPenaltyFraction;
+    }
+
+    private double normalizePenaltyInput(double raw, double defaultPenaltyFraction) {
+        if (!Double.isFinite(raw)) {
+            return defaultPenaltyFraction;
+        }
+        if (Math.abs(raw) > 1.0D) {
+            return raw / 100.0D;
+        }
+        return raw;
     }
 
     public double getSecondaryPassiveScale() {

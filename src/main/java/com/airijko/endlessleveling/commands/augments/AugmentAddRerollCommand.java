@@ -9,10 +9,8 @@ import com.airijko.endlessleveling.util.PartnerConsoleGuard;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
-import com.hypixel.hytale.server.core.command.system.CommandUtil;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
-import com.hypixel.hytale.server.core.permissions.HytalePermissions;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 
@@ -28,9 +26,6 @@ import java.util.concurrent.CompletableFuture;
  * increasing a dedicated reroll bonus pool for that tier.
  */
 public class AugmentAddRerollCommand extends AbstractCommand {
-
-    private static final String PERMISSION_NODE =
-            HytalePermissions.fromCommand("endlessleveling.augments.addreroll");
 
     private final PlayerDataManager playerDataManager;
     private final AugmentUnlockManager augmentUnlockManager;
@@ -52,11 +47,9 @@ public class AugmentAddRerollCommand extends AbstractCommand {
     @Nullable
     @Override
     protected CompletableFuture<Void> execute(@Nonnull CommandContext context) {
-        if (context.sender() instanceof com.hypixel.hytale.server.core.entity.entities.Player) {
-            CommandUtil.requirePermission(context.sender(), PERMISSION_NODE);
-        } else if (!PartnerConsoleGuard.isConsoleAllowed("el augments addreroll")) {
+        if (!PartnerConsoleGuard.isConsoleAllowed("el augments addreroll")) {
             context.sendMessage(Message.raw(
-                    "Console admin access requires an authorized EndlessLevelingPartnerAddon.")
+                    "This command requires an authorized EndlessLevelingPartnerAddon.")
                     .color("#ff6666"));
             return CompletableFuture.completedFuture(null);
         }

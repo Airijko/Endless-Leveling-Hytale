@@ -7,11 +7,9 @@ import com.airijko.endlessleveling.util.PartnerConsoleGuard;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
-import com.hypixel.hytale.server.core.command.system.CommandUtil;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.entity.entities.Player;
-import com.hypixel.hytale.server.core.permissions.HytalePermissions;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 
@@ -29,9 +27,6 @@ import java.util.concurrent.CompletableFuture;
  * console.
  */
 public class AddClassSwapCommand extends AbstractCommand {
-
-    private static final String PERMISSION_NODE =
-            HytalePermissions.fromCommand("endlessleveling.classes.addswap");
 
     private final ClassManager classManager;
     private final PlayerDataManager playerDataManager;
@@ -61,15 +56,11 @@ public class AddClassSwapCommand extends AbstractCommand {
         Player senderPlayer = context.sender() instanceof Player p ? p : null;
         boolean senderIsPlayer = senderPlayer != null;
 
-        if (senderIsPlayer) {
-            CommandUtil.requirePermission(context.sender(), PERMISSION_NODE);
-        } else {
-            if (!PartnerConsoleGuard.isConsoleAllowed("el classes addswap")) {
-                context.sendMessage(Message.raw(
-                        "Console admin access requires an authorized EndlessLevelingPartnerAddon.")
-                        .color("#ff6666"));
-                return CompletableFuture.completedFuture(null);
-            }
+        if (!PartnerConsoleGuard.isConsoleAllowed("el classes addswap")) {
+            context.sendMessage(Message.raw(
+                    "This command requires an authorized EndlessLevelingPartnerAddon.")
+                    .color("#ff6666"));
+            return CompletableFuture.completedFuture(null);
         }
 
         if (playerDataManager == null) {
