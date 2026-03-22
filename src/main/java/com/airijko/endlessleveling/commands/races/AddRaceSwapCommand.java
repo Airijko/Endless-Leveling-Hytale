@@ -1,6 +1,5 @@
 package com.airijko.endlessleveling.commands.races;
 
-import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.player.PlayerDataManager;
 import com.airijko.endlessleveling.util.PartnerConsoleGuard;
@@ -20,9 +19,9 @@ import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * /el races addswap &lt;player&gt;
+ * /el races addswap &lt;player&gt; [&lt;count&gt;]
  *
- * <p>Grants one additional race swap to a player's active profile. Requires the
+ * <p>Grants additional race swaps to a player's active profile. Requires the
  * {@code endlessleveling.races.addswap} permission node when executed by a
  * player, or an authorized EndlessLevelingPartnerAddon when executed from the
  * console.
@@ -36,21 +35,26 @@ public class AddRaceSwapCommand extends AbstractCommand {
 
     private final RequiredArg<String> playerArg =
             this.withRequiredArg("player", "Target player name", ArgTypes.STRING);
+        private final RequiredArg<Integer> countArg =
+            this.withRequiredArg("count", "Number of swaps to add", ArgTypes.INTEGER);
 
     public AddRaceSwapCommand(PlayerDataManager playerDataManager) {
         super("addswap", "Grant an additional race swap to a player");
         this.playerDataManager = playerDataManager;
         this.addUsageVariant(new AddRaceSwapSelfVariant());
+        this.addUsageVariant(new AddRaceSwapTargetVariant());
     }
 
     @Nullable
     @Override
     protected CompletableFuture<Void> execute(@Nonnull CommandContext context) {
-        return executeInternal(context, playerArg.get(context));
+        return executeInternal(context, playerArg.get(context), countArg.get(context));
     }
 
-    private CompletableFuture<Void> executeInternal(@Nonnull CommandContext context, @Nullable String explicitTargetName) {
-        Player senderPlayer = context.senderAs(Player.class);
+    private CompletableFuture<Void> executeInternal(@Nonnull CommandContext context,
+            @Nullable String explicitTargetName,
+            int count) {
+        Player senderPlayer = context.sender() instanceof Player p ? p : null;
         boolean senderIsPlayer = senderPlayer != null;
 
         if (senderIsPlayer) {
@@ -66,6 +70,11 @@ public class AddRaceSwapCommand extends AbstractCommand {
 
         if (playerDataManager == null) {
             context.sendMessage(Message.raw("Player data system is not initialised.").color("#ff6666"));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        if (count <= 0) {
+            context.sendMessage(Message.raw("Count must be a positive integer.").color("#ff9900"));
             return CompletableFuture.completedFuture(null);
         }
 
@@ -96,17 +105,19 @@ public class AddRaceSwapCommand extends AbstractCommand {
         }
 
         int before = targetData.getRemainingRaceSwitches();
-        targetData.setRemainingRaceSwitches(before + 1);
+        int after = safeAddNonNegative(before, count);
+        int added = Math.max(0, after - before);
+        targetData.setRemainingRaceSwitches(after);
         playerDataManager.save(targetData);
 
         context.sendMessage(Message.raw(
-                "Added 1 race swap to " + targetName
-                + " (remaining: " + before + " → " + (before + 1) + ").").color("#4fd7f7"));
+            "Added " + added + " race swap(s) to " + targetName
+            + " (remaining: " + before + " -> " + after + ").").color("#4fd7f7"));
 
         PlayerRef targetRef = Universe.get().getPlayer(targetData.getUuid());
         if (targetRef != null) {
             targetRef.sendMessage(
-                    Message.raw("An admin granted you 1 additional race swap.").color("#4fd7f7"));
+                Message.raw("An admin granted you " + added + " additional race swap(s).").color("#4fd7f7"));
         }
 
         return CompletableFuture.completedFuture(null);
@@ -120,7 +131,29 @@ public class AddRaceSwapCommand extends AbstractCommand {
         @Nullable
         @Override
         protected CompletableFuture<Void> execute(@Nonnull CommandContext context) {
-            return executeInternal(context, null);
+            return executeInternal(context, null, 1);
         }
+    }
+
+    private final class AddRaceSwapTargetVariant extends AbstractCommand {
+        private final RequiredArg<String> targetPlayerArg =
+                this.withRequiredArg("player", "Target player name", ArgTypes.STRING);
+
+        private AddRaceSwapTargetVariant() {
+            super("Grant a player one additional race swap");
+        }
+
+        @Nullable
+        @Override
+        protected CompletableFuture<Void> execute(@Nonnull CommandContext context) {
+            return executeInternal(context, targetPlayerArg.get(context), 1);
+        }
+    }
+
+    private int safeAddNonNegative(int base, int delta) {
+        int safeBase = Math.max(0, base);
+        int safeDelta = Math.max(0, delta);
+        long sum = (long) safeBase + safeDelta;
+        return sum >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) sum;
     }
 }

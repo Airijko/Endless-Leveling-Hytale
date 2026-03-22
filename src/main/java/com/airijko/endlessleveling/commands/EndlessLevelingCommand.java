@@ -24,17 +24,19 @@ import com.airijko.endlessleveling.ui.SettingsUIPage;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
+import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
-import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
-import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
 
-public class EndlessLevelingCommand extends AbstractPlayerCommand {
+public class EndlessLevelingCommand extends AbstractCommand {
 
         private static final String COMMAND_NAME = "lvl";
         private static final String COMMAND_DESCRIPTION = "Endless Leveling Menu";
@@ -75,14 +77,32 @@ public class EndlessLevelingCommand extends AbstractPlayerCommand {
         }
 
         @Override
-        protected void execute(@Nonnull CommandContext commandContext, @Nonnull Store<EntityStore> store,
-                        @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
-                Player player = commandContext.senderAs(Player.class);
+        @Nullable
+        protected CompletableFuture<Void> execute(@Nonnull CommandContext commandContext) {
+                Player player = commandContext.sender() instanceof Player p ? p : null;
+                if (player == null) {
+                        commandContext.sendMessage(Message.raw(
+                                        "This root command is player-only; use a subcommand from console.")
+                                        .color("#ff9900"));
+                        return CompletableFuture.completedFuture(null);
+                }
 
-                CompletableFuture.runAsync(() -> {
-                        player.getPageManager().openCustomPage(ref, store,
-                                        new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));
-                }, world);
+                Ref<EntityStore> ref = player.getReference();
+                if (ref == null) {
+                        commandContext.sendMessage(Message.raw("Unable to open skills page right now.").color("#ff6666"));
+                        return CompletableFuture.completedFuture(null);
+                }
+
+                Store<EntityStore> store = ref.getStore();
+                PlayerRef playerRef = Universe.get().getPlayer(player.getUuid());
+                if (playerRef == null) {
+                        commandContext.sendMessage(Message.raw("Unable to open skills page right now.").color("#ff6666"));
+                        return CompletableFuture.completedFuture(null);
+                }
+
+                player.getPageManager().openCustomPage(ref, store,
+                                new SkillsUIPage(playerRef, CustomPageLifetime.CanDismiss));
+                return CompletableFuture.completedFuture(null);
         }
 
         private OpenPageSubCommand addGuiShortcut(String keyword,

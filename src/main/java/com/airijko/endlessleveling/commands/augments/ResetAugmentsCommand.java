@@ -54,7 +54,7 @@ public class ResetAugmentsCommand extends AbstractCommand {
     }
 
     private CompletableFuture<Void> executeInternal(@Nonnull CommandContext context, @Nullable String explicitTargetName) {
-        Player senderPlayer = context.senderAs(Player.class);
+        Player senderPlayer = context.sender() instanceof Player p ? p : null;
         boolean senderIsPlayer = senderPlayer != null;
 
         if (senderIsPlayer) {

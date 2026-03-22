@@ -466,6 +466,18 @@ public class PlayerData {
         return Collections.unmodifiableMap(new LinkedHashMap<>(getActiveProfile().getAugmentRerollsUsed()));
     }
 
+    public int getAugmentRerollBonusForTier(String tierKey) {
+        return getActiveProfile().getAugmentRerollBonus(tierKey);
+    }
+
+    public void setAugmentRerollBonusForTier(String tierKey, int bonus) {
+        getActiveProfile().setAugmentRerollBonus(tierKey, bonus);
+    }
+
+    public Map<String, Integer> getAugmentRerollBonusSnapshot() {
+        return Collections.unmodifiableMap(new LinkedHashMap<>(getActiveProfile().getAugmentRerollsBonus()));
+    }
+
     public int getPassiveLevel(PassiveType type) {
         return getActiveProfile().getPassiveLevel(type);
     }
@@ -694,6 +706,7 @@ public class PlayerData {
         private final Map<String, String> selectedAugments;
         private final Map<String, Map<String, Double>> augmentValueRolls;
         private final Map<String, Integer> augmentRerollsUsed;
+        private final Map<String, Integer> augmentRerollsBonus;
         private String raceId;
         private final LinkedHashSet<String> completedRaceForms;
         private final LinkedHashSet<String> completedClassForms;
@@ -725,6 +738,7 @@ public class PlayerData {
             this.selectedAugments = new LinkedHashMap<>();
             this.augmentValueRolls = new LinkedHashMap<>();
             this.augmentRerollsUsed = new LinkedHashMap<>();
+            this.augmentRerollsBonus = new LinkedHashMap<>();
             this.raceId = null;
             this.completedRaceForms = new LinkedHashSet<>();
             this.completedClassForms = new LinkedHashSet<>();
@@ -809,6 +823,10 @@ public class PlayerData {
 
         public Map<String, Integer> getAugmentRerollsUsed() {
             return augmentRerollsUsed;
+        }
+
+        public Map<String, Integer> getAugmentRerollsBonus() {
+            return augmentRerollsBonus;
         }
 
         public Map<String, Map<String, Double>> getAugmentValueRolls() {
@@ -967,6 +985,28 @@ public class PlayerData {
                 return;
             }
             augmentRerollsUsed.put(key, normalized);
+        }
+
+        public int getAugmentRerollBonus(String tierKey) {
+            String key = normalizeTierKey(tierKey);
+            if (key == null) {
+                return 0;
+            }
+            return Math.max(0, augmentRerollsBonus.getOrDefault(key, 0));
+        }
+
+        public void setAugmentRerollBonus(String tierKey, int bonus) {
+            String key = normalizeTierKey(tierKey);
+            if (key == null) {
+                return;
+            }
+
+            int normalized = Math.max(0, bonus);
+            if (normalized <= 0) {
+                augmentRerollsBonus.remove(key);
+                return;
+            }
+            augmentRerollsBonus.put(key, normalized);
         }
 
         private String normalizeTierKey(String tierKey) {

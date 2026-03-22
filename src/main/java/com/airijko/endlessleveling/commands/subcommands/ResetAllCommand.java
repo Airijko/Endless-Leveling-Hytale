@@ -19,10 +19,12 @@ import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.permissions.HytalePermissions;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class ResetAllCommand extends AbstractCommand {
@@ -63,7 +65,7 @@ public class ResetAllCommand extends AbstractCommand {
             return CompletableFuture.completedFuture(null);
         }
 
-        Player senderPlayer = commandContext.senderAs(Player.class);
+        Player senderPlayer = commandContext.sender() instanceof Player p ? p : null;
         boolean senderIsPlayer = senderPlayer != null;
 
         PlayerData targetData;
@@ -124,22 +126,37 @@ public class ResetAllCommand extends AbstractCommand {
 
     private void applySkillModifiers(PlayerData targetData, PlayerRef targetRef) {
         if (targetRef == null) {
+            scheduleRetry(targetData);
             return;
         }
-
-        Ref<EntityStore> targetEntity = targetRef.getReference();
-        if (targetEntity == null) {
+        UUID worldUuid = targetRef.getWorldUuid();
+        World world = worldUuid != null ? Universe.get().getWorld(worldUuid) : null;
+        if (world == null) {
+            scheduleRetry(targetData);
             return;
         }
+        try {
+            world.execute(() -> {
+                Ref<EntityStore> targetEntity = targetRef.getReference();
+                if (targetEntity == null) {
+                    scheduleRetry(targetData);
+                    return;
+                }
+                Store<EntityStore> targetStore = targetEntity.getStore();
+                boolean applied = skillManager.applyAllSkillModifiers(targetEntity, targetStore, targetData);
+                if (!applied) {
+                    scheduleRetry(targetData);
+                }
+            });
+        } catch (Exception ex) {
+            scheduleRetry(targetData);
+        }
+    }
 
-        Store<EntityStore> targetStore = targetEntity.getStore();
-
-        boolean applied = skillManager.applyAllSkillModifiers(targetEntity, targetStore, targetData);
-        if (!applied) {
-            var retrySystem = EndlessLeveling.getInstance().getPlayerRaceStatSystem();
-            if (retrySystem != null) {
-                retrySystem.scheduleRetry(targetData.getUuid());
-            }
+    private void scheduleRetry(PlayerData targetData) {
+        var retrySystem = EndlessLeveling.getInstance().getPlayerRaceStatSystem();
+        if (retrySystem != null) {
+            retrySystem.scheduleRetry(targetData.getUuid());
         }
     }
 }

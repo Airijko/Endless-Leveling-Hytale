@@ -65,7 +65,7 @@ public class SetPrestigeCommand extends AbstractCommand {
             return CompletableFuture.completedFuture(null);
         }
 
-        Player senderPlayer = commandContext.senderAs(Player.class);
+        Player senderPlayer = commandContext.sender() instanceof Player p ? p : null;
         boolean senderIsPlayer = senderPlayer != null;
 
         if (requestedPrestige < 0) {

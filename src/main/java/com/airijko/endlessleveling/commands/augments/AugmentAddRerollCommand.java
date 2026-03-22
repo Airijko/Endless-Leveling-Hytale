@@ -1,6 +1,7 @@
 package com.airijko.endlessleveling.commands.augments;
 
 import com.airijko.endlessleveling.EndlessLeveling;
+import com.airijko.endlessleveling.augments.AugmentUnlockManager;
 import com.airijko.endlessleveling.enums.PassiveTier;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.player.PlayerDataManager;
@@ -21,13 +22,10 @@ import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * /el augments addreroll &lt;player&gt; &lt;type&gt; &lt;count&gt;
+ * /el augments addreroll <player> <type> <count>
  *
  * <p>Grants additional augment rerolls of a given tier to a player by
- * reducing the "used" counter on their active profile. Requires the
- * {@code endlessleveling.augments.addreroll} permission node when executed
- * by a player, or an authorized EndlessLevelingPartnerAddon when executed
- * from the console.
+ * increasing a dedicated reroll bonus pool for that tier.
  */
 public class AugmentAddRerollCommand extends AbstractCommand {
 
@@ -35,6 +33,7 @@ public class AugmentAddRerollCommand extends AbstractCommand {
             HytalePermissions.fromCommand("endlessleveling.augments.addreroll");
 
     private final PlayerDataManager playerDataManager;
+    private final AugmentUnlockManager augmentUnlockManager;
 
     private final RequiredArg<String> playerArg =
             this.withRequiredArg("player", "Target player name", ArgTypes.STRING);
@@ -47,6 +46,7 @@ public class AugmentAddRerollCommand extends AbstractCommand {
         super("addreroll", "Grant augment rerolls of a given tier to a player");
         EndlessLeveling plugin = EndlessLeveling.getInstance();
         this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
+        this.augmentUnlockManager = plugin != null ? plugin.getAugmentUnlockManager() : null;
     }
 
     @Nullable
@@ -54,14 +54,11 @@ public class AugmentAddRerollCommand extends AbstractCommand {
     protected CompletableFuture<Void> execute(@Nonnull CommandContext context) {
         if (context.sender() instanceof com.hypixel.hytale.server.core.entity.entities.Player) {
             CommandUtil.requirePermission(context.sender(), PERMISSION_NODE);
-        } else {
-            // Console sender: require authorized partner addon
-            if (!PartnerConsoleGuard.isConsoleAllowed("el augments addreroll")) {
-                context.sendMessage(Message.raw(
-                        "Console admin access requires an authorized EndlessLevelingPartnerAddon.")
-                        .color("#ff6666"));
-                return CompletableFuture.completedFuture(null);
-            }
+        } else if (!PartnerConsoleGuard.isConsoleAllowed("el augments addreroll")) {
+            context.sendMessage(Message.raw(
+                    "Console admin access requires an authorized EndlessLevelingPartnerAddon.")
+                    .color("#ff6666"));
+            return CompletableFuture.completedFuture(null);
         }
 
         if (playerDataManager == null) {
@@ -81,7 +78,7 @@ public class AugmentAddRerollCommand extends AbstractCommand {
         } catch (IllegalArgumentException ignored) {
             context.sendMessage(Message.raw(
                     "Unknown tier: " + typeArg.get(context)
-                    + ". Use COMMON, ELITE, LEGENDARY, or MYTHIC.").color("#ff9900"));
+                            + ". Use COMMON, ELITE, LEGENDARY, or MYTHIC.").color("#ff9900"));
             return CompletableFuture.completedFuture(null);
         }
 
@@ -93,23 +90,38 @@ public class AugmentAddRerollCommand extends AbstractCommand {
         }
 
         String tierKey = tier.name();
-        int currentUsed = targetData.getAugmentRerollsUsedForTier(tierKey);
-        int newUsed = Math.max(0, currentUsed - count);
-        targetData.setAugmentRerollsUsedForTier(tierKey, newUsed);
+        int currentBonus = targetData.getAugmentRerollBonusForTier(tierKey);
+        int newBonus = safeAddNonNegative(currentBonus, count);
+        targetData.setAugmentRerollBonusForTier(tierKey, newBonus);
         playerDataManager.save(targetData);
 
-        int granted = currentUsed - newUsed;
+        int granted = Math.max(0, newBonus - currentBonus);
+        int totalRemaining = augmentUnlockManager != null
+                ? augmentUnlockManager.getRemainingRerolls(targetData, tier)
+                : granted;
+
         context.sendMessage(Message.raw(
                 "Added " + granted + " " + tierKey + " reroll(s) to " + targetName
-                + " (used counter: " + currentUsed + " → " + newUsed + ").").color("#4fd7f7"));
+                        + " (bonus pool: " + currentBonus + " -> " + newBonus
+                        + ", total remaining: " + totalRemaining + ").")
+                .color("#4fd7f7"));
 
         PlayerRef targetRef = Universe.get().getPlayer(targetData.getUuid());
         if (targetRef != null) {
             targetRef.sendMessage(Message.raw(
                     "An admin granted you " + granted + " " + tierKey
-                    + " augment reroll(s).").color("#4fd7f7"));
+                            + " augment reroll(s). You now have " + totalRemaining + " " + tierKey
+                            + " reroll(s) remaining.")
+                    .color("#4fd7f7"));
         }
 
         return CompletableFuture.completedFuture(null);
+    }
+
+    private int safeAddNonNegative(int base, int delta) {
+        int safeBase = Math.max(0, base);
+        int safeDelta = Math.max(0, delta);
+        long sum = (long) safeBase + safeDelta;
+        return sum >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) sum;
     }
 }

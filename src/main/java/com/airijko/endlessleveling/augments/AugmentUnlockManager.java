@@ -198,8 +198,9 @@ public class AugmentUnlockManager {
         int playerLevel = Math.max(1, playerData.getLevel());
         int prestigeLevel = Math.max(0, playerData.getPrestigeLevel());
         int eligible = getEligibleRerollsForTier(playerData, tier, prestigeLevel, playerLevel);
+        int bonus = Math.max(0, playerData.getAugmentRerollBonusForTier(tier.name()));
         int used = Math.max(0, playerData.getAugmentRerollsUsedForTier(tier.name()));
-        return Math.max(0, eligible - used);
+        return Math.max(0, (eligible + bonus) - used);
     }
 
     /**
@@ -1428,9 +1429,11 @@ public class AugmentUnlockManager {
 
         for (PassiveTier tier : PassiveTier.values()) {
             int eligible = getEligibleRerollsForTier(playerData, tier, prestigeLevel, playerLevel);
+            int bonus = Math.max(0, playerData.getAugmentRerollBonusForTier(tier.name()));
             int used = playerData.getAugmentRerollsUsedForTier(tier.name());
-            if (used > eligible) {
-                playerData.setAugmentRerollsUsedForTier(tier.name(), eligible);
+            int maxUsed = Math.max(0, eligible + bonus);
+            if (used > maxUsed) {
+                playerData.setAugmentRerollsUsedForTier(tier.name(), maxUsed);
                 updated = true;
             }
         }

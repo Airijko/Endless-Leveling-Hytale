@@ -16,10 +16,12 @@ import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.permissions.HytalePermissions;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class ResetAllPlayersCommand extends AbstractCommand {
@@ -72,21 +74,37 @@ public class ResetAllPlayersCommand extends AbstractCommand {
 
     private void applySkillModifiers(PlayerData data, PlayerRef targetRef) {
         if (targetRef == null) {
+            scheduleRetry(data);
             return;
         }
-
-        Ref<EntityStore> targetEntity = targetRef.getReference();
-        if (targetEntity == null) {
+        UUID worldUuid = targetRef.getWorldUuid();
+        World world = worldUuid != null ? Universe.get().getWorld(worldUuid) : null;
+        if (world == null) {
+            scheduleRetry(data);
             return;
         }
+        try {
+            world.execute(() -> {
+                Ref<EntityStore> targetEntity = targetRef.getReference();
+                if (targetEntity == null) {
+                    scheduleRetry(data);
+                    return;
+                }
+                Store<EntityStore> targetStore = targetEntity.getStore();
+                boolean applied = skillManager.applyAllSkillModifiers(targetEntity, targetStore, data);
+                if (!applied) {
+                    scheduleRetry(data);
+                }
+            });
+        } catch (Exception ex) {
+            scheduleRetry(data);
+        }
+    }
 
-        Store<EntityStore> targetStore = targetEntity.getStore();
-        boolean applied = skillManager.applyAllSkillModifiers(targetEntity, targetStore, data);
-        if (!applied) {
-            var retrySystem = EndlessLeveling.getInstance().getPlayerRaceStatSystem();
-            if (retrySystem != null) {
-                retrySystem.scheduleRetry(data.getUuid());
-            }
+    private void scheduleRetry(PlayerData data) {
+        var retrySystem = EndlessLeveling.getInstance().getPlayerRaceStatSystem();
+        if (retrySystem != null) {
+            retrySystem.scheduleRetry(data.getUuid());
         }
     }
 }

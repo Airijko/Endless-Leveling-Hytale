@@ -1,6 +1,5 @@
 package com.airijko.endlessleveling.commands.classes;
 
-import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.classes.ClassManager;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.player.PlayerDataManager;
@@ -21,9 +20,9 @@ import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * /el classes addswap &lt;player&gt;
+ * /el classes addswap &lt;player&gt; [&lt;count&gt;]
  *
- * <p>Grants one additional primary class swap (and one secondary class swap
+ * <p>Grants additional primary class swaps (and secondary class swaps
  * when secondary classes are enabled) to a player's active profile. Requires
  * the {@code endlessleveling.classes.addswap} permission node when executed by
  * a player, or an authorized EndlessLevelingPartnerAddon when executed from the
@@ -39,22 +38,27 @@ public class AddClassSwapCommand extends AbstractCommand {
 
     private final RequiredArg<String> playerArg =
             this.withRequiredArg("player", "Target player name", ArgTypes.STRING);
+        private final RequiredArg<Integer> countArg =
+            this.withRequiredArg("count", "Number of swaps to add", ArgTypes.INTEGER);
 
     public AddClassSwapCommand(ClassManager classManager, PlayerDataManager playerDataManager) {
         super("addswap", "Grant an additional class swap to a player");
         this.classManager = classManager;
         this.playerDataManager = playerDataManager;
         this.addUsageVariant(new AddClassSwapSelfVariant());
+        this.addUsageVariant(new AddClassSwapTargetVariant());
     }
 
     @Nullable
     @Override
     protected CompletableFuture<Void> execute(@Nonnull CommandContext context) {
-        return executeInternal(context, playerArg.get(context));
+        return executeInternal(context, playerArg.get(context), countArg.get(context));
     }
 
-    private CompletableFuture<Void> executeInternal(@Nonnull CommandContext context, @Nullable String explicitTargetName) {
-        Player senderPlayer = context.senderAs(Player.class);
+    private CompletableFuture<Void> executeInternal(@Nonnull CommandContext context,
+            @Nullable String explicitTargetName,
+            int count) {
+        Player senderPlayer = context.sender() instanceof Player p ? p : null;
         boolean senderIsPlayer = senderPlayer != null;
 
         if (senderIsPlayer) {
@@ -70,6 +74,11 @@ public class AddClassSwapCommand extends AbstractCommand {
 
         if (playerDataManager == null) {
             context.sendMessage(Message.raw("Player data system is not initialised.").color("#ff6666"));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        if (count <= 0) {
+            context.sendMessage(Message.raw("Count must be a positive integer.").color("#ff9900"));
             return CompletableFuture.completedFuture(null);
         }
 
@@ -100,29 +109,35 @@ public class AddClassSwapCommand extends AbstractCommand {
         }
 
         int primaryBefore = targetData.getRemainingPrimaryClassSwitches();
-        targetData.setRemainingPrimaryClassSwitches(primaryBefore + 1);
+        int primaryAfter = safeAddNonNegative(primaryBefore, count);
+        int addedPrimary = Math.max(0, primaryAfter - primaryBefore);
+        targetData.setRemainingPrimaryClassSwitches(primaryAfter);
 
         StringBuilder summary = new StringBuilder("primary: ")
-                .append(primaryBefore).append(" → ").append(primaryBefore + 1);
+            .append(primaryBefore).append(" -> ").append(primaryAfter);
 
         boolean secondaryEnabled = classManager != null && classManager.isSecondaryClassEnabled();
         int secondaryBefore = 0;
+        int secondaryAfter = 0;
         if (secondaryEnabled) {
             secondaryBefore = targetData.getRemainingSecondaryClassSwitches();
-            targetData.setRemainingSecondaryClassSwitches(secondaryBefore + 1);
-            summary.append(", secondary: ").append(secondaryBefore).append(" → ").append(secondaryBefore + 1);
+            secondaryAfter = safeAddNonNegative(secondaryBefore, count);
+            targetData.setRemainingSecondaryClassSwitches(secondaryAfter);
+            summary.append(", secondary: ").append(secondaryBefore).append(" -> ").append(secondaryAfter);
         }
 
         playerDataManager.save(targetData);
 
         context.sendMessage(Message.raw(
-                "Added 1 class swap to " + targetName + " (" + summary + ").").color("#4fd7f7"));
+            "Added " + addedPrimary + " class swap(s) to " + targetName + " (" + summary + ").")
+            .color("#4fd7f7"));
 
         PlayerRef targetRef = Universe.get().getPlayer(targetData.getUuid());
         if (targetRef != null) {
             String msg = secondaryEnabled
-                    ? "An admin granted you 1 additional primary and 1 secondary class swap."
-                    : "An admin granted you 1 additional primary class swap.";
+                ? "An admin granted you " + addedPrimary + " additional primary and "
+                    + Math.max(0, secondaryAfter - secondaryBefore) + " secondary class swap(s)."
+                : "An admin granted you " + addedPrimary + " additional primary class swap(s).";
             targetRef.sendMessage(Message.raw(msg).color("#4fd7f7"));
         }
 
@@ -137,7 +152,29 @@ public class AddClassSwapCommand extends AbstractCommand {
         @Nullable
         @Override
         protected CompletableFuture<Void> execute(@Nonnull CommandContext context) {
-            return executeInternal(context, null);
+            return executeInternal(context, null, 1);
         }
+    }
+
+    private final class AddClassSwapTargetVariant extends AbstractCommand {
+        private final RequiredArg<String> targetPlayerArg =
+                this.withRequiredArg("player", "Target player name", ArgTypes.STRING);
+
+        private AddClassSwapTargetVariant() {
+            super("Grant a player one additional class swap");
+        }
+
+        @Nullable
+        @Override
+        protected CompletableFuture<Void> execute(@Nonnull CommandContext context) {
+            return executeInternal(context, targetPlayerArg.get(context), 1);
+        }
+    }
+
+    private int safeAddNonNegative(int base, int delta) {
+        int safeBase = Math.max(0, base);
+        int safeDelta = Math.max(0, delta);
+        long sum = (long) safeBase + safeDelta;
+        return sum >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) sum;
     }
 }

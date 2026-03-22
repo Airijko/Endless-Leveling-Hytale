@@ -560,6 +560,13 @@ public class PlayerDataManager {
             }
         }
 
+        Map<String, Object> rerollBonusNode = castToStringObjectMap(source.get("augmentRerollsBonus"));
+        if (rerollBonusNode != null) {
+            for (Map.Entry<String, Object> entry : rerollBonusNode.entrySet()) {
+                profile.setAugmentRerollBonus(entry.getKey(), parseInt(entry.getValue(), 0));
+            }
+        }
+
         Object raceNode = source.get("race");
         profile.setRaceId(parseRaceId(raceNode));
         Map<String, Object> raceMap = castToStringObjectMap(raceNode);
@@ -1214,6 +1221,17 @@ public class PlayerDataManager {
                     });
                     if (!profileRerollsUsed.isEmpty()) {
                         profileMap.put("augmentRerollsUsed", profileRerollsUsed);
+                    }
+
+                    Map<String, Integer> profileRerollsBonus = new LinkedHashMap<>();
+                    profile.getAugmentRerollsBonus().forEach((tier, bonus) -> {
+                        int normalized = Math.max(0, bonus == null ? 0 : bonus);
+                        if (normalized > 0) {
+                            profileRerollsBonus.put(tier, normalized);
+                        }
+                    });
+                    if (!profileRerollsBonus.isEmpty()) {
+                        profileMap.put("augmentRerollsBonus", profileRerollsBonus);
                     }
 
                     Map<String, Integer> profilePassives = new LinkedHashMap<>();

@@ -18,9 +18,11 @@ import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.permissions.HytalePermissions;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import com.airijko.endlessleveling.util.Lang;
+import java.util.UUID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -57,7 +59,7 @@ public class ResetSkillPointsCommand extends AbstractCommand {
     private CompletableFuture<Void> executeInternal(@Nonnull CommandContext commandContext,
             @Nullable String explicitTargetName,
             boolean hasExplicitTarget) {
-        Player senderPlayer = commandContext.senderAs(Player.class);
+        Player senderPlayer = commandContext.sender() instanceof Player p ? p : null;
         boolean senderIsPlayer = senderPlayer != null;
 
         if (senderIsPlayer) {
@@ -157,30 +159,40 @@ public class ResetSkillPointsCommand extends AbstractCommand {
         return CompletableFuture.completedFuture(null);
     }
 
-    private void applySkillModifiers(PlayerData targetData,
-            PlayerRef targetRef) {
-        Ref<EntityStore> targetEntity;
-        Store<EntityStore> targetStore;
-
-        if (targetRef != null && targetRef.getReference() != null) {
-            targetEntity = targetRef.getReference();
-            targetStore = targetEntity.getStore();
-        } else {
-            // Offline targets cannot be applied immediately; defer via retry system.
-            var retrySystem = EndlessLeveling.getInstance().getPlayerRaceStatSystem();
-            if (retrySystem != null) {
-                retrySystem.scheduleRetry(targetData.getUuid());
-            }
+    private void applySkillModifiers(PlayerData targetData, PlayerRef targetRef) {
+        if (targetRef == null) {
+            scheduleRetry(targetData);
             return;
         }
+        UUID worldUuid = targetRef.getWorldUuid();
+        World world = worldUuid != null ? Universe.get().getWorld(worldUuid) : null;
+        if (world == null) {
+            scheduleRetry(targetData);
+            return;
+        }
+        try {
+            world.execute(() -> {
+                Ref<EntityStore> targetEntity = targetRef.getReference();
+                if (targetEntity == null) {
+                    scheduleRetry(targetData);
+                    return;
+                }
+                Store<EntityStore> targetStore = targetEntity.getStore();
+                boolean applied = skillManager.applyAllSkillModifiers(targetEntity, targetStore, targetData);
+                if (!applied) {
+                    LOGGER.atFine().log("ResetSkillPointsCommand: modifiers deferred for %s", targetData.getUuid());
+                    scheduleRetry(targetData);
+                }
+            });
+        } catch (Exception ex) {
+            scheduleRetry(targetData);
+        }
+    }
 
-        boolean applied = skillManager.applyAllSkillModifiers(targetEntity, targetStore, targetData);
-        if (!applied) {
-            LOGGER.atFine().log("ResetSkillPointsCommand: modifiers deferred for %s", targetData.getUuid());
-            var retrySystem = EndlessLeveling.getInstance().getPlayerRaceStatSystem();
-            if (retrySystem != null) {
-                retrySystem.scheduleRetry(targetData.getUuid());
-            }
+    private void scheduleRetry(PlayerData targetData) {
+        var retrySystem = EndlessLeveling.getInstance().getPlayerRaceStatSystem();
+        if (retrySystem != null) {
+            retrySystem.scheduleRetry(targetData.getUuid());
         }
     }
 
