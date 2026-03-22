@@ -8,10 +8,13 @@ import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentRuntime
 import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.player.SkillManager;
+import com.airijko.endlessleveling.systems.PlayerCombatSystem;
 import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
+import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
@@ -154,12 +157,22 @@ public final class BloodthirsterAugment extends Augment implements AugmentHooks.
             applyHealthySelfDamage(attackerStats, healthySelfDamagePercentOfCurrent);
             playTriggerSound(context, TRIGGER_SFX_HEALTHY);
             playTriggerVfx(context);
+
+            if (healthyBonusDamage > 0.0D
+                    && context.getCommandBuffer() != null
+                    && context.getTargetRef() != null
+                    && EntityRefUtil.isUsable(context.getTargetRef())) {
+                Damage proc = PlayerCombatSystem.createAugmentProcDamage(context.getAttackerRef(),
+                        (float) healthyBonusDamage);
+                DamageSystems.executeDamage(context.getTargetRef(), context.getCommandBuffer(), proc);
+            }
+
             if (playerRef != null && playerRef.isValid()) {
                 AugmentUtils.sendAugmentMessage(playerRef,
                 String.format("%s activated! +%.1f bonus damage (healthy state).",
                     getName(), healthyBonusDamage));
             }
-            return context.getDamage() + (float) Math.max(0.0D, healthyBonusDamage);
+            return context.getDamage();
         }
 
         double healAmount = resolveWoundedHealing(context, hp);

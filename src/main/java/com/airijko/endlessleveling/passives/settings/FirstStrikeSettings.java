@@ -37,6 +37,7 @@ public record FirstStrikeSettings(boolean enabled,
         double resolvedHasteBonusPercent = DEFAULT_HASTE_BONUS_PERCENT;
         double resolvedHasteDurationSeconds = DEFAULT_HASTE_DURATION_SECONDS;
         double resolvedCooldownSeconds = 0.0D;
+        double resolvedTrueDamageFlatBonus = 0.0D;
         boolean resolvedResetOnKill = false;
 
         for (RacePassiveDefinition definition : definitions) {
@@ -66,6 +67,13 @@ public record FirstStrikeSettings(boolean enabled,
                 resolvedCooldownSeconds = Math.max(resolvedCooldownSeconds, cooldownCandidate);
             }
 
+            double trueDamageFlatCandidate = parsePositiveDouble(props == null
+                    ? null
+                    : firstNonNull(props.get("true_damage_flat_bonus"), props.get("flat_true_damage")));
+            if (trueDamageFlatCandidate > 0.0D) {
+                resolvedTrueDamageFlatBonus += trueDamageFlatCandidate;
+            }
+
             if (props != null && parseBoolean(props.get("reset_on_kill"))) {
                 resolvedResetOnKill = true;
             }
@@ -83,7 +91,7 @@ public record FirstStrikeSettings(boolean enabled,
                 0.0D,
             resolvedCooldownMillis,
                 0.0D,
-                0.0D,
+                resolvedTrueDamageFlatBonus,
                 0.0D,
                 resolvedHasteBonusPercent,
                 resolvedHasteDurationMillis,

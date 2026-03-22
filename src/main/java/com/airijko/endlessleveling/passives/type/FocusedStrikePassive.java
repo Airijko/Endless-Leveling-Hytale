@@ -66,15 +66,24 @@ public final class FocusedStrikePassive {
             runtimeState.setFirstStrikeReadyNotified(false);
             runtimeState.setFirstStrikeKillResetReady(false);
         }
-        return TriggerResult.none();
+        return new TriggerResult(0.0f, Math.max(0.0D, settings.trueDamageFlatBonus()));
     }
 
     public void resetCooldownOnKill(PassiveRuntimeState runtimeState) {
         if (runtimeState == null || !settings.enabled() || !settings.resetOnKill()) {
             return;
         }
-        runtimeState.setFirstStrikeCooldownExpiresAt(0L);
+
+        long now = System.currentTimeMillis();
+        long currentExpiresAt = runtimeState.getFirstStrikeCooldownExpiresAt();
+        if (currentExpiresAt <= now) {
+            return;
+        }
+
+        long remaining = currentExpiresAt - now;
+        long reducedRemaining = Math.max(0L, (long) Math.ceil(remaining / 2.0D));
+        runtimeState.setFirstStrikeCooldownExpiresAt(now + reducedRemaining);
         runtimeState.setFirstStrikeKillResetReady(true);
-        runtimeState.setFirstStrikeReadyNotified(true);
+        runtimeState.setFirstStrikeReadyNotified(reducedRemaining <= 0L);
     }
 }

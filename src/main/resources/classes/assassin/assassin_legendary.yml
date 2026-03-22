@@ -20,12 +20,11 @@ weapons:
 passives:
   - type: FOCUSED_STRIKE
     category: ON_HIT
-    value: 0.2 # +20% true-damage conversion descriptor
+    value: 1.0
     normal_bonus_damage: false # Disables legacy first-strike bonus damage
-    true_damage_flat_bonus: 20 # Flat true damage on hit
-    true_damage_conversion: 0.25 # Convert 25% of hit damage to true damage
+    true_damage_flat_bonus: 400 # Flat true damage on hit
     haste_bonus: 50 # +50% haste while this passive is active
-    cooldown: 14 # 10s out-of-combat cooldown
+    cooldown: 14
     reset_on_kill: true
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: haste

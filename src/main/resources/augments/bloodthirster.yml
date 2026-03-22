@@ -23,7 +23,7 @@ ui:
       '
     color: '#ffb86b'
   - title: Above 50%
-    body: '+25 Flat + (80% Strength)
+    body: '+50 Flat + (80% Strength)
 
       '
     color: '#8adf9e'
@@ -41,7 +41,7 @@ passives:
   healthy_state:
     health_threshold_above: 0.5
     bonus_damage:
-      flat_damage: 25.0
+      flat_damage: 50.0
       strength_scaling: 0.8
     self_damage:
       percent_of_current_hp: 0.1

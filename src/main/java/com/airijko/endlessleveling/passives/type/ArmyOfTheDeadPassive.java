@@ -1533,6 +1533,7 @@ public final class ArmyOfTheDeadPassive {
         }
 
         Map<String, Object> props = strongest.properties();
+        double effectivenessScale = Math.max(0.0D, strongest.value());
         int baseSummonAmount = parseIntNonNegative(
                 firstNonNull(props.get("base_summon_amount"), props.get("base_summons")),
                 DEFAULT_BASE_SUMMON_AMOUNT);
@@ -1553,6 +1554,8 @@ public final class ArmyOfTheDeadPassive {
             props.get("summon_base_damage")), DEFAULT_BASE_SUMMON_DAMAGE);
         double statInheritance = parseNonNegativeDouble(firstNonNull(props.get("summon_stat_inheritance"),
                 props.get("stat_inheritance")), DEFAULT_STAT_INHERITANCE);
+
+        statInheritance *= effectivenessScale;
 
         boolean onHitActivation = true;
         Object activationRaw = props.get("activation");
@@ -1576,7 +1579,8 @@ public final class ArmyOfTheDeadPassive {
                 baseDamage,
                 statInheritance,
                 skeletonType,
-                maxSummons);
+            maxSummons,
+            effectivenessScale);
     }
 
     private static RacePassiveDefinition resolveStrongestDefinition(List<RacePassiveDefinition> definitions) {
@@ -1652,7 +1656,8 @@ public final class ArmyOfTheDeadPassive {
             double baseDamage,
             double statInheritance,
             String skeletonType,
-            int maxSummons) {
+            int maxSummons,
+            double effectivenessScale) {
 
         private static ArmyOfTheDeadConfig disabled() {
             return new ArmyOfTheDeadConfig(false,
@@ -1663,7 +1668,8 @@ public final class ArmyOfTheDeadPassive {
                 DEFAULT_BASE_SUMMON_DAMAGE,
                     DEFAULT_STAT_INHERITANCE,
                     DEFAULT_SKELETON_TYPE,
-                    0);
+                    0,
+                    0.0D);
         }
     }
 

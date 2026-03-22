@@ -7,6 +7,7 @@ import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.leveling.PartyManager;
 import com.airijko.endlessleveling.passives.PassiveManager;
 import com.airijko.endlessleveling.passives.PassiveManager.PassiveRuntimeState;
+import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveScaling;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.util.EntityRefUtil;
@@ -60,11 +61,14 @@ public final class BuffingAuraPassive {
         }
 
         UUID sourceUuid = sourcePlayerData.getUuid();
-        double passiveValue = archetypeSnapshot.getValue(ArchetypePassiveType.BUFFING_AURA);
-        if (passiveValue <= 0.0D) {
+        ArchetypePassiveScaling.AuraScales auraScales = ArchetypePassiveScaling.resolveAuraScales(
+            archetypeSnapshot,
+            ArchetypePassiveType.BUFFING_AURA,
+            sourcePlayerData);
+        if (auraScales.ratioScale() <= 0.0D) {
             LOGGER.atFine().log("[BUFFING_AURA] Skip pulse for %s: passive value %.3f is not active.",
                     sourceUuid,
-                    passiveValue);
+                auraScales.ratioScale());
             return;
         }
 
@@ -105,14 +109,14 @@ public final class BuffingAuraPassive {
         }
 
         double totalStamina = resolveSourceStamina(sourcePlayerData, sourceStats);
-        double pooledBuff = (totalStamina * config.staminaRatio()) * passiveValue;
+        double pooledBuff = (totalStamina * config.staminaRatio()) * auraScales.ratioScale();
         if (pooledBuff <= 0.0D) {
             LOGGER.atFine().log(
                     "[BUFFING_AURA] Skip pulse for %s: pooled buff is zero (stamina=%.3f ratio=%.3f value=%.3f).",
                     sourceUuid,
                     totalStamina,
                     config.staminaRatio(),
-                    passiveValue);
+                auraScales.ratioScale());
             return;
         }
 
@@ -132,7 +136,7 @@ public final class BuffingAuraPassive {
         long expiresAt = now + config.durationMillis();
         distributeBuffPool(targets,
                 pooledBuff,
-                config.maxBuffedValuePerAlly(),
+            config.maxBuffedValuePerAlly() * auraScales.ratioScale(),
                 config.selfBuffEffectiveness(),
                 expiresAt);
 

@@ -3,6 +3,7 @@ package com.airijko.endlessleveling.passives.type;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.passives.PassiveManager.PassiveRuntimeState;
+import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveScaling;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.util.EntityRefUtil;
@@ -46,8 +47,11 @@ public final class HealingAuraPassive {
             return;
         }
 
-        double passiveValue = archetypeSnapshot.getValue(ArchetypePassiveType.HEALING_AURA);
-        if (passiveValue <= 0.0D) {
+        ArchetypePassiveScaling.AuraScales auraScales = ArchetypePassiveScaling.resolveAuraScales(
+            archetypeSnapshot,
+            ArchetypePassiveType.HEALING_AURA,
+            playerData);
+        if (auraScales.fullScale() <= 0.0D && auraScales.ratioScale() <= 0.0D) {
             return;
         }
         HealingAuraConfig config = resolveConfig(archetypeSnapshot);
@@ -85,9 +89,9 @@ public final class HealingAuraPassive {
         double totalMana = sourceMana != null ? Math.max(0.0D, sourceMana.getMax()) : 0.0D;
         double totalStamina = sourceStamina != null ? Math.max(0.0D, sourceStamina.getMax()) : 0.0D;
 
-        double healPerPulse = (config.flatHealValue()
-                + (totalMana * config.manaRatio())
-                + (totalStamina * config.staminaRatio())) * passiveValue;
+        double healPerPulse = (config.flatHealValue() * auraScales.fullScale())
+            + (totalMana * config.manaRatio() * auraScales.ratioScale())
+            + (totalStamina * config.staminaRatio() * auraScales.ratioScale());
         if (healPerPulse <= 0.0D) {
             return;
         }

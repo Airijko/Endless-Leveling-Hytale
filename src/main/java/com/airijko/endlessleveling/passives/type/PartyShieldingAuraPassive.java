@@ -6,6 +6,7 @@ import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.leveling.PartyManager;
 import com.airijko.endlessleveling.passives.PassiveManager;
 import com.airijko.endlessleveling.passives.PassiveManager.PassiveRuntimeState;
+import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveScaling;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.util.EntityRefUtil;
@@ -56,8 +57,11 @@ public final class PartyShieldingAuraPassive {
             return;
         }
 
-        double passiveValue = archetypeSnapshot.getValue(ArchetypePassiveType.SHIELDING_AURA);
-        if (passiveValue <= 0.0D) {
+        ArchetypePassiveScaling.AuraScales auraScales = ArchetypePassiveScaling.resolveAuraScales(
+            archetypeSnapshot,
+            ArchetypePassiveType.SHIELDING_AURA,
+            sourcePlayerData);
+        if (auraScales.fullScale() <= 0.0D && auraScales.ratioScale() <= 0.0D) {
             return;
         }
 
@@ -95,9 +99,9 @@ public final class PartyShieldingAuraPassive {
         double totalMana = sourceMana != null ? Math.max(0.0D, sourceMana.getMax()) : 0.0D;
         double totalStamina = sourceStamina != null ? Math.max(0.0D, sourceStamina.getMax()) : 0.0D;
 
-        double shieldAmount = (config.flatShieldValue()
-                + (totalMana * config.manaRatio())
-                + (totalStamina * config.staminaRatio())) * passiveValue;
+        double shieldAmount = (config.flatShieldValue() * auraScales.fullScale())
+            + (totalMana * config.manaRatio() * auraScales.ratioScale())
+            + (totalStamina * config.staminaRatio() * auraScales.ratioScale());
         if (shieldAmount <= 0.0D) {
             return;
         }
