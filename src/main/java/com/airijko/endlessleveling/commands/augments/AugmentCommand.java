@@ -4,7 +4,6 @@ import com.airijko.endlessleveling.commands.subcommands.OpenPageSubCommand;
 import com.airijko.endlessleveling.ui.AugmentsChoosePage;
 import com.airijko.endlessleveling.ui.AugmentsUIPage;
 import com.hypixel.hytale.component.Ref;
-import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
@@ -12,6 +11,7 @@ import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
@@ -54,18 +54,25 @@ public class AugmentCommand extends AbstractCommand {
             return CompletableFuture.completedFuture(null);
         }
 
-        Store<EntityStore> store = ref.getStore();
         PlayerRef senderRef = Universe.get().getPlayer(sender.getUuid());
         if (senderRef == null) {
             context.sendMessage(Message.raw("Unable to open augments page right now.").color("#ff6666"));
             return CompletableFuture.completedFuture(null);
         }
 
-        Player player = store.getComponent(ref, Player.getComponentType());
-        if (player != null) {
-            player.getPageManager().openCustomPage(ref, store,
-                    new AugmentsUIPage(senderRef, CustomPageLifetime.CanDismiss));
+        World world = sender.getWorld();
+        if (world == null) {
+            context.sendMessage(Message.raw("Unable to open augments page right now.").color("#ff6666"));
+            return CompletableFuture.completedFuture(null);
         }
+
+        try {
+            world.execute(() -> sender.getPageManager().openCustomPage(ref, ref.getStore(),
+                    new AugmentsUIPage(senderRef, CustomPageLifetime.CanDismiss)));
+        } catch (Exception ex) {
+            context.sendMessage(Message.raw("Unable to open augments page right now.").color("#ff6666"));
+        }
+
         return CompletableFuture.completedFuture(null);
     }
 }
