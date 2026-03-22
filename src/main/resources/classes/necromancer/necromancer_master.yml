@@ -25,7 +25,7 @@ passives:
     activation: on_hit
     cooldown_seconds: 16
     base_summon_damage: 15
-    summon_stat_inheritance: 0.3
+    summon_stat_inheritance: 0.4
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Adamantite
   - type: MANA_REGEN
     value: 0.04

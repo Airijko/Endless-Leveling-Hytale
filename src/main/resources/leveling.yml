@@ -17,7 +17,7 @@ player_level_cap: 100
 party_xp_share:
   enabled: true
   range: 25
-  member_share_percent: 20
+  member_share_percent: 100
 
 # Optional cap controls for class innate attribute gains.
 # These caps apply to class INNATE_ATTRIBUTE_GAIN scaling only.

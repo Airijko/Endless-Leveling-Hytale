@@ -25,7 +25,7 @@ passives:
     activation: on_hit
     cooldown_seconds: 12
     base_summon_damage: 25
-    summon_stat_inheritance: 0.4
+    summon_stat_inheritance: 0.6
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Onyxium
   - type: MANA_REGEN
     value: 0.052

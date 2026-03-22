@@ -258,8 +258,25 @@ public final class BurnAugment extends Augment
                 continue;
             }
 
-            DamageSystems.executeDamage(targetRef, commandBuffer, burnTickDamage);
+            if (!tryExecuteBurnDamage(targetRef, commandBuffer, burnTickDamage)) {
+                continue;
+            }
             applyBurnEffect(targetRef, commandBuffer, burnEffect);
+        }
+    }
+
+    private static boolean tryExecuteBurnDamage(Ref<EntityStore> targetRef,
+            CommandBuffer<EntityStore> commandBuffer,
+            Damage burnTickDamage) {
+        try {
+            DamageSystems.executeDamage(targetRef, commandBuffer, burnTickDamage);
+            return true;
+        } catch (IllegalArgumentException exception) {
+            String message = exception.getMessage();
+            if (message != null && message.contains("Entity is not visible")) {
+                return false;
+            }
+            throw exception;
         }
     }
 

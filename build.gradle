@@ -58,6 +58,13 @@ tasks.named('build') {
     dependsOn shadowJar
 }
 
+// Maven-style compatibility alias so `gradlew package` builds the distributable jar.
+tasks.register('package') {
+    group = 'build'
+    description = 'Builds the shaded distributable jar (alias for shadowJar).'
+    dependsOn tasks.named('shadowJar')
+}
+
 // Deploy plugin JAR to server mods folder
 tasks.register('deployToServer', Copy) {
     // Using 'from shadowJar' automatically adds task dependency and proper input tracking
