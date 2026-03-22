@@ -15,7 +15,7 @@ weapons:
   - type: SWORD
     damage: 1.43
   - type: BOW
-    damage: 1.365
+    damage: 1.05
 
 passives:
   - type: FOCUSED_STRIKE

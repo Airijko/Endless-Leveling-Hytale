@@ -14,7 +14,7 @@ weapons:
   - type: CROSSBOW
     damage: 1.552
   - type: DAGGER
-    damage: 1.208
+    damage: 1.05
 
 passives:
   - type: TRUE_BOLTS

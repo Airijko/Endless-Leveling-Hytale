@@ -52,6 +52,7 @@ public class ClassManager {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final int SWAP_CONSUME_LEVEL_THRESHOLD_DEFAULT = 10;
     private static final int SWAP_CONSUME_COUNT = 1;
+    private static final double OFF_CLASS_WEAPON_DAMAGE_MULTIPLIER = 0.60D;
 
     private final PluginFilesManager filesManager;
     private final ConfigManager configManager;
@@ -502,13 +503,23 @@ public class ClassManager {
         if (!isEnabled() || data == null) {
             return 1.0D;
         }
-        double totalBonus = 0.0D;
+
         CharacterClassDefinition primary = getPlayerPrimaryClass(data);
-        if (primary != null) {
-            double primaryBonus = Math.max(0.0D, primary.getWeaponMultiplier(weaponCategoryKey) - 1.0D);
-            totalBonus += primaryBonus;
+        if (primary == null) {
+            return 1.0D;
         }
-        return 1.0D + totalBonus;
+
+        String normalizedCategory = WeaponConfig.normalizeCategoryKey(weaponCategoryKey);
+        if (normalizedCategory == null || normalizedCategory.isBlank()) {
+            return 1.0D;
+        }
+
+        // Weapon damage bonuses are sourced from primary class only.
+        if (primary.getWeaponMultipliers().containsKey(normalizedCategory)) {
+            return Math.max(0.0D, primary.getWeaponMultiplier(normalizedCategory));
+        }
+
+        return OFF_CLASS_WEAPON_DAMAGE_MULTIPLIER;
     }
 
     public double getSecondaryPassiveScale() {
