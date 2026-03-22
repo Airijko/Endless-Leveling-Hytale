@@ -1,0 +1,115 @@
+package com.airijko.endlessleveling.commands.augments;
+
+import com.airijko.endlessleveling.EndlessLeveling;
+import com.airijko.endlessleveling.enums.PassiveTier;
+import com.airijko.endlessleveling.player.PlayerData;
+import com.airijko.endlessleveling.player.PlayerDataManager;
+import com.airijko.endlessleveling.util.PartnerConsoleGuard;
+import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.command.system.AbstractCommand;
+import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.command.system.CommandUtil;
+import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
+import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
+import com.hypixel.hytale.server.core.permissions.HytalePermissions;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.Universe;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+
+/**
+ * /el augments addreroll &lt;player&gt; &lt;type&gt; &lt;count&gt;
+ *
+ * <p>Grants additional augment rerolls of a given tier to a player by
+ * reducing the "used" counter on their active profile. Requires the
+ * {@code endlessleveling.augments.addreroll} permission node when executed
+ * by a player, or an authorized EndlessLevelingPartnerAddon when executed
+ * from the console.
+ */
+public class AugmentAddRerollCommand extends AbstractCommand {
+
+    private static final String PERMISSION_NODE =
+            HytalePermissions.fromCommand("endlessleveling.augments.addreroll");
+
+    private final PlayerDataManager playerDataManager;
+
+    private final RequiredArg<String> playerArg =
+            this.withRequiredArg("player", "Target player name", ArgTypes.STRING);
+    private final RequiredArg<String> typeArg =
+            this.withRequiredArg("type", "Tier (COMMON/ELITE/LEGENDARY/MYTHIC)", ArgTypes.STRING);
+    private final RequiredArg<Integer> countArg =
+            this.withRequiredArg("count", "Number of rerolls to grant", ArgTypes.INTEGER);
+
+    public AugmentAddRerollCommand() {
+        super("addreroll", "Grant augment rerolls of a given tier to a player");
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
+    }
+
+    @Nullable
+    @Override
+    protected CompletableFuture<Void> execute(@Nonnull CommandContext context) {
+        if (context.sender() instanceof com.hypixel.hytale.server.core.entity.entities.Player) {
+            CommandUtil.requirePermission(context.sender(), PERMISSION_NODE);
+        } else {
+            // Console sender: require authorized partner addon
+            if (!PartnerConsoleGuard.isConsoleAllowed("el augments addreroll")) {
+                context.sendMessage(Message.raw(
+                        "Console admin access requires an authorized EndlessLevelingPartnerAddon.")
+                        .color("#ff6666"));
+                return CompletableFuture.completedFuture(null);
+            }
+        }
+
+        if (playerDataManager == null) {
+            context.sendMessage(Message.raw("Player data system is not initialised.").color("#ff6666"));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        int count = countArg.get(context);
+        if (count <= 0) {
+            context.sendMessage(Message.raw("Count must be a positive integer.").color("#ff9900"));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        PassiveTier tier;
+        try {
+            tier = PassiveTier.valueOf(typeArg.get(context).trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ignored) {
+            context.sendMessage(Message.raw(
+                    "Unknown tier: " + typeArg.get(context)
+                    + ". Use COMMON, ELITE, LEGENDARY, or MYTHIC.").color("#ff9900"));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        String targetName = playerArg.get(context);
+        PlayerData targetData = playerDataManager.getByName(targetName);
+        if (targetData == null) {
+            context.sendMessage(Message.raw("Player not found: " + targetName).color("#ff6666"));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        String tierKey = tier.name();
+        int currentUsed = targetData.getAugmentRerollsUsedForTier(tierKey);
+        int newUsed = Math.max(0, currentUsed - count);
+        targetData.setAugmentRerollsUsedForTier(tierKey, newUsed);
+        playerDataManager.save(targetData);
+
+        int granted = currentUsed - newUsed;
+        context.sendMessage(Message.raw(
+                "Added " + granted + " " + tierKey + " reroll(s) to " + targetName
+                + " (used counter: " + currentUsed + " → " + newUsed + ").").color("#4fd7f7"));
+
+        PlayerRef targetRef = Universe.get().getPlayer(targetData.getUuid());
+        if (targetRef != null) {
+            targetRef.sendMessage(Message.raw(
+                    "An admin granted you " + granted + " " + tierKey
+                    + " augment reroll(s).").color("#4fd7f7"));
+        }
+
+        return CompletableFuture.completedFuture(null);
+    }
+}

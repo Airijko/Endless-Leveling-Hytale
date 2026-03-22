@@ -7,23 +7,26 @@ import com.airijko.endlessleveling.leveling.LevelingManager;
 import com.airijko.endlessleveling.player.PlayerDataManager;
 import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.ui.PlayerHud;
+import com.airijko.endlessleveling.util.PartnerConsoleGuard;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.CommandUtil;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
-import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.permissions.HytalePermissions;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
-import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.concurrent.CompletableFuture;
 
-public class ResetPrestigeCommand extends AbstractPlayerCommand {
+public class ResetPrestigeCommand extends AbstractCommand {
 
     private static final String PERMISSION_NODE = HytalePermissions.fromCommand("endlessleveling.resetprestige");
 
@@ -44,20 +47,23 @@ public class ResetPrestigeCommand extends AbstractPlayerCommand {
         this.addAliases("prestigereset");
     }
 
+    @Nullable
     @Override
-    protected void execute(
-            @Nonnull CommandContext commandContext,
-            @Nonnull Store<EntityStore> store,
-            @Nonnull Ref<EntityStore> ref,
-            @Nonnull PlayerRef senderRef,
-            @Nonnull World world) {
-        CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
+    protected CompletableFuture<Void> execute(@Nonnull CommandContext commandContext) {
+        if (commandContext.sender() instanceof Player) {
+            CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
+        } else if (!PartnerConsoleGuard.isConsoleAllowed("el resetprestige")) {
+            commandContext.sendMessage(Message.raw(
+                    "Console admin access requires an authorized EndlessLevelingPartnerAddon.")
+                    .color("#ff6666"));
+            return CompletableFuture.completedFuture(null);
+        }
 
         String targetName = targetArg.get(commandContext);
         PlayerData targetData = playerDataManager.getByName(targetName);
         if (targetData == null) {
-            senderRef.sendMessage(Message.raw("Player not found: " + targetName));
-            return;
+            commandContext.sendMessage(Message.raw("Player not found: " + targetName));
+            return CompletableFuture.completedFuture(null);
         }
 
         PlayerRef targetRef = Universe.get().getPlayer(targetData.getUuid());
@@ -85,12 +91,12 @@ public class ResetPrestigeCommand extends AbstractPlayerCommand {
         }
 
         if (clampedToCap) {
-            senderRef.sendMessage(Message.raw(
+            commandContext.sendMessage(Message.raw(
                     "Reset prestige of " + targetName + " from " + previousPrestige
                             + " to 0. Level exceeded cap and was clamped to " + prestigeZeroCap
                             + (removedPrestigeAugmentSlots ? ". Removed excess prestige augment slots." : ".")));
         } else {
-            senderRef.sendMessage(Message.raw(
+            commandContext.sendMessage(Message.raw(
                     "Reset prestige of " + targetName + " from " + previousPrestige
                             + " to 0. Level remains " + previousLevel
                             + (removedPrestigeAugmentSlots ? ". Removed excess prestige augment slots." : ".")));
@@ -108,6 +114,8 @@ public class ResetPrestigeCommand extends AbstractPlayerCommand {
                                 + (removedPrestigeAugmentSlots ? " Extra prestige augment slots were removed." : "")));
             }
         }
+
+            return CompletableFuture.completedFuture(null);
     }
 
     private void applySkillModifiers(PlayerData targetData, PlayerRef targetRef) {

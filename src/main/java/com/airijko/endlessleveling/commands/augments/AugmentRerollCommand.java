@@ -1,4 +1,4 @@
-package com.airijko.endlessleveling.commands.subcommands;
+package com.airijko.endlessleveling.commands.augments;
 
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentUnlockManager;

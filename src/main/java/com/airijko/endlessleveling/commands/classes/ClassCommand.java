@@ -2,6 +2,7 @@ package com.airijko.endlessleveling.commands.classes;
 
 import com.airijko.endlessleveling.classes.CharacterClassDefinition;
 import com.airijko.endlessleveling.commands.subcommands.OpenPageSubCommand;
+import com.airijko.endlessleveling.commands.classes.AddClassSwapCommand;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.classes.ClassManager;
 import com.airijko.endlessleveling.player.PlayerDataManager;
@@ -41,6 +42,7 @@ public class ClassCommand extends AbstractPlayerCommand {
                 "Open the EndlessLeveling Classes page",
                 playerRef -> new ClassesUIPage(playerRef, CustomPageLifetime.CanDismiss)));
         this.addSubCommand(new ClassPathsCommand(classManager));
+        this.addSubCommand(new AddClassSwapCommand(classManager, playerDataManager));
     }
 
     @Override

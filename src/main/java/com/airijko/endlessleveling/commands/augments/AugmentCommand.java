@@ -1,9 +1,6 @@
 package com.airijko.endlessleveling.commands.augments;
 
 import com.airijko.endlessleveling.commands.subcommands.OpenPageSubCommand;
-import com.airijko.endlessleveling.commands.subcommands.AugmentRefreshCommand;
-import com.airijko.endlessleveling.commands.subcommands.AugmentRerollCommand;
-import com.airijko.endlessleveling.commands.subcommands.ResetAugmentsCommand;
 import com.airijko.endlessleveling.ui.AugmentsChoosePage;
 import com.airijko.endlessleveling.ui.AugmentsUIPage;
 import com.hypixel.hytale.component.Ref;
@@ -23,7 +20,8 @@ public class AugmentCommand extends AbstractPlayerCommand {
     public AugmentCommand() {
         super("augments", "Augment commands");
         this.addAliases("augment", "aug", "a");
-        this.addSubCommand(new AugmentRerollCommand("reroll", "Consume an unlocked reroll for your offers"));
+        this.addSubCommand(new AugmentRerollSelectedCommand());
+        this.addSubCommand(new AugmentAddRerollCommand());
         this.addSubCommand(new AugmentRefreshCommand("refresh", "Reroll stored augment offers for a player"));
         this.addSubCommand(new ResetAugmentsCommand("reset",
                 "Reset selected augments and reroll all eligible offers"));

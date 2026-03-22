@@ -3,6 +3,7 @@ package com.airijko.endlessleveling;
 import com.airijko.endlessleveling.classes.ClassWeaponResolver;
 import com.airijko.endlessleveling.classes.WeaponConfig;
 import com.airijko.endlessleveling.commands.EndlessLevelingCommand;
+import com.airijko.endlessleveling.commands.augments.AugmentCommand;
 import com.airijko.endlessleveling.commands.PartyCommand;
 import com.airijko.endlessleveling.commands.RaceCommand;
 import com.airijko.endlessleveling.commands.classes.ClassCommand;
@@ -515,6 +516,7 @@ public class EndlessLeveling extends JavaPlugin {
         }
         this.getCommandRegistry().registerCommand(new RaceCommand(raceManager, playerDataManager));
         this.getCommandRegistry().registerCommand(new ClassCommand(classManager, playerDataManager));
+    this.getCommandRegistry().registerCommand(new AugmentCommand());
 
         if (augmentManager != null) {
             augmentManager.load();

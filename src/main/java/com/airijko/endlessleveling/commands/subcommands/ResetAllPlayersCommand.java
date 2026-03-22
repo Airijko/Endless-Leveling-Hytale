@@ -5,21 +5,24 @@ import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.leveling.LevelingManager;
 import com.airijko.endlessleveling.player.PlayerDataManager;
 import com.airijko.endlessleveling.player.SkillManager;
+import com.airijko.endlessleveling.util.PartnerConsoleGuard;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.CommandUtil;
-import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.permissions.HytalePermissions;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
-import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.concurrent.CompletableFuture;
 
-public class ResetAllPlayersCommand extends AbstractPlayerCommand {
+public class ResetAllPlayersCommand extends AbstractCommand {
 
     private static final String PERMISSION_NODE = HytalePermissions.fromCommand("endlessleveling.resetallplayers");
 
@@ -34,18 +37,22 @@ public class ResetAllPlayersCommand extends AbstractPlayerCommand {
         this.skillManager = EndlessLeveling.getInstance().getSkillManager();
     }
 
+    @Nullable
     @Override
-    protected void execute(@Nonnull CommandContext commandContext,
-            @Nonnull Store<EntityStore> store,
-            @Nonnull Ref<EntityStore> ref,
-            @Nonnull PlayerRef senderRef,
-            @Nonnull World world) {
-        CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
+    protected CompletableFuture<Void> execute(@Nonnull CommandContext commandContext) {
+        if (commandContext.sender() instanceof Player) {
+            CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
+        } else if (!PartnerConsoleGuard.isConsoleAllowed("el resetallplayers")) {
+            commandContext.sendMessage(Message.raw(
+                    "Console admin access requires an authorized EndlessLevelingPartnerAddon.")
+                    .color("#ff6666"));
+            return CompletableFuture.completedFuture(null);
+        }
 
         var cachedPlayers = playerDataManager.getAllCached();
         if (cachedPlayers.isEmpty()) {
-            senderRef.sendMessage(Message.raw("No loaded player data to reset."));
-            return;
+            commandContext.sendMessage(Message.raw("No loaded player data to reset."));
+            return CompletableFuture.completedFuture(null);
         }
 
         int resetCount = 0;
@@ -59,7 +66,8 @@ public class ResetAllPlayersCommand extends AbstractPlayerCommand {
             resetCount++;
         }
 
-        senderRef.sendMessage(Message.raw("Reset " + resetCount + " player(s) to level 1."));
+        commandContext.sendMessage(Message.raw("Reset " + resetCount + " player(s) to level 1."));
+        return CompletableFuture.completedFuture(null);
     }
 
     private void applySkillModifiers(PlayerData data, PlayerRef targetRef) {

@@ -6,23 +6,26 @@ import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.leveling.LevelingManager;
 import com.airijko.endlessleveling.player.PlayerDataManager;
 import com.airijko.endlessleveling.ui.PlayerHud;
+import com.airijko.endlessleveling.util.PartnerConsoleGuard;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.CommandUtil;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
-import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.permissions.HytalePermissions;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
-import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.concurrent.CompletableFuture;
 
-public class SetPrestigeCommand extends AbstractPlayerCommand {
+public class SetPrestigeCommand extends AbstractCommand {
 
     private static final String PERMISSION_NODE = HytalePermissions.fromCommand("endlessleveling.setprestige");
 
@@ -43,34 +46,37 @@ public class SetPrestigeCommand extends AbstractPlayerCommand {
         this.addAliases("prestigeset");
     }
 
+    @Nullable
     @Override
-    protected void execute(
-            @Nonnull CommandContext commandContext,
-            @Nonnull Store<EntityStore> store,
-            @Nonnull Ref<EntityStore> ref,
-            @Nonnull PlayerRef senderRef,
-            @Nonnull World world) {
-        CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
+    protected CompletableFuture<Void> execute(@Nonnull CommandContext commandContext) {
+        if (commandContext.sender() instanceof Player) {
+            CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
+        } else if (!PartnerConsoleGuard.isConsoleAllowed("el setprestige")) {
+            commandContext.sendMessage(Message.raw(
+                    "Console admin access requires an authorized EndlessLevelingPartnerAddon.")
+                    .color("#ff6666"));
+            return CompletableFuture.completedFuture(null);
+        }
 
         String targetName = targetArg.get(commandContext);
         int requestedPrestige = prestigeArg.get(commandContext);
 
         if (requestedPrestige < 0) {
-            senderRef.sendMessage(Message.raw("Prestige must be 0 or higher."));
-            return;
+            commandContext.sendMessage(Message.raw("Prestige must be 0 or higher."));
+            return CompletableFuture.completedFuture(null);
         }
 
         Integer prestigeCap = levelingManager != null ? levelingManager.getPrestigeCap() : null;
         if (prestigeCap != null && requestedPrestige > prestigeCap) {
-            senderRef.sendMessage(Message.raw(
+            commandContext.sendMessage(Message.raw(
                     "Prestige cannot be set above the configured cap of " + prestigeCap + "."));
-            return;
+            return CompletableFuture.completedFuture(null);
         }
 
         PlayerData targetData = playerDataManager.getByName(targetName);
         if (targetData == null) {
-            senderRef.sendMessage(Message.raw("Player not found: " + targetName));
-            return;
+            commandContext.sendMessage(Message.raw("Player not found: " + targetName));
+            return CompletableFuture.completedFuture(null);
         }
 
         int previousPrestige = Math.max(0, targetData.getPrestigeLevel());
@@ -100,11 +106,11 @@ public class SetPrestigeCommand extends AbstractPlayerCommand {
         String suffix = removedExcessUnlocks ? " Removed excess prestige augment slots." : "";
 
         if (clampedToCap) {
-            senderRef.sendMessage(Message.raw(
+            commandContext.sendMessage(Message.raw(
                     "Set prestige of " + targetName + " from " + previousPrestige + " to " + requestedPrestige
                             + ". Level exceeded new cap and was clamped to " + finalLevel + "." + suffix));
         } else {
-            senderRef.sendMessage(Message.raw(
+            commandContext.sendMessage(Message.raw(
                     "Set prestige of " + targetName + " from " + previousPrestige + " to " + requestedPrestige
                             + ". Level remains " + finalLevel + "." + suffix));
         }
@@ -120,5 +126,7 @@ public class SetPrestigeCommand extends AbstractPlayerCommand {
                         "An admin set your prestige to " + requestedPrestige + "." + suffix));
             }
         }
+
+        return CompletableFuture.completedFuture(null);
     }
 }
