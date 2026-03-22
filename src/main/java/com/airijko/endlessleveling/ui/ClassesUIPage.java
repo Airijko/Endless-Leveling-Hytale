@@ -653,9 +653,48 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             RacePassiveDefinition passive = passives.get(index);
             ui.append(entriesSelector, "Pages/Classes/ClassPassiveEntry.ui");
             String base = entriesSelector + "[" + index + "]";
-            ui.set(base + " #PassiveName.Text", buildPassiveLabel(passive));
-            ui.set(base + " #PassiveValue.Text", formatPassiveDescription(passive, data));
+            String label = buildPassiveLabel(passive);
+            String value = formatPassiveDescription(passive, data);
+            ui.set(base + " #PassiveName.Text", label);
+            ui.set(base + " #PassiveValue.Text", trimDuplicatePassiveHeader(label, value));
         }
+    }
+
+    private String trimDuplicatePassiveHeader(String label, String value) {
+        if (value == null || value.isBlank()) {
+            return value;
+        }
+        String normalizedLabel = normalizePassiveText(label);
+        if (normalizedLabel.isEmpty()) {
+            return value;
+        }
+
+        int newline = value.indexOf('\n');
+        String firstLine = (newline >= 0 ? value.substring(0, newline) : value).trim();
+        if (!normalizePassiveText(firstLine).equals(normalizedLabel)) {
+            return value;
+        }
+
+        if (newline < 0) {
+            return value;
+        }
+
+        String remaining = value.substring(newline + 1).stripLeading();
+        return remaining.isBlank() ? value : remaining;
+    }
+
+    private String normalizePassiveText(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char ch = Character.toLowerCase(text.charAt(i));
+            if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')) {
+                builder.append(ch);
+            }
+        }
+        return builder.toString();
     }
 
     private boolean selectedClassMatches(String classId) {

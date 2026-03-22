@@ -14,7 +14,7 @@ weapons:
   - type: DAGGER
     damage: 1.05
 
-passives:
+passives: 
   - type: ARMY_OF_THE_DEAD
     category: NECOMANCY
     value: 1.0

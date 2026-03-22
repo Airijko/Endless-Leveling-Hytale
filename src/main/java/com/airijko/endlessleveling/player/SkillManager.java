@@ -56,10 +56,10 @@ public class SkillManager {
     private static final String VANGUARD_BASE_CLASS_ID = "vanguard";
     private static final String CLASS_INNATE_CAPS_PATH = "classes.innate_attribute_gain_level_caps";
     private static final String DEFENSE_CAPS_PATH = "defense_caps";
-    private static final String DEFENSE_CAPS_DEFAULT_CATEGORY_PATH = DEFENSE_CAPS_PATH + ".default_category";
-    private static final String DEFENSE_CAPS_CATEGORIES_PATH = DEFENSE_CAPS_PATH + ".categories";
+    private static final String DEFENSE_CAPS_DEFAULT_ROLE_PATH = DEFENSE_CAPS_PATH + ".default_role";
+    private static final String DEFENSE_CAPS_ROLES_PATH = DEFENSE_CAPS_PATH + ".roles";
     private static final String DEFENSE_CAPS_MAX_REDUCTION_KEY = "max_reduction";
-    private static final String DEFENSE_CAPS_DEFAULT_CATEGORY = "default";
+    private static final String DEFENSE_CAPS_DEFAULT_ROLE = "skirmisher";
     private static final int DEFAULT_CLASS_INNATE_LEVEL_CAP = 100;
 
     private final ConfigManager levelingConfig;
@@ -72,10 +72,10 @@ public class SkillManager {
 
     private int baseSkillPoints;
     private int skillPointsPerLevel;
-    private volatile Map<String, Double> defenseCapByCategory = Map.of(
-            DEFENSE_CAPS_DEFAULT_CATEGORY,
+        private volatile Map<String, Double> defenseCapByRole = Map.of(
+            DEFENSE_CAPS_DEFAULT_ROLE,
             DEFENSE_MAX_REDUCTION);
-    private volatile String defaultDefenseCapCategory = DEFENSE_CAPS_DEFAULT_CATEGORY;
+        private volatile String defaultDefenseCapRole = DEFENSE_CAPS_DEFAULT_ROLE;
     private final Map<SkillAttributeType, Integer> classInnateAttributeLevelCaps = new EnumMap<>(
             SkillAttributeType.class);
 
@@ -112,7 +112,7 @@ public class SkillManager {
             baseSkillPoints = getIntFromLevelingConfig("baseSkillPoints", 8);
             skillPointsPerLevel = getIntFromLevelingConfig("skillPointsPerLevel", 4);
             loadClassInnateAttributeLevelCaps();
-            loadDefenseCapCategories();
+            loadDefenseCapRoles();
             LOGGER.atInfo().log("SkillManager loaded: baseSkillPoints=%d, skillPointsPerLevel=%d",
                     baseSkillPoints, skillPointsPerLevel);
         } catch (Exception e) {
@@ -120,32 +120,34 @@ public class SkillManager {
             baseSkillPoints = 8;
             skillPointsPerLevel = 4;
             loadDefaultClassInnateAttributeLevelCaps();
-            loadDefaultDefenseCapCategories();
+            loadDefaultDefenseCapRoles();
         }
     }
 
-    private void loadDefaultDefenseCapCategories() {
-        defenseCapByCategory = Map.of(
-                DEFENSE_CAPS_DEFAULT_CATEGORY,
-                DEFENSE_MAX_REDUCTION,
-                "glass_cannon",
-                50.0D,
-                "fighter",
-                65.0D,
-                "tank",
-                80.0D);
-        defaultDefenseCapCategory = DEFENSE_CAPS_DEFAULT_CATEGORY;
+    private void loadDefaultDefenseCapRoles() {
+        Map<String, Double> defaults = new LinkedHashMap<>();
+        defaults.put("mage", 40.0D);
+        defaults.put("marksman", 40.0D);
+        defaults.put("assassin", 45.0D);
+        defaults.put("support", 50.0D);
+        defaults.put("diver", 55.0D);
+        defaults.put("skirmisher", 65.0D);
+        defaults.put("battlemage", 65.0D);
+        defaults.put("juggernaut", 80.0D);
+        defaults.put("vanguard", 80.0D);
+        defenseCapByRole = Map.copyOf(defaults);
+        defaultDefenseCapRole = DEFENSE_CAPS_DEFAULT_ROLE;
     }
 
-    private void loadDefenseCapCategories() {
-        Object rawCategories = config.get(DEFENSE_CAPS_CATEGORIES_PATH, null, false);
-        if (!(rawCategories instanceof Map<?, ?> categoriesNode)) {
-            loadDefaultDefenseCapCategories();
+    private void loadDefenseCapRoles() {
+        Object rawRoles = config.get(DEFENSE_CAPS_ROLES_PATH, null, false);
+        if (!(rawRoles instanceof Map<?, ?> rolesNode)) {
+            loadDefaultDefenseCapRoles();
             return;
         }
 
         Map<String, Double> parsed = new LinkedHashMap<>();
-        for (Map.Entry<?, ?> entry : categoriesNode.entrySet()) {
+        for (Map.Entry<?, ?> entry : rolesNode.entrySet()) {
             if (!(entry.getKey() instanceof String key)) {
                 continue;
             }
@@ -154,26 +156,26 @@ public class SkillManager {
                 continue;
             }
             double maxReduction = parseCategoryMaxReduction(entry.getValue(), DEFENSE_MAX_REDUCTION,
-                    DEFENSE_CAPS_CATEGORIES_PATH + "." + key);
+                    DEFENSE_CAPS_ROLES_PATH + "." + key);
             parsed.put(normalizedKey, maxReduction);
         }
 
         if (parsed.isEmpty()) {
-            loadDefaultDefenseCapCategories();
+            loadDefaultDefenseCapRoles();
             return;
         }
 
-        String configuredDefault = normalizeCategoryKey(config.get(DEFENSE_CAPS_DEFAULT_CATEGORY_PATH,
-                DEFENSE_CAPS_DEFAULT_CATEGORY,
+        String configuredDefault = normalizeCategoryKey(config.get(DEFENSE_CAPS_DEFAULT_ROLE_PATH,
+                DEFENSE_CAPS_DEFAULT_ROLE,
                 false));
         if (configuredDefault == null || !parsed.containsKey(configuredDefault)) {
-            configuredDefault = parsed.containsKey(DEFENSE_CAPS_DEFAULT_CATEGORY)
-                    ? DEFENSE_CAPS_DEFAULT_CATEGORY
+            configuredDefault = parsed.containsKey(DEFENSE_CAPS_DEFAULT_ROLE)
+                    ? DEFENSE_CAPS_DEFAULT_ROLE
                     : parsed.keySet().iterator().next();
         }
 
-        defenseCapByCategory = Map.copyOf(parsed);
-        defaultDefenseCapCategory = configuredDefault;
+        defenseCapByRole = Map.copyOf(parsed);
+        defaultDefenseCapRole = configuredDefault;
     }
 
     private double parseCategoryMaxReduction(Object rawValue, double fallback, String path) {
@@ -206,15 +208,25 @@ public class SkillManager {
 
     private void ensureDefenseCapConfigSection() {
         boolean changed = false;
-        changed |= config.ensurePath(DEFENSE_CAPS_DEFAULT_CATEGORY_PATH, DEFENSE_CAPS_DEFAULT_CATEGORY);
-        changed |= config.ensurePath(DEFENSE_CAPS_CATEGORIES_PATH + ".default." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
-                DEFENSE_MAX_REDUCTION);
-        changed |= config.ensurePath(DEFENSE_CAPS_CATEGORIES_PATH + ".glass_cannon." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
-                50.0D);
-        changed |= config.ensurePath(DEFENSE_CAPS_CATEGORIES_PATH + ".fighter." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
-                65.0D);
-        changed |= config.ensurePath(DEFENSE_CAPS_CATEGORIES_PATH + ".tank." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
-                80.0D);
+        changed |= config.ensurePath(DEFENSE_CAPS_DEFAULT_ROLE_PATH, DEFENSE_CAPS_DEFAULT_ROLE);
+        changed |= config.ensurePath(DEFENSE_CAPS_ROLES_PATH + ".Mage." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+            40.0D);
+        changed |= config.ensurePath(DEFENSE_CAPS_ROLES_PATH + ".Marksman." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+            40.0D);
+        changed |= config.ensurePath(DEFENSE_CAPS_ROLES_PATH + ".Assassin." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+            45.0D);
+        changed |= config.ensurePath(DEFENSE_CAPS_ROLES_PATH + ".Support." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+            50.0D);
+        changed |= config.ensurePath(DEFENSE_CAPS_ROLES_PATH + ".Diver." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+            55.0D);
+        changed |= config.ensurePath(DEFENSE_CAPS_ROLES_PATH + ".Skirmisher." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+            65.0D);
+        changed |= config.ensurePath(DEFENSE_CAPS_ROLES_PATH + ".BattleMage." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+            65.0D);
+        changed |= config.ensurePath(DEFENSE_CAPS_ROLES_PATH + ".Juggernaut." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+            80.0D);
+        changed |= config.ensurePath(DEFENSE_CAPS_ROLES_PATH + ".Vanguard." + DEFENSE_CAPS_MAX_REDUCTION_KEY,
+            80.0D);
         if (changed) {
             config.save();
         }
@@ -1292,36 +1304,47 @@ public class SkillManager {
 
     private double resolvePrimaryDefenseMaxReduction(PlayerData playerData) {
         if (playerData == null) {
-            return resolveDefenseCapByCategory(null);
+            return resolveDefaultDefenseCap();
         }
 
-        String classCategory = null;
         if (classManager != null) {
             CharacterClassDefinition primaryClass = classManager.getClass(playerData.getPrimaryClassId());
             if (primaryClass != null) {
-                classCategory = primaryClass.getCategory();
+                double roleCap = resolveDefenseCapByRoles(primaryClass.getRoles());
+                if (roleCap >= 0.0D) {
+                    return roleCap;
+                }
             }
         }
-        return resolveDefenseCapByCategory(classCategory);
+        return resolveDefaultDefenseCap();
     }
 
-    private double resolveDefenseCapByCategory(String classCategory) {
-        String normalized = normalizeCategoryKey(classCategory);
-        Map<String, Double> configuredCaps = defenseCapByCategory;
-        if (normalized != null) {
-            Double direct = configuredCaps.get(normalized);
-            if (direct != null) {
-                return direct;
+    private double resolveDefenseCapByRoles(List<String> roles) {
+        if (roles == null || roles.isEmpty()) {
+            return -1.0D;
+        }
+        Map<String, Double> configuredCaps = defenseCapByRole;
+        for (String role : roles) {
+            String normalized = normalizeCategoryKey(role);
+            if (normalized == null) {
+                continue;
+            }
+            Double cap = configuredCaps.get(normalized);
+            if (cap != null) {
+                return cap;
             }
         }
+        return -1.0D;
+    }
 
-        Double fallback = configuredCaps.get(defaultDefenseCapCategory);
+    private double resolveDefaultDefenseCap() {
+        Map<String, Double> configuredCaps = defenseCapByRole;
+        Double fallback = configuredCaps.get(defaultDefenseCapRole);
         if (fallback != null) {
             return fallback;
         }
-
-        Double defaultCap = configuredCaps.get(DEFENSE_CAPS_DEFAULT_CATEGORY);
-        return defaultCap != null ? defaultCap : DEFENSE_MAX_REDUCTION;
+        Double skirmisherCap = configuredCaps.get(DEFENSE_CAPS_DEFAULT_ROLE);
+        return skirmisherCap != null ? skirmisherCap : DEFENSE_MAX_REDUCTION;
     }
 
     private float getSwiftnessMultiplier(PlayerData playerData) {

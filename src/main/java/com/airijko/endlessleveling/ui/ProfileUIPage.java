@@ -57,6 +57,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final String PASSIVE_ENTRY_TEMPLATE = "Pages/Profile/ProfileRacePassiveEntry.ui";
+    private static final String SKILL_PASSIVE_ENTRY_TEMPLATE = "Pages/Profile/ProfileSkillPassiveEntry.ui";
 
     private final PlayerDataManager playerDataManager;
     private final RaceManager raceManager;
@@ -287,12 +288,12 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 passiveSections.passiveSummary(),
                 passiveSections.passiveEntries(),
                 ProfileSectionTheme.PASSIVE);
-        renderPassiveSection(ui,
-                "#InnatePassiveSummary",
-                "#InnatePassiveEntries",
-                passiveSections.innatePassiveSummary(),
-                passiveSections.innatePassiveEntries(),
-                ProfileSectionTheme.INNATE_PASSIVE);
+        renderSkillPassiveSection(ui,
+            "#InnatePassiveSummary",
+            "#InnatePassiveEntries",
+            passiveSections.innatePassiveSummary(),
+            passiveSections.innatePassiveEntries(),
+            ProfileSectionTheme.INNATE_PASSIVE);
         renderPassiveSection(ui,
                 "#InnateAttributeSummary",
                 "#InnateAttributeEntries",
@@ -459,7 +460,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private AggregatedPassiveSections buildAggregatedPassiveSections(@Nonnull PlayerData playerData,
             @Nonnull PlayerProfile profile) {
         List<PassiveEntry> passiveEntries = new ArrayList<>();
-        List<PassiveEntry> innatePassiveEntries = new ArrayList<>();
+        List<SkillPassiveEntry> innatePassiveEntries = new ArrayList<>();
         List<PassiveEntry> innateAttributeEntries = new ArrayList<>();
 
         ArchetypePassiveSnapshot snapshot = archetypePassiveManager != null
@@ -492,7 +493,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         innatePassiveEntries.addAll(buildInnatePlayerPassiveEntries(playerData));
 
         passiveEntries.sort(Comparator.comparing(PassiveEntry::label));
-        innatePassiveEntries.sort(Comparator.comparing(PassiveEntry::label));
+        innatePassiveEntries.sort(Comparator.comparing(SkillPassiveEntry::label));
         innateAttributeEntries.sort(Comparator.comparing(PassiveEntry::label));
 
         String passiveSummary = passiveEntries.isEmpty() ? tr("ui.profile.passives.none", "No passive bonuses active")
@@ -595,7 +596,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         };
     }
 
-    private List<PassiveEntry> buildInnatePlayerPassiveEntries(@Nonnull PlayerData playerData) {
+    private List<SkillPassiveEntry> buildInnatePlayerPassiveEntries(@Nonnull PlayerData playerData) {
         if (passiveManager == null) {
             return List.of();
         }
@@ -605,18 +606,18 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             return List.of();
         }
 
-        List<PassiveEntry> entries = new ArrayList<>();
+        List<SkillPassiveEntry> entries = new ArrayList<>();
         for (PassiveType type : PassiveType.values()) {
             PassiveManager.PassiveSnapshot snapshot = syncResult.snapshots().get(type);
             if (snapshot == null || !snapshot.isUnlocked()) {
                 continue;
             }
-            String label = tr("ui.profile.passives.level_label", "{0} (Lv {1})", type.getDisplayName(),
-                    snapshot.level());
+            String label = type.getDisplayName();
             String valueText = type.formatValue(snapshot.value());
-            entries.add(new PassiveEntry(label, valueText));
+            String levelText = tr("ui.profile.passives.level_short", "Lv {0}", snapshot.level());
+            entries.add(new SkillPassiveEntry(label, valueText, levelText));
         }
-        entries.sort(Comparator.comparing(PassiveEntry::label));
+        entries.sort(Comparator.comparing(SkillPassiveEntry::label));
         return entries;
     }
 
@@ -761,6 +762,22 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         populatePassiveEntries(ui, entriesSelector, PASSIVE_ENTRY_TEMPLATE, entries, sectionTheme);
     }
 
+    private void renderSkillPassiveSection(@Nonnull UICommandBuilder ui,
+            @Nonnull String summarySelector,
+            @Nonnull String entriesSelector,
+            @Nonnull String emptyText,
+            @Nonnull List<SkillPassiveEntry> entries,
+            @Nonnull ProfileSectionTheme sectionTheme) {
+        if (entries.isEmpty()) {
+            ui.set(summarySelector + ".Visible", true);
+            ui.set(summarySelector + ".Text", emptyText);
+            ui.clear(entriesSelector);
+            return;
+        }
+        ui.set(summarySelector + ".Visible", false);
+        populateSkillPassiveEntries(ui, entriesSelector, entries, sectionTheme);
+    }
+
     private void renderAugmentSection(@Nonnull UICommandBuilder ui,
             @Nonnull List<AugmentEntry> augments) {
         String summarySelector = "#AugmentSummary";
@@ -829,9 +846,63 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             String base = containerSelector + "[" + i + "]";
             ui.set(base + " #PassiveName.Text", entry.label());
             ui.set(base + " #PassiveName.Style.TextColor", sectionTheme.nameColor());
-            ui.set(base + " #PassiveValue.Text", entry.value());
+            ui.set(base + " #PassiveValue.Text", trimDuplicatePassiveHeader(entry.label(), entry.value()));
             ui.set(base + " #PassiveValue.Style.TextColor", sectionTheme.valueColor());
         }
+    }
+
+    private void populateSkillPassiveEntries(@Nonnull UICommandBuilder ui,
+            @Nonnull String containerSelector,
+            @Nonnull List<SkillPassiveEntry> entries,
+            @Nonnull ProfileSectionTheme sectionTheme) {
+        ui.clear(containerSelector);
+        for (int i = 0; i < entries.size(); i++) {
+            SkillPassiveEntry entry = entries.get(i);
+            ui.append(containerSelector, SKILL_PASSIVE_ENTRY_TEMPLATE);
+            String base = containerSelector + "[" + i + "]";
+            ui.set(base + " #PassiveName.Text", entry.label());
+            ui.set(base + " #PassiveName.Style.TextColor", sectionTheme.nameColor());
+            ui.set(base + " #PassiveValue.Text", trimDuplicatePassiveHeader(entry.label(), entry.value()));
+            ui.set(base + " #PassiveValue.Style.TextColor", sectionTheme.valueColor());
+            ui.set(base + " #PassiveLevel.Text", entry.level());
+        }
+    }
+
+    private String trimDuplicatePassiveHeader(String label, String value) {
+        if (value == null || value.isBlank()) {
+            return value;
+        }
+        String normalizedLabel = normalizePassiveText(label);
+        if (normalizedLabel.isEmpty()) {
+            return value;
+        }
+
+        int newline = value.indexOf('\n');
+        String firstLine = (newline >= 0 ? value.substring(0, newline) : value).trim();
+        if (!normalizePassiveText(firstLine).equals(normalizedLabel)) {
+            return value;
+        }
+
+        if (newline < 0) {
+            return value;
+        }
+
+        String remaining = value.substring(newline + 1).stripLeading();
+        return remaining.isBlank() ? value : remaining;
+    }
+
+    private String normalizePassiveText(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char ch = Character.toLowerCase(text.charAt(i));
+            if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')) {
+                builder.append(ch);
+            }
+        }
+        return builder.toString();
     }
 
     private void applyAttributeDisplay(@Nonnull UICommandBuilder ui,
@@ -996,6 +1067,9 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     private record PassiveEntry(String label, String value) {
     }
 
+    private record SkillPassiveEntry(String label, String value, String level) {
+    }
+
     private record AugmentEntry(String id, String tier, String value, String source) {
     }
 
@@ -1003,7 +1077,7 @@ public class ProfileUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private record AggregatedPassiveSections(List<PassiveEntry> passiveEntries,
-            List<PassiveEntry> innatePassiveEntries,
+            List<SkillPassiveEntry> innatePassiveEntries,
             List<PassiveEntry> innateAttributeEntries,
             String passiveSummary,
             String innatePassiveSummary,
