@@ -22,16 +22,16 @@ ascension:
       name: "Iceborn Ragnarok"
 
 attributes:
-  life_force: 145
-  strength: 1.22
-  defense: 1.0
-  haste: 0.98
-  precision: 24.0
-  ferocity: 50.0
-  stamina: 18.0
-  flow: 10.0
-  sorcery: 0.96
-  discipline: 0
+  life_force: 98.7
+  strength: 1.17
+  defense: 0.99
+  haste: 0.95
+  precision: 11.03
+  ferocity: 22.05
+  stamina: 15.4
+  flow: 7.7
+  sorcery: 0.94
+  discipline: 0.0
 
 passives:
   - type: HEALTH_REGEN

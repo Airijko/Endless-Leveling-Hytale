@@ -22,16 +22,16 @@ ascension:
       name: "Vastaya Spiritbinder"
 
 attributes: # Base Values
-  life_force: 125
-  strength: 1.12
-  defense: 0.98
-  haste: 1.15
-  precision: 20.0
-  ferocity: 42.0
-  stamina: 12.0
-  flow: 38.0
-  sorcery: 1.38
-  discipline: 0
+  life_force: 85.0
+  strength: 1.08
+  defense: 0.87
+  haste: 1.16
+  precision: 11.03
+  ferocity: 29.40
+  stamina: 7.7
+  flow: 23.1
+  sorcery: 1.08
+  discipline: 0.0
 
 passives:
   - type: XP_BONUS

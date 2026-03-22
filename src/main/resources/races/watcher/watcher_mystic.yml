@@ -22,16 +22,16 @@ ascension:
       name: "Watcher Eldritch"
 
 attributes:
-  life_force: 100
-  strength: 0.78
-  defense: 0.82
-  haste: 0.93
-  precision: 15.0
-  ferocity: 45.0
-  stamina: 6.0
-  flow: 48.0
-  sorcery: 1.25
-  discipline: 0
+  life_force: 81.9
+  strength: 0.75
+  defense: 0.81
+  haste: 0.92
+  precision: 11.03
+  ferocity: 22.05
+  stamina: 4.6
+  flow: 38.5
+  sorcery: 1.12
+  discipline: 0.0
 
 passives:
   - type: MANA_REGEN

@@ -25,16 +25,16 @@ ascension:
   next_paths: []
 
 attributes:
-  life_force: 217.5
-  strength: 0.915
-  defense: 1.08
-  haste: 1.05
-  precision: 24
-  ferocity: 79
-  stamina: 10
-  flow: 72
-  sorcery: 1.75
-  discipline: 0
+  life_force: 98.9
+  strength: 1.07
+  defense: 0.98
+  haste: 1.12
+  precision: 13.31
+  ferocity: 26.63
+  stamina: 9.7
+  flow: 80.6
+  sorcery: 1.60
+  discipline: 0.0
 
 passives:
   - type: MANA_REGEN

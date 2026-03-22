@@ -22,16 +22,16 @@ ascension:
       name: "Watcher Mystic"
 
 attributes:
-  life_force: 78
+  life_force: 78.0
   strength: 0.68
   defense: 0.77
-  haste: 0.875
-  precision: 10.5
-  ferocity: 21.0
+  haste: 0.88
+  precision: 10.50
+  ferocity: 21.00
   stamina: 4.2
   flow: 35.0
   sorcery: 1.02
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: MANA_REGEN

@@ -22,16 +22,16 @@ ascension:
       name: "Void Oblivion"
 
 attributes:
-  life_force: 220
+  life_force: 118.6
   strength: 1.08
-  defense: 1.3
-  haste: 1.02
-  precision: 10.0
-  ferocity: 42.0
-  stamina: 15.0
-  flow: 42.0
+  defense: 1.03
+  haste: 0.99
+  precision: 7.72
+  ferocity: 38.59
+  stamina: 10.2
+  flow: 33.9
   sorcery: 1.08
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: MANA_REGEN

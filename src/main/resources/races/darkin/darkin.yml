@@ -23,16 +23,16 @@ ascension:
       name: "Darkin Bloodweaver"
 
 attributes:
-  life_force: 65
+  life_force: 65.0
   strength: 1.11
   defense: 0.68
   haste: 1.05
-  precision: 3.5
-  ferocity: 52.5
+  precision: 3.50
+  ferocity: 52.50
   stamina: 8.8
   flow: 7.0
   sorcery: 0.85
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: HEALING_BONUS

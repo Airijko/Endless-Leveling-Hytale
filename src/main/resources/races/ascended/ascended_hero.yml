@@ -22,16 +22,16 @@ ascension:
       name: "Ascended Titan"
 
 attributes:
-  life_force: 155
-  strength: 1.32
-  defense: 1.14
-  haste: 0.97
-  precision: 22.0
-  ferocity: 15.0
-  stamina: 16.0
-  flow: 18.0
-  sorcery: 1.0
-  discipline: 0
+  life_force: 102.9
+  strength: 1.12
+  defense: 0.99
+  haste: 0.95
+  precision: 14.70
+  ferocity: 7.35
+  stamina: 11.6
+  flow: 15.4
+  sorcery: 0.98
+  discipline: 0.0
 
 passives:
   - type: SPECIAL_CHARGE_BONUS

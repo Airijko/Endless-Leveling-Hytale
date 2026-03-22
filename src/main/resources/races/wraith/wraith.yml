@@ -22,16 +22,16 @@ ascension:
       name: "Wraith Fang"
 
 attributes:
-  life_force: 49
+  life_force: 49.0
   strength: 1.02
   defense: 0.72
-  haste: 1.1
-  precision: 7.0
-  ferocity: 52.5
+  haste: 1.10
+  precision: 7.00
+  ferocity: 52.50
   stamina: 7.0
   flow: 14.0
   sorcery: 1.02
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: SWIFTNESS

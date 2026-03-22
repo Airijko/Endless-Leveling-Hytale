@@ -22,16 +22,16 @@ ascension:
       name: "Drake Marauder"
 
 attributes:
-  life_force: 114
+  life_force: 114.0
   strength: 1.02
   defense: 1.02
-  haste: 0.925
-  precision: 3.5
-  ferocity: 42.0
+  haste: 0.93
+  precision: 3.50
+  ferocity: 42.00
   stamina: 10.5
   flow: 10.5
   sorcery: 0.93
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: SWIFTNESS

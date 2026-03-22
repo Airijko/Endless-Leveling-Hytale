@@ -24,16 +24,16 @@ ascension:
       name: "Wraith Reaver"
 
 attributes:
-  life_force: 62
+  life_force: 51.5
   strength: 1.12
-  defense: 0.78
-  haste: 1.18
-  precision: 10.0
-  ferocity: 74.0
-  stamina: 10.0
-  flow: 18.0
+  defense: 0.76
+  haste: 1.16
+  precision: 7.35
+  ferocity: 55.12
+  stamina: 7.7
+  flow: 15.4
   sorcery: 1.12
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: SWIFTNESS

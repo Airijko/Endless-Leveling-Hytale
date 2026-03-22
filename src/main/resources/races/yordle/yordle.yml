@@ -22,16 +22,16 @@ ascension:
       name: "Yordle Trickster"
 
 attributes:
-  life_force: 52
+  life_force: 52.0
   strength: 0.81
   defense: 0.77
-  haste: 1.075
-  precision: 17.5
-  ferocity: 7.0
+  haste: 1.07
+  precision: 17.50
+  ferocity: 7.00
   stamina: 12.3
   flow: 31.5
   sorcery: 0.94
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: SWIFTNESS

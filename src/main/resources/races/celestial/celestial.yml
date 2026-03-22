@@ -22,16 +22,16 @@ ascension:
       name: "Celestial Arcanum"
 
 attributes:
-  life_force: 59
+  life_force: 59.0
   strength: 0.77
   defense: 0.94
-  haste: 0.875
-  precision: 3.5
-  ferocity: 28.0
+  haste: 0.88
+  precision: 3.50
+  ferocity: 28.00
   stamina: 5.6
   flow: 24.5
   sorcery: 1.06
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: MANA_REGEN

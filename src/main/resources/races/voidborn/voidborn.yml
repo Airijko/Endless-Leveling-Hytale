@@ -22,16 +22,16 @@ ascension:
       name: "Void Prowler"
 
 attributes:
-  life_force: 98
+  life_force: 98.0
   strength: 0.98
   defense: 0.85
-  haste: 0.9
-  precision: 7.0
-  ferocity: 35.0
+  haste: 0.90
+  precision: 7.00
+  ferocity: 35.00
   stamina: 8.4
   flow: 28.0
   sorcery: 0.98
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: MANA_REGEN

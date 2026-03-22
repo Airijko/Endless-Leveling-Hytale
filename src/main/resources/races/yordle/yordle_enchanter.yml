@@ -23,16 +23,16 @@ ascension:
       name: "Yordle Master"
 
 attributes:
-  life_force: 95
-  strength: 0.9
-  defense: 0.92
-  haste: 1.225
-  precision: 24.0
-  ferocity: 12.0
-  stamina: 22.0
-  flow: 58.0
-  sorcery: 1.18
-  discipline: 0
+  life_force: 57.3
+  strength: 0.89
+  defense: 0.85
+  haste: 1.18
+  precision: 19.29
+  ferocity: 7.72
+  stamina: 17.7
+  flow: 45.4
+  sorcery: 1.04
+  discipline: 0.0
 
 passives:
   - type: SWIFTNESS

@@ -22,16 +22,16 @@ ascension:
       name: "Golem Crusher"
 
 attributes:
-  life_force: 195
+  life_force: 195.0
   strength: 0.60
   defense: 1.11
-  haste: 0.6
-  precision: 0.0
-  ferocity: 0.0
+  haste: 0.60
+  precision: 0.00
+  ferocity: 0.00
   stamina: 14.0
   flow: 3.5
   sorcery: 0.68
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: RETALIATION

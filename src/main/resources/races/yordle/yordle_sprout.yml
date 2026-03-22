@@ -22,16 +22,16 @@ ascension:
       name: "Yordle Enchanter"
 
 attributes:
-  life_force: 70
+  life_force: 54.6
   strength: 0.85
-  defense: 0.85
-  haste: 1.15
-  precision: 20.0
-  ferocity: 9.0
-  stamina: 17.0
-  flow: 46.0
-  sorcery: 1.06
-  discipline: 0
+  defense: 0.81
+  haste: 1.12
+  precision: 18.38
+  ferocity: 7.35
+  stamina: 14.8
+  flow: 37.8
+  sorcery: 0.99
+  discipline: 0.0
 
 passives:
   - type: SWIFTNESS

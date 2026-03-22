@@ -24,16 +24,16 @@ ascension:
       name: "Void Reaver"
 
 attributes:
-  life_force: 140
-  strength: 1.18
-  defense: 0.94
-  haste: 0.96
-  precision: 11.0
-  ferocity: 64.0
-  stamina: 12.0
-  flow: 36.0
-  sorcery: 1.18
-  discipline: 0
+  life_force: 102.9
+  strength: 1.08
+  defense: 0.89
+  haste: 0.95
+  precision: 7.35
+  ferocity: 36.75
+  stamina: 9.2
+  flow: 30.8
+  sorcery: 1.08
+  discipline: 0.0
 
 passives:
   - type: MANA_REGEN

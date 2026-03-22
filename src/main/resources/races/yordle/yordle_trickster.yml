@@ -22,16 +22,16 @@ ascension:
       name: "Yordle Menace"
 
 attributes:
-  life_force: 68
-  strength: 0.95
-  defense: 0.8
-  haste: 1.15
-  precision: 27.0
-  ferocity: 18.0
-  stamina: 16.0
-  flow: 40.0
-  sorcery: 1.08
-  discipline: 0
+  life_force: 54.6
+  strength: 0.89
+  defense: 0.81
+  haste: 1.12
+  precision: 18.38
+  ferocity: 7.35
+  stamina: 13.5
+  flow: 34.7
+  sorcery: 1.03
+  discipline: 0.0
 
 passives:
   - type: SWIFTNESS

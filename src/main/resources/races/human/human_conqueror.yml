@@ -23,15 +23,15 @@ ascension:
       name: "Human Emperor"
 
 attributes:
-  life_force: 165
-  strength: 1.2
-  defense: 1.0
-  haste: 1.08
-  precision: 13.0
-  ferocity: 84.0
-  stamina: 14.0
-  flow: 22.0
-  discipline: 0
+  life_force: 108.0
+  strength: 1.03
+  defense: 0.94
+  haste: 1.10
+  precision: 7.72
+  ferocity: 38.59
+  stamina: 8.5
+  flow: 16.9
+  discipline: 0.0
 
 passives:
   - type: XP_BONUS

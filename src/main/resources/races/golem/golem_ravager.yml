@@ -24,16 +24,16 @@ ascension:
       name: "Golem Prime"
 
 attributes:
-  life_force: 380
-  strength: 1.36
-  defense: 1.5
-  haste: 0.73
-  precision: 12.0
-  ferocity: 32.0
-  stamina: 30.0
-  flow: 16.0
-  sorcery: 1.36
-  discipline: 0
+  life_force: 215.0
+  strength: 0.73
+  defense: 1.22
+  haste: 0.66
+  precision: 0.00
+  ferocity: 0.00
+  stamina: 16.9
+  flow: 4.2
+  sorcery: 0.82
+  discipline: 0.0
 
 passives:
   - type: RETALIATION

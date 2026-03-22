@@ -21,15 +21,15 @@ ascension:
       name: "Human Voyager"
 
 attributes:
-  life_force: 130
-  strength: 0.95
-  defense: 0.95
-  haste: 1.04
-  precision: 9.0
-  ferocity: 40.0
-  stamina: 11.0
-  flow: 20.0
-  discipline: 0
+  life_force: 107.8
+  strength: 0.89
+  defense: 0.89
+  haste: 1.05
+  precision: 7.35
+  ferocity: 36.75
+  stamina: 8.4
+  flow: 16.8
+  discipline: 0.0
 
 passives:
   - type: XP_BONUS

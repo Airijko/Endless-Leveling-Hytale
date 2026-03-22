@@ -22,16 +22,16 @@ ascension:
       name: "Vastaya Mystic"
 
 attributes: # Base Values
-  life_force: 81
+  life_force: 81.0
   strength: 0.98
   defense: 0.83
-  haste: 1.1
-  precision: 10.5
-  ferocity: 28.0
+  haste: 1.10
+  precision: 10.50
+  ferocity: 28.00
   stamina: 7.0
   flow: 21.0
   sorcery: 0.98
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: XP_BONUS

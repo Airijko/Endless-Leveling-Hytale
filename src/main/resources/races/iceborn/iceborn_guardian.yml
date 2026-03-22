@@ -22,16 +22,16 @@ ascension:
       name: "Iceborn Titan"
 
 attributes:
-  life_force: 160
-  strength: 1.12
-  defense: 1.08
-  haste: 0.98
-  precision: 12.0
-  ferocity: 24.0
-  stamina: 22.0
-  flow: 9.0
-  sorcery: 0.88
-  discipline: 0
+  life_force: 103.4
+  strength: 1.11
+  defense: 1.03
+  haste: 0.95
+  precision: 11.03
+  ferocity: 22.05
+  stamina: 15.4
+  flow: 7.7
+  sorcery: 0.89
+  discipline: 0.0
 
 passives:
   - type: HEALTH_REGEN

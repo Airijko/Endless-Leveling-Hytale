@@ -22,16 +22,16 @@ ascension:
       name: "Ascended Magus"
 
 attributes:
-  life_force: 98
+  life_force: 98.0
   strength: 1.02
   defense: 0.94
-  haste: 0.9
-  precision: 14.0
-  ferocity: 7.0
+  haste: 0.90
+  precision: 14.00
+  ferocity: 7.00
   stamina: 10.5
   flow: 14.0
   sorcery: 0.89
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: SPECIAL_CHARGE_BONUS

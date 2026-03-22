@@ -22,16 +22,16 @@ ascension:
       name: "Void Juggernaut"
 
 attributes:
-  life_force: 160
-  strength: 1.02
-  defense: 1.12
-  haste: 0.96
-  precision: 8.0
-  ferocity: 34.0
-  stamina: 11.0
-  flow: 34.0
-  sorcery: 1.02
-  discipline: 0
+  life_force: 107.8
+  strength: 1.03
+  defense: 0.94
+  haste: 0.95
+  precision: 7.35
+  ferocity: 36.75
+  stamina: 9.2
+  flow: 30.8
+  sorcery: 1.03
+  discipline: 0.0
 
 passives:
   - type: MANA_REGEN

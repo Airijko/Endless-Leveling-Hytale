@@ -22,16 +22,16 @@ ascension:
       name: "Ascended Divinity"
 
 attributes:
-  life_force: 220
-  strength: 1.525
-  defense: 1.26
-  haste: 1.03
-  precision: 28.0
-  ferocity: 22.0
-  stamina: 20.0
-  flow: 20.0
+  life_force: 108.0
+  strength: 1.23
+  defense: 1.04
+  haste: 0.99
+  precision: 15.44
+  ferocity: 7.72
+  stamina: 12.7
+  flow: 16.9
   sorcery: 1.08
-  discipline: 0
+  discipline: 0.0
 
 passives:
   - type: SPECIAL_CHARGE_BONUS

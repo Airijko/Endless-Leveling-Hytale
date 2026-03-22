@@ -24,16 +24,16 @@ ascension:
       name: "Alpha Dragon"
 
 attributes:
-  life_force: 150
-  strength: 1.18
-  defense: 1.0
-  haste: 1.075
-  precision: 9.0
-  ferocity: 90.0
-  stamina: 13.0
-  flow: 12.0
-  sorcery: 1.08
-  discipline: 0
+  life_force: 125.7
+  strength: 1.23
+  defense: 1.12
+  haste: 1.03
+  precision: 3.86
+  ferocity: 46.31
+  stamina: 12.7
+  flow: 12.7
+  sorcery: 1.13
+  discipline: 0.0
 
 passives:
   - type: SWIFTNESS

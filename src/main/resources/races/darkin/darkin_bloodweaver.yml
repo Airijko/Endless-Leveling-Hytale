@@ -22,16 +22,16 @@ ascension:
       name: "Darkin Bloodlord"
 
 attributes:
-  life_force: 95
-  strength: 1.05
-  defense: 0.78
-  haste: 1.075
-  precision: 6.0
-  ferocity: 60.0
-  stamina: 11.0
-  flow: 16.0
-  sorcery: 1.35
-  discipline: 0
+  life_force: 68.2
+  strength: 1.22
+  defense: 0.71
+  haste: 1.10
+  precision: 3.68
+  ferocity: 55.12
+  stamina: 9.7
+  flow: 7.7
+  sorcery: 0.94
+  discipline: 0.0
 
 passives:
   - type: HEALING_BONUS

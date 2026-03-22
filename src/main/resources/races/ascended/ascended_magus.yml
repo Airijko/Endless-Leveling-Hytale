@@ -22,16 +22,16 @@ ascension:
       name: "Ascended Archon"
 
 attributes:
-  life_force: 150
-  strength: 1.1
-  defense: 1.08
-  haste: 0.97
-  precision: 18.0
-  ferocity: 14.0
-  stamina: 15.0
-  flow: 28.0
-  sorcery: 1.36
-  discipline: 0
+  life_force: 102.9
+  strength: 1.12
+  defense: 0.99
+  haste: 0.95
+  precision: 14.70
+  ferocity: 7.35
+  stamina: 11.6
+  flow: 15.4
+  sorcery: 0.98
+  discipline: 0.0
 
 passives:
   - type: SPECIAL_CHARGE_BONUS

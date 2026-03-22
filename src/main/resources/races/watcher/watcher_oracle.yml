@@ -23,16 +23,16 @@ ascension:
       name: "Watcher Arbiter"
 
 attributes:
-  life_force: 170
-  strength: 0.8
-  defense: 0.98
-  haste: 0.99
-  precision: 16.0
-  ferocity: 30.0
-  stamina: 8.0
-  flow: 62.0
-  sorcery: 1.28
-  discipline: 0
+  life_force: 86.0
+  strength: 0.75
+  defense: 0.85
+  haste: 0.97
+  precision: 11.58
+  ferocity: 23.15
+  stamina: 6.0
+  flow: 50.4
+  sorcery: 1.12
+  discipline: 0.0
 
 passives:
   - type: MANA_REGEN

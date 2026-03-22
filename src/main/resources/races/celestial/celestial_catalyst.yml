@@ -22,16 +22,16 @@ ascension:
       name: "Celestial Supreme"
 
 attributes:
-  life_force: 110
-  strength: 0.88
-  defense: 1.05
-  haste: 0.99
-  precision: 6.0
-  ferocity: 38.0
-  stamina: 9.0
-  flow: 55.0
-  sorcery: 1.38
-  discipline: 0
+  life_force: 65.0
+  strength: 0.85
+  defense: 1.04
+  haste: 0.97
+  precision: 3.86
+  ferocity: 30.87
+  stamina: 8.1
+  flow: 35.3
+  sorcery: 1.17
+  discipline: 0.0
 
 passives:
   - type: MANA_REGEN

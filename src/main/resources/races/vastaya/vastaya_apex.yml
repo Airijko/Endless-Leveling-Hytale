@@ -27,16 +27,16 @@ ascension:
   next_paths: []
 
 attributes: # Base Values
-  life_force: 220
-  strength: 1.79
-  defense: 1.16
-  haste: 1.25
-  precision: 31
-  ferocity: 93
-  stamina: 19
-  flow: 57
-  sorcery: 1.825
-  discipline: 0
+  life_force: 102.7
+  strength: 1.54
+  defense: 1.05
+  haste: 1.39
+  precision: 13.31
+  ferocity: 35.50
+  stamina: 11.0
+  flow: 33.0
+  sorcery: 1.54
+  discipline: 0.0
 
 passives:
   - type: XP_BONUS

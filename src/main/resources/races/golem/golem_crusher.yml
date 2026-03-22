@@ -24,16 +24,16 @@ ascension:
       name: "Golem Ravager"
 
 attributes:
-  life_force: 300
-  strength: 1.1
-  defense: 1.35
-  haste: 0.67
-  precision: 8.0
-  ferocity: 18.0
-  stamina: 24.0
-  flow: 12.0
-  sorcery: 1.1
-  discipline: 0
+  life_force: 204.8
+  strength: 0.66
+  defense: 1.17
+  haste: 0.63
+  precision: 0.00
+  ferocity: 0.00
+  stamina: 15.4
+  flow: 3.9
+  sorcery: 0.75
+  discipline: 0.0
 
 passives:
   - type: RETALIATION

@@ -24,16 +24,16 @@ ascension:
       name: "Dragon Tyrant"
 
 attributes:
-  life_force: 125
-  strength: 1.08
-  defense: 0.96
-  haste: 1.0
-  precision: 5.5
-  ferocity: 65.0
-  stamina: 11.0
-  flow: 10.5
-  sorcery: 0.98
-  discipline: 0
+  life_force: 119.7
+  strength: 1.12
+  defense: 1.07
+  haste: 0.98
+  precision: 3.68
+  ferocity: 44.10
+  stamina: 11.6
+  flow: 11.6
+  sorcery: 1.02
+  discipline: 0.0
 
 passives:
   - type: SWIFTNESS

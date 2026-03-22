@@ -22,16 +22,16 @@ ascension:
       name: "Watcher Oracle"
 
 attributes:
-  life_force: 120
-  strength: 0.74
-  defense: 0.86
-  haste: 0.93
-  precision: 13.0
-  ferocity: 25.0
-  stamina: 6.0
-  flow: 50.0
-  sorcery: 1.12
-  discipline: 0
+  life_force: 81.9
+  strength: 0.71
+  defense: 0.81
+  haste: 0.92
+  precision: 11.03
+  ferocity: 22.05
+  stamina: 5.0
+  flow: 42.0
+  sorcery: 1.07
+  discipline: 0.0
 
 passives:
   - type: MANA_REGEN
