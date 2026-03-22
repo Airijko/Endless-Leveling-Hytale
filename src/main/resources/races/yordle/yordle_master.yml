@@ -11,7 +11,7 @@ ascension:
   path: "hybrid"
   final_form: true
   requirements:
-    required_prestige: 10
+    required_prestige: 18
     min_skill_levels:
       flow: 200
       stamina: 200

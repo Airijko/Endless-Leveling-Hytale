@@ -11,7 +11,7 @@ ascension:
   path: "crit"
   final_form: false
   requirements:
-    required_prestige: 5
+    required_prestige: 9
     min_skill_levels:
       sorcery: 250
       ferocity: 250

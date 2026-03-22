@@ -11,7 +11,7 @@ ascension:
   path: "offense"
   final_form: false
   requirements:
-    required_prestige: 2
+    required_prestige: 3
     min_skill_levels:
       ferocity: 125
     min_any_skill_levels:

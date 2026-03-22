@@ -20,10 +20,10 @@ passives:
   - type: BLADE_DANCE
     category: ON_HIT
     display_name: "Blade Dance"
-    value: 0.10
+    value: 0.09
     duration: 5
     max_stacks: 5
-    damage_bonus_per_stack: 0.05
+    damage_bonus_per_stack: 0.06
     trigger_on_hit: true
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: haste

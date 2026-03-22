@@ -10,7 +10,7 @@ ascension:
   path: "hybrid"
   final_form: true
   requirements:
-    required_prestige: 10
+    required_prestige: 18
     min_skill_levels:
       discipline: 200
       haste: 150

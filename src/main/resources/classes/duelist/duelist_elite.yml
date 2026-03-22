@@ -20,7 +20,7 @@ passives:
   - type: BLADE_DANCE
     category: ON_HIT
     display_name: "Blade Dance"
-    value: 0.10
+    value: 0.075
     duration: 5
     max_stacks: 5
     damage_bonus_per_stack: 0.05

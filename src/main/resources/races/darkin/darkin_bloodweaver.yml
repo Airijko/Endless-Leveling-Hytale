@@ -11,7 +11,7 @@ ascension:
   path: "sorcery"
   final_form: false
   requirements:
-    required_prestige: 2
+    required_prestige: 3
     min_skill_levels:
       sorcery: 150
       life_force: 100

@@ -198,7 +198,8 @@ $C.@PageOverlay {
                                                     LayoutMode: Left;
 
                                                     Group #DetailColumnLeft {
-                                                        LayoutMode: Top;
+                                                        LayoutMode: TopScrolling;
+                                                        ScrollbarStyle: $C.@DefaultScrollbarStyle;
                                                         FlexWeight: 1;
                                                         Background: #050910(0.85);
                                                         Padding: (Full: 16);

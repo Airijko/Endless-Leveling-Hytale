@@ -11,7 +11,7 @@ ascension:
   path: "strength"
   final_form: false
   requirements:
-    required_prestige: 2
+    required_prestige: 3
     min_skill_levels:
       life_force: 125
       strength: 125

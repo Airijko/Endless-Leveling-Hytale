@@ -11,7 +11,7 @@ ascension:
   path: "defense"
   final_form: false
   requirements:
-    required_prestige: 2
+    required_prestige: 3
     min_skill_levels:
       life_force: 125
       stamina: 125
