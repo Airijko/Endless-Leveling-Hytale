@@ -131,6 +131,13 @@ public final class LoggingManager {
         if (trimmed.isEmpty()) {
             return null;
         }
+        String lowered = trimmed.toLowerCase();
+        if ("mob_common_offense".equals(lowered)) {
+            return LOGGER_PREFIX + ".systems.PlayerDefenseSystem";
+        }
+        if ("mob_common_defense".equals(lowered)) {
+            return LOGGER_PREFIX + ".systems.PlayerCombatSystem";
+        }
         // Allow shorthand like "augments" or ".systems"; fall back to full package if
         // provided.
         if (trimmed.startsWith(LOGGER_PREFIX)) {

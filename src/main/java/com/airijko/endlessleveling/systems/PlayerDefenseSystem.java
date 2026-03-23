@@ -219,15 +219,14 @@ public class PlayerDefenseSystem extends DamageEventSystem {
 									onHit.trueDamageBonus());
 							if (Math.abs(onHit.damage() - originalDamage) > 0.0001f || appliedTrueDamage > 0f) {
 								LOGGER.atInfo().log(
-										"MobOnHitAugments attacker=%d defender=%s base=%.3f attr=%.3f crit=%s final=%.3f true=%.3f augments=%s",
+										"MobOnHitAugments attacker=%d defender=%s base=%.3f attr=%.3f crit=%s final=%.3f true=%.3f",
 										attackerRef.getIndex(),
 										defenderPlayer.getUsername(),
 										originalDamage,
 										damageAfterAttributes,
 										mobCrit,
 										onHit.damage(),
-										appliedTrueDamage,
-										attackerAugments);
+										appliedTrueDamage);
 							}
 						}
 					}

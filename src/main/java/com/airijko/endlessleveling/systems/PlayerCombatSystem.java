@@ -66,7 +66,7 @@ public class PlayerCombatSystem extends DamageEventSystem {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final boolean PASSIVE_DEBUG = Boolean
             .parseBoolean(System.getProperty("el.passive.debug", "true"));
-        private static final String DEBUG_SECTION_MOB_COMMON_DEFENSE = "mob_common_defense";
+    private static final String DEBUG_SECTION_MOB_COMMON_DEFENSE = "mob_common_defense";
     public static final MetaKey<Boolean> AUGMENT_DOT_DAMAGE = Damage.META_REGISTRY
             .registerMetaObject(data -> Boolean.FALSE);
     public static final MetaKey<Boolean> AUGMENT_PROC_DAMAGE = Damage.META_REGISTRY
@@ -162,30 +162,30 @@ public class PlayerCombatSystem extends DamageEventSystem {
 
         Player player = EntityRefUtil.tryGetComponent(commandBuffer, attackerRef, Player.getComponentType());
         ItemStack weapon = player != null && player.getInventory() != null
-                ? player.getInventory().getItemInHand()
-                : null;
+            ? player.getInventory().getItemInHand()
+            : null;
 
         EntityStatMap attackerStats = EntityRefUtil.tryGetComponent(commandBuffer, attackerRef,
-                EntityStatMap.getComponentType());
+            EntityStatMap.getComponentType());
         EntityStatMap targetStats = EntityRefUtil.tryGetComponent(commandBuffer, targetRef,
-                EntityStatMap.getComponentType());
+            EntityStatMap.getComponentType());
 
         boolean bypassOutgoingAugmentMath = shouldBypassOutgoingAugmentMath(damage);
         CombatHookProcessor.OutgoingResult result = bypassOutgoingAugmentMath
-                ? new CombatHookProcessor.OutgoingResult(damage.getAmount(), false, 0.0D)
-                : combatHookProcessor.processOutgoing(
-                        new CombatHookProcessor.OutgoingContext(
-                                playerData,
-                                attackerPlayer,
-                                attackerRef,
-                                targetRef,
-                                commandBuffer,
-                                damage,
-                                weapon,
-                                runtimeState,
-                                archetypeSnapshot,
-                                attackerStats,
-                                targetStats));
+            ? new CombatHookProcessor.OutgoingResult(damage.getAmount(), false, 0.0D)
+            : combatHookProcessor.processOutgoing(
+                new CombatHookProcessor.OutgoingContext(
+                    playerData,
+                    attackerPlayer,
+                    attackerRef,
+                    targetRef,
+                    commandBuffer,
+                    damage,
+                    weapon,
+                    runtimeState,
+                    archetypeSnapshot,
+                    attackerStats,
+                    targetStats));
 
         float adjusted = Math.max(0.0f, result.finalDamage());
         float incomingBeforeDefense = adjusted;
@@ -197,23 +197,22 @@ public class PlayerCombatSystem extends DamageEventSystem {
         long now = System.currentTimeMillis();
         TrueDamageSettings trueDamageSettings = resolveTrueDamageSettings(archetypeSnapshot);
         boolean trueEdgeReady = isTrueEdgeOffCooldown(runtimeState, now, trueDamageSettings);
-
         TrueEdgeComputation trueEdge = TrueEdgeComputation.none();
         adjusted = incomingBeforeDefense;
 
         if (mobLevelingManager != null
-                && mobLevelingManager.isMobLevelingEnabled()
-                && mobLevelingManager.isMobDefenseScalingEnabled()) {
+            && mobLevelingManager.isMobLevelingEnabled()
+            && mobLevelingManager.isMobDefenseScalingEnabled()) {
             if (!targetIsPlayer) {
-                mobLevel = mobLevelingManager.resolveMobLevel(targetRef, commandBuffer);
-                reduction = mobLevelingManager.getMobDefenseReductionForLevels(
-                        targetRef,
-                        commandBuffer,
-                        mobLevel,
-                        playerLevel);
-                if (reduction != 0.0D) {
-                    adjusted = (float) (adjusted * (1.0D - reduction));
-                }
+            mobLevel = mobLevelingManager.resolveMobLevel(targetRef, commandBuffer);
+            reduction = mobLevelingManager.getMobDefenseReductionForLevels(
+                targetRef,
+                commandBuffer,
+                mobLevel,
+                playerLevel);
+            if (reduction != 0.0D) {
+                adjusted = (float) (adjusted * (1.0D - reduction));
+            }
             }
         }
 
@@ -230,16 +229,16 @@ public class PlayerCombatSystem extends DamageEventSystem {
                         reduction,
                         targetIsPlayer)
                 : TrueEdgeComputation.none();
-                if (!bypassOutgoingAugmentMath && trueEdgeReady && trueEdge.triggered() && trueDamageSettings.sourceType() != null) {
-                    if (trueDamageSettings.sourceType() == ArchetypePassiveType.TRUE_BOLTS) {
-                        FirstStrikeTriggerEffects.play(targetRef, commandBuffer);
-                    }
-                    logPassiveTrigger(playerData,
-                        trueDamageSettings.sourceType(),
-                        "bonus_true=%.2f true=%.2f",
-                        trueEdge.bonusTrueDamageFromPercent(),
-                        trueEdge.reducedTrueDamage());
-                }
+        if (!bypassOutgoingAugmentMath && trueEdgeReady && trueEdge.triggered() && trueDamageSettings.sourceType() != null) {
+            if (trueDamageSettings.sourceType() == ArchetypePassiveType.TRUE_BOLTS) {
+                FirstStrikeTriggerEffects.play(targetRef, commandBuffer);
+            }
+            logPassiveTrigger(playerData,
+                    trueDamageSettings.sourceType(),
+                    "bonus_true=%.2f true=%.2f",
+                    trueEdge.bonusTrueDamageFromPercent(),
+                    trueEdge.reducedTrueDamage());
+        }
         if (!bypassOutgoingAugmentMath
                 && trueEdgeReady
                 && trueEdge.triggered()
@@ -249,6 +248,7 @@ public class PlayerCombatSystem extends DamageEventSystem {
                     trueDamageSettings,
                     now + trueDamageSettings.internalCooldownMillis());
         }
+
         double reducedAugmentTrueDamage = bypassOutgoingAugmentMath
                 ? 0.0D
                 : applyLevelDifferenceReductionToTrueDamage(
@@ -353,8 +353,8 @@ public class PlayerCombatSystem extends DamageEventSystem {
                         augmentIds,
                         plugin.getAugmentManager(),
                         plugin.getAugmentRuntimeManager());
-                LOGGER.atInfo().log("[MOB_OVERRIDE_AUGMENTS] target=%d uuid=%s augments=%s",
-                        targetRef.getIndex(), mobUuid, augmentIds);
+                LOGGER.atInfo().log("[MOB_OVERRIDE_AUGMENTS] target=%d uuid=%s augmentCount=%d",
+                    targetRef.getIndex(), mobUuid, augmentIds.size());
             }
         }
 
@@ -389,8 +389,12 @@ public class PlayerCombatSystem extends DamageEventSystem {
                 afterDamageTaken);
 
             if (finalDamage != incomingDamage || Math.abs(afterDefense - incomingDamage) > 0.0001f) {
-                LOGGER.atInfo().log("MobAugments target=%d damage %.3f -> %.3f (afterDefense=%.3f, defense=%.2f%%) augments=%s",
-                    targetRef.getIndex(), incomingDamage, finalDamage, afterDefense, defensePercent, augmentIds);
+                LOGGER.atInfo().log("MobAugments target=%d damage %.3f -> %.3f (afterDefense=%.3f, defense=%.2f%%)",
+                    targetRef.getIndex(),
+                    incomingDamage,
+                    finalDamage,
+                    afterDefense,
+                    defensePercent);
         }
         return Math.max(0.0f, finalDamage);
     }
