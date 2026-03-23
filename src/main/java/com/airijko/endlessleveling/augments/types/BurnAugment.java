@@ -148,8 +148,13 @@ public final class BurnAugment extends Augment
         var burnState = context.getRuntimeState().getState(ID);
         boolean active = burnState.getExpiresAt() > now;
         if (!active) {
-            clearPulse(context.getPlayerRef(), context.getCommandBuffer());
-            if (burnState.getStacks() > 0) {
+            boolean hadActivePulse = clearPulse(context.getPlayerRef(), context.getCommandBuffer());
+            boolean hadActiveState = burnState.getStacks() > 0;
+            if (!hadActivePulse && !hadActiveState) {
+                return;
+            }
+
+            if (hadActiveState) {
                 PlayerRef playerRef = AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getPlayerRef());
                 if (playerRef != null && playerRef.isValid()) {
                     AugmentUtils.sendAugmentMessage(playerRef,
@@ -157,6 +162,7 @@ public final class BurnAugment extends Augment
                 }
                 burnState.setStacks(0);
             }
+
             AugmentUtils.setAttributeBonus(context.getRuntimeState(), ID + "_life_force", SkillAttributeType.LIFE_FORCE,
                     0.0D, 0L);
             return;
@@ -384,11 +390,11 @@ public final class BurnAugment extends Augment
                 Math.min(PULSE_RING_MAX_LAYER_SPACING, targetRadius / (layerCount * 6.0D)));
     }
 
-    private void clearPulse(Ref<EntityStore> sourceRef, CommandBuffer<EntityStore> commandBuffer) {
+    private boolean clearPulse(Ref<EntityStore> sourceRef, CommandBuffer<EntityStore> commandBuffer) {
         if (sourceRef == null || commandBuffer == null) {
-            return;
+            return false;
         }
-        ACTIVE_PULSES.remove(resolvePulseKey(sourceRef, commandBuffer));
+        return ACTIVE_PULSES.remove(resolvePulseKey(sourceRef, commandBuffer)) != null;
     }
 
     private String resolvePulseKey(Ref<EntityStore> sourceRef, CommandBuffer<EntityStore> commandBuffer) {

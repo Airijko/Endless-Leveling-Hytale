@@ -221,8 +221,14 @@ public final class FrozenDomainAugment extends Augment
         var augmentState = context.getRuntimeState().getState(ID);
         boolean active = augmentState.getExpiresAt() > now;
         if (!active) {
-            clearTriggerPulse(context.getPlayerRef(), context.getCommandBuffer());
-            if (augmentState.getStacks() > 0) {
+            boolean hadTriggerPulse = clearTriggerPulse(context.getPlayerRef(), context.getCommandBuffer());
+            boolean hadActiveState = augmentState.getStacks() > 0;
+            boolean hasLingeringFrozenTargets = !ACTIVE_FROST.isEmpty();
+            if (!hadTriggerPulse && !hadActiveState && !hasLingeringFrozenTargets) {
+                return;
+            }
+
+            if (hadActiveState) {
                 PlayerRef playerRef = AugmentUtils.getPlayerRef(context.getCommandBuffer(), context.getPlayerRef());
                 if (playerRef != null && playerRef.isValid()) {
                     AugmentUtils.sendAugmentMessage(playerRef,
@@ -234,7 +240,9 @@ public final class FrozenDomainAugment extends Augment
                     0.0D, 0L);
             AugmentUtils.setAttributeBonus(context.getRuntimeState(), ID + "_stolen_haste", SkillAttributeType.HASTE,
                     0.0D, 0L);
-            cleanupExpired(context.getCommandBuffer(), now);
+            if (hasLingeringFrozenTargets) {
+                cleanupExpired(context.getCommandBuffer(), now);
+            }
             return;
         }
 
@@ -574,11 +582,11 @@ public final class FrozenDomainAugment extends Augment
         return null;
     }
 
-    private void clearTriggerPulse(Ref<EntityStore> sourceRef, CommandBuffer<EntityStore> commandBuffer) {
+    private boolean clearTriggerPulse(Ref<EntityStore> sourceRef, CommandBuffer<EntityStore> commandBuffer) {
         if (sourceRef == null || commandBuffer == null) {
-            return;
+            return false;
         }
-        ACTIVE_PULSES.remove(keyFor(sourceRef, commandBuffer));
+        return ACTIVE_PULSES.remove(keyFor(sourceRef, commandBuffer)) != null;
     }
 
     private void startTriggerPulse(Ref<EntityStore> sourceRef,

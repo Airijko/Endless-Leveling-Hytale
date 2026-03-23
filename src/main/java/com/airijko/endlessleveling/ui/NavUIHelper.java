@@ -11,10 +11,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import com.airijko.endlessleveling.EndlessLeveling;
+import com.airijko.endlessleveling.leveling.PartyManager;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
+import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.command.system.CommandManager;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.ui.Value;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
@@ -22,6 +25,7 @@ import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.airijko.endlessleveling.util.Lang;
+import com.hypixel.hytale.server.core.universe.Universe;
 
 import static com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType.Activating;
 import static com.hypixel.hytale.server.core.ui.builder.EventData.of;
@@ -78,6 +82,15 @@ public final class NavUIHelper {
                 ui.set("#NavClasses.Text", Lang.tr(playerRef.getUuid(), "ui.nav.classes", "CLASSES"));
                 ui.set("#NavAugments.Text", Lang.tr(playerRef.getUuid(), "ui.nav.augments", "AUGMENTS"));
                 ui.set("#NavLeaderboards.Text", Lang.tr(playerRef.getUuid(), "ui.nav.leaderboards", "LEADERBOARDS"));
+                ui.set("#NavParty.Text", Lang.tr(playerRef.getUuid(), "ui.nav.party", "PARTY"));
+
+                boolean partyAvailable = false;
+                EndlessLeveling plugin = EndlessLeveling.getInstance();
+                if (plugin != null && plugin.getPartyManager() != null && plugin.getPartyManager().isAvailable()) {
+                        partyAvailable = true;
+                }
+                ui.set("#NavParty.Visible", partyAvailable);
+
                 ui.set("#NavSupport.Text", Lang.tr(playerRef.getUuid(), "ui.nav.support", "SUPPORT"));
                 ui.set("#NavSettings.Text", Lang.tr(playerRef.getUuid(), "ui.nav.settings", "SETTINGS"));
                 ui.set("#NavVersion.Text", NAV_VERSION);
@@ -198,6 +211,7 @@ public final class NavUIHelper {
                 setNavButtonSelected(ui, "#NavRaces", "races".equalsIgnoreCase(activeNav));
                 setNavButtonSelected(ui, "#NavClasses", "classes".equalsIgnoreCase(activeNav));
                 setNavButtonSelected(ui, "#NavLeaderboards", "leaderboards".equalsIgnoreCase(activeNav));
+                setNavButtonSelected(ui, "#NavParty", "party".equalsIgnoreCase(activeNav));
                 setNavButtonSelected(ui, "#NavSupport", "support".equalsIgnoreCase(activeNav));
                 setNavButtonSelected(ui, "#NavSettings", "settings".equalsIgnoreCase(activeNav));
         }
@@ -217,6 +231,7 @@ public final class NavUIHelper {
                 events.addEventBinding(Activating, "#NavSkills", of("Action", "nav:skills"), false);
                 events.addEventBinding(Activating, "#NavAugments", of("Action", "nav:augments"), false);
                 events.addEventBinding(Activating, "#NavLeaderboards", of("Action", "nav:leaderboards"), false);
+                events.addEventBinding(Activating, "#NavParty", of("Action", "nav:party"), false);
                 events.addEventBinding(Activating, "#NavSupport", of("Action", "nav:support"), false);
                 events.addEventBinding(Activating, "#NavSettings", of("Action", "nav:settings"), false);
         }
@@ -267,6 +282,11 @@ public final class NavUIHelper {
                         case "leaderboards" -> player.getPageManager()
                                         .openCustomPage(ref, store, new LeaderboardsUIPage(playerRef,
                                                         CustomPageLifetime.CanDismiss));
+                        case "party" -> {
+                                if (!openPartyGui(playerRef)) {
+                                        playerRef.sendMessage(Message.raw("PartyPro is not available or cannot be opened right now.").color("#ff6666"));
+                                }
+                        }
                         case "settings" -> player.getPageManager()
                                         .openCustomPage(ref, store,
                                                         new SettingsUIPage(playerRef, CustomPageLifetime.CanDismiss));
@@ -280,6 +300,72 @@ public final class NavUIHelper {
                 }
 
                 return true;
+        }
+
+        private static boolean openPartyGui(@Nonnull PlayerRef playerRef) {
+                if (playerRef == null) {
+                        return false;
+                }
+
+                EndlessLeveling plugin = EndlessLeveling.getInstance();
+                if (plugin == null) {
+                        return false;
+                }
+
+                PartyManager partyManager = plugin.getPartyManager();
+                if (partyManager == null || !partyManager.isAvailable()) {
+                        return false;
+                }
+
+                try {
+                        // Primary path: dispatch as player through the server command manager.
+                        CommandManager.get().handleCommand(playerRef, "p");
+                        return true;
+                } catch (Exception ignored) {
+                }
+
+                if (runCommandAsPlayer(playerRef, "p")) {
+                        return true;
+                }
+
+                return runCommandAsPlayer(playerRef, "p");
+        }
+
+        private static boolean runCommandAsPlayer(@Nonnull PlayerRef playerRef, @Nonnull String command) {
+                if (playerRef == null || command == null || command.isBlank()) {
+                        return false;
+                }
+
+                String[] candidates = new String[] {"executeCommand", "dispatchCommand", "runCommand", "execute"};
+                for (String candidate : candidates) {
+                        try {
+                                var method = playerRef.getClass().getMethod(candidate, String.class);
+                                method.setAccessible(true);
+                                Object result = method.invoke(playerRef, command);
+                                if (result == null || Boolean.TRUE.equals(result)) {
+                                        return true;
+                                }
+                        } catch (NoSuchMethodException ignored) {
+                        } catch (Exception ignored) {
+                        }
+                }
+
+                Object universe = Universe.get();
+                if (universe != null) {
+                        for (String candidate : candidates) {
+                                try {
+                                        var method = universe.getClass().getMethod(candidate, PlayerRef.class, String.class);
+                                        method.setAccessible(true);
+                                        Object result = method.invoke(universe, playerRef, command);
+                                        if (result == null || Boolean.TRUE.equals(result)) {
+                                                return true;
+                                        }
+                                } catch (NoSuchMethodException ignored) {
+                                } catch (Exception ignored) {
+                                }
+                        }
+                }
+                return false;
         }
 
         private static String resolveVersion() {

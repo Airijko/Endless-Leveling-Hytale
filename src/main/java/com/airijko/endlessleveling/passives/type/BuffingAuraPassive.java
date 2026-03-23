@@ -48,6 +48,10 @@ public final class BuffingAuraPassive {
     private BuffingAuraPassive() {
     }
 
+    public static long pulseIntervalMillis() {
+        return PULSE_INTERVAL_MILLIS;
+    }
+
     public static void pulse(PlayerData sourcePlayerData,
             Ref<EntityStore> sourceRef,
             CommandBuffer<EntityStore> commandBuffer,

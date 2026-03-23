@@ -23,8 +23,8 @@ World_Overrides:
       Player_Level_Scaling_Difference:
         Range: 20
       Defense_Max_Difference:
-        At_Positive_Max_Difference: 0.3
-        Above_Positive_Max_Difference: 0.6
+        At_Positive_Max_Difference: 0.4
+        Above_Positive_Max_Difference: 0.8
     Mob_Augments:
       Enabled: true
       Base_High_Tier:

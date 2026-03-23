@@ -113,6 +113,10 @@
     @LeftNavButton #NavLeaderboards {
       Text: "LEADERBOARDS";
     }
+
+    @LeftNavButton #NavParty {
+      Text: "PARTY";
+    }
   }
 
   Group { FlexWeight: 1; }

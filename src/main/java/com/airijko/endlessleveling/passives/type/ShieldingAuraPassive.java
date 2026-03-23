@@ -46,6 +46,10 @@ public final class ShieldingAuraPassive {
     private ShieldingAuraPassive() {
     }
 
+    public static long pulseIntervalMillis() {
+        return PULSE_INTERVAL_MILLIS;
+    }
+
     public static void pulse(PlayerData sourcePlayerData,
             Ref<EntityStore> sourceRef,
             CommandBuffer<EntityStore> commandBuffer,

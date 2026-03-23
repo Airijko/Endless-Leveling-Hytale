@@ -15,6 +15,7 @@ import com.airijko.endlessleveling.augments.MobAugmentExecutor;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager;
 import com.airijko.endlessleveling.augments.AugmentUnlockManager;
 import com.airijko.endlessleveling.compatibility.NameplateBuilderCompatibility;
+import com.airijko.endlessleveling.commands.CommandRegistrar;
 import com.airijko.endlessleveling.listeners.OpenPlayerHudListener;
 import com.airijko.endlessleveling.listeners.PartyListener;
 import com.airijko.endlessleveling.listeners.PlayerDataListener;
@@ -400,11 +401,12 @@ public class EndlessLeveling extends JavaPlugin {
         passiveManager = new PassiveManager(configManager);
         eventHookManager = new EventHookManager(new ConfigManager(filesManager, filesManager.getEventsFile()));
         augmentManager = new AugmentManager(filesManager.getAugmentsFolder().toPath(), filesManager, configManager);
+        augmentManager.load();
         augmentRuntimeManager = new AugmentRuntimeManager();
         mobAugmentExecutor = new MobAugmentExecutor();
         uiTitleIntegrityGuard = new UiTitleIntegrityGuard();
         applyPartnerBrandingInternal(DEFAULT_BRAND_NAME, DEFAULT_COMMAND_PREFIX, DEFAULT_MESSAGE_PREFIX, null,
-            null, null);
+                null, null);
         skillManager = new SkillManager(filesManager,
                 classManager,
                 playerAttributeManager,
@@ -417,7 +419,7 @@ public class EndlessLeveling extends JavaPlugin {
         ConfigManager levelingConfigManager = new ConfigManager(filesManager, filesManager.getLevelingFile());
         augmentUnlockManager = new AugmentUnlockManager(configManager, levelingConfigManager, augmentManager,
                 playerDataManager,
-            classManager,
+                classManager,
                 skillManager,
                 archetypePassiveManager);
         augmentSyncValidator = new AugmentSyncValidator(playerDataManager, augmentUnlockManager);
@@ -471,7 +473,7 @@ public class EndlessLeveling extends JavaPlugin {
             this.getEventRegistry().registerGlobal((Class) eventClass, luckDoubleDropSystem::onInventoryChangeCompat);
             LOGGER.atInfo().log("Registered inventory change listener using event class %s", eventClass.getName());
         }, () -> LOGGER.atWarning().log(
-            "No supported inventory change event class was found; luck double-drop inventory listener disabled."));
+                "No supported inventory change event class was found; luck double-drop inventory listener disabled."));
         this.getEntityStoreRegistry().registerSystem(new BreakBlockEntitySystem(luckDoubleDropSystem));
         this.getEntityStoreRegistry().registerSystem(new MobDropTaggingSystem(luckDoubleDropSystem));
         this.getEntityStoreRegistry()
@@ -493,8 +495,8 @@ public class EndlessLeveling extends JavaPlugin {
         this.getEntityStoreRegistry().registerSystem(movementHasteSystem);
         this.getEntityStoreRegistry()
                 .registerSystem(new PlayerDefenseSystem(playerDataManager, skillManager, passiveManager,
-                archetypePassiveManager, augmentExecutor, mobAugmentExecutor, mobLevelingManager,
-                movementHasteSystem));
+                        archetypePassiveManager, augmentExecutor, mobAugmentExecutor, mobLevelingManager,
+                        movementHasteSystem));
         this.getEntityStoreRegistry()
                 .registerSystem(new PassiveRegenSystem(playerDataManager, passiveManager, archetypePassiveManager,
                         skillManager, augmentRuntimeManager, augmentExecutor));
@@ -510,19 +512,15 @@ public class EndlessLeveling extends JavaPlugin {
         this.getEntityStoreRegistry().registerSystem(uiIntegrityAlertSystem);
         this.getEntityStoreRegistry().registerSystem(new WitherEffectSystem());
 
-        // Register commands
-        this.getCommandRegistry().registerCommand(new EndlessLevelingCommand());
-        this.getCommandRegistry().registerCommand(new ProfileCommand());
-        if (partyManager.isAvailable()) {
-            this.getCommandRegistry().registerCommand(new PartyCommand());
-        }
-        this.getCommandRegistry().registerCommand(new RaceCommand(raceManager, playerDataManager));
-        this.getCommandRegistry().registerCommand(new ClassCommand(classManager, playerDataManager));
-    this.getCommandRegistry().registerCommand(new AugmentCommand());
-
-        if (augmentManager != null) {
-            augmentManager.load();
-        }
+        // Register commands via helper class to keep main class clean.
+        String commandRoot = CommandRegistrar.registerCommands(
+                this.getCommandRegistry(),
+            this.getEventRegistry(),
+                partyManager,
+                raceManager,
+                classManager,
+                playerDataManager,
+                augmentManager);
 
         if (augmentSyncValidator != null) {
             augmentSyncValidator.auditAndNotify();

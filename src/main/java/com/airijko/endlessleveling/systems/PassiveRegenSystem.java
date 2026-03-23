@@ -775,19 +775,34 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             @Nonnull EntityStatMap statMap,
             @Nonnull ArchetypePassiveSnapshot archetypeSnapshot,
             @Nonnull PassiveRuntimeState runtimeState) {
+        if (archetypeSnapshot.getValue(ArchetypePassiveType.HEALING_AURA) <= 0.0D) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
         long beforePulse = runtimeState.getPartyMendingLastPulseMillis();
+        if (beforePulse > 0L && now - beforePulse < HealingAuraPassive.pulseIntervalMillis()) {
+            return;
+        }
+
         HealingAuraPassive.pulse(playerData,
                 ref,
                 commandBuffer,
                 statMap,
                 archetypeSnapshot,
                 runtimeState);
-        if (runtimeState.getPartyMendingLastPulseMillis() > beforePulse) {
+
+        long afterPulse = runtimeState.getPartyMendingLastPulseMillis();
+        if (afterPulse > beforePulse) {
             logPassiveTrigger(playerData,
                 ArchetypePassiveType.HEALING_AURA,
                 "pulse_at=%d",
-                runtimeState.getPartyMendingLastPulseMillis());
+                afterPulse);
+            return;
         }
+
+        // Throttle paused/no-heal/no-targets paths to pulse cadence.
+        runtimeState.setPartyMendingLastPulseMillis(now);
     }
 
     private void applyPartyShieldingAura(@Nonnull PlayerData playerData,
@@ -796,20 +811,51 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             @Nonnull EntityStatMap statMap,
             @Nonnull ArchetypePassiveSnapshot archetypeSnapshot,
             @Nonnull PassiveRuntimeState runtimeState) {
+        long now = System.currentTimeMillis();
+        boolean hasShieldingAuraPassive = archetypeSnapshot.getValue(ArchetypePassiveType.SHIELDING_AURA) > 0.0D;
+        boolean hasShieldingAuraState = runtimeState.getShieldingAuraShieldAmount() > 0.0D
+                || runtimeState.getShieldingAuraShieldExpiresAt() > 0L
+                || runtimeState.getShieldingAuraActiveUntil() > 0L
+                || runtimeState.getShieldingAuraCooldownExpiresAt() > 0L;
+
+        if (!hasShieldingAuraPassive && !hasShieldingAuraState) {
+            return;
+        }
+
+        if (hasShieldingAuraState) {
+            ShieldingAuraPassive.cleanupExpiredShield(runtimeState, now);
+        }
+
+        if (!hasShieldingAuraPassive) {
+            return;
+        }
+
         long beforeActiveUntil = runtimeState.getShieldingAuraActiveUntil();
+        long beforePulse = runtimeState.getShieldingAuraLastPulseMillis();
+        boolean hasNewDamageTrigger = runtimeState.getLastDamageDealtMillis() > beforePulse;
+        if (!hasNewDamageTrigger
+                && beforePulse > 0L
+                && now - beforePulse < ShieldingAuraPassive.pulseIntervalMillis()) {
+            return;
+        }
+
         ShieldingAuraPassive.pulse(playerData,
                 ref,
                 commandBuffer,
                 statMap,
                 archetypeSnapshot,
                 runtimeState);
+
         if (runtimeState.getShieldingAuraActiveUntil() > beforeActiveUntil) {
             logPassiveTrigger(playerData,
                 ArchetypePassiveType.SHIELDING_AURA,
                 "active_until=%d",
                 runtimeState.getShieldingAuraActiveUntil());
+            return;
         }
-        ShieldingAuraPassive.cleanupExpiredShield(runtimeState, System.currentTimeMillis());
+
+        // Throttle non-activation checks (cooldown/no-targets/etc.) to pulse cadence.
+        runtimeState.setShieldingAuraLastPulseMillis(now);
     }
 
     private void applyPartyBuffingAura(@Nonnull PlayerData playerData,
@@ -818,20 +864,46 @@ public class PassiveRegenSystem extends TickingSystem<EntityStore> {
             @Nonnull EntityStatMap statMap,
             @Nonnull ArchetypePassiveSnapshot archetypeSnapshot,
             @Nonnull PassiveRuntimeState runtimeState) {
+        long now = System.currentTimeMillis();
+        boolean hasBuffingAuraPassive = archetypeSnapshot.getValue(ArchetypePassiveType.BUFFING_AURA) > 0.0D;
+        boolean hasBuffingAuraState = runtimeState.getBuffingAuraDamageBonus() > 0.0D
+                || runtimeState.getBuffingAuraBonusExpiresAt() > 0L;
+
+        if (!hasBuffingAuraPassive && !hasBuffingAuraState) {
+            return;
+        }
+
+        if (hasBuffingAuraState) {
+            BuffingAuraPassive.cleanupExpiredBonus(runtimeState, now);
+        }
+
+        if (!hasBuffingAuraPassive) {
+            return;
+        }
+
         long beforePulse = runtimeState.getBuffingAuraLastPulseMillis();
+        if (beforePulse > 0L && now - beforePulse < BuffingAuraPassive.pulseIntervalMillis()) {
+            return;
+        }
+
         BuffingAuraPassive.pulse(playerData,
                 ref,
                 commandBuffer,
                 statMap,
                 archetypeSnapshot,
                 runtimeState);
-        if (runtimeState.getBuffingAuraLastPulseMillis() > beforePulse) {
+
+        long afterPulse = runtimeState.getBuffingAuraLastPulseMillis();
+        if (afterPulse > beforePulse) {
             logPassiveTrigger(playerData,
                 ArchetypePassiveType.BUFFING_AURA,
                 "pulse_at=%d",
-                runtimeState.getBuffingAuraLastPulseMillis());
+                afterPulse);
+            return;
         }
-        BuffingAuraPassive.cleanupExpiredBonus(runtimeState, System.currentTimeMillis());
+
+        // Throttle non-activation paths (paused/no targets/zero pool) to pulse cadence.
+        runtimeState.setBuffingAuraLastPulseMillis(now);
     }
 
     private void applyArmyOfTheDead(@Nonnull PlayerData playerData,

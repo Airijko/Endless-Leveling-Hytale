@@ -36,6 +36,10 @@ public final class HealingAuraPassive {
     private HealingAuraPassive() {
     }
 
+    public static long pulseIntervalMillis() {
+        return PULSE_INTERVAL_MILLIS;
+    }
+
     public static void pulse(PlayerData playerData,
             Ref<EntityStore> sourceRef,
             CommandBuffer<EntityStore> commandBuffer,

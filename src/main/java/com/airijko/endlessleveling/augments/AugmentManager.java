@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -172,8 +173,14 @@ public class AugmentManager {
     }
 
     public Augment createAugment(String id) {
-        AugmentDefinition definition = cache.get(resolveLookupId(id));
+        String lookup = resolveLookupId(id);
+        AugmentDefinition definition = lookup == null ? null : cache.get(lookup);
         if (definition == null) {
+            String candidate = id == null ? "null" : id.trim();
+            LOGGER.atWarning().log("[AUGMENT] Failed to create augment: %s (not found in cache). Available augment count=%d", candidate, cache.size());
+            if (!cache.isEmpty()) {
+                LOGGER.atFine().log("[AUGMENT] Available augments: %s", String.join(", ", cache.keySet()));
+            }
             return null;
         }
         return createFromDefinition(definition);
@@ -352,11 +359,30 @@ public class AugmentManager {
 
     private String resolveLookupId(String id) {
         if (id == null || id.isBlank()) {
-            return id;
+            return null;
         }
-        String candidate = id.trim();
+        String candidate = normalizeId(id);
+        if (candidate == null) {
+            return null;
+        }
+
         String resolved = CommonAugment.resolveBaseAugmentId(candidate);
-        return resolved == null ? candidate : resolved;
+        if (resolved != null) {
+            candidate = normalizeId(resolved);
+        }
+
+        if (cache.containsKey(candidate)) {
+            return candidate;
+        }
+
+        // fallback: case-insensitive lookup if not already exact key
+        for (String key : cache.keySet()) {
+            if (key.equalsIgnoreCase(candidate)) {
+                return key;
+            }
+        }
+
+        return candidate;
     }
 
     private void syncBuiltinAugmentsIfNeeded() {
@@ -461,7 +487,10 @@ public class AugmentManager {
             return null;
         }
         String trimmed = id.trim();
-        return trimmed.isEmpty() ? null : trimmed;
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        return trimmed.toLowerCase(Locale.ROOT);
     }
 
     private static String stripExtension(String filename) {
