@@ -3,6 +3,8 @@ package com.airijko.endlessleveling.leveling;
 import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentManager;
+import com.airijko.endlessleveling.augments.AugmentValueReader;
+import com.airijko.endlessleveling.augments.types.CommonAugment;
 import com.airijko.endlessleveling.enums.PassiveTier;
 import com.airijko.endlessleveling.managers.ConfigManager;
 import com.airijko.endlessleveling.managers.PluginFilesManager;
@@ -44,13 +46,19 @@ public class MobLevelingManager {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final int CHUNK_BIT_SHIFT = 5;
     private static final int BLOCKS_PER_CHUNK = 16;
+    private static final long MOB_LEVEL_DEBUG_COOLDOWN_MS = 5000L;
+    private static final Object UNSET_CONFIG_VALUE = new Object();
 
     private final ConfigManager configManager;
     private final ConfigManager worldsConfigManager;
     private final PlayerDataManager playerDataManager;
+    private final Map<Long, Long> mobLevelDebugLogTimes = new ConcurrentHashMap<>();
+    private final Map<Integer, MobHealthCompositionSnapshot> entityHealthCompositionSnapshots = new ConcurrentHashMap<>();
+    private volatile boolean missingLevelSourceModeWarned;
 
     private final Map<String, AreaOverride> areaOverrides = new ConcurrentHashMap<>();
     // Stateless design: do not maintain per-entity mutable state in maps.
+    private volatile MobAugmentTierPools cachedMobAugmentTierPools;
 
     private enum LevelSourceMode {
         PLAYER,
@@ -68,6 +76,21 @@ public class MobLevelingManager {
     private record ViewportCandidate(PlayerRef playerRef, Vector3d position, double distanceSq, int viewRadiusChunks) {
     }
 
+    private record MobAugmentTierPools(int sourceCount,
+                                       int blacklistHash,
+                                       List<String> elite,
+                                       List<String> legendary,
+                                       List<String> mythic,
+                                       List<String> fallback) {
+    }
+
+    public record MobHealthCompositionSnapshot(float baseMax,
+                                               float scaledMax,
+                                               float lifeForceBonus,
+                                               float combinedMax,
+                                               long updatedAtMillis) {
+    }
+
     public MobLevelingManager(PluginFilesManager filesManager, PlayerDataManager playerDataManager) {
         this.configManager = new ConfigManager(filesManager, filesManager.getLevelingFile());
         this.worldsConfigManager = new ConfigManager(filesManager, filesManager.getWorldsFile());
@@ -78,6 +101,7 @@ public class MobLevelingManager {
         configManager.load();
         worldsConfigManager.load();
         clearAllEntityLevelOverrides();
+        cachedMobAugmentTierPools = null;
     }
 
     public void syncTierLevelOverridesForDungeon(Store<EntityStore> store, UUID sourcePlayerUuid) {
@@ -87,33 +111,100 @@ public class MobLevelingManager {
     public Integer resolveMobLevelForEntity(Ref<EntityStore> ref,
                                             Store<EntityStore> store,
                                             CommandBuffer<EntityStore> commandBuffer) {
-        return resolveMobLevelForEntity(ref, store, commandBuffer, Integer.MAX_VALUE);
+        return resolveMobLevelForEntity(ref, store, commandBuffer, 1);
     }
 
     public Integer resolveMobLevelForEntity(Ref<EntityStore> ref,
                                             Store<EntityStore> store,
                                             CommandBuffer<EntityStore> commandBuffer,
                                             int resolveAttempts) {
-        if (ref == null || !isMobLevelingEnabled()) {
+        if (ref == null) {
+            return null;
+        }
+
+        if (!isMobLevelingEnabled()) {
+            if (shouldLogMobLevelDebug(ref, store != null ? store : ref.getStore())) {
+                LOGGER.atWarning().log(
+                        "[MOB_LEVEL_DEBUG] source=DISABLED mob=%d resolveAttempts=%d Mob_Leveling.Enabled=false; skipping resolve.",
+                        ref.getIndex(),
+                        resolveAttempts);
+            }
             return null;
         }
 
         Store<EntityStore> effectiveStore = store != null ? store : ref.getStore();
-        if (isWorldXpBlacklisted(effectiveStore) || isEntityBlacklisted(ref, effectiveStore, commandBuffer)) {
+        if (isWorldXpBlacklisted(effectiveStore)) {
+            if (shouldLogMobLevelDebug(ref, effectiveStore)) {
+                LOGGER.atWarning().log(
+                        "[MOB_LEVEL_DEBUG] source=SKIP mob=%d resolveAttempts=%d world='%s' is XP-blacklisted; skipping resolve.",
+                        ref.getIndex(),
+                        resolveAttempts,
+                        String.valueOf(resolveWorldIdentifier(effectiveStore)));
+            }
             return null;
         }
 
-        ViewportCandidate candidate = resolveViewportCandidate(ref, effectiveStore, commandBuffer);
-        if (candidate == null) {
+        if (isEntityBlacklisted(ref, effectiveStore, commandBuffer)) {
+            if (shouldLogMobLevelDebug(ref, effectiveStore)) {
+                LOGGER.atWarning().log(
+                        "[MOB_LEVEL_DEBUG] source=SKIP mob=%d resolveAttempts=%d entity is blacklisted; skipping resolve.",
+                        ref.getIndex(),
+                        resolveAttempts);
+            }
             return null;
+        }
+
+        LevelSourceMode mode = getLevelSourceMode(effectiveStore);
+
+        ViewportCandidate candidate = null;
+        if (mode == LevelSourceMode.PLAYER || mode == LevelSourceMode.MIXED) {
+            candidate = resolveViewportCandidate(ref, effectiveStore, commandBuffer);
+            if (candidate == null) {
+                Vector3d mobPos = resolveWorldPosition(ref, commandBuffer);
+                int fallbackLevel = mode == LevelSourceMode.MIXED
+                        ? resolveDistanceLevel(effectiveStore, mobPos)
+                        : getFixedLevel(effectiveStore, ref.getIndex(), mobPos);
+                fallbackLevel = Math.max(1, clampToConfiguredRange(fallbackLevel, effectiveStore));
+                if (shouldLogMobLevelDebug(ref, effectiveStore)) {
+                    LOGGER.atWarning().log(
+                            "[MOB_LEVEL_DEBUG] source=%s mob=%d resolveAttempts=%d no viewport candidate; using fallback level=%d.",
+                            mode,
+                            ref.getIndex(),
+                            resolveAttempts,
+                            fallbackLevel);
+                }
+                return fallbackLevel;
+            }
         }
 
         int level = resolveLevelByConfiguredSource(ref, effectiveStore, commandBuffer, candidate);
         if (level <= 0) {
+            if (shouldLogMobLevelDebug(ref, effectiveStore)) {
+                LOGGER.atWarning().log(
+                        "[MOB_LEVEL_DEBUG] source=%s mob=%d resolveAttempts=%d resolved level <= 0 (%d); returning unresolved so caller may fallback.",
+                        mode,
+                        ref.getIndex(),
+                        resolveAttempts,
+                        level);
+            }
             return null;
         }
 
-        return clampToConfiguredRange(level, effectiveStore);
+        int clamped = clampToConfiguredRange(level, effectiveStore);
+        if (shouldLogMobLevelDebug(ref, effectiveStore)) {
+            String playerId = candidate != null && candidate.playerRef() != null
+                    ? String.valueOf(candidate.playerRef().getUuid())
+                    : "none";
+            LOGGER.atFine().log(
+                    "[MOB_LEVEL_DEBUG] source=%s mob=%d resolveAttempts=%d resolved=%d clamped=%d player=%s",
+                    mode,
+                    ref.getIndex(),
+                    resolveAttempts,
+                    level,
+                    clamped,
+                    playerId);
+        }
+        return clamped;
     }
 
     public String describePlayerContextForEntity(Ref<EntityStore> ref,
@@ -136,11 +227,11 @@ public class MobLevelingManager {
     }
 
     public void forgetEntity(int entityIndex) {
-        // no-op: stateless mode
+        entityHealthCompositionSnapshots.remove(entityIndex);
     }
 
     public void forgetEntity(Store<EntityStore> store, int entityIndex) {
-        // no-op: stateless mode
+        entityHealthCompositionSnapshots.remove(entityIndex);
     }
 
     public void forgetEntityByKey(long entityKey) {
@@ -148,11 +239,60 @@ public class MobLevelingManager {
     }
 
     public void recordEntityMaxHealth(int entityIndex, float maxHealth) {
-        // no-op: stateless mode
+        if (!Float.isFinite(maxHealth) || maxHealth <= 0.0f) {
+            entityHealthCompositionSnapshots.remove(entityIndex);
+            return;
+        }
+
+        MobHealthCompositionSnapshot existing = entityHealthCompositionSnapshots.get(entityIndex);
+        if (existing == null) {
+            entityHealthCompositionSnapshots.put(entityIndex,
+                    new MobHealthCompositionSnapshot(maxHealth, maxHealth, 0.0f, maxHealth,
+                            System.currentTimeMillis()));
+            return;
+        }
+
+        entityHealthCompositionSnapshots.put(entityIndex,
+                new MobHealthCompositionSnapshot(
+                        existing.baseMax(),
+                        existing.scaledMax(),
+                        existing.lifeForceBonus(),
+                        maxHealth,
+                        System.currentTimeMillis()));
     }
 
     public float getEntityMaxHealthSnapshot(int entityIndex) {
-        return -1.0f;
+        MobHealthCompositionSnapshot snapshot = entityHealthCompositionSnapshots.get(entityIndex);
+        if (snapshot == null || !Float.isFinite(snapshot.combinedMax())) {
+            return -1.0f;
+        }
+        return snapshot.combinedMax();
+    }
+
+    public void recordEntityHealthComposition(int entityIndex,
+                                              float baseMax,
+                                              float scaledMax,
+                                              float lifeForceBonus,
+                                              float combinedMax) {
+        if (entityIndex < 0
+                || !Float.isFinite(baseMax)
+                || !Float.isFinite(scaledMax)
+                || !Float.isFinite(lifeForceBonus)
+                || !Float.isFinite(combinedMax)
+                || combinedMax <= 0.0f) {
+            return;
+        }
+
+        entityHealthCompositionSnapshots.put(entityIndex,
+                new MobHealthCompositionSnapshot(baseMax,
+                        scaledMax,
+                        Math.max(0.0f, lifeForceBonus),
+                        combinedMax,
+                        System.currentTimeMillis()));
+    }
+
+    public MobHealthCompositionSnapshot getEntityHealthCompositionSnapshot(int entityIndex) {
+        return entityHealthCompositionSnapshots.get(entityIndex);
     }
 
     public int resolveMobLevel(Ref<EntityStore> ref, CommandBuffer<EntityStore> commandBuffer) {
@@ -236,6 +376,10 @@ public class MobLevelingManager {
             return List.of();
         }
 
+        if (!getConfigBoolean("Mob_Augments.Enabled", true, store)) {
+            return List.of();
+        }
+
         EndlessLeveling plugin = EndlessLeveling.getInstance();
         AugmentManager augmentManager = plugin != null ? plugin.getAugmentManager() : null;
         if (augmentManager == null || augmentManager.getAugments().isEmpty()) {
@@ -245,8 +389,9 @@ public class MobLevelingManager {
         int level = Math.max(1, resolveMobLevel(ref, commandBuffer));
         int baseCount = getConfigInt("Mob_Leveling.Mob_Augments.Base_Count", 0, store);
         int perLevels = Math.max(1, getConfigInt("Mob_Leveling.Mob_Augments.Per_Levels", 15, store));
-        int count = Math.max(0, baseCount + (level / perLevels));
-        if (count <= 0) {
+        int highTierCount = Math.max(0, baseCount + (level / perLevels));
+        int commonCount = Math.max(0, resolveCommonAugmentCountFromPerLevel(level, store));
+        if (highTierCount <= 0 && commonCount <= 0) {
             return List.of();
         }
 
@@ -255,29 +400,14 @@ public class MobLevelingManager {
                 getConfigDouble("Mob_Leveling.Mob_Augments.Weights.LEGENDARY", 0.35D, store));
         double mythicWeight = Math.max(0.0D, getConfigDouble("Mob_Leveling.Mob_Augments.Weights.MYTHIC", 0.1D, store));
 
-        List<String> elite = new ArrayList<>();
-        List<String> legendary = new ArrayList<>();
-        List<String> mythic = new ArrayList<>();
-
         Set<String> blacklistedIds = parseAugmentBlacklist(store);
-        for (AugmentDefinition def : augmentManager.getAugments().values()) {
-            if (def == null || !def.isMobCompatible() || def.getId() == null || def.getId().isBlank()) {
-                continue;
-            }
-            String id = def.getId().trim();
-            if (blacklistedIds.contains(id.toLowerCase(Locale.ROOT))) {
-                continue;
-            }
-            if (def.getTier() == PassiveTier.ELITE) {
-                elite.add(id);
-            } else if (def.getTier() == PassiveTier.LEGENDARY) {
-                legendary.add(id);
-            } else if (def.getTier() == PassiveTier.MYTHIC) {
-                mythic.add(id);
-            }
-        }
+        MobAugmentTierPools tierPools = resolveMobAugmentTierPools(augmentManager, blacklistedIds);
+        List<String> elite = tierPools.elite();
+        List<String> legendary = tierPools.legendary();
+        List<String> mythic = tierPools.mythic();
+        List<String> fallbackPool = tierPools.fallback();
 
-        if (elite.isEmpty() && legendary.isEmpty() && mythic.isEmpty()) {
+        if (highTierCount > 0 && elite.isEmpty() && legendary.isEmpty() && mythic.isEmpty()) {
             return List.of();
         }
 
@@ -285,16 +415,23 @@ public class MobLevelingManager {
         SplittableRandom random = new SplittableRandom(seed);
         Set<String> chosen = new LinkedHashSet<>();
 
-        int safety = Math.max(8, count * 12);
-        for (int i = 0; i < safety && chosen.size() < count; i++) {
-            PassiveTier tier = rollTier(random, eliteWeight, legendaryWeight, mythicWeight);
-            String picked = pickTier(tier, elite, legendary, mythic, random);
-            if (picked != null) {
-                chosen.add(picked);
+        if (highTierCount > 0) {
+            int safety = Math.max(8, highTierCount * 12);
+            for (int i = 0; i < safety && chosen.size() < highTierCount; i++) {
+                PassiveTier tier = rollTier(random, eliteWeight, legendaryWeight, mythicWeight);
+                String picked = pickTier(tier, elite, legendary, mythic, fallbackPool, random);
+                if (picked != null) {
+                    chosen.add(picked);
+                }
             }
         }
 
-        return chosen.isEmpty() ? List.of() : List.copyOf(chosen);
+        List<String> selected = new ArrayList<>(chosen);
+        if (commonCount > 0 && (blacklistedIds == null || !blacklistedIds.contains(CommonAugment.ID))) {
+            selected.addAll(rollMobCommonStatOffers(augmentManager, commonCount, random));
+        }
+
+        return selected.isEmpty() ? List.of() : List.copyOf(selected);
     }
 
     public String describeDistanceCenter(Store<EntityStore> store) {
@@ -515,7 +652,14 @@ public class MobLevelingManager {
     }
 
     public boolean isMobDamageScalingEnabled() {
-        return getConfigBoolean("Mob_Leveling.Scaling.Damage.Enabled", false, null);
+        return isMobDamageScalingEnabled(null);
+    }
+
+    public boolean isMobDamageScalingEnabled(Store<EntityStore> store) {
+        if (getConfigBoolean("Mob_Leveling.Scaling.Damage.Enabled", false, store)) {
+            return true;
+        }
+        return store == null && hasGlobalOrDefaultWorldOverrideBoolean("Scaling.Damage.Enabled");
     }
 
     public boolean isMobHealthScalingEnabled() {
@@ -523,11 +667,21 @@ public class MobLevelingManager {
     }
 
     public boolean isMobHealthScalingEnabled(Store<EntityStore> store) {
-        return getConfigBoolean("Mob_Leveling.Scaling.Health.Enabled", false, store);
+        if (getConfigBoolean("Mob_Leveling.Scaling.Health.Enabled", false, store)) {
+            return true;
+        }
+        return store == null && hasGlobalOrDefaultWorldOverrideBoolean("Scaling.Health.Enabled");
     }
 
     public boolean isMobDefenseScalingEnabled() {
-        return getConfigBoolean("Mob_Leveling.Scaling.Defense.Enabled", false, null);
+        return isMobDefenseScalingEnabled(null);
+    }
+
+    public boolean isMobDefenseScalingEnabled(Store<EntityStore> store) {
+        if (getConfigBoolean("Mob_Leveling.Scaling.Defense.Enabled", false, store)) {
+            return true;
+        }
+        return store == null && hasGlobalOrDefaultWorldOverrideBoolean("Scaling.Defense.Enabled");
     }
 
     public double getMobDefenseReductionForLevels(int mobLevel, int playerLevel) {
@@ -565,15 +719,19 @@ public class MobLevelingManager {
     }
 
     public double getMobDefenseReductionForLevelDifference(int levelDifference) {
-        if (!isMobDefenseScalingEnabled()) {
+        return getMobDefenseReductionForLevelDifference(null, levelDifference);
+    }
+
+    public double getMobDefenseReductionForLevelDifference(Store<EntityStore> store, int levelDifference) {
+        if (!isMobDefenseScalingEnabled(store)) {
             return 0.0D;
         }
 
-        int maxDiff = Math.max(1, getConfigInt("Mob_Leveling.Scaling.Level_Scaling_Difference.Range", 10, null));
+        int maxDiff = Math.max(1, getConfigInt("Mob_Leveling.Scaling.Level_Scaling_Difference.Range", 10, store));
         double negative = clampReduction(getConfigDouble("Mob_Leveling.Scaling.Defense.At_Negative_Max_Difference", 0.0D,
-                null));
+                store));
         double positive = clampReduction(getConfigDouble("Mob_Leveling.Scaling.Defense.At_Positive_Max_Difference", 0.75D,
-                null));
+                store));
         if (levelDifference <= -maxDiff) {
             return negative;
         }
@@ -588,11 +746,27 @@ public class MobLevelingManager {
     }
 
     public boolean shouldShowMobLevelUi() {
-        return getConfigBoolean("Mob_Leveling.UI.Show_Mob_Level", true, null);
+        return shouldRenderMobNameplate();
     }
 
     public boolean shouldIncludeLevelInNameplate() {
-        return getConfigBoolean("Mob_Leveling.UI.Show_Level_In_Name", true, null);
+        return shouldShowMobNameplateLevel();
+    }
+
+    public boolean shouldRenderMobNameplate() {
+        return getConfigBoolean("Mob_Leveling.Nameplate.Enabled", true, null);
+    }
+
+    public boolean shouldShowMobNameplateLevel() {
+        return getConfigBoolean("Mob_Leveling.Nameplate.Show_Level", true, null);
+    }
+
+    public boolean shouldShowMobNameplateName() {
+        return getConfigBoolean("Mob_Leveling.Nameplate.Show_Name", true, null);
+    }
+
+    public boolean shouldShowMobNameplateHealth() {
+        return getConfigBoolean("Mob_Leveling.Nameplate.Show_Health", true, null);
     }
 
     public boolean registerAreaLevelOverride(String id,
@@ -651,7 +825,7 @@ public class MobLevelingManager {
     }
 
     public void clearAllEntityLevelOverrides() {
-        // no-op; no entity-level state to clear
+        entityHealthCompositionSnapshots.clear();
     }
 
     private int resolveLevelByConfiguredSource(Ref<EntityStore> ref,
@@ -663,22 +837,36 @@ public class MobLevelingManager {
         int entityId = ref.getIndex();
 
         return switch (mode) {
-            case PLAYER -> resolvePlayerSourceLevel(store, candidate.playerRef());
+            case PLAYER -> resolvePlayerSourceLevel(store, candidate != null ? candidate.playerRef() : null, entityId);
             case DISTANCE -> resolveDistanceLevel(store, mobPos);
             case MIXED -> {
-                int player = resolvePlayerSourceLevel(store, candidate.playerRef());
+                int player = resolvePlayerSourceLevel(store, candidate != null ? candidate.playerRef() : null, entityId);
                 int distance = resolveDistanceLevel(store, mobPos);
                 double playerWeight = clamp01(getConfigDouble("Mob_Leveling.Level_Source.Mixed.Player_Weight", 0.5D,
                         store));
                 long seed = toEntityKey(store, entityId) ^ (long) player;
+                // Mix high bits into low bits so the store identity-hash in the upper 32
+                // bits doesn't create a constant per-world bias in the modulo result.
+                // Uses the MurmurHash3 64-bit finalizer for uniform distribution.
+                seed ^= (seed >>> 33);
+                seed *= 0xFF51AFD7ED558CCDL;
+                seed ^= (seed >>> 33);
                 double roll = Math.floorMod(seed, 10000L) / 10000.0D;
                 yield roll <= playerWeight ? player : distance;
             }
-            case FIXED, TIERS -> getFixedLevel(store, entityId, mobPos);
+            case FIXED -> getFixedLevel(store, entityId, mobPos);
+            case TIERS -> {
+                if (shouldLogMobLevelDebug(ref, store)) {
+                    LOGGER.atWarning().log(
+                            "[MOB_LEVEL_DEBUG] source=TIERS currently aliases FIXED in this build; mob=%d.",
+                            entityId);
+                }
+                yield getFixedLevel(store, entityId, mobPos);
+            }
         };
     }
 
-    private int resolvePlayerSourceLevel(Store<EntityStore> store, PlayerRef sourcePlayer) {
+    private int resolvePlayerSourceLevel(Store<EntityStore> store, PlayerRef sourcePlayer, int entityId) {
         int baseLevel = resolveReferencePlayerLevel(store, sourcePlayer);
         int offset = getConfigInt("Mob_Leveling.Level_Source.Player_Based.Offset", 0, store);
         int minDiff = getConfigInt("Mob_Leveling.Level_Source.Player_Based.Min_Difference", -3, store);
@@ -689,7 +877,7 @@ public class MobLevelingManager {
             maxDiff = tmp;
         }
         int spread = Math.max(0, maxDiff - minDiff);
-        int diff = spread == 0 ? minDiff : minDiff + Math.floorMod(baseLevel * 31, spread + 1);
+        int diff = spread == 0 ? minDiff : minDiff + Math.floorMod(toEntityKey(store, entityId), spread + 1);
         return clampToConfiguredRange(baseLevel + offset + diff, store);
     }
 
@@ -761,44 +949,63 @@ public class MobLevelingManager {
         }
 
         int configuredWorldViewChunks = Math.max(1, resolveWorldViewOrSimulationDistanceChunks(store));
-        double maxDistanceBlocks = configuredWorldViewChunks * (double) BLOCKS_PER_CHUNK;
-        double maxDistanceSq = maxDistanceBlocks * maxDistanceBlocks;
 
         ViewportCandidate best = null;
+        int playersSeen = 0;
+        int invalidPlayerRef = 0;
+        int invalidEntityRef = 0;
+        int worldMismatch = 0;
+        int missingPlayerPos = 0;
+        int outsideViewport = 0;
         for (PlayerRef playerRef : universe.getPlayers()) {
+            playersSeen++;
             if (playerRef == null || !playerRef.isValid()) {
+                invalidPlayerRef++;
                 continue;
             }
 
             Ref<EntityStore> playerEntityRef = playerRef.getReference();
             if (playerEntityRef == null || !playerEntityRef.isValid()) {
+                invalidEntityRef++;
                 continue;
             }
 
             Store<EntityStore> playerStore = playerEntityRef.getStore();
             if (!isSameWorld(store, playerStore)) {
+                worldMismatch++;
                 continue;
             }
 
             Vector3d playerPos = resolveWorldPosition(playerEntityRef, null);
             if (playerPos == null) {
+                missingPlayerPos++;
                 continue;
             }
 
             int playerViewChunks = Math.max(1, resolvePlayerViewDistanceChunks(playerStore, playerEntityRef));
             int effectiveChunks = Math.max(configuredWorldViewChunks, playerViewChunks);
             if (!isWithinChunkViewport(mobPos, playerPos, effectiveChunks)) {
+                outsideViewport++;
                 continue;
             }
 
             double distSq = horizontalDistanceSquared(mobPos, playerPos);
-            if (distSq > maxDistanceSq) {
-                continue;
-            }
-
             if (best == null || distSq < best.distanceSq()) {
                 best = new ViewportCandidate(playerRef, playerPos, distSq, effectiveChunks);
             }
+        }
+
+        if (best == null && shouldLogMobLevelDebug(ref, store)) {
+            LOGGER.atWarning().log(
+                    "[MOB_LEVEL_DEBUG] viewport reject summary mob=%d playersSeen=%d invalidPlayerRef=%d invalidEntityRef=%d worldMismatch=%d missingPlayerPos=%d outsideViewport=%d configuredWorldViewChunks=%d",
+                    ref.getIndex(),
+                    playersSeen,
+                    invalidPlayerRef,
+                    invalidEntityRef,
+                    worldMismatch,
+                    missingPlayerPos,
+                    outsideViewport,
+                    configuredWorldViewChunks);
         }
 
         return best;
@@ -933,8 +1140,18 @@ public class MobLevelingManager {
     }
 
     private LevelSourceMode getLevelSourceMode(Store<EntityStore> store) {
-        String raw = getConfigString("Mob_Leveling.Level_Source.Mode", "FIXED", store);
+        String raw = firstNonBlank(
+                getConfigString("Mob_Leveling.Level_Source.Mode", null, store),
+                getConfigString("Mob_Leveling.Level_Source.mode", null, store),
+                getConfigString("Mob_Leveling.Level_Source.Source", null, store),
+                getConfigString("Mob_Leveling.Level_Source.Type", null, store),
+                getConfigString("Mob_Leveling.Level_Source.Level_Mode", null, store));
         if (raw == null || raw.isBlank()) {
+            if (!missingLevelSourceModeWarned) {
+                missingLevelSourceModeWarned = true;
+                LOGGER.atWarning().log(
+                        "[MOB_LEVEL_DEBUG] Missing Mob_Leveling.Level_Source.Mode; defaulting to FIXED. Valid values: PLAYER, MIXED, DISTANCE, FIXED, TIERS.");
+            }
             return LevelSourceMode.FIXED;
         }
         String normalized = raw.trim().toUpperCase(Locale.ROOT);
@@ -944,8 +1161,35 @@ public class MobLevelingManager {
         try {
             return LevelSourceMode.valueOf(normalized);
         } catch (IllegalArgumentException ignored) {
+            LOGGER.atWarning().log(
+                    "[MOB_LEVEL_DEBUG] Unknown Mob_Leveling.Level_Source.Mode '%s'; defaulting to FIXED. Valid values: PLAYER, MIXED, DISTANCE, FIXED, TIERS.",
+                    raw);
             return LevelSourceMode.FIXED;
         }
+    }
+
+    private String firstNonBlank(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private boolean shouldLogMobLevelDebug(Ref<EntityStore> ref, Store<EntityStore> store) {
+        int entityId = ref != null ? ref.getIndex() : -1;
+        long key = toEntityKey(store != null ? store : (ref != null ? ref.getStore() : null), entityId);
+        if (key < 0L) {
+            return true;
+        }
+
+        long now = System.currentTimeMillis();
+        Long previous = mobLevelDebugLogTimes.put(key, now);
+        return previous == null || now - previous >= MOB_LEVEL_DEBUG_COOLDOWN_MS;
     }
 
     private PartyLevelCalculation getPartyLevelCalculationMode(Store<EntityStore> store) {
@@ -1008,6 +1252,15 @@ public class MobLevelingManager {
         if (a == b) {
             return true;
         }
+
+        Object worldA = invokeNoArg(a, "getWorld");
+        Object worldB = invokeNoArg(b, "getWorld");
+        if (worldA != null && worldB != null) {
+            if (worldA == worldB || worldA.equals(worldB)) {
+                return true;
+            }
+        }
+
         String wa = resolveWorldIdentifier(a);
         String wb = resolveWorldIdentifier(b);
         return wa != null && wb != null && wa.equalsIgnoreCase(wb);
@@ -1078,7 +1331,10 @@ public class MobLevelingManager {
     }
 
     private Set<String> parseAugmentBlacklist(Store<EntityStore> store) {
-        Object raw = configManager.get("Mob_Leveling.Mob_Augments.Blacklisted_Augments", null, false);
+        Object raw = resolveConfigValue("Mob_Augments.Blacklisted_Augments", null, store);
+        if (raw == null) {
+            raw = configManager.get("Mob_Leveling.Mob_Augments.Blacklisted_Augments", null, false);
+        }
         if (raw == null) {
             return Set.of();
         }
@@ -1094,6 +1350,148 @@ public class MobLevelingManager {
             }
         }
         return out;
+    }
+
+    private int resolveCommonAugmentCountFromPerLevel(int level, Store<EntityStore> store) {
+        Object raw = resolveConfigValue("Mob_Augments.Common.Per_Level", null, store);
+        if (raw == null) {
+            return 0;
+        }
+
+        if (raw instanceof Number number) {
+            double perLevel = Math.max(0.0D, number.doubleValue());
+            return (int) Math.max(0, Math.round(level * perLevel));
+        }
+
+        String text = raw.toString().trim();
+        if (text.isEmpty()) {
+            return 0;
+        }
+
+        if (text.contains("-")) {
+            String[] split = text.split("-", 2);
+            if (split.length == 2) {
+                try {
+                    double min = Double.parseDouble(split[0].trim());
+                    double max = Double.parseDouble(split[1].trim());
+                    if (min > max) {
+                        double tmp = min;
+                        min = max;
+                        max = tmp;
+                    }
+                    double averagePerLevel = Math.max(0.0D, (min + max) / 2.0D);
+                    return (int) Math.max(0, Math.round(level * averagePerLevel));
+                } catch (NumberFormatException ignored) {
+                    return 0;
+                }
+            }
+        }
+
+        try {
+            double single = Math.max(0.0D, Double.parseDouble(text));
+            return (int) Math.max(0, Math.round(level * single));
+        } catch (NumberFormatException ignored) {
+            return 0;
+        }
+    }
+
+    private List<String> rollMobCommonStatOffers(AugmentManager augmentManager,
+            int commonCount,
+            SplittableRandom random) {
+        if (augmentManager == null || commonCount <= 0) {
+            return List.of();
+        }
+
+        AugmentDefinition commonAugmentDefinition = augmentManager.getAugment(CommonAugment.ID);
+        if (commonAugmentDefinition == null || commonAugmentDefinition.getTier() != PassiveTier.COMMON) {
+            return List.of();
+        }
+
+        Map<String, Object> buffs = AugmentValueReader.getMap(commonAugmentDefinition.getPassives(), "buffs");
+        if (buffs.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> statKeys = new ArrayList<>();
+        for (String key : buffs.keySet()) {
+            if (key != null && !key.isBlank()) {
+                statKeys.add(key.trim().toLowerCase(Locale.ROOT));
+            }
+        }
+        if (statKeys.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> offers = new ArrayList<>(commonCount);
+        for (int i = 0; i < commonCount; i++) {
+            String statKey = statKeys.get(random.nextInt(statKeys.size()));
+            Map<String, Object> section = AugmentValueReader.getMap(buffs, statKey);
+            double value = rollCommonRange(section, random);
+            offers.add(CommonAugment.buildStatOfferId(statKey, value));
+        }
+        return offers;
+    }
+
+    private double rollCommonRange(Map<String, Object> section, SplittableRandom random) {
+        double base = Math.max(0.0D, AugmentValueReader.getDouble(section, "value", 0.0D));
+        double min = Math.max(0.0D, AugmentValueReader.getDouble(section, "min_value", base));
+        double max = Math.max(0.0D, AugmentValueReader.getDouble(section, "max_value", base));
+
+        if (max < min) {
+            double swap = min;
+            min = max;
+            max = swap;
+        }
+
+        if (Math.abs(max - min) < 0.0001D) {
+            return roundToTwoDecimals(min);
+        }
+
+        if (isWholeNumber(min) && isWholeNumber(max)) {
+            long minInt = Math.round(min);
+            long maxInt = Math.round(max);
+            if (maxInt <= minInt) {
+                return minInt;
+            }
+            return minInt + random.nextLong((maxInt - minInt) + 1L);
+        }
+
+        return roundToTwoDecimals(random.nextDouble(min, max));
+    }
+
+    private double roundToTwoDecimals(double value) {
+        return Math.round(value * 100.0D) / 100.0D;
+    }
+
+    private boolean isWholeNumber(double value) {
+        return Math.abs(value - Math.rint(value)) < 0.0001D;
+    }
+
+    private boolean hasGlobalOrDefaultWorldOverrideBoolean(String worldPath) {
+        if (worldPath == null || worldPath.isBlank()) {
+            return false;
+        }
+
+        String defaultPath = "World_Overrides.default." + worldPath;
+        if (worldsConfigManager.hasPath(defaultPath) && toBoolean(worldsConfigManager.get(defaultPath, null, false))) {
+            return true;
+        }
+
+        String globalPath = "World_Overrides.Global." + worldPath;
+        return worldsConfigManager.hasPath(globalPath) && toBoolean(worldsConfigManager.get(globalPath, null, false));
+    }
+
+    private boolean toBoolean(Object value) {
+        if (value instanceof Boolean bool) {
+            return bool;
+        }
+        if (value instanceof Number number) {
+            return number.intValue() != 0;
+        }
+        if (value instanceof String str) {
+            return Boolean.parseBoolean(str.trim());
+        }
+        return false;
     }
 
     private long computeAugmentSeed(Ref<EntityStore> ref, Store<EntityStore> store, int level) {
@@ -1132,6 +1530,7 @@ public class MobLevelingManager {
                             List<String> elite,
                             List<String> legendary,
                             List<String> mythic,
+                            List<String> fallback,
                             SplittableRandom random) {
         List<String> pool;
         if (tier == PassiveTier.MYTHIC) {
@@ -1142,16 +1541,61 @@ public class MobLevelingManager {
             pool = elite;
         }
         if (pool == null || pool.isEmpty()) {
-            List<String> fallback = new ArrayList<>();
-            fallback.addAll(elite);
-            fallback.addAll(legendary);
-            fallback.addAll(mythic);
             if (fallback.isEmpty()) {
                 return null;
             }
             return fallback.get(random.nextInt(fallback.size()));
         }
         return pool.get(random.nextInt(pool.size()));
+    }
+
+    private MobAugmentTierPools resolveMobAugmentTierPools(AugmentManager augmentManager, Set<String> blacklistedIds) {
+        if (augmentManager == null) {
+            return new MobAugmentTierPools(0, 0, List.of(), List.of(), List.of(), List.of());
+        }
+
+        int sourceCount = augmentManager.getAugments().size();
+        int blacklistHash = blacklistedIds == null ? 0 : blacklistedIds.hashCode();
+        MobAugmentTierPools cached = cachedMobAugmentTierPools;
+        if (cached != null && cached.sourceCount() == sourceCount && cached.blacklistHash() == blacklistHash) {
+            return cached;
+        }
+
+        List<String> elite = new ArrayList<>();
+        List<String> legendary = new ArrayList<>();
+        List<String> mythic = new ArrayList<>();
+
+        for (AugmentDefinition def : augmentManager.getAugments().values()) {
+            if (def == null || !def.isMobCompatible() || def.getId() == null || def.getId().isBlank()) {
+                continue;
+            }
+            String id = def.getId().trim();
+            if (blacklistedIds != null && blacklistedIds.contains(id.toLowerCase(Locale.ROOT))) {
+                continue;
+            }
+            if (def.getTier() == PassiveTier.ELITE) {
+                elite.add(id);
+            } else if (def.getTier() == PassiveTier.LEGENDARY) {
+                legendary.add(id);
+            } else if (def.getTier() == PassiveTier.MYTHIC) {
+                mythic.add(id);
+            }
+        }
+
+        List<String> fallback = new ArrayList<>(elite.size() + legendary.size() + mythic.size());
+        fallback.addAll(elite);
+        fallback.addAll(legendary);
+        fallback.addAll(mythic);
+
+        MobAugmentTierPools rebuilt = new MobAugmentTierPools(
+                sourceCount,
+                blacklistHash,
+                List.copyOf(elite),
+                List.copyOf(legendary),
+                List.copyOf(mythic),
+                List.copyOf(fallback));
+        cachedMobAugmentTierPools = rebuilt;
+        return rebuilt;
     }
 
     private Vector3d resolveWorldSpawn(Store<EntityStore> store) {
@@ -1165,7 +1609,7 @@ public class MobLevelingManager {
     }
 
     private int getConfigInt(String path, int defaultValue, Store<EntityStore> store) {
-        Object raw = configManager.get(path, defaultValue, false);
+        Object raw = resolveConfigValue(path, defaultValue, store);
         if (raw == null) {
             return defaultValue;
         }
@@ -1180,7 +1624,7 @@ public class MobLevelingManager {
     }
 
     private double getConfigDouble(String path, double defaultValue, Store<EntityStore> store) {
-        Object raw = configManager.get(path, defaultValue, false);
+        Object raw = resolveConfigValue(path, defaultValue, store);
         if (raw == null) {
             return defaultValue;
         }
@@ -1195,12 +1639,12 @@ public class MobLevelingManager {
     }
 
     private String getConfigString(String path, String defaultValue, Store<EntityStore> store) {
-        Object raw = configManager.get(path, defaultValue, false);
+        Object raw = resolveConfigValue(path, defaultValue, store);
         return raw == null ? defaultValue : raw.toString();
     }
 
     private boolean getConfigBoolean(String path, boolean defaultValue, Store<EntityStore> store) {
-        Object raw = configManager.get(path, defaultValue, false);
+        Object raw = resolveConfigValue(path, defaultValue, store);
         if (raw instanceof Boolean b) {
             return b;
         }
@@ -1211,6 +1655,99 @@ public class MobLevelingManager {
             return Boolean.parseBoolean(s.trim());
         }
         return defaultValue;
+    }
+
+    private Object resolveConfigValue(String path, Object defaultValue, Store<EntityStore> store) {
+        Object worldOverride = resolveWorldOverrideValue(path, store);
+        if (worldOverride != UNSET_CONFIG_VALUE) {
+            return worldOverride;
+        }
+        return configManager.get(path, defaultValue, false);
+    }
+
+    private Object resolveWorldOverrideValue(String path, Store<EntityStore> store) {
+        if (path == null || path.isBlank()) {
+            return UNSET_CONFIG_VALUE;
+        }
+        if (store == null) {
+            return UNSET_CONFIG_VALUE;
+        }
+
+        String worldPath = normalizeWorldOverridePath(path);
+
+        String worldId = resolveWorldIdentifier(store);
+        String matchedKey = resolveBestWorldOverrideKey(worldId);
+        if (matchedKey != null) {
+            String matchedPath = "World_Overrides." + matchedKey + "." + worldPath;
+            if (worldsConfigManager.hasPath(matchedPath)) {
+                return worldsConfigManager.get(matchedPath, null, false);
+            }
+        }
+
+        String defaultPath = "World_Overrides.default." + worldPath;
+        if (worldsConfigManager.hasPath(defaultPath)) {
+            return worldsConfigManager.get(defaultPath, null, false);
+        }
+
+        String globalPath = "World_Overrides.Global." + worldPath;
+        if (worldsConfigManager.hasPath(globalPath)) {
+            return worldsConfigManager.get(globalPath, null, false);
+        }
+
+        return UNSET_CONFIG_VALUE;
+    }
+
+    private String normalizeWorldOverridePath(String path) {
+        String trimmed = path.trim();
+        String prefix = "Mob_Leveling.";
+        if (trimmed.startsWith(prefix)) {
+            return trimmed.substring(prefix.length());
+        }
+        return trimmed;
+    }
+
+    private String resolveBestWorldOverrideKey(String worldId) {
+        if (worldId == null || worldId.isBlank()) {
+            return null;
+        }
+
+        Object raw = worldsConfigManager.get("World_Overrides", null, false);
+        if (!(raw instanceof Map<?, ?> map) || map.isEmpty()) {
+            return null;
+        }
+
+        String normalizedWorld = worldId.trim().toLowerCase(Locale.ROOT);
+        String best = null;
+        int bestScore = -1;
+
+        for (Object keyRaw : map.keySet()) {
+            if (keyRaw == null) {
+                continue;
+            }
+            String key = keyRaw.toString().trim();
+            if (key.isEmpty()) {
+                continue;
+            }
+            String normalizedKey = key.toLowerCase(Locale.ROOT);
+            if ("default".equals(normalizedKey) || "global".equals(normalizedKey)) {
+                continue;
+            }
+
+            boolean matches = normalizedKey.contains("*")
+                    ? matchesWildcard(normalizedWorld, normalizedKey)
+                    : normalizedWorld.equals(normalizedKey);
+            if (!matches) {
+                continue;
+            }
+
+            int score = normalizedKey.replace("*", "").length();
+            if (score > bestScore) {
+                best = key;
+                bestScore = score;
+            }
+        }
+
+        return best;
     }
 
     private Integer parsePositiveInt(Object raw) {

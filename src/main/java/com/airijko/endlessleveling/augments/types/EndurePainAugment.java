@@ -127,6 +127,12 @@ public final class EndurePainAugment extends Augment
 
         EntityStatValue health = stats.get(DefaultEntityStatTypes.getHealth());
         if (health == null || health.get() <= 0f) {
+            state.clear();
+            capState.clear();
+            UUID playerId = context.getPlayerData() != null ? context.getPlayerData().getUuid() : null;
+            if (playerId != null) {
+                LAST_HIT_DAMAGE.remove(playerId);
+            }
             return;
         }
 

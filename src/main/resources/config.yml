@@ -152,4 +152,4 @@ enable_builtin_augments: true # If false, EndlessLeveling's built-in augments ar
 enable_logging: false # Master toggle: true enables ALL mod logs (debug + info + warnings)
 logging:
   base_level: WARNING # When enable_logging is false, base level is clamped to WARNING/SEVERE (INFO suppressed unless enable_logging is true or a debug section is enabled).
-  debug_sections: [mob_common_offense, mob_common_defense, commands] # Package prefixes to fully enable debug logging, e.g. [augments] or [commands, commands.subcommands]. Targeted mob common logs: [mob_common_offense, mob_common_defense]. 'commands' enables all command root/fallback logs.
+  debug_sections: [mob_level_debug, mob_level_flow, mob_common_offense, mob_common_defense] # Supports aliases and package prefixes. mob_level_debug + mob_level_flow enable resolver and mob-level flow logs; mob_common_offense + mob_common_defense keep hit-time augment/health diagnostics.

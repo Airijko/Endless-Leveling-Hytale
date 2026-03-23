@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -78,9 +79,58 @@ public final class MobAugmentExecutor {
             var runtimeState = runtimeManager.getRuntimeState(entityId);
             mobAugments.put(entityId, new MobAugmentInstance(augments, appliedAugmentIds, runtimeState));
             LOGGER.atInfo().log("[MOB_OVERRIDE_AUGMENTS] Bound %d augments to mob %s: %s",
-                    augments.size(), entityId, augmentIds);
+                    augments.size(), entityId, formatAugmentBindSummary(appliedAugmentIds));
+            LOGGER.atInfo().log("[MOB_OVERRIDE_AUGMENTS][RAW] mob=%s ids=%s",
+                    entityId, appliedAugmentIds);
             LOGGER.atInfo().log("[MOB_AUGMENT_CATEGORIES] mob=%s categories=%s",
                     entityId, summarizeCategories(augments));
+        }
+    }
+
+    private String formatAugmentBindSummary(List<String> augmentIds) {
+        if (augmentIds == null || augmentIds.isEmpty()) {
+            return "commonTotals=[] nonCommonCount=0";
+        }
+
+        Map<String, Double> commonTotals = new LinkedHashMap<>();
+        int nonCommonCount = 0;
+
+        for (String augmentId : augmentIds) {
+            if (augmentId == null || augmentId.isBlank()) {
+                continue;
+            }
+
+            String trimmed = augmentId.trim();
+            String[] parts = trimmed.split("::");
+            if (parts.length >= 3 && "common".equalsIgnoreCase(parts[0])) {
+                String stat = parts[1].trim().toLowerCase(Locale.ROOT);
+                double amount = parseCommonAmount(parts[2]);
+                commonTotals.merge(stat, amount, Double::sum);
+                continue;
+            }
+
+            nonCommonCount++;
+        }
+
+        List<String> formattedTotals = new ArrayList<>();
+        for (Map.Entry<String, Double> entry : commonTotals.entrySet()) {
+            formattedTotals.add(String.format(Locale.ROOT, "%s=%.3f", entry.getKey(), entry.getValue()));
+        }
+
+        return String.format(Locale.ROOT,
+                "commonTotals=%s nonCommonCount=%d",
+                formattedTotals,
+                nonCommonCount);
+    }
+
+    private double parseCommonAmount(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return 0.0D;
+        }
+        try {
+            return Double.parseDouble(raw.trim());
+        } catch (Exception ignored) {
+            return 0.0D;
         }
     }
 

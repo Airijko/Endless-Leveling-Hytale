@@ -47,7 +47,11 @@ public final class LoggingManager {
         Level configuredBase = resolveLevel(
                 configManager.get("logging.base_level", DEFAULT_BASE_LEVEL.getName(), false));
         Collection<String> configuredSections = resolveSections(
-                configManager.get("logging.debug_sections", Collections.emptyList(), false));
+            configManager.get("logging.debug_sections", Collections.emptyList(), false));
+        if (configuredSections.isEmpty()) {
+            configuredSections = resolveSections(
+                configManager.get("debug_sections", Collections.emptyList(), false));
+        }
 
         configure(enabled, configuredSections, configuredBase);
     }
@@ -137,6 +141,12 @@ public final class LoggingManager {
         }
         if ("mob_common_defense".equals(lowered)) {
             return LOGGER_PREFIX + ".systems.PlayerCombatSystem";
+        }
+        if ("mob_level_debug".equals(lowered)) {
+            return LOGGER_PREFIX + ".leveling.MobLevelingManager";
+        }
+        if ("mob_level_flow".equals(lowered)) {
+            return LOGGER_PREFIX + ".mob.MobLevelingSystem";
         }
         // Allow shorthand like "augments" or ".systems"; fall back to full package if
         // provided.

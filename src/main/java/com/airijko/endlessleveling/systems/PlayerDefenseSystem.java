@@ -143,6 +143,7 @@ public class PlayerDefenseSystem extends DamageEventSystem {
 		}
 
 		if (attackerRef != null && mobAugmentExecutor != null && mobLevelingManager != null) {
+			boolean offenseDebugEnabled = isDebugSectionEnabled(DEBUG_SECTION_MOB_COMMON_OFFENSE);
 			PlayerRef attackerPlayer = EntityRefUtil.tryGetComponent(commandBuffer, attackerRef,
 					PlayerRef.getComponentType());
 			boolean attackerIsPlayer = attackerPlayer != null && attackerPlayer.isValid();
@@ -179,7 +180,7 @@ public class PlayerDefenseSystem extends DamageEventSystem {
 									SkillAttributeType.SORCERY);
 							double combinedDamagePercent = Math.max(0.0D, strengthBonus + sorceryBonus);
 							float damageAfterAttributes = (float) (originalDamage * (1.0D + (combinedDamagePercent / 100.0D)));
-							if (isDebugSectionEnabled(DEBUG_SECTION_MOB_COMMON_OFFENSE)) {
+							if (offenseDebugEnabled) {
 								float commonBonusDamage = Math.max(0.0f, damageAfterAttributes - originalDamage);
 								LOGGER.atInfo().log(
 										"[MOB_COMMON_OFFENSE] attacker=%d defender=%s base=%.3f bonus=%.3f final=%.3f strength=%.2f%% sorcery=%.2f%% combined=%.2f%%",
@@ -229,6 +230,19 @@ public class PlayerDefenseSystem extends DamageEventSystem {
 										appliedTrueDamage);
 							}
 						}
+						else if (offenseDebugEnabled) {
+							LOGGER.atInfo().log(
+									"[MOB_COMMON_OFFENSE] attacker=%d defender=%s skipped=missing_attacker_uuid augmentCount=%d",
+									attackerRef.getIndex(),
+									defenderPlayer.getUsername(),
+									attackerAugments.size());
+						}
+					}
+					else if (offenseDebugEnabled) {
+						LOGGER.atInfo().log(
+								"[MOB_COMMON_OFFENSE] attacker=%d defender=%s skipped=no_mob_augments",
+								attackerRef.getIndex(),
+								defenderPlayer.getUsername());
 					}
 				}
 			}
@@ -411,7 +425,33 @@ public class PlayerDefenseSystem extends DamageEventSystem {
 		}
 
 		Object raw = plugin.getConfigManager().get("logging.debug_sections", List.of(), false);
-		if (!(raw instanceof Collection<?> sections)) {
+		if (raw == null) {
+			raw = List.of();
+		}
+
+		Collection<?> sections = null;
+		if (raw instanceof Collection<?> collection) {
+			sections = collection;
+		} else if (raw instanceof String str) {
+			String trimmed = str.trim();
+			if (!trimmed.isEmpty()) {
+				sections = List.of(trimmed.split(","));
+			}
+		}
+
+		if (sections == null || sections.isEmpty()) {
+			raw = plugin.getConfigManager().get("debug_sections", List.of(), false);
+			if (raw instanceof Collection<?> collection) {
+				sections = collection;
+			} else if (raw instanceof String str) {
+				String trimmed = str.trim();
+				if (!trimmed.isEmpty()) {
+					sections = List.of(trimmed.split(","));
+				}
+			}
+		}
+
+		if (sections == null || sections.isEmpty()) {
 			return false;
 		}
 

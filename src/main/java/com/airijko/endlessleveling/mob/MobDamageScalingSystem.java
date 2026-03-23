@@ -88,7 +88,7 @@ public class MobDamageScalingSystem extends DamageEventSystem {
                     PlayerRef.getComponentType());
             if ((attackerPlayer == null || !attackerPlayer.isValid())
                     && !managedSummonAttacker
-                    && levelingManager.isMobDamageScalingEnabled()) {
+                    && levelingManager.isMobDamageScalingEnabled(store)) {
 
                 // Treat as mob source
                 int mobLevel = levelingManager.resolveMobLevel(attackerRef, commandBuffer);
@@ -111,7 +111,7 @@ public class MobDamageScalingSystem extends DamageEventSystem {
                 float updated = (float) (old * mult);
                 damage.setAmount(updated);
                 try {
-                    LOGGER.atInfo().log("MobDamageScaling: scaled damage from %f to %f for entity %d", old, updated,
+                    LOGGER.atFiner().log("MobDamageScaling: scaled damage from %f to %f for entity %d", old, updated,
                             attackerRef.getIndex());
                 } catch (Throwable ignored) {
                 }

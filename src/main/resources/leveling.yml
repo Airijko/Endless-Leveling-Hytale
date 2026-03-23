@@ -82,6 +82,7 @@ prestige:
 
 Mob_Leveling:
   Level_Source:
+    Mode: FIXED # PLAYER, MIXED, DISTANCE, FIXED, or TIERS
     Party_System:
       Enabled: true
       Level_Calculation: "MEDIAN"
@@ -103,6 +104,9 @@ Mob_Leveling:
         Multiplier: 0.05
     Additive_Minimum_XP: 50
     Global_XP_Multiplier: 1.0
-  UI:
-    Show_Mob_Level: true
-    Show_Level_In_Name: true
+  Nameplate:
+    # Enables or disables mob leveling nameplates completely.
+    Enabled: true
+    Show_Level: true
+    Show_Name: true
+    Show_Health: true
