@@ -31,3 +31,4 @@ passives:
     reset_on_kill: true
   heal_on_kill:
     value: 0.5
+mob_compatible: true

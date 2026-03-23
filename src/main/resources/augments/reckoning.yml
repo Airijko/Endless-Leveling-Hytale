@@ -36,3 +36,4 @@ passives:
     full_value_at_health_percent: 1.0
   self_damage:
     percent_of_current_hp: 0.05
+mob_compatible: true

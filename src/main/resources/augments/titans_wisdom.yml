@@ -26,3 +26,4 @@ passives:
   debuffs:
     haste:
       value: -0.15
+mob_compatible: true

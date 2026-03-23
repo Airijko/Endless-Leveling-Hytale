@@ -12,9 +12,7 @@ weapons:
   - type: STAFF
     damage: 1.625
   - type: SWORD
-    damage: 1.495
-  - type: DAGGER
-    damage: 1.43
+    damage: 1.625
 
 passives:
   - type: HEALTH_REGEN
@@ -33,7 +31,7 @@ passives:
     value: 1.755
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: life_force
-    value: 2.925
+    value: 3.25
 
 ascension:
   id: class_battlemage_exalted

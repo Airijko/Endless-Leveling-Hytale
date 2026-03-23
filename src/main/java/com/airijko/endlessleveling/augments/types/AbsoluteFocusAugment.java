@@ -56,13 +56,9 @@ public final class AbsoluteFocusAugment extends Augment implements AugmentHooks.
         if (context == null) {
             return 0f;
         }
-        SkillManager skillManager = context.getSkillManager();
-        if (skillManager == null || context.getPlayerData() == null) {
-            return context.getDamage();
-        }
 
         float originalDamage = context.getDamage();
-        double totalBonusMultiplier = resolveExcessCritDamageBonus(skillManager, context);
+        double totalBonusMultiplier = resolveExcessCritDamageBonus(context);
         boolean activated = false;
 
         if (guaranteedCritChance > 0.0D
@@ -70,7 +66,7 @@ public final class AbsoluteFocusAugment extends Augment implements AugmentHooks.
                         guaranteedCritCooldownMillis)) {
             activated = true;
             if (!context.isCritical()) {
-                double ferocity = skillManager.calculatePlayerFerocity(context.getPlayerData());
+                double ferocity = AugmentUtils.resolveFerocity(context);
                 totalBonusMultiplier += (ferocity / 100.0D) * guaranteedCritChance;
             }
         }
@@ -92,13 +88,11 @@ public final class AbsoluteFocusAugment extends Augment implements AugmentHooks.
         return finalDamage;
     }
 
-    private double resolveExcessCritDamageBonus(SkillManager skillManager, AugmentHooks.HitContext context) {
+    private double resolveExcessCritDamageBonus(AugmentHooks.HitContext context) {
         if (conversionRatio <= 0.0D) {
             return 0.0D;
         }
-        SkillManager.PrecisionBreakdown breakdown = skillManager.getPrecisionBreakdown(context.getPlayerData());
-        double rawCritPercent = breakdown.racePercent() + breakdown.skillPercent();
-        double rawCritChance = Math.max(0.0D, rawCritPercent / 100.0D);
+        double rawCritChance = Math.max(0.0D, AugmentUtils.resolvePrecision(context));
         double excessCritChance = Math.max(0.0D, rawCritChance - 1.0D);
         return excessCritChance * conversionRatio;
     }

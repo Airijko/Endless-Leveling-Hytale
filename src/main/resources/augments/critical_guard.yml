@@ -26,3 +26,4 @@ passives:
     value: 0.25
     scaling_stat: crit_rate
     category: ON_DAMAGE_TAKEN
+mob_compatible: true

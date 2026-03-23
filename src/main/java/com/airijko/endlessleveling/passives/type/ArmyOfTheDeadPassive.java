@@ -4,6 +4,7 @@ import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.compatibility.NameplateBuilderCompatibility;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
+import com.airijko.endlessleveling.augments.MobAugmentExecutor;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
 import com.airijko.endlessleveling.player.PlayerDataManager;
 import com.airijko.endlessleveling.leveling.PartyManager;
@@ -844,6 +845,12 @@ public final class ArmyOfTheDeadPassive {
             }
         }
 
+
+        // Apply player augments to the summon
+        UUID summonUuid = resolveEntityUuid(summonRef, store, null);
+        if (summonUuid != null) {
+            applyPlayerAugmentsToSummon(summonRef, store, source.ownerUuid(), summonUuid, slotIndex);
+        }
         applySummonMovementSpeedBonus(summonRef, store, inheritedStats.movementMultiplier());
     }
 
@@ -914,6 +921,102 @@ public final class ArmyOfTheDeadPassive {
                 inheritance,
                 hp.get(),
                 hp.getMax());
+    }
+
+    private static void applyPlayerAugmentsToSummon(Ref<EntityStore> summonRef,
+            Store<EntityStore> store,
+            UUID ownerUuid,
+            UUID summonUuid,
+            int slotIndex) {
+        if (summonRef == null || store == null || ownerUuid == null || summonUuid == null) {
+            LOGGER.atWarning().log(
+                    "[ARMY_OF_THE_DEAD][AUGMENTS] Cannot apply augments: missing required parameters for slot %d owner=%s summon=%s",
+                    slotIndex,
+                    ownerUuid,
+                    summonUuid);
+            return;
+        }
+
+        // Get player data
+        PlayerDataManager playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
+        if (playerDataManager == null) {
+            LOGGER.atWarning().log(
+                    "[ARMY_OF_THE_DEAD][AUGMENTS] PlayerDataManager not available for slot %d owner=%s",
+                    slotIndex,
+                    ownerUuid);
+            return;
+        }
+
+        PlayerData playerData = playerDataManager.get(ownerUuid);
+        if (playerData == null) {
+            LOGGER.atWarning().log(
+                    "[ARMY_OF_THE_DEAD][AUGMENTS] No player data found for owner=%s slot=%d",
+                    ownerUuid,
+                    slotIndex);
+            return;
+        }
+
+        // Get selected augments
+        Map<String, String> selectedAugmentsMap = playerData.getSelectedAugmentsSnapshot();
+        if (selectedAugmentsMap == null || selectedAugmentsMap.isEmpty()) {
+            LOGGER.atFine().log(
+                    "[ARMY_OF_THE_DEAD][AUGMENTS] No augments selected for owner=%s slot=%d summon=%s",
+                    ownerUuid,
+                    slotIndex,
+                    summonUuid);
+            return;
+        }
+
+        List<String> augmentIds = new ArrayList<>(selectedAugmentsMap.values());
+
+        // Get augment managers
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null) {
+            LOGGER.atWarning().log(
+                    "[ARMY_OF_THE_DEAD][AUGMENTS] EndlessLeveling plugin not available for slot %d owner=%s",
+                    slotIndex,
+                    ownerUuid);
+            return;
+        }
+
+        MobAugmentExecutor mobAugmentExecutor = plugin.getMobAugmentExecutor();
+        var augmentManager = plugin.getAugmentManager();
+        var augmentRuntimeManager = plugin.getAugmentRuntimeManager();
+
+        if (mobAugmentExecutor == null || augmentManager == null || augmentRuntimeManager == null) {
+            LOGGER.atWarning().log(
+                    "[ARMY_OF_THE_DEAD][AUGMENTS] Missing augment executor/manager for slot %d owner=%s summon=%s",
+                    slotIndex,
+                    ownerUuid,
+                    summonUuid);
+            return;
+        }
+
+        try {
+            LOGGER.atFine().log(
+                    "[ARMY_OF_THE_DEAD][AUGMENTS][DEBUG] Registering %d augments to summon at slot %d: owner=%s summon=%s augments=%s",
+                    augmentIds.size(),
+                    slotIndex,
+                    ownerUuid,
+                    summonUuid,
+                    augmentIds);
+
+            mobAugmentExecutor.registerMobAugments(summonUuid, augmentIds, augmentManager, augmentRuntimeManager);
+
+            LOGGER.atInfo().log(
+                    "[ARMY_OF_THE_DEAD][AUGMENTS] ✓ Successfully registered %d augments to summon at slot %d owner=%s summon=%s",
+                    augmentIds.size(),
+                    slotIndex,
+                    ownerUuid,
+                    summonUuid);
+        } catch (Exception e) {
+            LOGGER.atSevere().withCause(e).log(
+                    "[ARMY_OF_THE_DEAD][AUGMENTS] Failed to register augments for slot %d owner=%s summon=%s: %s",
+                    slotIndex,
+                    ownerUuid,
+                    summonUuid,
+                    e.getMessage());
+        }
     }
 
     private static void applySummonMovementSpeedBonus(Ref<EntityStore> summonRef,

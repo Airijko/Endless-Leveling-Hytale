@@ -42,3 +42,4 @@ passives:
       condition:
         resource: MANA
         max_percent: 0.25
+mob_compatible: true

@@ -4,6 +4,9 @@ import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentRuntimeState;
 import com.airijko.endlessleveling.augments.types.OverhealAugment;
 import com.airijko.endlessleveling.augments.types.UndyingRageAugment;
+import com.airijko.endlessleveling.mob.MobSkillAttributeResolver;
+import com.airijko.endlessleveling.player.PlayerData;
+import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.util.Lang;
 import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
@@ -321,5 +324,82 @@ public final class AugmentUtils {
             }
         }
         return 0.0D;
+    }
+
+    public static double resolveSkillAttribute(AugmentHooks.BaseContext context, SkillAttributeType type) {
+        return MobSkillAttributeResolver.resolveSkillAttribute(context, type);
+    }
+
+    public static double resolveSkillAttribute(EntityStatMap statMap,
+            SkillManager skillManager,
+            PlayerData playerData,
+            CommandBuffer<EntityStore> commandBuffer,
+            Ref<EntityStore> sourceRef,
+            SkillAttributeType type) {
+        return MobSkillAttributeResolver.resolveSkillAttribute(
+                statMap,
+                skillManager,
+                playerData,
+                commandBuffer,
+                sourceRef,
+                type);
+    }
+
+    public static double resolveLifeForce(AugmentHooks.BaseContext context) {
+        return resolveSkillAttribute(context, SkillAttributeType.LIFE_FORCE);
+    }
+
+    public static double resolveStrength(AugmentHooks.BaseContext context) {
+        return resolveSkillAttribute(context, SkillAttributeType.STRENGTH);
+    }
+
+    public static double resolveSorcery(AugmentHooks.BaseContext context) {
+        return resolveSkillAttribute(context, SkillAttributeType.SORCERY);
+    }
+
+    public static double resolveDefense(AugmentHooks.BaseContext context) {
+        return resolveSkillAttribute(context, SkillAttributeType.DEFENSE);
+    }
+
+    public static double resolveHaste(AugmentHooks.BaseContext context) {
+        return resolveSkillAttribute(context, SkillAttributeType.HASTE);
+    }
+
+    public static double resolveStamina(AugmentHooks.BaseContext context) {
+        return resolveSkillAttribute(context, SkillAttributeType.STAMINA);
+    }
+
+    public static double resolveFlow(AugmentHooks.BaseContext context) {
+        return resolveSkillAttribute(context, SkillAttributeType.FLOW);
+    }
+
+    public static double resolveDiscipline(AugmentHooks.BaseContext context) {
+        return resolveSkillAttribute(context, SkillAttributeType.DISCIPLINE);
+    }
+
+    public static double resolvePrecision(AugmentHooks.BaseContext context) {
+        return resolveSkillAttribute(context, SkillAttributeType.PRECISION);
+    }
+
+    public static double resolveFerocity(AugmentHooks.BaseContext context) {
+        return resolveSkillAttribute(context, SkillAttributeType.FEROCITY);
+    }
+
+    public static double resolvePrecision(EntityStatMap statMap,
+            SkillManager skillManager,
+            PlayerData playerData,
+            CommandBuffer<EntityStore> commandBuffer,
+            Ref<EntityStore> sourceRef) {
+        return resolveSkillAttribute(statMap, skillManager, playerData, commandBuffer, sourceRef,
+                SkillAttributeType.PRECISION);
+    }
+
+    public static double resolveFerocity(EntityStatMap statMap,
+            SkillManager skillManager,
+            PlayerData playerData,
+            CommandBuffer<EntityStore> commandBuffer,
+            Ref<EntityStore> sourceRef) {
+        return resolveSkillAttribute(statMap, skillManager, playerData, commandBuffer, sourceRef,
+                SkillAttributeType.FEROCITY);
     }
 }

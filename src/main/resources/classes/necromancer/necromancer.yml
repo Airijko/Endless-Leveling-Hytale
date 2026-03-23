@@ -27,8 +27,9 @@ passives:
     base_summon_damage: 5
     summon_stat_inheritance: 0.2
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Copper
-  - type: HEALTH_REGEN
-    value: 0.014
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: life_force
+    value: 1.575
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: flow
     value: 1.05

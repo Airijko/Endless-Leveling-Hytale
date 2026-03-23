@@ -24,13 +24,11 @@ public final class ArcaneMasteryAugment extends Augment implements AugmentHooks.
     @Override
     public void applyPassive(AugmentHooks.PassiveStatContext context) {
         var runtime = context.getRuntimeState();
-        var playerData = context.getPlayerData();
-        var skillManager = context.getSkillManager();
-        if (runtime == null || playerData == null || skillManager == null) {
+        if (runtime == null) {
             return;
         }
 
-        double sorcery = skillManager.calculatePlayerSorcery(playerData);
+        double sorcery = AugmentUtils.resolveSorcery(context);
         double flowBonus = sorcery * sorceryToFlowRatio;
         AugmentUtils.setAttributeBonus(runtime,
                 ID + "_flow",

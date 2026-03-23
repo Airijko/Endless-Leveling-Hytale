@@ -27,10 +27,9 @@ passives:
     base_summon_damage: 25
     summon_stat_inheritance: 0.6
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Onyxium
-  - type: MANA_REGEN
-    value: 0.052
-  - type: HEALTH_REGEN
-    value: 0.026
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: life_force
+    value: 2.925
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: flow
     value: 1.95

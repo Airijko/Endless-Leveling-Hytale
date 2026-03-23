@@ -28,3 +28,4 @@ passives:
       value: 0.05
     haste:
       value: 0.25
+mob_compatible: true

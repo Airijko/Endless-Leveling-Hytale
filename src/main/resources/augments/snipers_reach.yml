@@ -36,3 +36,4 @@ passives:
     max_distance: 30
     scaling_type: linear
     attack_type: RANGED
+mob_compatible: true

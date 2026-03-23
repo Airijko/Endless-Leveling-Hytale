@@ -39,3 +39,4 @@ passives:
     cancel_on_kill: true
   emergency_heal:
     missing_health_percent: 0.25
+mob_compatible: true

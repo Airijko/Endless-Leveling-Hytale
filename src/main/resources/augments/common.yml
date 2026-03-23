@@ -62,3 +62,4 @@ passives:
     stamina:
       min_value: 2
       max_value: 6
+mob_compatible: true

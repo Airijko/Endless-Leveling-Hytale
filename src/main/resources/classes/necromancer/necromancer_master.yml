@@ -27,10 +27,9 @@ passives:
     base_summon_damage: 15
     summon_stat_inheritance: 0.4
     skeleton_type: EndlessLeveling_ArmyOfTheDead_Pet_Adamantite
-  - type: MANA_REGEN
-    value: 0.04
-  - type: HEALTH_REGEN
-    value: 0.02
+  - type: INNATE_ATTRIBUTE_GAIN
+    attribute: life_force
+    value: 2.25
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: flow
     value: 1.5

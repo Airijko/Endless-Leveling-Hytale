@@ -1,5 +1,7 @@
 package com.airijko.endlessleveling.mob;
 
+import com.airijko.endlessleveling.EndlessLeveling;
+import com.airijko.endlessleveling.augments.MobAugmentExecutor;
 import com.airijko.endlessleveling.leveling.MobLevelingManager;
 import com.airijko.endlessleveling.leveling.XpKillCreditTracker;
 import com.airijko.endlessleveling.passives.type.ArmyOfTheDeadPassive.SummonInheritedStats;
@@ -13,13 +15,16 @@ import com.hypixel.hytale.component.dependency.Order;
 import com.hypixel.hytale.component.dependency.SystemDependency;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
+import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import javax.annotation.Nonnull;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
@@ -76,6 +81,7 @@ public class MobDamageScalingSystem extends DamageEventSystem {
             boolean managedSummonAttacker = ArmyOfTheDeadPassive.isManagedSummon(attackerRef, store, commandBuffer);
             if (managedSummonAttacker) {
                 applySummonOutgoingScaling(damage, attackerRef, store, commandBuffer);
+                applySummonAttackerAugments(damage, attackerRef, targetRef, store, commandBuffer);
             }
 
             PlayerRef attackerPlayer = EntityRefUtil.tryGetComponent(commandBuffer, attackerRef,
@@ -113,8 +119,94 @@ public class MobDamageScalingSystem extends DamageEventSystem {
 
             if (ArmyOfTheDeadPassive.isManagedSummon(targetRef, store, commandBuffer)) {
                 applySummonIncomingDefenseScaling(damage, targetRef, store, commandBuffer);
+                applySummonDefenderAugments(damage, targetRef, attackerRef, store, commandBuffer);
             }
         }
+    }
+
+    private void applySummonAttackerAugments(@Nonnull Damage damage,
+            @Nonnull Ref<EntityStore> attackerRef,
+            @Nonnull Ref<EntityStore> targetRef,
+            @Nonnull Store<EntityStore> store,
+            @Nonnull CommandBuffer<EntityStore> commandBuffer) {
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null) {
+            return;
+        }
+
+        MobAugmentExecutor executor = plugin.getMobAugmentExecutor();
+        if (executor == null) {
+            return;
+        }
+
+        UUID attackerUuid = resolveEntityUuid(attackerRef, store, commandBuffer);
+        if (attackerUuid == null || !executor.hasMobAugments(attackerUuid)) {
+            return;
+        }
+
+        EntityStatMap attackerStats = EntityRefUtil.tryGetComponent(commandBuffer, attackerRef,
+                EntityStatMap.getComponentType());
+        EntityStatMap targetStats = EntityRefUtil.tryGetComponent(commandBuffer, targetRef,
+                EntityStatMap.getComponentType());
+
+        float before = Math.max(0.0f, damage.getAmount());
+        var onHit = executor.applyOnHit(attackerUuid,
+                attackerRef,
+                targetRef,
+                commandBuffer,
+                attackerStats,
+                targetStats,
+                before);
+
+        // Preserve legacy behavior where true damage is represented as a flat add-on.
+        double trueDamage = Math.max(0.0D, onHit.trueDamageBonus());
+        float after = Math.max(0.0f, onHit.damage() + (float) trueDamage);
+        damage.setAmount(after);
+    }
+
+    private void applySummonDefenderAugments(@Nonnull Damage damage,
+            @Nonnull Ref<EntityStore> targetRef,
+            @Nonnull Ref<EntityStore> attackerRef,
+            @Nonnull Store<EntityStore> store,
+            @Nonnull CommandBuffer<EntityStore> commandBuffer) {
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null) {
+            return;
+        }
+
+        MobAugmentExecutor executor = plugin.getMobAugmentExecutor();
+        if (executor == null) {
+            return;
+        }
+
+        UUID targetUuid = resolveEntityUuid(targetRef, store, commandBuffer);
+        if (targetUuid == null || !executor.hasMobAugments(targetUuid)) {
+            return;
+        }
+
+        EntityStatMap targetStats = EntityRefUtil.tryGetComponent(commandBuffer, targetRef,
+                EntityStatMap.getComponentType());
+        if (targetStats == null) {
+            return;
+        }
+
+        float before = Math.max(0.0f, damage.getAmount());
+        float afterDamageTaken = executor.applyOnDamageTaken(
+                targetUuid,
+                targetRef,
+                attackerRef,
+                commandBuffer,
+                targetStats,
+                before);
+        float afterLowHp = executor.applyOnLowHp(
+                targetUuid,
+                targetRef,
+                attackerRef,
+                commandBuffer,
+                targetStats,
+                afterDamageTaken);
+
+        damage.setAmount(Math.max(0.0f, afterLowHp));
     }
 
     private void applySummonOutgoingScaling(@Nonnull Damage damage,
@@ -208,5 +300,26 @@ public class MobDamageScalingSystem extends DamageEventSystem {
         }
         logMap.put(entityIndex, now);
         return true;
+    }
+
+    private UUID resolveEntityUuid(Ref<EntityStore> ref,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (ref == null) {
+            return null;
+        }
+
+        UUIDComponent uuidComponent = commandBuffer != null
+                ? commandBuffer.getComponent(ref, UUIDComponent.getComponentType())
+                : null;
+        if (uuidComponent == null && store != null) {
+            uuidComponent = store.getComponent(ref, UUIDComponent.getComponentType());
+        }
+        if (uuidComponent == null) {
+            return null;
+        }
+
+        UUID uuid = uuidComponent.getUuid();
+        return uuid != null ? uuid : null;
     }
 }

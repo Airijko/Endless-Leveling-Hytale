@@ -7,7 +7,6 @@ import com.airijko.endlessleveling.augments.AugmentHooks;
 import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.enums.ClassWeaponType;
-import com.airijko.endlessleveling.player.SkillManager;
 
 import java.util.Map;
 
@@ -44,9 +43,8 @@ public final class MagicBladeAugment extends Augment implements AugmentHooks.OnH
         }
         double totalMultiplierBonus = 0.0D;
 
-        SkillManager skillManager = context.getSkillManager();
-        if (skillManager != null && context.getPlayerData() != null && sorceryWeaponConversionPercent > 0.0D) {
-            double sorceryPercent = skillManager.calculatePlayerSorcery(context.getPlayerData());
+        if (sorceryWeaponConversionPercent > 0.0D) {
+            double sorceryPercent = AugmentUtils.resolveSorcery(context);
             totalMultiplierBonus += (sorceryPercent * sorceryWeaponConversionPercent) / 100.0D;
         }
 

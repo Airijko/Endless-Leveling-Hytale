@@ -257,13 +257,8 @@ public final class BloodthirsterAugment extends Augment implements AugmentHooks.
         double missing = Math.max(0.0D, hp.getMax() - hp.get());
         double baseHeal = missing * woundedMissingHealthPercent;
 
-        SkillManager skillManager = context.getSkillManager();
-        if (skillManager == null || context.getPlayerData() == null) {
-            return baseHeal;
-        }
-
-        double strength = Math.max(0.0D, skillManager.calculatePlayerStrength(context.getPlayerData()));
-        double sorcery = Math.max(0.0D, skillManager.calculatePlayerSorcery(context.getPlayerData()));
+        double strength = AugmentUtils.resolveStrength(context);
+        double sorcery = AugmentUtils.resolveSorcery(context);
         double scalingMultiplier = 1.0D
                 + ((strength * woundedStrengthScaling) / 100.0D)
                 + ((sorcery * woundedSorceryScaling) / 100.0D);
@@ -285,11 +280,7 @@ public final class BloodthirsterAugment extends Augment implements AugmentHooks.
     }
 
     private double resolveHealthyBonusDamage(AugmentHooks.HitContext context) {
-        double strength = 0.0D;
-        SkillManager skillManager = context == null ? null : context.getSkillManager();
-        if (skillManager != null && context.getPlayerData() != null) {
-            strength = Math.max(0.0D, skillManager.calculatePlayerStrength(context.getPlayerData()));
-        }
+        double strength = AugmentUtils.resolveStrength(context);
         return healthyFlatDamage + (strength * healthyStrengthScaling);
     }
 

@@ -28,3 +28,4 @@ passives:
       value: 0.05
     healing_to_damage:
       value: 0.15
+mob_compatible: true

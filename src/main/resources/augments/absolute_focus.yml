@@ -30,3 +30,4 @@ passives:
   excess_crit_conversion:
     stat: crit_chance
     conversion_ratio: 1.0
+mob_compatible: true

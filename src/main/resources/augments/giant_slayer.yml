@@ -31,3 +31,4 @@ passives:
     reference_stat: PLAYER_CURRENT_HP
     max_ratio: 8.0
     calculation: linear
+mob_compatible: true

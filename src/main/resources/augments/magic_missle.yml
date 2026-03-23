@@ -33,3 +33,4 @@ passives:
     flat_damage: 10.0
     sorcery_scaling: 0.2
     cooldown: 2.0
+mob_compatible: true

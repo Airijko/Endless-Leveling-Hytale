@@ -42,3 +42,4 @@ passives:
       true_damage_percent: 0.15
   duration:
     seconds: 8
+mob_compatible: true

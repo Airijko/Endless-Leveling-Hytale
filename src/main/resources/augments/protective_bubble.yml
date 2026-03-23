@@ -20,3 +20,4 @@ passives:
   immunity_bubble:
     immunity_window: 0.25
     cooldown: 30
+mob_compatible: true

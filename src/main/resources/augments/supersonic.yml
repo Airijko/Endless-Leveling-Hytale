@@ -22,3 +22,4 @@ passives:
   debuffs:
     strength:
       value: -0.1
+mob_compatible: true

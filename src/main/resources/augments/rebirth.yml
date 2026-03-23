@@ -22,3 +22,4 @@ passives:
     value: 0.5
     min_health_hp: 1
     cooldown: 100
+mob_compatible: true

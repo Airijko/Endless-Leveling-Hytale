@@ -40,3 +40,4 @@ passives:
     sorcery_scaling: 1.5
     radius: 3.0
     can_crit: false
+mob_compatible: true

@@ -13,6 +13,7 @@ import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.math.vector.Vector3d;
+import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageCause;
 import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
@@ -122,10 +123,12 @@ public final class DeathBombAugment extends Augment
 
     @Override
     public float onDamageTaken(AugmentHooks.DamageTakenContext context) {
-        if (context == null || context.getRuntimeState() == null || context.getPlayerData() == null
-                || context.getPlayerData().getUuid() == null || context.getCommandBuffer() == null
+        if (context == null || context.getRuntimeState() == null || context.getCommandBuffer() == null
                 || context.getDefenderRef() == null || context.getStatMap() == null) {
             return context != null ? context.getIncomingDamage() : 0f;
+        }
+        if (!EntityRefUtil.isUsable(context.getDefenderRef())) {
+            return context.getIncomingDamage();
         }
 
         float incoming = Math.max(0f, context.getIncomingDamage());
@@ -143,7 +146,22 @@ public final class DeathBombAugment extends Augment
             return incoming;
         }
 
-        UUID uuid = context.getPlayerData().getUuid();
+        // Get UUID: try playerData first (for players), fall back to defender UUID (for mobs)
+        UUID uuid = null;
+        if (context.getPlayerData() != null && context.getPlayerData().getUuid() != null) {
+            uuid = context.getPlayerData().getUuid();
+        } else {
+            // For mobs without PlayerData, use defender's UUID
+            UUIDComponent uuidComp = context.getCommandBuffer().getComponent(
+                    context.getDefenderRef(),
+                    UUIDComponent.getComponentType());
+            if (uuidComp != null) {
+                uuid = uuidComp.getUuid();
+            }
+        }
+        if (uuid == null) {
+            return incoming;
+        }
         long now = System.currentTimeMillis();
         PendingBomb existing = PENDING_BOMBS.get(uuid);
         if (existing != null) {
@@ -167,12 +185,8 @@ public final class DeathBombAugment extends Augment
             return incoming;
         }
 
-        double strength = context.getSkillManager() != null
-                ? Math.max(0.0D, context.getSkillManager().calculatePlayerStrength(context.getPlayerData()))
-                : 0.0D;
-        double sorcery = context.getSkillManager() != null
-                ? Math.max(0.0D, context.getSkillManager().calculatePlayerSorcery(context.getPlayerData()))
-                : 0.0D;
+        double strength = AugmentUtils.resolveStrength(context);
+        double sorcery = AugmentUtils.resolveSorcery(context);
         double scaledDamage = (hp.getMax() * healthRatio)
                 + (strength * strengthRatio)
                 + (sorcery * sorceryRatio);
@@ -197,6 +211,7 @@ public final class DeathBombAugment extends Augment
             return;
         }
 
+        // tickPendingBombs handles null playerRef (for mobs without PlayerRef)
         tickPendingBombs(context.getCommandBuffer(), context.getPlayerRef());
     }
 
@@ -229,8 +244,11 @@ public final class DeathBombAugment extends Augment
                 continue;
             }
 
-            if (pending.worldStore == null || fallbackVisualRef == null || fallbackVisualRef.getStore() == null
-                    || fallbackVisualRef.getStore() != pending.worldStore) {
+            // For mobs, fallbackVisualRef may be null - just validate the store exists
+            if (pending.worldStore == null) {
+                continue;
+            }
+            if (fallbackVisualRef != null && (fallbackVisualRef.getStore() == null || fallbackVisualRef.getStore() != pending.worldStore)) {
                 continue;
             }
 
@@ -249,8 +267,11 @@ public final class DeathBombAugment extends Augment
                 || pending.damage <= 0.0D || pending.radius <= 0.0D) {
             return;
         }
-        if (pending.worldStore == null || fallbackVisualRef == null || fallbackVisualRef.getStore() == null
-                || fallbackVisualRef.getStore() != pending.worldStore) {
+        // For mobs, fallbackVisualRef may be null - just validate the store exists
+        if (pending.worldStore == null) {
+            return;
+        }
+        if (fallbackVisualRef != null && (fallbackVisualRef.getStore() == null || fallbackVisualRef.getStore() != pending.worldStore)) {
             return;
         }
 
@@ -360,8 +381,11 @@ public final class DeathBombAugment extends Augment
         if (commandBuffer == null || pending == null || pending.position == null) {
             return;
         }
-        if (pending.worldStore == null || fallbackVisualRef == null || fallbackVisualRef.getStore() == null
-                || fallbackVisualRef.getStore() != pending.worldStore) {
+        // For mobs, fallbackVisualRef may be null - just validate the store exists
+        if (pending.worldStore == null) {
+            return;
+        }
+        if (fallbackVisualRef != null && (fallbackVisualRef.getStore() == null || fallbackVisualRef.getStore() != pending.worldStore)) {
             return;
         }
 

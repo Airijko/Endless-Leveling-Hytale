@@ -30,3 +30,4 @@ passives:
     strength_scaling: 0.1
     sorcery_scaling: 0.1
     can_crit: true
+mob_compatible: true

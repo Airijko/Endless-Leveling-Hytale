@@ -51,3 +51,4 @@ passives:
       missing_health_percent: 0.1
       strength_scaling: 0.1
       sorcery_scaling: 0.1
+mob_compatible: true

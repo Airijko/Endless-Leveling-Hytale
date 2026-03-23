@@ -26,3 +26,4 @@ passives:
     life_steal:
       value: 0.125
       category: LIFESTEAL
+mob_compatible: true

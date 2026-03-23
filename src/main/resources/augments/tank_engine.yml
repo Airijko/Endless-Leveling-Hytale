@@ -29,3 +29,4 @@ passives:
     duration: 8
     decay_per_second: 5
     exclude_flat_from_percent_scaling: true
+mob_compatible: true

@@ -29,3 +29,4 @@ passives:
     value: 2.5
     threshold: 0.15
     cooldown: 45
+mob_compatible: true

@@ -37,3 +37,4 @@ passives:
   weapon_bonus:
     weapon_type: sword
     bonus_damage: 0.2
+mob_compatible: true

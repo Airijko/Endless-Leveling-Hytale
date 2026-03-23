@@ -37,3 +37,4 @@ passives:
     movement_speed:
       value: 0.5
       duration: 3
+mob_compatible: true

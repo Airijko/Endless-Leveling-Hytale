@@ -4,6 +4,7 @@ import com.airijko.endlessleveling.augments.Augment;
 
 import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentHooks;
+import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.player.SkillManager;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -35,9 +36,7 @@ public final class CriticalGuardAugment extends Augment implements AugmentHooks.
             return incomingDamage;
         }
 
-        SkillManager skillManager = context.getSkillManager();
-        double critChance = skillManager != null ? skillManager.calculatePlayerPrecision(context.getPlayerData())
-                : 0.0D;
+        double critChance = AugmentUtils.resolvePrecision(context);
         critChance = Math.max(0.0D, Math.min(1.0D, critChance));
 
         double roll = ThreadLocalRandom.current().nextDouble();

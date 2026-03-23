@@ -41,10 +41,7 @@ public final class ArcaneCometAugment extends Augment implements AugmentHooks.On
             return context.getDamage();
         }
 
-        SkillManager skillManager = context.getSkillManager();
-        double sorcery = (skillManager == null || context.getPlayerData() == null)
-                ? 0.0D
-                : Math.max(0.0D, skillManager.calculatePlayerSorcery(context.getPlayerData()));
+        double sorcery = AugmentUtils.resolveSorcery(context);
 
         double bonusDamage = flatBonusDamage + (sorcery * sorceryRatio);
         if (bonusDamage <= 0.0D) {

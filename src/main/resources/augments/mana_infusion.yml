@@ -26,3 +26,4 @@ passives:
     sorcery_from_mana:
       value: 0.2
       scaling_stat: MANA
+mob_compatible: true

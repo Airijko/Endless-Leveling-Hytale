@@ -32,3 +32,4 @@ passives:
     max_value: 0.4
     full_value_at_health_percent: 0.2
     healing_to_damage: 0.3
+mob_compatible: true

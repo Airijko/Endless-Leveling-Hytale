@@ -52,3 +52,4 @@ passives:
     duration: 3
   haste_to_damage_conversion:
     conversion_percent: 0.5
+mob_compatible: true

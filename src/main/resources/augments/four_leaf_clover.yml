@@ -16,3 +16,4 @@ passives:
   buffs:
     luck:
       value: 0.5
+mob_compatible: true

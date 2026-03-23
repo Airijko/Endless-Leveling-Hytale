@@ -32,3 +32,4 @@ passives:
   buffs:
     precision:
       value: 0.15
+mob_compatible: true

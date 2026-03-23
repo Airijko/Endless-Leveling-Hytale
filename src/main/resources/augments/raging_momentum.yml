@@ -35,3 +35,4 @@ passives:
     max_stacks: 20
     duration_per_stack: 8
     decay_per_second: 2
+mob_compatible: true

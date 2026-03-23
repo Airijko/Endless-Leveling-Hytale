@@ -195,8 +195,11 @@ public final class OverhealAugment extends Augment
             if (playerRef != null && playerRef.isValid() && playerDataManager != null && skillManager != null) {
                 PlayerData playerData = playerDataManager.get(playerRef.getUuid());
                 if (playerData != null) {
-                    double precisionPercent = Math.max(0.0D, skillManager.calculatePlayerPrecision(playerData)) * 100.0D;
-                    double ferocityValue = Math.max(0.0D, skillManager.calculatePlayerFerocity(playerData));
+                    double precisionPercent = Math.max(0.0D,
+                        AugmentUtils.resolvePrecision(statMap, skillManager, playerData, commandBuffer, ownerRef))
+                        * 100.0D;
+                    double ferocityValue = Math.max(0.0D,
+                        AugmentUtils.resolveFerocity(statMap, skillManager, playerData, commandBuffer, ownerRef));
                     dynamicShieldCap = (precisionPercent * precisionShieldScaling)
                             + (ferocityValue * ferocityShieldScaling);
                 }

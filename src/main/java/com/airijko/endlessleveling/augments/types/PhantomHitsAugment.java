@@ -6,10 +6,10 @@ import com.airijko.endlessleveling.augments.AugmentDamageSafety;
 import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentHooks;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentState;
+import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.systems.PlayerCombatSystem;
 import com.airijko.endlessleveling.util.EntityRefUtil;
-import com.airijko.endlessleveling.player.SkillManager;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
@@ -76,13 +76,8 @@ public final class PhantomHitsAugment extends Augment implements AugmentHooks.On
             }
         }
 
-        SkillManager skillManager = context.getSkillManager();
-        if (skillManager == null || context.getPlayerData() == null) {
-            return context.getDamage();
-        }
-
-        double strength = skillManager.calculatePlayerStrength(context.getPlayerData());
-        double sorcery = skillManager.calculatePlayerSorcery(context.getPlayerData());
+        double strength = AugmentUtils.resolveStrength(context);
+        double sorcery = AugmentUtils.resolveSorcery(context);
         double phantomDamage = flatDamage + (strength * strengthScaling) + (sorcery * sorceryScaling);
 
         if (phantomDamage <= 0.0D) {
@@ -90,10 +85,9 @@ public final class PhantomHitsAugment extends Augment implements AugmentHooks.On
         }
 
         if (canCrit) {
-            double critChance = Math.max(0.0D,
-                    Math.min(1.0D, skillManager.calculatePlayerPrecision(context.getPlayerData())));
+            double critChance = Math.max(0.0D, Math.min(1.0D, AugmentUtils.resolvePrecision(context)));
             if (ThreadLocalRandom.current().nextDouble() <= critChance) {
-                double ferocity = skillManager.calculatePlayerFerocity(context.getPlayerData());
+                double ferocity = AugmentUtils.resolveFerocity(context);
                 phantomDamage *= 1.0D + (ferocity / 100.0D);
             }
         }

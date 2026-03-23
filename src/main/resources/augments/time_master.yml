@@ -24,3 +24,4 @@ passives:
   cooldown_reduction:
     flat_seconds: 1
     percent_remaining: 0.075
+mob_compatible: true

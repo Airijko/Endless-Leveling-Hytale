@@ -27,3 +27,4 @@ passives:
       value: 0.075
     sorcery:
       value: 0.075
+mob_compatible: true

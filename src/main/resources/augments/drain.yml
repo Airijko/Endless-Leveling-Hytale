@@ -36,3 +36,4 @@ passives:
     target_stat: CURRENT_HP
     max_damage_per_tick: 1000
     cooldown: 1.0
+mob_compatible: true

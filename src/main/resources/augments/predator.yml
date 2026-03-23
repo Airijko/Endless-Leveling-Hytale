@@ -47,3 +47,4 @@ passives:
     defense:
       value: -0.1
       active_until_max_stacks: true
+mob_compatible: true

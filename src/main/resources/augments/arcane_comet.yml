@@ -30,3 +30,4 @@ passives:
     sorcery_ratio: 0.5
     can_crit: false
     cooldown: 8.0
+mob_compatible: true

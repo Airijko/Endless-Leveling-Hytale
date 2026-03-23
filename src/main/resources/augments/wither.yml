@@ -46,3 +46,4 @@ passives:
       movement_speed:
         value: -0.2
         max_slow_cap: 0
+mob_compatible: true

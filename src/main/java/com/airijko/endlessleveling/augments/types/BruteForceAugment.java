@@ -52,13 +52,8 @@ public final class BruteForceAugment extends Augment
         AugmentUtils.setAttributeBonus(context.getRuntimeState(), ID + "_sorc_bonus", SkillAttributeType.SORCERY,
                 0.0D, 0L);
 
-        if (context.getSkillManager() == null || context.getPlayerData() == null) {
-            return;
-        }
-
-        double strengthBase = Math.max(0.0D,
-                context.getSkillManager().calculatePlayerStrength(context.getPlayerData()));
-        double sorceryBase = Math.max(0.0D, context.getSkillManager().calculatePlayerSorcery(context.getPlayerData()));
+        double strengthBase = AugmentUtils.resolveStrength(context);
+        double sorceryBase = AugmentUtils.resolveSorcery(context);
 
         double strengthExtra = strengthBase * Math.max(0.0D, strengthMultiplier - 1.0D);
         double sorceryExtra = sorceryBase * Math.max(0.0D, sorceryMultiplier - 1.0D);
@@ -80,9 +75,7 @@ public final class BruteForceAugment extends Augment
             return damage;
         }
 
-        double ferocity = context.getSkillManager() != null && context.getPlayerData() != null
-                ? Math.max(0.0D, context.getSkillManager().calculatePlayerFerocity(context.getPlayerData()))
-                : 0.0D;
+        double ferocity = AugmentUtils.resolveFerocity(context);
         double critMultiplier = 1.0D + (ferocity / 100.0D);
         if (critMultiplier <= 0.0D) {
             return damage;

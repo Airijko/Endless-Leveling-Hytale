@@ -5,6 +5,7 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.airijko.endlessleveling.augments.types.DeathBombAugment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -311,6 +312,9 @@ public final class MobAugmentExecutor {
             EntityStatMap statMap,
             float incomingDamage) {
 
+        // Tick pending death bombs for this world even if this mob has no augments.
+        DeathBombAugment.tickPendingBombs(commandBuffer, mobRef);
+
         MobAugmentInstance instance = mobAugments.get(entityId);
         if (instance == null || instance.augments.isEmpty()) {
             return incomingDamage;
@@ -353,6 +357,9 @@ public final class MobAugmentExecutor {
                 }
             }
         }
+
+        // Tick again after handlers so newly queued bombs can progress naturally.
+        DeathBombAugment.tickPendingBombs(commandBuffer, mobRef);
 
         return damage;
     }

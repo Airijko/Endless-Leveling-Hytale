@@ -29,3 +29,4 @@ passives:
     restore_after_seconds: 30
   regeneration:
     max_health_regen_percent_per_second: 0.02
+mob_compatible: true

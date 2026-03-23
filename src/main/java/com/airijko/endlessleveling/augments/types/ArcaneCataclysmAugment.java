@@ -4,6 +4,7 @@ import com.airijko.endlessleveling.augments.Augment;
 import com.airijko.endlessleveling.augments.AugmentDamageSafety;
 import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentHooks;
+import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentRuntimeManager.AugmentRuntimeState;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
 import com.airijko.endlessleveling.player.SkillManager;
@@ -102,10 +103,7 @@ public final class ArcaneCataclysmAugment extends Augment implements AugmentHook
         hitCounterWindowState.setExpiresAt(0L);
         markStackDelay(runtime, now);
 
-        SkillManager skillManager = context.getSkillManager();
-        double sorcery = (skillManager == null || context.getPlayerData() == null)
-                ? 0.0D
-                : Math.max(0.0D, skillManager.calculatePlayerSorcery(context.getPlayerData()));
+        double sorcery = AugmentUtils.resolveSorcery(context);
         double explosionDamage = flatDamage + (sorcery * sorceryScaling);
         if (explosionDamage <= 0.0D) {
             return context.getDamage();

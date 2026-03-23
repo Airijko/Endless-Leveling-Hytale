@@ -25,3 +25,4 @@ passives:
   heal_on_kill:
     value: 0.2
     cooldown: 7
+mob_compatible: true

@@ -33,3 +33,4 @@ passives:
   buffs:
     life_force:
       value: 100
+mob_compatible: true

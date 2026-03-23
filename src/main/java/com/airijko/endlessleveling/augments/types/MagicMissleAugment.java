@@ -6,7 +6,6 @@ import com.airijko.endlessleveling.augments.AugmentDefinition;
 import com.airijko.endlessleveling.augments.AugmentHooks;
 import com.airijko.endlessleveling.augments.AugmentUtils;
 import com.airijko.endlessleveling.augments.AugmentValueReader;
-import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.systems.PlayerCombatSystem;
 import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
@@ -40,10 +39,7 @@ public final class MagicMissleAugment extends Augment implements AugmentHooks.On
             return context.getDamage();
         }
 
-        SkillManager skillManager = context.getSkillManager();
-        double sorcery = (skillManager == null || context.getPlayerData() == null)
-                ? 0.0D
-                : Math.max(0.0D, skillManager.calculatePlayerSorcery(context.getPlayerData()));
+        double sorcery = AugmentUtils.resolveSorcery(context);
 
         double missileDamage = flatDamage + (sorcery * sorceryScaling);
         if (missileDamage <= 0.0D) {

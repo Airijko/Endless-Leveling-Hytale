@@ -29,3 +29,4 @@ passives:
     value: 1.75
     cooldown: 25
     category: ON_HIT
+mob_compatible: true

@@ -12,15 +12,10 @@ ui:
   sections:
   - title: Buffs
     body: 'Delay: 3s
-
       Radius: +5
-
       Max Health Ratio: 50%
-
       Strength Ratio: 10%
-
       Sorcery Ratio: 10%
-
       '
     color: '#8adf9e'
   - title: Cooldown
@@ -35,3 +30,4 @@ passives:
       max_health_ratio: 0.5
       strength_ratio: 0.1
       sorcery_ratio: 0.1
+mob_compatible: true

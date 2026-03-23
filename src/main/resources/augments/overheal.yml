@@ -35,3 +35,4 @@ passives:
   buffs:
     lifesteal:
       value: 0.05
+mob_compatible: true

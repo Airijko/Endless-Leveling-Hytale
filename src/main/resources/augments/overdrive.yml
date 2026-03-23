@@ -44,3 +44,4 @@ passives:
     seconds: 8
   stack_loss_conditions:
     on_damage_taken: true
+mob_compatible: true

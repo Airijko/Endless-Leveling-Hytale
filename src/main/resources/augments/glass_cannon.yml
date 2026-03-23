@@ -27,3 +27,4 @@ passives:
       value: 0.5
     bonus_damage:
       value: 0.5
+mob_compatible: true
