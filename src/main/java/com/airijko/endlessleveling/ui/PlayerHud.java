@@ -26,9 +26,10 @@ import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
 import javax.annotation.Nonnull;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -90,6 +91,7 @@ public class PlayerHud extends CustomUIHud {
     private String lastRaceIconItemId;
     private String lastPrimaryIconItemId;
     private String lastSecondaryIconItemId;
+    private final Map<String, Object> lastUiState = new HashMap<>();
     private final java.util.concurrent.atomic.AtomicBoolean built = new java.util.concurrent.atomic.AtomicBoolean(
             false);
 
@@ -148,45 +150,52 @@ public class PlayerHud extends CustomUIHud {
         if (data == null) {
             return; // Do not push updates when the HUD is disabled or data is unavailable.
         }
-        uiCommandBuilder.set("#InfoMobLevelPrefix.Text",
+
+        boolean changed = false;
+        changed |= setTextIfChanged(uiCommandBuilder,
+                "#InfoMobLevelPrefix.Text",
                 Lang.tr(targetPlayerRef.getUuid(), LocalizationKey.HUD_MOB_PREFIX));
-        uiCommandBuilder.set("#InfoRacePrefix.Text",
+        changed |= setTextIfChanged(uiCommandBuilder,
+                "#InfoRacePrefix.Text",
                 Lang.tr(targetPlayerRef.getUuid(), LocalizationKey.HUD_RACE_PREFIX));
-        uiCommandBuilder.set("#Level.Text", resolveHudLabel());
+        changed |= setTextIfChanged(uiCommandBuilder, "#Level.Text", resolveHudLabel());
         double progress = resolveXpProgress();
-        uiCommandBuilder.set("#ProgressBar.Value", progress);
-        uiCommandBuilder.set("#InfoRaceValue.Text", resolveRaceLabel());
-        uiCommandBuilder.set("#InfoMobLevelValue.Text", resolveMobLevelLabel());
-        uiCommandBuilder.set("#PrimaryClass.Text", resolveClassLabel(true));
-        setRaceIcon(uiCommandBuilder, resolveRaceIconId());
-        setPrimaryClassIcon(uiCommandBuilder, resolveClassIconId(true));
+        changed |= setDoubleIfChanged(uiCommandBuilder, "#ProgressBar.Value", progress);
+        changed |= setTextIfChanged(uiCommandBuilder, "#InfoRaceValue.Text", resolveRaceLabel());
+        changed |= setTextIfChanged(uiCommandBuilder, "#InfoMobLevelValue.Text", resolveMobLevelLabel());
+        changed |= setTextIfChanged(uiCommandBuilder, "#PrimaryClass.Text", resolveClassLabel(true));
+        changed |= setRaceIcon(uiCommandBuilder, resolveRaceIconId());
+        changed |= setPrimaryClassIcon(uiCommandBuilder, resolveClassIconId(true));
         boolean secondaryEnabled = classManager != null && classManager.isSecondaryClassEnabled();
-        uiCommandBuilder.set("#SecondaryClassRow.Visible", secondaryEnabled);
-        uiCommandBuilder.set("#SecondaryClass.Visible", secondaryEnabled);
+        changed |= setBoolIfChanged(uiCommandBuilder, "#SecondaryClassRow.Visible", secondaryEnabled);
+        changed |= setBoolIfChanged(uiCommandBuilder, "#SecondaryClass.Visible", secondaryEnabled);
         if (secondaryEnabled) {
-            uiCommandBuilder.set("#SecondaryClass.Text", resolveClassLabel(false));
-            setSecondaryClassIcon(uiCommandBuilder, resolveClassIconId(false));
+            changed |= setTextIfChanged(uiCommandBuilder, "#SecondaryClass.Text", resolveClassLabel(false));
+            changed |= setSecondaryClassIcon(uiCommandBuilder, resolveClassIconId(false));
         } else {
-            uiCommandBuilder.set("#SecondaryClass.Text", "");
-            setSecondaryClassIcon(uiCommandBuilder, null);
+            changed |= setTextIfChanged(uiCommandBuilder, "#SecondaryClass.Text", "");
+            changed |= setSecondaryClassIcon(uiCommandBuilder, null);
         }
 
-        applyAugmentOverlay(uiCommandBuilder);
+        changed |= applyAugmentOverlay(uiCommandBuilder);
 
-        update(false, uiCommandBuilder);
+        if (changed) {
+            update(false, uiCommandBuilder);
+        }
     }
 
-    private void applyAugmentOverlay(@Nonnull UICommandBuilder uiCommandBuilder) {
+    private boolean applyAugmentOverlay(@Nonnull UICommandBuilder uiCommandBuilder) {
+        boolean changed = false;
         AugmentHudOverlayController.HudOverlayState overlayState = augmentHudOverlayController != null
                 ? augmentHudOverlayController.resolve(targetPlayerRef)
                 : AugmentHudOverlayController.HudOverlayState.hidden();
 
-        applyOverlayBar(uiCommandBuilder,
+        changed |= applyOverlayBar(uiCommandBuilder,
                 "#ActiveAugmentPanel",
                 "#ActiveAugmentName",
                 "#ActiveAugmentProgress",
                 overlayState.durationBar());
-        applyOverlayBar(uiCommandBuilder,
+        changed |= applyOverlayBar(uiCommandBuilder,
                 "#ShieldStatusPanel",
                 "#ShieldStatusName",
                 "#ShieldStatusProgress",
@@ -195,26 +204,34 @@ public class PlayerHud extends CustomUIHud {
         List<AugmentHudOverlayController.StackingHudState> stackingSlots = overlayState.stackingSlots();
         for (int i = 0; i < MAX_STACKING_SLOTS; i++) {
             AugmentHudOverlayController.StackingHudState slot = i < stackingSlots.size() ? stackingSlots.get(i) : null;
-            applyStackingSlot(uiCommandBuilder, i, slot);
+            changed |= applyStackingSlot(uiCommandBuilder, i, slot);
         }
+        return changed;
     }
 
-    private void applyStackingSlot(@Nonnull UICommandBuilder uiCommandBuilder, int slotIndex,
+    private boolean applyStackingSlot(@Nonnull UICommandBuilder uiCommandBuilder, int slotIndex,
             AugmentHudOverlayController.StackingHudState slot) {
+        boolean changed = false;
         boolean active = slot != null && slot.active();
-        boolean showStackCount = active && slot.showStackCount();
+        boolean showStackCount = active && slot != null && slot.showStackCount();
+        boolean atMaxStacks = active && slot != null && slot.atMaxStacks();
+        String stackCountText = showStackCount && slot != null
+            ? Integer.toString(Math.max(0, slot.stacks()))
+            : "";
+        String iconItemId = active && slot != null ? slot.iconItemId() : null;
         String prefix = "#StackingSlot" + slotIndex;
-        uiCommandBuilder.set(prefix + ".Visible", active);
-        uiCommandBuilder.set(prefix + "StackBadge.Visible", showStackCount);
-        uiCommandBuilder.set(prefix + "StackCount.Visible", showStackCount);
-        uiCommandBuilder.set(prefix + "MaxOutline.Visible", active && slot.atMaxStacks());
-        uiCommandBuilder.set(prefix + "StackCount.Text",
-                showStackCount ? Integer.toString(Math.max(0, slot.stacks())) : "");
-        setStackingIconVariant(uiCommandBuilder, slotIndex, active ? slot.iconItemId() : null);
+        changed |= setBoolIfChanged(uiCommandBuilder, prefix + ".Visible", active);
+        changed |= setBoolIfChanged(uiCommandBuilder, prefix + "StackBadge.Visible", showStackCount);
+        changed |= setBoolIfChanged(uiCommandBuilder, prefix + "StackCount.Visible", showStackCount);
+        changed |= setBoolIfChanged(uiCommandBuilder, prefix + "MaxOutline.Visible", atMaxStacks);
+        changed |= setTextIfChanged(uiCommandBuilder, prefix + "StackCount.Text", stackCountText);
+        changed |= setStackingIconVariant(uiCommandBuilder, slotIndex, iconItemId);
+        return changed;
     }
 
-    private void setStackingIconVariant(@Nonnull UICommandBuilder uiCommandBuilder, int slotIndex,
+    private boolean setStackingIconVariant(@Nonnull UICommandBuilder uiCommandBuilder, int slotIndex,
             String iconItemId) {
+        boolean changed = false;
         String normalizedIconItemId = iconItemId == null || iconItemId.isBlank() ? null : iconItemId;
         String chosenVariant = normalizedIconItemId == null
                 ? null
@@ -224,29 +241,32 @@ public class PlayerHud extends CustomUIHud {
         if (chosenVariant != null) {
             // Keep fixed variant styling but allow unknown category icons to render
             // by reusing the selected variant node with the exact item id.
-            uiCommandBuilder.set(prefix + chosenVariant + ".ItemId", normalizedIconItemId);
+            changed |= setTextIfChanged(uiCommandBuilder, prefix + chosenVariant + ".ItemId", normalizedIconItemId);
         }
 
         for (String variant : STACKING_ICON_VARIANT_SUFFIXES) {
-            uiCommandBuilder.set(prefix + variant + ".Visible", variant.equals(chosenVariant));
+            changed |= setBoolIfChanged(uiCommandBuilder, prefix + variant + ".Visible", variant.equals(chosenVariant));
         }
+        return changed;
     }
 
-    private void applyOverlayBar(@Nonnull UICommandBuilder uiCommandBuilder,
+    private boolean applyOverlayBar(@Nonnull UICommandBuilder uiCommandBuilder,
             @Nonnull String panelSelector,
             @Nonnull String labelSelector,
             @Nonnull String progressSelector,
             @Nonnull AugmentHudOverlayController.BarState state) {
+        boolean changed = false;
         boolean visible = state != null && state.visible();
-        uiCommandBuilder.set(panelSelector + ".Visible", visible);
+        changed |= setBoolIfChanged(uiCommandBuilder, panelSelector + ".Visible", visible);
         if (!visible) {
-            uiCommandBuilder.set(labelSelector + ".Text", "");
-            uiCommandBuilder.set(progressSelector + ".Value", 0.0D);
-            return;
+            changed |= setTextIfChanged(uiCommandBuilder, labelSelector + ".Text", "");
+            changed |= setDoubleIfChanged(uiCommandBuilder, progressSelector + ".Value", 0.0D);
+            return changed;
         }
 
-        uiCommandBuilder.set(labelSelector + ".Text", state.label());
-        uiCommandBuilder.set(progressSelector + ".Value", state.progress());
+        changed |= setTextIfChanged(uiCommandBuilder, labelSelector + ".Text", state.label());
+        changed |= setDoubleIfChanged(uiCommandBuilder, progressSelector + ".Value", state.progress());
+        return changed;
     }
 
     private String resolveRaceLabel() {
@@ -375,43 +395,49 @@ public class PlayerHud extends CustomUIHud {
         uiCommandBuilder.set(selector + ".Visible", true);
     }
 
-    private void setRaceIcon(@Nonnull UICommandBuilder uiCommandBuilder, String itemId) {
+    private boolean setRaceIcon(@Nonnull UICommandBuilder uiCommandBuilder, String itemId) {
+        boolean changed = false;
         if (itemId == null || itemId.isBlank()) {
             lastRaceIconItemId = null;
-            uiCommandBuilder.set("#InfoRaceIcon.Visible", false);
-            return;
+            changed |= setBoolIfChanged(uiCommandBuilder, "#InfoRaceIcon.Visible", false);
+            return changed;
         }
         if (!itemId.equals(lastRaceIconItemId)) {
-            uiCommandBuilder.set("#InfoRaceIcon.ItemId", itemId);
+            changed |= setTextIfChanged(uiCommandBuilder, "#InfoRaceIcon.ItemId", itemId);
             lastRaceIconItemId = itemId;
         }
-        uiCommandBuilder.set("#InfoRaceIcon.Visible", true);
+        changed |= setBoolIfChanged(uiCommandBuilder, "#InfoRaceIcon.Visible", true);
+        return changed;
     }
 
-    private void setPrimaryClassIcon(@Nonnull UICommandBuilder uiCommandBuilder, String itemId) {
+    private boolean setPrimaryClassIcon(@Nonnull UICommandBuilder uiCommandBuilder, String itemId) {
+        boolean changed = false;
         if (itemId == null || itemId.isBlank()) {
             lastPrimaryIconItemId = null;
-            uiCommandBuilder.set("#PrimaryIcon.Visible", false);
-            return;
+            changed |= setBoolIfChanged(uiCommandBuilder, "#PrimaryIcon.Visible", false);
+            return changed;
         }
         if (!itemId.equals(lastPrimaryIconItemId)) {
-            uiCommandBuilder.set("#PrimaryIcon.ItemId", itemId);
+            changed |= setTextIfChanged(uiCommandBuilder, "#PrimaryIcon.ItemId", itemId);
             lastPrimaryIconItemId = itemId;
         }
-        uiCommandBuilder.set("#PrimaryIcon.Visible", true);
+        changed |= setBoolIfChanged(uiCommandBuilder, "#PrimaryIcon.Visible", true);
+        return changed;
     }
 
-    private void setSecondaryClassIcon(@Nonnull UICommandBuilder uiCommandBuilder, String itemId) {
+    private boolean setSecondaryClassIcon(@Nonnull UICommandBuilder uiCommandBuilder, String itemId) {
+        boolean changed = false;
         if (itemId == null || itemId.isBlank()) {
             lastSecondaryIconItemId = null;
-            uiCommandBuilder.set("#SecondaryIcon.Visible", false);
-            return;
+            changed |= setBoolIfChanged(uiCommandBuilder, "#SecondaryIcon.Visible", false);
+            return changed;
         }
         if (!itemId.equals(lastSecondaryIconItemId)) {
-            uiCommandBuilder.set("#SecondaryIcon.ItemId", itemId);
+            changed |= setTextIfChanged(uiCommandBuilder, "#SecondaryIcon.ItemId", itemId);
             lastSecondaryIconItemId = itemId;
         }
-        uiCommandBuilder.set("#SecondaryIcon.Visible", true);
+        changed |= setBoolIfChanged(uiCommandBuilder, "#SecondaryIcon.Visible", true);
+        return changed;
     }
 
     private String resolveClassIconId(boolean primary) {
@@ -524,13 +550,18 @@ public class PlayerHud extends CustomUIHud {
         markDirty(uuid);
     }
 
-    public static Set<UUID> drainDirtyHudUuids() {
+    public static Set<UUID> snapshotDirtyHudUuids() {
         if (DIRTY_HUDS.isEmpty()) {
             return Set.of();
         }
-        Set<UUID> dirtySnapshot = new HashSet<>(DIRTY_HUDS);
-        DIRTY_HUDS.removeAll(dirtySnapshot);
-        return dirtySnapshot;
+        return Set.copyOf(DIRTY_HUDS);
+    }
+
+    public static void clearDirty(UUID uuid) {
+        if (uuid == null) {
+            return;
+        }
+        DIRTY_HUDS.remove(uuid);
     }
 
     public static void markDirty(UUID uuid) {
@@ -606,6 +637,17 @@ public class PlayerHud extends CustomUIHud {
         return Set.copyOf(ACTIVE_HUDS.keySet());
     }
 
+    public static Ref<EntityStore> getHudEntityRef(UUID uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        PlayerHud hud = ACTIVE_HUDS.get(uuid);
+        if (hud == null || !hud.built.get()) {
+            return null;
+        }
+        return hud.targetPlayerRef.getReference();
+    }
+
     public static boolean isHudInStore(UUID uuid, Store<EntityStore> store) {
         if (uuid == null || store == null) {
             return false;
@@ -676,6 +718,37 @@ public class PlayerHud extends CustomUIHud {
             LOGGER.atInfo().log("Opening PlayerHud via default HudManager for %s", uuid);
             hudManager.setCustomHud(playerRef, newHud);
         }
+    }
+
+    private boolean setTextIfChanged(@Nonnull UICommandBuilder uiCommandBuilder, @Nonnull String selector, String value) {
+        String normalized = value == null ? "" : value;
+        Object previous = lastUiState.get(selector);
+        if (Objects.equals(previous, normalized)) {
+            return false;
+        }
+        lastUiState.put(selector, normalized);
+        uiCommandBuilder.set(selector, normalized);
+        return true;
+    }
+
+    private boolean setBoolIfChanged(@Nonnull UICommandBuilder uiCommandBuilder, @Nonnull String selector, boolean value) {
+        Object previous = lastUiState.get(selector);
+        if (previous instanceof Boolean b && b == value) {
+            return false;
+        }
+        lastUiState.put(selector, value);
+        uiCommandBuilder.set(selector, value);
+        return true;
+    }
+
+    private boolean setDoubleIfChanged(@Nonnull UICommandBuilder uiCommandBuilder, @Nonnull String selector, double value) {
+        Object previous = lastUiState.get(selector);
+        if (previous instanceof Double d && Math.abs(d - value) < 0.0001D) {
+            return false;
+        }
+        lastUiState.put(selector, value);
+        uiCommandBuilder.set(selector, value);
+        return true;
     }
 
 }
