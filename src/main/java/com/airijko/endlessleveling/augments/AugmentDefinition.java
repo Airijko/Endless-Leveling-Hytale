@@ -23,6 +23,7 @@ public final class AugmentDefinition {
     private final String description;
     private final Map<String, Object> passives;
     private final List<UiSection> uiSections;
+    private final boolean mobCompatible;
 
     public AugmentDefinition(String id,
             String name,
@@ -31,7 +32,7 @@ public final class AugmentDefinition {
             boolean stackable,
             String description,
             Map<String, Object> passives) {
-        this(id, name, tier, category, stackable, description, passives, Collections.emptyList());
+        this(id, name, tier, category, stackable, description, passives, Collections.emptyList(), true);
     }
 
     public AugmentDefinition(String id,
@@ -42,6 +43,18 @@ public final class AugmentDefinition {
             String description,
             Map<String, Object> passives,
             List<UiSection> uiSections) {
+        this(id, name, tier, category, stackable, description, passives, uiSections, true);
+    }
+
+    public AugmentDefinition(String id,
+            String name,
+            PassiveTier tier,
+            PassiveCategory category,
+            boolean stackable,
+            String description,
+            Map<String, Object> passives,
+            List<UiSection> uiSections,
+            boolean mobCompatible) {
         this.id = Objects.requireNonNull(id, "id");
         this.name = name == null ? id : name;
         this.tier = tier == null ? PassiveTier.COMMON : tier;
@@ -52,6 +65,7 @@ public final class AugmentDefinition {
         this.passives = Collections.unmodifiableMap(safe);
         List<UiSection> safeSections = uiSections == null ? Collections.emptyList() : new ArrayList<>(uiSections);
         this.uiSections = Collections.unmodifiableList(safeSections);
+        this.mobCompatible = mobCompatible;
     }
 
     public String getId() {
@@ -84,6 +98,10 @@ public final class AugmentDefinition {
 
     public List<UiSection> getUiSections() {
         return uiSections;
+    }
+
+    public boolean isMobCompatible() {
+        return mobCompatible;
     }
 
     public record UiSection(String title, String body, String color) {

@@ -272,12 +272,13 @@ public class AugmentManager {
             PassiveTier tier = PassiveTier.fromConfig(root.get("tier"), PassiveTier.COMMON);
             PassiveCategory category = PassiveCategory.fromConfig(root.get("category"), null);
             boolean stackable = booleanVal(root.get("stackable"), false);
+            boolean mobCompatible = booleanVal(root.get("mob_compatible"), true);
             Object passivesNode = root.getOrDefault("passives", Collections.emptyMap());
             Map<String, Object> passives = passivesNode instanceof Map<?, ?> m
                     ? (Map<String, Object>) m
                     : Collections.emptyMap();
             List<AugmentDefinition.UiSection> uiSections = parseUiSections(root);
-            return new AugmentDefinition(id, name, tier, category, stackable, description, passives, uiSections);
+            return new AugmentDefinition(id, name, tier, category, stackable, description, passives, uiSections, mobCompatible);
         }
     }
 
