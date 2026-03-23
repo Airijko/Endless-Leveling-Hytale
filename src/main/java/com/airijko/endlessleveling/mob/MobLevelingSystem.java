@@ -39,6 +39,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,8 +56,12 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     private static final Query<EntityStore> ENTITY_QUERY = Query.any();
     private static final String MOB_HEALTH_SCALE_MODIFIER_KEY = "EL_MOB_HEALTH_SCALE";
     private static final String MOB_AUGMENT_LIFE_FORCE_MODIFIER_KEY = "EL_MOB_AUGMENT_LIFE_FORCE";
-    private static final float SYSTEM_INTERVAL_SECONDS = 0.15f;
+    private static final float SYSTEM_INTERVAL_SECONDS = 0.50f;
     private static final long STALE_ENTITY_TTL_MILLIS = 100_000L;
+    private static final long PASSIVE_STAT_TICK_INTERVAL_MILLIS = 1000L;
+    private static final long NAMEPLATE_REFRESH_INTERVAL_MILLIS = 1500L;
+    private static final int PROCESS_PARTITIONS = 4;
+    private static final int MAX_ENTITY_PROCESS_BUDGET_PER_TICK = 320;
     private static final int CHUNK_BIT_SHIFT = 5;
     private static final int MIN_PLAYER_VIEW_RADIUS_CHUNKS = 1;
     private static final int PLAYER_VIEW_RADIUS_BUFFER_CHUNKS = 1;
@@ -91,6 +96,11 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         private float lastObservedHealth = Float.NaN;
         private float lastObservedMaxHealth = Float.NaN;
         private float lastAppliedLifeForceBonus = Float.NaN;
+        private long lastPassiveStatTickMillis;
+        private long lastNameplateRefreshMillis;
+        private int lastAppliedNameplateLevel = Integer.MIN_VALUE;
+        private boolean lastAppliedIncludeLevelInName;
+        private String lastAppliedNameplateText;
 
         private boolean hasTrackedState() {
             return appliedLevel > 0
@@ -105,6 +115,10 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                     || Float.isFinite(lastObservedHealth)
                     || Float.isFinite(lastObservedMaxHealth)
                     || Float.isFinite(lastAppliedLifeForceBonus)
+                    || lastPassiveStatTickMillis > 0L
+                    || lastNameplateRefreshMillis > 0L
+                    || lastAppliedNameplateLevel != Integer.MIN_VALUE
+                    || lastAppliedNameplateText != null
                     || trackedStore != null
                     || trackedEntityId >= 0;
         }
@@ -139,10 +153,21 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         long currentTimeMillis = (systemTimeMillis += elapsedMillis);
         Set<Long> processedEntityKeysThisStep = new HashSet<>();
         List<PlayerChunkViewport> playerChunkViewports = snapshotPlayerChunkViewports(store);
+        Set<Long> activePlayerChunks = buildActivePlayerChunkSet(playerChunkViewports);
+        int[] remainingBudget = new int[] { MAX_ENTITY_PROCESS_BUDGET_PER_TICK };
+
+        if (playerChunkViewports.isEmpty() && !shouldResetAllMobs) {
+            pruneStaleEntities(currentTimeMillis);
+            return;
+        }
 
         store.forEachChunk(ENTITY_QUERY,
                 (ArchetypeChunk<EntityStore> chunk, CommandBuffer<EntityStore> commandBuffer) -> {
                     for (int i = 0; i < chunk.size(); i++) {
+                        if (remainingBudget[0] <= 0) {
+                            break;
+                        }
+
                         Ref<EntityStore> ref = chunk.getReferenceTo(i);
                         int entityId = ref.getIndex();
                         TrackingIdentity trackingIdentity = resolveTrackingIdentity(ref, commandBuffer);
@@ -154,6 +179,14 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
 
                         EntityRuntimeState existingState = entityStates.get(entityKey);
                         boolean hasLockedLevel = hasAnyLevelLock(ref, entityId, existingState);
+                        if (!shouldProcessEntityThisTick(entityKey,
+                                tickCount,
+                                shouldResetAllMobs,
+                                hasLockedLevel,
+                                existingState)) {
+                            continue;
+                        }
+                        remainingBudget[0]--;
 
                         PlayerRef playerRef = commandBuffer.getComponent(ref, PlayerRef.getComponentType());
                         if (playerRef != null && playerRef.isValid()) {
@@ -183,10 +216,10 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                             existingState = null;
                         }
 
-                        boolean hasNearbyPlayerChunk = isWithinNearbyPlayerChunkViewport(
+                        boolean hasNearbyPlayerChunk = isWithinActivePlayerChunk(
                                 ref,
                                 commandBuffer,
-                                playerChunkViewports);
+                            activePlayerChunks);
                         if (!hasNearbyPlayerChunk) {
                             boolean hasTrackedState = existingState != null && existingState.hasTrackedState();
                             if (hasTrackedState || hasLockedLevel) {
@@ -247,7 +280,12 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                             && ensureMobAugmentsRegistered(ref, store, commandBuffer);
                         float currentLifeForceBonus = 0.0f;
                         if (!managedSummon) {
-                            tickMobPassiveAugmentStats(ref, store, commandBuffer);
+                            if (registeredMobAugments
+                                    || state.lastPassiveStatTickMillis <= 0L
+                                    || currentTimeMillis - state.lastPassiveStatTickMillis >= PASSIVE_STAT_TICK_INTERVAL_MILLIS) {
+                                tickMobPassiveAugmentStats(ref, store, commandBuffer);
+                                state.lastPassiveStatTickMillis = currentTimeMillis;
+                            }
                             currentLifeForceBonus = resolveMobLifeForceHealthBonus(ref, commandBuffer);
                         }
 
@@ -301,11 +339,17 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                         }
 
                         if (managedSummon || (showMobLevelUi && initializationSettled)) {
-                            // Re-apply regularly so HP text stays in sync with live combat damage.
-                            boolean nameplateApplied = applyNameplate(ref, commandBuffer, includeLevelInName,
-                                    entityKey, state);
-                            if (nameplateApplied) {
-                                state.managedNameplate = true;
+                            boolean shouldRefreshNameplate = managedSummon
+                                    || !state.managedNameplate
+                                    || state.lastNameplateRefreshMillis <= 0L
+                                    || currentTimeMillis - state.lastNameplateRefreshMillis >= NAMEPLATE_REFRESH_INTERVAL_MILLIS;
+                            if (shouldRefreshNameplate) {
+                                boolean nameplateApplied = applyNameplate(ref, commandBuffer, includeLevelInName,
+                                        entityKey, state);
+                                if (nameplateApplied) {
+                                    state.managedNameplate = true;
+                                    state.lastNameplateRefreshMillis = currentTimeMillis;
+                                }
                             }
                         } else {
                             clearOrRemoveNameplate(ref, commandBuffer, entityKey, state);
@@ -861,9 +905,18 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         }
 
         if (NameplateBuilderCompatibility.isAvailable() && !managedSummon) {
+            if (state != null
+                    && state.managedNameplate
+                    && state.lastAppliedNameplateLevel == nameplateLevel
+                    && state.lastAppliedIncludeLevelInName == includeLevelInName) {
+                return true;
+            }
             boolean applied = NameplateBuilderCompatibility.registerMobLevel(ref.getStore(), ref, nameplateLevel);
             if (applied && state != null) {
                 state.managedNameplate = true;
+                state.lastAppliedNameplateLevel = nameplateLevel;
+                state.lastAppliedIncludeLevelInName = includeLevelInName;
+                state.lastAppliedNameplateText = null;
             }
             return applied;
         }
@@ -904,6 +957,12 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             }
         }
 
+        if (state != null
+                && state.managedNameplate
+                && Objects.equals(state.lastAppliedNameplateText, label)) {
+            return true;
+        }
+
         boolean builderApplied = false;
         boolean usedSummonSegment = false;
         boolean usedMobSegmentFallback = false;
@@ -932,6 +991,9 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
 
         if (state != null) {
             state.managedNameplate = true;
+            state.lastAppliedNameplateText = label;
+            state.lastAppliedNameplateLevel = nameplateLevel != null ? nameplateLevel : Integer.MIN_VALUE;
+            state.lastAppliedIncludeLevelInName = includeLevelInName;
         }
 
         boolean vanillaApplied = nameplate != null;
@@ -1065,6 +1127,9 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             }
             state.managedNameplate = false;
             state.previousNameplateText = null;
+            state.lastAppliedNameplateText = null;
+            state.lastAppliedNameplateLevel = Integer.MIN_VALUE;
+            state.lastAppliedIncludeLevelInName = false;
             return;
         }
 
@@ -1083,6 +1148,9 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         }
         state.previousNameplateText = null;
         state.managedNameplate = false;
+        state.lastAppliedNameplateText = null;
+        state.lastAppliedNameplateLevel = Integer.MIN_VALUE;
+        state.lastAppliedIncludeLevelInName = false;
     }
 
     private String readNameplateText(Nameplate nameplate) {
@@ -1166,6 +1234,23 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     private record PlayerChunkViewport(int chunkX, int chunkZ, int radiusChunks) {
     }
 
+    private boolean shouldProcessEntityThisTick(long entityKey,
+            int tickCount,
+            boolean shouldResetAllMobs,
+            boolean hasLockedLevel,
+            EntityRuntimeState existingState) {
+        if (shouldResetAllMobs || hasLockedLevel) {
+            return true;
+        }
+        if (existingState != null && existingState.hasTrackedState()) {
+            return true;
+        }
+
+        int safeTickCount = Math.max(0, tickCount);
+        int partition = Math.floorMod(safeTickCount, PROCESS_PARTITIONS);
+        return Math.floorMod(entityKey, PROCESS_PARTITIONS) == partition;
+    }
+
     private List<PlayerChunkViewport> snapshotPlayerChunkViewports(Store<EntityStore> currentStore) {
         if (currentStore == null || currentStore.isShutdown()) {
             return List.of();
@@ -1218,6 +1303,38 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         return viewports;
     }
 
+    private Set<Long> buildActivePlayerChunkSet(List<PlayerChunkViewport> playerChunkViewports) {
+        if (playerChunkViewports == null || playerChunkViewports.isEmpty()) {
+            return Set.of();
+        }
+
+        Set<Long> activeChunks = new HashSet<>();
+        for (PlayerChunkViewport viewport : playerChunkViewports) {
+            if (viewport == null) {
+                continue;
+            }
+
+            int radius = Math.max(MIN_PLAYER_VIEW_RADIUS_CHUNKS, viewport.radiusChunks());
+            int minX = viewport.chunkX() - radius;
+            int maxX = viewport.chunkX() + radius;
+            int minZ = viewport.chunkZ() - radius;
+            int maxZ = viewport.chunkZ() + radius;
+            for (int x = minX; x <= maxX; x++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    activeChunks.add(packChunkKey(x, z));
+                }
+            }
+        }
+
+        return activeChunks;
+    }
+
+    private long packChunkKey(int chunkX, int chunkZ) {
+        long xPart = Integer.toUnsignedLong(chunkX);
+        long zPart = Integer.toUnsignedLong(chunkZ);
+        return (xPart << 32) | zPart;
+    }
+
     private boolean isSameStoreOrWorld(Store<EntityStore> currentStore,
             String currentWorldId,
             Store<EntityStore> candidateStore) {
@@ -1255,10 +1372,10 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         return Math.max(MIN_PLAYER_VIEW_RADIUS_CHUNKS, configuredRadius);
     }
 
-    private boolean isWithinNearbyPlayerChunkViewport(Ref<EntityStore> entityRef,
+    private boolean isWithinActivePlayerChunk(Ref<EntityStore> entityRef,
             CommandBuffer<EntityStore> commandBuffer,
-            List<PlayerChunkViewport> playerChunkViewports) {
-        if (entityRef == null || playerChunkViewports == null || playerChunkViewports.isEmpty()) {
+            Set<Long> activePlayerChunks) {
+        if (entityRef == null || activePlayerChunks == null || activePlayerChunks.isEmpty()) {
             return false;
         }
 
@@ -1269,20 +1386,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
 
         int mobChunkX = blockToChunk(mobPosition.getX());
         int mobChunkZ = blockToChunk(mobPosition.getZ());
-        for (PlayerChunkViewport viewport : playerChunkViewports) {
-            if (viewport == null) {
-                continue;
-            }
-
-            int radiusChunks = Math.max(MIN_PLAYER_VIEW_RADIUS_CHUNKS, viewport.radiusChunks());
-            int dx = Math.abs(mobChunkX - viewport.chunkX());
-            int dz = Math.abs(mobChunkZ - viewport.chunkZ());
-            if (dx <= radiusChunks && dz <= radiusChunks) {
-                return true;
-            }
-        }
-
-        return false;
+        return activePlayerChunks.contains(packChunkKey(mobChunkX, mobChunkZ));
     }
 
     private Vector3d resolvePosition(Ref<EntityStore> entityRef, CommandBuffer<EntityStore> commandBuffer) {
