@@ -32,6 +32,10 @@ public class HudRefreshSystem extends TickingSystem<EntityStore> {
             return;
         }
 
+        if (!PlayerHud.hasActiveHuds()) {
+            return;
+        }
+
         timeSinceLastRefresh += deltaSeconds;
         if (timeSinceLastRefresh < REFRESH_INTERVAL_SECONDS) {
             return;
@@ -55,6 +59,10 @@ public class HudRefreshSystem extends TickingSystem<EntityStore> {
 
                 UUID uuid = playerRef.getUuid();
                 if (uuid == null) {
+                    continue;
+                }
+
+                if (!PlayerHud.isActive(uuid)) {
                     continue;
                 }
 

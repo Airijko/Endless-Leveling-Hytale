@@ -569,6 +569,10 @@ public class PlayerHud extends CustomUIHud {
         return ACTIVE_HUDS.containsKey(uuid);
     }
 
+    public static boolean hasActiveHuds() {
+        return !ACTIVE_HUDS.isEmpty();
+    }
+
     public static void openPreferred(@Nonnull Player player, @Nonnull PlayerRef playerRef) {
         PlayerDataManager playerDataManager = EndlessLeveling.getInstance().getPlayerDataManager();
         PlayerData playerData = playerDataManager == null ? null : playerDataManager.get(playerRef.getUuid());

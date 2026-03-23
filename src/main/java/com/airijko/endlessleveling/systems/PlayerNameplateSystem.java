@@ -13,7 +13,9 @@ import com.hypixel.hytale.server.core.entity.nameplate.Nameplate;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nonnull;
 
@@ -21,9 +23,11 @@ import javax.annotation.Nonnull;
 public class PlayerNameplateSystem extends TickingSystem<EntityStore> {
 
     private static final Query<EntityStore> PLAYER_QUERY = Query.any();
+    private static final float UPDATE_INTERVAL_SECONDS = 0.5f;
 
     private final PlayerDataManager playerDataManager;
     private final Map<UUID, String> lastLabels = new HashMap<>();
+    private float elapsedSeconds;
 
     public PlayerNameplateSystem(@Nonnull PlayerDataManager playerDataManager) {
         this.playerDataManager = playerDataManager;
@@ -34,6 +38,14 @@ public class PlayerNameplateSystem extends TickingSystem<EntityStore> {
         if (store == null || store.isShutdown() || playerDataManager == null) {
             return;
         }
+
+        elapsedSeconds += deltaSeconds;
+        if (elapsedSeconds < UPDATE_INTERVAL_SECONDS) {
+            return;
+        }
+        elapsedSeconds = 0.0f;
+
+        Set<UUID> onlinePlayers = new HashSet<>();
 
         store.forEachChunk(PLAYER_QUERY, (ArchetypeChunk<EntityStore> chunk,
                 CommandBuffer<EntityStore> commandBuffer) -> {
@@ -49,6 +61,10 @@ public class PlayerNameplateSystem extends TickingSystem<EntityStore> {
                 }
 
                 UUID uuid = playerRef.getUuid();
+                if (uuid == null) {
+                    continue;
+                }
+                onlinePlayers.add(uuid);
                 String baseName = playerRef.getUsername() != null ? playerRef.getUsername() : "Player";
                 PlayerData playerData = playerDataManager.get(uuid);
                 if (playerData == null) {
@@ -80,5 +96,9 @@ public class PlayerNameplateSystem extends TickingSystem<EntityStore> {
                 lastLabels.put(uuid, label);
             }
         });
+
+        if (!lastLabels.isEmpty()) {
+            lastLabels.keySet().removeIf(uuid -> !onlinePlayers.contains(uuid));
+        }
     }
 }
