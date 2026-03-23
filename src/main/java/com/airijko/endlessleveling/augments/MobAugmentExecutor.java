@@ -134,7 +134,8 @@ public final class MobAugmentExecutor {
                 startingDamage,
                 isCritical,
                 false,
-                null);
+                null,
+                1.0f);
 
         if (AugmentDispatch.isMiss(context)) {
             for (Augment augment : instance.augments) {

@@ -84,6 +84,7 @@ public interface AugmentHooks {
         private final boolean critical;
         private final boolean rangedAttack;
         private final ClassWeaponType weaponType;
+        private final float classWeaponMultiplier;
         private final float baseDamage;
         private float damage;
         private double trueDamageBonus;
@@ -99,7 +100,8 @@ public interface AugmentHooks {
                 float damage,
                 boolean critical,
                 boolean rangedAttack,
-                ClassWeaponType weaponType) {
+                ClassWeaponType weaponType,
+                float classWeaponMultiplier) {
             super(playerData, runtimeState, skillManager);
             this.attackerRef = attackerRef;
             this.targetRef = targetRef;
@@ -111,6 +113,7 @@ public interface AugmentHooks {
             this.critical = critical;
             this.rangedAttack = rangedAttack;
             this.weaponType = weaponType;
+            this.classWeaponMultiplier = classWeaponMultiplier;
             this.trueDamageBonus = 0.0D;
         }
 
@@ -145,6 +148,10 @@ public interface AugmentHooks {
 
         public ClassWeaponType getWeaponType() {
             return weaponType;
+        }
+
+        public float getClassWeaponMultiplier() {
+            return classWeaponMultiplier;
         }
 
         public float getDamage() {

@@ -265,7 +265,8 @@ public final class CombatHookProcessor {
                     finalDamage,
                     critResult.isCrit,
                     rangedAttack,
-                    weaponType);
+                    weaponType,
+                    weaponMultiplier);
             finalDamage = onHitResult.damage();
             augmentTrueDamageBonus = Math.max(0.0D, onHitResult.trueDamageBonus());
         }

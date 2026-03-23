@@ -74,7 +74,8 @@ public final class AugmentExecutor {
             float startingDamage,
             boolean critical,
             boolean ranged,
-            ClassWeaponType weaponType) {
+            ClassWeaponType weaponType,
+            float classWeaponMultiplier) {
         List<Augment> augments = resolve(playerData);
         if (augments.isEmpty()) {
             return new AugmentDispatch.OnHitResult(startingDamage, 0.0D);
@@ -82,7 +83,7 @@ public final class AugmentExecutor {
         var runtime = runtimeManager.getRuntimeState(playerData.getUuid());
         notifyCooldowns(playerData, runtime, commandBuffer, attackerRef, augments);
         HitContext context = new HitContext(playerData, runtime, skillManager, attackerRef, targetRef, commandBuffer,
-                attackerStats, targetStats, startingDamage, critical, ranged, weaponType);
+            attackerStats, targetStats, startingDamage, critical, ranged, weaponType, classWeaponMultiplier);
 
         if (AugmentDispatch.isMiss(context)) {
             for (Augment augment : augments) {

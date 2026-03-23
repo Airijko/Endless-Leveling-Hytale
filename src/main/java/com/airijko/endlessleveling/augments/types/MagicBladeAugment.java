@@ -49,7 +49,12 @@ public final class MagicBladeAugment extends Augment implements AugmentHooks.OnH
         }
 
         if (bonusWeaponType != null && context.getWeaponType() == bonusWeaponType) {
-            totalMultiplierBonus += weaponBonusDamage;
+            float classWeaponMultiplier = context.getClassWeaponMultiplier();
+            double normalizedWeaponBonus = weaponBonusDamage;
+            if (classWeaponMultiplier > 0.0f) {
+                normalizedWeaponBonus = weaponBonusDamage / classWeaponMultiplier;
+            }
+            totalMultiplierBonus += normalizedWeaponBonus;
         }
 
         return AugmentUtils.applyAdditiveBonusFromBase(
