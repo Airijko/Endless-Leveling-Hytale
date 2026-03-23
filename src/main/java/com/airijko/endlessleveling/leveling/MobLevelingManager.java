@@ -92,20 +92,22 @@ public class MobLevelingManager {
     private final ConfigManager worldsConfigManager;
     private final PlayerDataManager playerDataManager;
 
-            private record MobAugmentGenerationSettings(boolean enabled,
-                int baseHighTierCount,
-                double baseHighTierChance,
-                double baseHighTierEliteWeight,
-                double baseHighTierLegendaryWeight,
-                double baseHighTierMythicWeight,
-                int extraHighTierCount,
+    private record MobAugmentGenerationSettings(boolean enabled,
+            int baseHighTierCount,
+            double baseHighTierChance,
+            double baseHighTierEliteWeight,
+            double baseHighTierLegendaryWeight,
+            double baseHighTierMythicWeight,
+            int extraHighTierCount,
             double extraHighTierChance,
             double extraHighTierEliteWeight,
             double extraHighTierLegendaryWeight,
             double extraHighTierMythicWeight,
-            int commonAugmentsPerLevel,
+            int commonAugmentsPerLevelMin,
+            int commonAugmentsPerLevelMax,
+                Map<Integer, Double> commonAugmentsPerLevelWeights,
             Set<String> blacklistedAugmentIds) {
-        }
+    }
 
         private record GeneratedMobAugmentCacheEntry(String mobType,
             int level,
@@ -1000,7 +1002,7 @@ public class MobLevelingManager {
         }
         SplittableRandom random = new SplittableRandom(seed);
 
-        int commonAugmentCount = Math.max(0, level * settings.commonAugmentsPerLevel());
+        int commonAugmentCount = rollTotalCommonAugmentCount(level, settings, random);
         if (settings.blacklistedAugmentIds().contains(CommonAugment.ID.toLowerCase(Locale.ROOT))) {
             commonAugmentCount = 0;
         }
@@ -1213,10 +1215,10 @@ public class MobLevelingManager {
                         DEFAULT_EXTRA_HIGH_TIER_MYTHIC_WEIGHT,
                         store));
 
-        int commonAugmentsPerLevel = Math.max(0,
-                getWorldOverrideInt("Mob_Leveling.Mob_Augments.Common.Per_Level",
-                        DEFAULT_COMMON_AUGMENTS_PER_LEVEL,
-                        store));
+        LevelRange commonAugmentsPerLevelRange = resolveCommonAugmentsPerLevelRange(store);
+        Map<Integer, Double> commonAugmentsPerLevelWeights = resolveCommonAugmentsPerLevelWeights(
+            commonAugmentsPerLevelRange,
+            store);
 
         Set<String> blacklistedAugmentIds = parseBlacklistedMobAugmentIds(store);
 
@@ -1232,8 +1234,87 @@ public class MobLevelingManager {
                 eliteWeight,
                 legendaryWeight,
                 mythicWeight,
-                commonAugmentsPerLevel,
+                commonAugmentsPerLevelRange.min(),
+                commonAugmentsPerLevelRange.max(),
+                commonAugmentsPerLevelWeights,
                 blacklistedAugmentIds);
+    }
+
+    private LevelRange resolveCommonAugmentsPerLevelRange(Store<EntityStore> store) {
+        Object raw = getWorldOverrideValue("Mob_Leveling.Mob_Augments.Common.Per_Level", store,
+                DEFAULT_COMMON_AUGMENTS_PER_LEVEL);
+        LevelRange parsedRange = parseNonNegativeIntegerRange(raw);
+        if (parsedRange != null) {
+            return parsedRange;
+        }
+
+        Integer parsedValue = parseNonNegativeInteger(raw);
+        if (parsedValue != null) {
+            return new LevelRange(parsedValue, parsedValue);
+        }
+
+        return new LevelRange(DEFAULT_COMMON_AUGMENTS_PER_LEVEL, DEFAULT_COMMON_AUGMENTS_PER_LEVEL);
+    }
+
+    private Map<Integer, Double> resolveCommonAugmentsPerLevelWeights(LevelRange range, Store<EntityStore> store) {
+        Object raw = getWorldOverrideValue("Mob_Leveling.Mob_Augments.Common.Weights", store, null);
+        if (!(raw instanceof Map<?, ?> weightsMap) || weightsMap.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Integer, Double> parsed = new LinkedHashMap<>();
+        int min = 0;
+        int max = Math.max(min, range.max());
+        for (int count = min; count <= max; count++) {
+            Object weightRaw = resolveCaseInsensitive(weightsMap, String.valueOf(count));
+            Double weight = parseNonNegativeDouble(weightRaw);
+            if (weight != null) {
+                parsed.put(count, weight);
+            }
+        }
+
+        return parsed.isEmpty() ? Map.of() : Map.copyOf(parsed);
+    }
+
+    private int rollCommonAugmentsPerLevel(MobAugmentGenerationSettings settings, SplittableRandom random) {
+        int min = Math.max(0, settings.commonAugmentsPerLevelMin());
+        int max = Math.max(min, settings.commonAugmentsPerLevelMax());
+        Map<Integer, Double> weights = settings.commonAugmentsPerLevelWeights();
+        int weightedMin = weights != null && weights.containsKey(0) ? 0 : min;
+        if (weightedMin == max && (weights == null || weights.isEmpty())) {
+            return min;
+        }
+
+        if (weights != null && !weights.isEmpty()) {
+            double totalWeight = 0.0D;
+            for (int count = weightedMin; count <= max; count++) {
+                totalWeight += Math.max(0.0D, weights.getOrDefault(count, 0.0D));
+            }
+
+            if (totalWeight > 0.0D) {
+                double roll = random.nextDouble(totalWeight);
+                for (int count = weightedMin; count <= max; count++) {
+                    roll -= Math.max(0.0D, weights.getOrDefault(count, 0.0D));
+                    if (roll < 0.0D) {
+                        return count;
+                    }
+                }
+                return max;
+            }
+        }
+
+        return random.nextInt(min, max + 1);
+    }
+
+    private int rollTotalCommonAugmentCount(int level,
+            MobAugmentGenerationSettings settings,
+            SplittableRandom random) {
+        int clampedLevel = Math.max(0, level);
+        int total = 0;
+        for (int currentLevel = 0; currentLevel < clampedLevel; currentLevel++) {
+            total += rollCommonAugmentsPerLevel(settings, random);
+        }
+        return total;
     }
 
     private Set<String> parseBlacklistedMobAugmentIds(Store<EntityStore> store) {
@@ -4696,6 +4777,54 @@ public class MobLevelingManager {
         int lower = Math.min(min, max);
         int upper = Math.max(min, max);
         return new LevelRange(lower, upper);
+    }
+
+    private LevelRange parseNonNegativeIntegerRange(Object raw) {
+        if (!(raw instanceof String text)) {
+            return null;
+        }
+
+        String trimmed = text.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+
+        String[] parts = trimmed.split("-");
+        if (parts.length != 2) {
+            return null;
+        }
+
+        Integer min = parseNonNegativeInteger(parts[0]);
+        Integer max = parseNonNegativeInteger(parts[1]);
+        if (min == null || max == null) {
+            return null;
+        }
+
+        int lower = Math.min(min, max);
+        int upper = Math.max(min, max);
+        return new LevelRange(lower, upper);
+    }
+
+    private Integer parseNonNegativeInteger(Object raw) {
+        if (raw == null) {
+            return null;
+        }
+        if (raw instanceof Number number) {
+            int value = number.intValue();
+            return value >= 0 ? value : null;
+        }
+        if (raw instanceof String text) {
+            String trimmed = text.trim();
+            if (!trimmed.matches("\\d+")) {
+                return null;
+            }
+            try {
+                return Integer.parseInt(trimmed);
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private Integer parsePositiveInteger(Object raw) {

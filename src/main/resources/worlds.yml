@@ -42,7 +42,15 @@ World_Overrides:
           Legendary: 0.15
           Mythic: 0.05
       Common:
-        Per_Level: 3
+        # produces a total common count somewhere between 0 and 150.
+        Per_Level: "0-3"
+        # Optional weights for each per-level roll result when using a range.
+        # Comment out or enable as needed; if using a single integer for Per_Level, weights are ignored.
+        Weights:
+          0: 0.10
+          1: 0.20
+          2: 0.45
+          3: 0.25
       # Any augment ids listed here will never be applied to mobs (override or generated).
       # Example: [rebirth, frozen_domain] or [common] to disable generated common rolls.
       Blacklisted_Augments: []
