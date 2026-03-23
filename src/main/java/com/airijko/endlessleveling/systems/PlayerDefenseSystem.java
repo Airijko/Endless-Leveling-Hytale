@@ -43,6 +43,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.Collection;
+import java.util.Locale;
 import javax.annotation.Nonnull;
 
 /**
@@ -53,6 +55,7 @@ import javax.annotation.Nonnull;
 public class PlayerDefenseSystem extends DamageEventSystem {
 	private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 	private static final double MOB_PRECISION_MAX_PERCENT = 100.0D;
+	private static final String DEBUG_SECTION_MOB_COMMON_OFFENSE = "mob_common_offense";
 	private final PlayerDataManager playerDataManager;
 	private final SkillManager skillManager;
 	private final PassiveManager passiveManager;
@@ -176,6 +179,19 @@ public class PlayerDefenseSystem extends DamageEventSystem {
 									SkillAttributeType.SORCERY);
 							double combinedDamagePercent = Math.max(0.0D, strengthBonus + sorceryBonus);
 							float damageAfterAttributes = (float) (originalDamage * (1.0D + (combinedDamagePercent / 100.0D)));
+							if (isDebugSectionEnabled(DEBUG_SECTION_MOB_COMMON_OFFENSE)) {
+								float commonBonusDamage = Math.max(0.0f, damageAfterAttributes - originalDamage);
+								LOGGER.atInfo().log(
+										"[MOB_COMMON_OFFENSE] attacker=%d defender=%s base=%.3f bonus=%.3f final=%.3f strength=%.2f%% sorcery=%.2f%% combined=%.2f%%",
+										attackerRef.getIndex(),
+										defenderPlayer.getUsername(),
+										originalDamage,
+										commonBonusDamage,
+										damageAfterAttributes,
+										strengthBonus,
+										sorceryBonus,
+										combinedDamagePercent);
+							}
 
 							double precisionPercent = Math.max(0.0D, Math.min(MOB_PRECISION_MAX_PERCENT,
 									mobAugmentExecutor.getAttributeBonus(attackerUuid, SkillAttributeType.PRECISION)));
@@ -384,5 +400,36 @@ public class PlayerDefenseSystem extends DamageEventSystem {
 		} catch (Throwable ignored) {
 			return null;
 		}
+	}
+
+	private boolean isDebugSectionEnabled(String sectionKey) {
+		if (sectionKey == null || sectionKey.isBlank()) {
+			return false;
+		}
+		EndlessLeveling plugin = EndlessLeveling.getInstance();
+		if (plugin == null || plugin.getConfigManager() == null) {
+			return false;
+		}
+
+		Object raw = plugin.getConfigManager().get("logging.debug_sections", List.of(), false);
+		if (!(raw instanceof Collection<?> sections)) {
+			return false;
+		}
+
+		String normalizedKey = sectionKey.trim().toLowerCase(Locale.ROOT);
+		String systemsKey = ("systems." + normalizedKey);
+		String fqSystemsKey = ("com.airijko.endlessleveling.systems." + normalizedKey);
+		for (Object section : sections) {
+			if (section == null) {
+				continue;
+			}
+			String normalizedSection = String.valueOf(section).trim().toLowerCase(Locale.ROOT);
+			if (normalizedSection.equals(normalizedKey)
+					|| normalizedSection.equals(systemsKey)
+					|| normalizedSection.equals(fqSystemsKey)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

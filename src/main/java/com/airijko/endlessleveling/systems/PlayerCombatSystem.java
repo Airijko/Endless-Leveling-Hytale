@@ -52,7 +52,9 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -64,6 +66,7 @@ public class PlayerCombatSystem extends DamageEventSystem {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final boolean PASSIVE_DEBUG = Boolean
             .parseBoolean(System.getProperty("el.passive.debug", "true"));
+        private static final String DEBUG_SECTION_MOB_COMMON_DEFENSE = "mob_common_defense";
     public static final MetaKey<Boolean> AUGMENT_DOT_DAMAGE = Damage.META_REGISTRY
             .registerMetaObject(data -> Boolean.FALSE);
     public static final MetaKey<Boolean> AUGMENT_PROC_DAMAGE = Damage.META_REGISTRY
@@ -359,6 +362,16 @@ public class PlayerCombatSystem extends DamageEventSystem {
                 Math.min(MOB_DEFENSE_MAX_REDUCTION_PERCENT,
                     mobAugmentExecutor.getAttributeBonus(mobUuid, SkillAttributeType.DEFENSE)));
             float afterDefense = (float) (incomingDamage * (1.0D - (defensePercent / 100.0D)));
+            if (isDebugSectionEnabled(DEBUG_SECTION_MOB_COMMON_DEFENSE)) {
+                float defenseReductionAmount = Math.max(0.0f, incomingDamage - afterDefense);
+                LOGGER.atInfo().log(
+                        "[MOB_COMMON_DEFENSE] target=%d base=%.3f reduced=%.3f afterDefense=%.3f defense=%.2f%%",
+                        targetRef.getIndex(),
+                        incomingDamage,
+                        defenseReductionAmount,
+                        afterDefense,
+                        defensePercent);
+            }
 
         float afterDamageTaken = mobAugmentExecutor.applyOnDamageTaken(
                 mobUuid,
@@ -720,6 +733,37 @@ public class PlayerCombatSystem extends DamageEventSystem {
                 playerData.getUuid(),
                 type.name(),
                 detail);
+    }
+
+    private boolean isDebugSectionEnabled(String sectionKey) {
+        if (sectionKey == null || sectionKey.isBlank()) {
+            return false;
+        }
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null || plugin.getConfigManager() == null) {
+            return false;
+        }
+
+        Object raw = plugin.getConfigManager().get("logging.debug_sections", List.of(), false);
+        if (!(raw instanceof Collection<?> sections)) {
+            return false;
+        }
+
+        String normalizedKey = sectionKey.trim().toLowerCase(Locale.ROOT);
+        String systemsKey = "systems." + normalizedKey;
+        String fqSystemsKey = "com.airijko.endlessleveling.systems." + normalizedKey;
+        for (Object section : sections) {
+            if (section == null) {
+                continue;
+            }
+            String normalizedSection = String.valueOf(section).trim().toLowerCase(Locale.ROOT);
+            if (normalizedSection.equals(normalizedKey)
+                    || normalizedSection.equals(systemsKey)
+                    || normalizedSection.equals(fqSystemsKey)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private record TrueDamageSettings(ArchetypePassiveType sourceType,
