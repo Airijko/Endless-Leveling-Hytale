@@ -23,8 +23,8 @@ passives:
     value: 1.0
     normal_bonus_damage: false # Disables legacy first-strike bonus damage
     true_damage_flat_bonus: 200 # Flat true damage on hit
-    haste_bonus: 50 # +50% haste while this passive is active
-    cooldown: 18
+    haste_bonus: 35 # +35% haste while this passive is active
+    cooldown: 35
     reset_on_kill: true
   - type: INNATE_ATTRIBUTE_GAIN
     attribute: haste

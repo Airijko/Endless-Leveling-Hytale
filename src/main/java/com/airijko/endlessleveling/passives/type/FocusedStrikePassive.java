@@ -81,7 +81,7 @@ public final class FocusedStrikePassive {
         }
 
         long remaining = currentExpiresAt - now;
-        long reducedRemaining = Math.max(0L, (long) Math.ceil(remaining / 2.0D));
+        long reducedRemaining = Math.max(0L, (long) Math.ceil(remaining * 0.75D));
         runtimeState.setFirstStrikeCooldownExpiresAt(now + reducedRemaining);
         runtimeState.setFirstStrikeKillResetReady(true);
         runtimeState.setFirstStrikeReadyNotified(reducedRemaining <= 0L);

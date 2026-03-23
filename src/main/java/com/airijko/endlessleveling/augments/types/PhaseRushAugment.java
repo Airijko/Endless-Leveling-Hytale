@@ -190,15 +190,16 @@ public final class PhaseRushAugment extends Augment
                 hasteBonus * 100.0D,
                 0L);
 
-        double conversionBonus = resolveHasteConversionBonus(context);
+        double conversionBonus = resolveHasteConversionBonus(context, burstActive);
         return AugmentUtils.applyAdditiveBonusFromBase(
                 context.getDamage(),
                 context.getBaseDamage(),
                 conversionBonus);
     }
 
-    private double resolveHasteConversionBonus(AugmentHooks.HitContext context) {
-        if (hasteToDamageConversionPercent <= 0.0D
+    private double resolveHasteConversionBonus(AugmentHooks.HitContext context, boolean burstActive) {
+        if (!burstActive
+                || hasteToDamageConversionPercent <= 0.0D
                 || context.getSkillManager() == null
                 || context.getPlayerData() == null) {
             return 0.0D;

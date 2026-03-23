@@ -24,12 +24,14 @@ ui:
   - title: Buffs
     body: '+50% Haste
 
-      Conversion Percent: +50%
+      During Phase Rush burst: gain % bonus damage equal to 50% of your Haste bonus
 
       '
     color: '#8adf9e'
   - title: Phase Rush Bonus
     body: 'Double your Haste Bonus for 3s after hitting 5 times
+
+      Haste-based bonus damage is active only during this burst
 
       '
     color: '#8adf9e'
