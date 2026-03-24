@@ -62,6 +62,14 @@ public final class CommonAugment extends Augment implements AugmentHooks.Passive
             return;
         }
         String sourcePrefix = buildSourcePrefix(selectionKey);
+
+        // Mob common offers are encoded as a single rolled stat; avoid writing all 10
+        // attributes every passive tick in mob flow.
+        if (context.getPlayerData() == null && selectedOffer != null) {
+            applySelectedMobOffer(context, sourcePrefix, selectedOffer);
+            return;
+        }
+
         double lifeForceBonus = selectedOffer == null
                 ? resolveRoll(context, selectionKey, "life_force", lifeForceRange)
                 : resolveSelectedOfferBonus(selectedOffer, "life_force");
@@ -153,6 +161,38 @@ public final class CommonAugment extends Augment implements AugmentHooks.Passive
             return 0.0D;
         }
         return selectedOffer.rolledValue();
+    }
+
+    private void applySelectedMobOffer(AugmentHooks.PassiveStatContext context,
+            String sourcePrefix,
+            CommonStatOffer selectedOffer) {
+        if (context == null || context.getRuntimeState() == null || sourcePrefix == null || selectedOffer == null) {
+            return;
+        }
+
+        SkillAttributeType attributeType = switch (selectedOffer.attributeKey()) {
+            case "life_force" -> SkillAttributeType.LIFE_FORCE;
+            case "strength" -> SkillAttributeType.STRENGTH;
+            case "sorcery" -> SkillAttributeType.SORCERY;
+            case "defense" -> SkillAttributeType.DEFENSE;
+            case "haste" -> SkillAttributeType.HASTE;
+            case "precision" -> SkillAttributeType.PRECISION;
+            case "ferocity" -> SkillAttributeType.FEROCITY;
+            case "discipline" -> SkillAttributeType.DISCIPLINE;
+            case "flow" -> SkillAttributeType.FLOW;
+            case "stamina" -> SkillAttributeType.STAMINA;
+            default -> null;
+        };
+
+        if (attributeType == null) {
+            return;
+        }
+
+        AugmentUtils.setAttributeBonus(context.getRuntimeState(),
+                sourcePrefix + "_" + selectedOffer.attributeKey(),
+                attributeType,
+                selectedOffer.rolledValue(),
+                0L);
     }
 
     private BonusRange readRange(Map<String, Object> buffs, String buffKey) {

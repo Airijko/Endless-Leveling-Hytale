@@ -1106,6 +1106,8 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (manaPerSummon == null) {
             manaPerSummon = getNestedDoubleProp(props, "summon_amount_scaling", "mana_ratio");
         }
+        Double strengthPerSummon = getNestedDoubleProp(props, "summon_amount_scaling", "strength_per_summon");
+        Double sorceryPerSummon = getNestedDoubleProp(props, "summon_amount_scaling", "sorcery_per_summon");
         Double summonLifetime = getDoubleProp(props, "minion_lifetime_seconds");
         if (summonLifetime == null) {
             summonLifetime = getDoubleProp(props, "lifetime_seconds");
@@ -1241,11 +1243,9 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                             : tr("ui.classes.passive.pretty.army_of_the_dead.base",
                                     "- Base summons: {0}",
                                     formatNumber(baseSummonAmount)),
-                    manaPerSummon == null
+                    (strengthPerSummon == null || strengthPerSummon <= 0.0D) && (sorceryPerSummon == null || sorceryPerSummon <= 0.0D) && (manaPerSummon == null || manaPerSummon <= 0.0D)
                             ? null
-                            : tr("ui.classes.passive.pretty.army_of_the_dead.mana_scaling",
-                                    "- Scaling: +1 summon per {0} mana",
-                                    formatNumber(manaPerSummon)),
+                            : buildArmyOfTheDeadScalingText(strengthPerSummon, sorceryPerSummon, manaPerSummon),
                     maxSummons == null || maxSummons <= 0.0D
                             ? null
                             : tr("ui.classes.passive.pretty.army_of_the_dead.cap",
@@ -1597,6 +1597,30 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             builder.append(part);
         }
         return builder.toString();
+    }
+
+    private String buildArmyOfTheDeadScalingText(Double strengthPerSummon, Double sorceryPerSummon, Double manaPerSummon) {
+        if (strengthPerSummon != null && strengthPerSummon > 0.0D) {
+            if (sorceryPerSummon != null && sorceryPerSummon > 0.0D) {
+                return tr("ui.classes.passive.pretty.army_of_the_dead.dual_scaling",
+                        "- Scaling: +1 summon per {0} strength or {1} sorcery",
+                        formatNumber(strengthPerSummon),
+                        formatNumber(sorceryPerSummon));
+            } else {
+                return tr("ui.classes.passive.pretty.army_of_the_dead.strength_scaling",
+                        "- Scaling: +1 summon per {0} strength",
+                        formatNumber(strengthPerSummon));
+            }
+        } else if (sorceryPerSummon != null && sorceryPerSummon > 0.0D) {
+            return tr("ui.classes.passive.pretty.army_of_the_dead.sorcery_scaling",
+                    "- Scaling: +1 summon per {0} sorcery",
+                    formatNumber(sorceryPerSummon));
+        } else if (manaPerSummon != null && manaPerSummon > 0.0D) {
+            return tr("ui.classes.passive.pretty.army_of_the_dead.mana_scaling",
+                    "- Scaling: +1 summon per {0} mana",
+                    formatNumber(manaPerSummon));
+        }
+        return null;
     }
 
     private String formatSlotAvailability(long remainingSeconds) {

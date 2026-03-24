@@ -67,6 +67,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     private static final String DEBUG_SECTION_MOB_COMMON_DEFENSE = "mob_common_defense";
 
     private final MobLevelingManager mobLevelingManager = EndlessLeveling.getInstance().getMobLevelingManager();
+    private final java.util.Random random = new java.util.Random();
 
     private final AtomicBoolean fullMobRescaleRequested = new AtomicBoolean(false);
     private long systemTimeMillis = 0L;
@@ -845,6 +846,20 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             }
         }
 
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin == null || plugin.getMobAugmentExecutor() == null) {
+            return;
+        }
+
+        UUID mobUuid = trackingIdentity.uuidBacked() ? resolveUuid(ref, commandBuffer) : null;
+        if (mobUuid == null) {
+            return; // Skip passive ticking if we can't resolve UUID
+        }
+
+        if (!plugin.getMobAugmentExecutor().hasMobAugments(mobUuid)) {
+            return; // Skip if no augments registered (avoids expensive component fetches)
+        }
+
         if (state.lastPassiveStatTickMillis > 0L
                 && currentTimeMillis - state.lastPassiveStatTickMillis < PASSIVE_STAT_TICK_INTERVAL_MILLIS) {
             return;
@@ -987,7 +1002,13 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     }
 
     private EntityRuntimeState getOrCreateEntityState(long entityKey, int entityId, Store<EntityStore> store) {
-        EntityRuntimeState state = entityStates.computeIfAbsent(entityKey, ignored -> new EntityRuntimeState());
+        EntityRuntimeState state = entityStates.computeIfAbsent(entityKey, ignored -> {
+            EntityRuntimeState newState = new EntityRuntimeState();
+            // Passive tick bucketing: stagger entity ticks across the 1000ms interval instead of syncing
+            // Set lastPassiveStatTickMillis to a random offset in [-1000, 0] so initial tick happens spread out
+            newState.lastPassiveStatTickMillis = -(PASSIVE_STAT_TICK_INTERVAL_MILLIS - (long)(random.nextDouble() * PASSIVE_STAT_TICK_INTERVAL_MILLIS));
+            return newState;
+        });
         if (entityId >= 0) {
             state.trackedEntityId = entityId;
         }
@@ -1001,6 +1022,25 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         long storePart = store == null ? 0L : Integer.toUnsignedLong(System.identityHashCode(store));
         long entityPart = Integer.toUnsignedLong(entityId);
         return (storePart << 32) | entityPart;
+    }
+
+    private UUID resolveUuid(Ref<EntityStore> ref, CommandBuffer<EntityStore> commandBuffer) {
+        if (ref == null) {
+            return null;
+        }
+
+        UUIDComponent uuidComponent = null;
+        if (commandBuffer != null) {
+            uuidComponent = commandBuffer.getComponent(ref, UUIDComponent.getComponentType());
+        }
+        if (uuidComponent == null) {
+            Store<EntityStore> store = ref.getStore();
+            if (store != null) {
+                uuidComponent = store.getComponent(ref, UUIDComponent.getComponentType());
+            }
+        }
+
+        return uuidComponent != null ? uuidComponent.getUuid() : null;
     }
 
     private TrackingIdentity resolveTrackingIdentity(Ref<EntityStore> ref,

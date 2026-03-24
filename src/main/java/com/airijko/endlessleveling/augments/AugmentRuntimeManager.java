@@ -136,9 +136,25 @@ public final class AugmentRuntimeManager {
             if (type == null || sourceId == null) {
                 return;
             }
-            attributeBonuses
-                    .computeIfAbsent(type, t -> new ConcurrentHashMap<>())
-                    .put(normalizeId(sourceId), new AttributeBonus(value, expiresAtMillis));
+
+            String normalizedSourceId = normalizeId(sourceId);
+            if (normalizedSourceId == null || normalizedSourceId.isBlank()) {
+                return;
+            }
+
+            Map<String, AttributeBonus> bonusesByType = attributeBonuses
+                    .computeIfAbsent(type, t -> new ConcurrentHashMap<>());
+
+            AttributeBonus existing = bonusesByType.get(normalizedSourceId);
+            if (existing != null
+                    && Double.compare(existing.value(), value) == 0
+                    && existing.expiresAt() == expiresAtMillis) {
+                // Passive hooks can re-apply the same permanent values every tick.
+                // Skip identical writes to avoid heavy ConcurrentHashMap.put churn.
+                return;
+            }
+
+            bonusesByType.put(normalizedSourceId, new AttributeBonus(value, expiresAtMillis));
         }
 
         public void retainAugmentStates(Set<String> activeAugmentIds) {

@@ -20,7 +20,8 @@ passives:
     value: 1.0
     base_summon_amount: 1
     summon_amount_scaling:
-      mana_per_summon: 175
+      strength_per_summon: 175
+      sorcery_per_summon: 175
     minion_lifetime_seconds: 30
     activation: on_hit
     cooldown_seconds: 18

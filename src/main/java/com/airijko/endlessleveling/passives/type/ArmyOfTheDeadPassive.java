@@ -1119,18 +1119,43 @@ public final class ArmyOfTheDeadPassive {
             return 0;
         }
 
-        double ownerMana = 0.0D;
-        if (sourceStats != null) {
-            EntityStatValue mana = sourceStats.get(DefaultEntityStatTypes.getMana());
-            ownerMana = mana != null ? Math.max(0.0D, mana.getMax()) : 0.0D;
-        }
-        if (ownerMana <= 0.0D && sourcePlayerData != null) {
-            ownerMana = Math.max(0.0D, sourcePlayerData.getPlayerSkillAttributeLevel(SkillAttributeType.FLOW));
-        }
-
         int extra = 0;
-        if (config.manaPerSummon() > 0.0D) {
-            extra = (int) Math.floor(ownerMana / config.manaPerSummon());
+        
+        // Check for strength and sorcery scaling
+        if (config.strengthPerSummon() > 0.0D || config.sorceryPerSummon() > 0.0D) {
+            double strength = 0.0D;
+            double sorcery = 0.0D;
+            
+            if (sourcePlayerData != null) {
+                strength = Math.max(0.0D, sourcePlayerData.getPlayerSkillAttributeLevel(SkillAttributeType.STRENGTH));
+                sorcery = Math.max(0.0D, sourcePlayerData.getPlayerSkillAttributeLevel(SkillAttributeType.SORCERY));
+            }
+            
+            int strengthExtra = 0;
+            int sorceryExtra = 0;
+            
+            if (config.strengthPerSummon() > 0.0D) {
+                strengthExtra = (int) Math.floor(strength / config.strengthPerSummon());
+            }
+            if (config.sorceryPerSummon() > 0.0D) {
+                sorceryExtra = (int) Math.floor(sorcery / config.sorceryPerSummon());
+            }
+            
+            extra = Math.max(strengthExtra, sorceryExtra);
+        } else {
+            // Fallback to mana-based scaling for backwards compatibility
+            double ownerMana = 0.0D;
+            if (sourceStats != null) {
+                EntityStatValue mana = sourceStats.get(DefaultEntityStatTypes.getMana());
+                ownerMana = mana != null ? Math.max(0.0D, mana.getMax()) : 0.0D;
+            }
+            if (ownerMana <= 0.0D && sourcePlayerData != null) {
+                ownerMana = Math.max(0.0D, sourcePlayerData.getPlayerSkillAttributeLevel(SkillAttributeType.FLOW));
+            }
+
+            if (config.manaPerSummon() > 0.0D) {
+                extra = (int) Math.floor(ownerMana / config.manaPerSummon());
+            }
         }
 
         int total = base + Math.max(0, extra);
@@ -1780,10 +1805,15 @@ public final class ArmyOfTheDeadPassive {
                 DEFAULT_BASE_SUMMON_AMOUNT);
 
         double manaPerSummon = DEFAULT_MANA_PER_SUMMON;
+        double strengthPerSummon = 0.0D;
+        double sorceryPerSummon = 0.0D;
+        
         Object scaling = props.get("summon_amount_scaling");
         if (scaling instanceof Map<?, ?> scalingMap) {
             manaPerSummon = parsePositiveDouble(firstNonNull(scalingMap.get("mana_per_summon"),
                     scalingMap.get("mana_ratio")), DEFAULT_MANA_PER_SUMMON);
+            strengthPerSummon = parsePositiveDouble(scalingMap.get("strength_per_summon"), 0.0D);
+            sorceryPerSummon = parsePositiveDouble(scalingMap.get("sorcery_per_summon"), 0.0D);
         }
         manaPerSummon = parsePositiveDouble(firstNonNull(props.get("mana_per_summon"), manaPerSummon),
                 manaPerSummon);
@@ -1815,6 +1845,8 @@ public final class ArmyOfTheDeadPassive {
         return new ArmyOfTheDeadConfig(onHitActivation,
                 baseSummonAmount,
                 manaPerSummon,
+                strengthPerSummon,
+                sorceryPerSummon,
                 secondsToMillis(cooldownSeconds),
                 secondsToMillis(lifetimeSeconds),
                 baseDamage,
@@ -1892,6 +1924,8 @@ public final class ArmyOfTheDeadPassive {
     private record ArmyOfTheDeadConfig(boolean onHitActivation,
             int baseSummonAmount,
             double manaPerSummon,
+            double strengthPerSummon,
+            double sorceryPerSummon,
             long cooldownMillis,
             long lifetimeMillis,
             double baseDamage,
@@ -1904,6 +1938,8 @@ public final class ArmyOfTheDeadPassive {
             return new ArmyOfTheDeadConfig(false,
                     DEFAULT_BASE_SUMMON_AMOUNT,
                     DEFAULT_MANA_PER_SUMMON,
+                    0.0D,
+                    0.0D,
                     secondsToMillis(DEFAULT_COOLDOWN_SECONDS),
                     secondsToMillis(DEFAULT_LIFETIME_SECONDS),
                 DEFAULT_BASE_SUMMON_DAMAGE,
