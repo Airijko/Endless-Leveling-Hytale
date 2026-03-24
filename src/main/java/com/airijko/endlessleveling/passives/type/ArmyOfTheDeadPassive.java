@@ -29,6 +29,7 @@ import com.hypixel.hytale.server.core.modules.entitystats.modifier.StaticModifie
 import com.hypixel.hytale.server.core.modules.entitystats.modifier.StaticModifier.CalculationType;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.util.TargetUtil;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.entity.entities.player.movement.MovementManager;
@@ -69,6 +70,7 @@ public final class ArmyOfTheDeadPassive {
     private static final long INHERITANCE_DEBUG_LOG_COOLDOWN_MS = 5000L;
     private static final long NAMEPLATE_REFRESH_INTERVAL_MS = 2000L;
     private static final long NAMEPLATE_FAILURE_LOG_COOLDOWN_MS = 5000L;
+    private static final double AUTO_AGGRO_SCAN_RANGE = 24.0D;
 
     private static final Map<UUID, OwnerSummonState> OWNER_STATES = new ConcurrentHashMap<>();
     private static final Map<UUID, SummonBinding> SUMMON_BINDINGS = new ConcurrentHashMap<>();
@@ -451,31 +453,7 @@ public final class ArmyOfTheDeadPassive {
             Ref<EntityStore> targetRef,
             Store<EntityStore> store,
             CommandBuffer<EntityStore> commandBuffer) {
-        if (!EntityRefUtil.isUsable(attackerRef) || !EntityRefUtil.isUsable(targetRef)) {
-            return false;
-        }
-
-        UUID attackerOwner = resolveSummonOwnerUuid(attackerRef, store, commandBuffer);
-        UUID targetOwner = resolveSummonOwnerUuid(targetRef, store, commandBuffer);
-
-        if (attackerOwner == null && targetOwner == null) {
-            return false;
-        }
-
-        UUID attackerPlayerUuid = resolvePlayerUuid(attackerRef, store, commandBuffer);
-        UUID targetPlayerUuid = resolvePlayerUuid(targetRef, store, commandBuffer);
-
-        if (attackerOwner != null && targetPlayerUuid != null && isAlliedWithOwner(attackerOwner, targetPlayerUuid)) {
-            return true;
-        }
-
-        if (targetOwner != null && attackerPlayerUuid != null && isAlliedWithOwner(targetOwner, attackerPlayerUuid)) {
-            return true;
-        }
-
-        return attackerOwner != null
-                && targetOwner != null
-                && areAlliedOwners(attackerOwner, targetOwner);
+        return false;
     }
 
     public static boolean isFriendlyToOwner(UUID ownerUuid,
@@ -666,6 +644,73 @@ public final class ArmyOfTheDeadPassive {
                     now,
                     ownerStore,
                     ownerState);
+
+            if (!ownerDisconnected) {
+                autoRetargetIdleSummons(ownerUuid, ownerState, store);
+            }
+        }
+    }
+
+    private static void autoRetargetIdleSummons(UUID ownerUuid,
+            OwnerSummonState ownerState,
+            Store<EntityStore> store) {
+        if (ownerUuid == null || ownerState == null || store == null) {
+            return;
+        }
+
+        synchronized (ownerState) {
+            for (SummonSlot slot : ownerState.slots) {
+                if (slot == null || !EntityRefUtil.isUsable(slot.activeRef)) {
+                    continue;
+                }
+
+                Store<EntityStore> summonStore = EntityRefUtil.getStore(slot.activeRef);
+                if (summonStore != store) {
+                    continue;
+                }
+
+                NPCEntity summonNpc = EntityRefUtil.tryGetComponent(store,
+                        slot.activeRef,
+                        NPCEntity.getComponentType());
+                if (summonNpc == null || summonNpc.getRole() == null) {
+                    continue;
+                }
+
+                Ref<EntityStore> currentTarget = summonNpc.getRole()
+                        .getMarkedEntitySupport()
+                        .getMarkedEntityRef("LockedTarget");
+                if (EntityRefUtil.isUsable(currentTarget)) {
+                    continue;
+                }
+
+                TransformComponent transform = EntityRefUtil.tryGetComponent(store,
+                        slot.activeRef,
+                        TransformComponent.getComponentType());
+                if (transform == null || transform.getPosition() == null) {
+                    continue;
+                }
+
+                for (Ref<EntityStore> candidate : TargetUtil.getAllEntitiesInSphere(
+                        transform.getPosition(), AUTO_AGGRO_SCAN_RANGE, store)) {
+                    if (!EntityRefUtil.isUsable(candidate)) {
+                        continue;
+                    }
+                    if (candidate.equals(slot.activeRef)) {
+                        continue;
+                    }
+                    if (!isValidAggroTargetForOwner(ownerUuid, candidate, store, null)) {
+                        continue;
+                    }
+
+                    try {
+                        summonNpc.getRole().setMarkedTarget("LockedTarget", candidate);
+                    } catch (Throwable throwable) {
+                        LOGGER.atFiner().withCause(throwable)
+                                .log("[ARMY_OF_THE_DEAD] Auto-retarget failed for summon of owner %s.", ownerUuid);
+                    }
+                    break;
+                }
+            }
         }
     }
 
@@ -1140,8 +1185,8 @@ public final class ArmyOfTheDeadPassive {
             if (config.sorceryPerSummon() > 0.0D) {
                 sorceryExtra = (int) Math.floor(sorcery / config.sorceryPerSummon());
             }
-            
-            extra = Math.max(strengthExtra, sorceryExtra);
+
+            extra = strengthExtra + sorceryExtra;
         } else {
             // Fallback to mana-based scaling for backwards compatibility
             double ownerMana = 0.0D;
@@ -1214,6 +1259,26 @@ public final class ArmyOfTheDeadPassive {
         }
 
         if (slot.summonExpiresAt > 0L && now >= slot.summonExpiresAt) {
+            MobAugmentExecutor mobAugmentExecutor = EndlessLeveling.getInstance().getMobAugmentExecutor();
+            if (mobAugmentExecutor != null) {
+                EntityStatMap summonStats = EntityRefUtil.tryGetComponent(commandBuffer,
+                        slot.activeRef,
+                        EntityStatMap.getComponentType());
+                float currentHp = 1.0f;
+                if (summonStats != null) {
+                    EntityStatValue health = summonStats.get(DefaultEntityStatTypes.getHealth());
+                    if (health != null) {
+                        currentHp = (float) Math.max(1.0D, health.get());
+                    }
+                }
+                mobAugmentExecutor.applyOnDamageTaken(slot.activeSummonUuid,
+                        slot.activeRef,
+                        sourceRef,
+                        commandBuffer,
+                        summonStats,
+                        currentHp + 1.0f);
+            }
+
             forceKillSummon(slot.activeRef, commandBuffer, sourceRef);
             SUMMON_BINDINGS.remove(slot.activeSummonUuid);
             slot.activeRef = null;

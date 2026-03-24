@@ -47,9 +47,6 @@ public final class GraspOfTheUndyingAugment extends Augment
 
     private final double flatDamage;
     private final double maxHealthScaling;
-    private final double strengthScaling;
-    private final double precisionScaling;
-    private final double ferocityScaling;
     private final long cooldownMillis;
     private final double flatHealthPerStack;
     private final double healOnHitMaxHealthPercent;
@@ -66,12 +63,6 @@ public final class GraspOfTheUndyingAugment extends Augment
         this.flatDamage = Math.max(0.0D, AugmentValueReader.getDouble(damage, "flat_damage", 25.0D));
         this.maxHealthScaling = AugmentUtils
                 .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(damage, "max_health_scaling", 0.025D));
-        this.strengthScaling = AugmentUtils
-                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(damage, "strength_scaling", 0.10D));
-        this.precisionScaling = AugmentUtils
-                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(damage, "precision_scaling", 0.50D));
-        this.ferocityScaling = AugmentUtils
-                .normalizeConfiguredBonusMultiplier(AugmentValueReader.getDouble(damage, "ferocity_scaling", 0.20D));
         this.cooldownMillis = AugmentUtils.secondsToMillis(
             AugmentValueReader.getDouble(
                 trigger,
@@ -126,15 +117,8 @@ public final class GraspOfTheUndyingAugment extends Augment
             }
         }
 
-        double strength = AugmentUtils.resolveStrength(context);
-        double precision = AugmentUtils.resolvePrecision(context);
-        double ferocity = AugmentUtils.resolveFerocity(context);
-
         double procDamage = flatDamage
-                + (maxHealth * maxHealthScaling)
-                + (strength * strengthScaling)
-                + (precision * precisionScaling)
-                + (ferocity * ferocityScaling);
+                + (maxHealth * maxHealthScaling);
         if (procDamage <= 0.0D) {
             return context.getDamage();
         }

@@ -184,8 +184,15 @@ public final class DeathBombAugment extends Augment
             return incoming;
         }
 
-        TransformComponent transform = context.getCommandBuffer().getComponent(context.getDefenderRef(),
-                TransformComponent.getComponentType());
+        TransformComponent transform = EntityRefUtil.tryGetComponent(context.getCommandBuffer(),
+                context.getDefenderRef(), TransformComponent.getComponentType());
+        if (transform == null) {
+            Store<EntityStore> defenderStore = EntityRefUtil.getStore(context.getDefenderRef());
+            if (defenderStore != null) {
+                transform = EntityRefUtil.tryGetComponent(defenderStore,
+                        context.getDefenderRef(), TransformComponent.getComponentType());
+            }
+        }
         Vector3d position = transform != null ? snapshotPosition(transform.getPosition()) : null;
         if (position == null) {
             return incoming;

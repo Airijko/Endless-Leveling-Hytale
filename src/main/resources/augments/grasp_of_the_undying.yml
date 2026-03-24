@@ -23,7 +23,7 @@ ui:
       '
     color: '#f7e48b'
   - title: Damage Proc
-    body: 'Damage: 25 + (2.5% Max HP) + (10% Strength) + (50% Precision) + (20% Ferocity)
+    body: 'Damage: 25 + (2.5% Max HP)
 
       '
     color: '#8adf9e'
@@ -44,9 +44,6 @@ passives:
   damage:
     flat_damage: 25.0
     max_health_scaling: 0.025
-    strength_scaling: 0.10
-    precision_scaling: 0.50
-    ferocity_scaling: 0.20
   stacking_health:
     flat_health_per_stack: 25.0
     heal_max_health_percent_on_hit: 0.04
