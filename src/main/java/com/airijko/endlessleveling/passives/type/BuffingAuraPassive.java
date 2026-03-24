@@ -9,6 +9,7 @@ import com.airijko.endlessleveling.passives.PassiveManager;
 import com.airijko.endlessleveling.passives.PassiveManager.PassiveRuntimeState;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveScaling;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
+import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.races.RacePassiveDefinition;
 import com.airijko.endlessleveling.util.EntityRefUtil;
 import com.hypixel.hytale.component.CommandBuffer;
@@ -384,7 +385,13 @@ public final class BuffingAuraPassive {
         if (sourcePlayerData == null) {
             return 0.0D;
         }
-        return Math.max(0.0D, sourcePlayerData.getPlayerSkillAttributeLevel(SkillAttributeType.STAMINA));
+        SkillManager skillManager = EndlessLeveling.getInstance() != null
+                ? EndlessLeveling.getInstance().getSkillManager()
+                : null;
+        if (skillManager != null) {
+            return Math.max(0.0D, skillManager.calculatePlayerStamina(sourcePlayerData));
+        }
+        return 0.0D;
     }
 
     private static boolean isLivingTarget(EntityStatMap statMap) {

@@ -1603,7 +1603,7 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
         if (strengthPerSummon != null && strengthPerSummon > 0.0D) {
             if (sorceryPerSummon != null && sorceryPerSummon > 0.0D) {
                 return tr("ui.classes.passive.pretty.army_of_the_dead.dual_scaling",
-                        "- Scaling: +1 summon per {0} strength and {1} sorcery",
+                        "- Scaling: +1 summon per {0} strength or {1} sorcery",
                         formatNumber(strengthPerSummon),
                         formatNumber(sorceryPerSummon));
             } else {

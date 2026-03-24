@@ -146,7 +146,7 @@ public class PlayerDataListener {
         }
 
         if (augmentUnlockManager != null) {
-            augmentUnlockManager.ensureUnlocks(playerData);
+            augmentUnlockManager.ensureUnlocksForAllProfiles(playerData);
 
             // Audit after ensureUnlocks so that routine TOO_FEW cases (missing
             // offers that ensureUnlocks just filled) don't trigger false alerts.

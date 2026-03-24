@@ -1237,6 +1237,9 @@ public final class ArmyOfTheDeadPassive {
         }
 
         int extra = 0;
+        SkillManager skillManager = EndlessLeveling.getInstance() != null
+            ? EndlessLeveling.getInstance().getSkillManager()
+            : null;
         
         // Check for strength and sorcery scaling
         if (config.strengthPerSummon() > 0.0D || config.sorceryPerSummon() > 0.0D) {
@@ -1244,8 +1247,12 @@ public final class ArmyOfTheDeadPassive {
             double sorcery = 0.0D;
             
             if (sourcePlayerData != null) {
-                strength = Math.max(0.0D, sourcePlayerData.getPlayerSkillAttributeLevel(SkillAttributeType.STRENGTH));
-                sorcery = Math.max(0.0D, sourcePlayerData.getPlayerSkillAttributeLevel(SkillAttributeType.SORCERY));
+                if (skillManager != null) {
+                    // Use effective attribute totals so augment scaling (including Brute Force)
+                    // contributes to summon count.
+                    strength = Math.max(0.0D, skillManager.calculatePlayerStrength(sourcePlayerData));
+                    sorcery = Math.max(0.0D, skillManager.calculatePlayerSorcery(sourcePlayerData));
+                }
             }
             
             int strengthExtra = 0;
@@ -1258,6 +1265,8 @@ public final class ArmyOfTheDeadPassive {
                 sorceryExtra = (int) Math.floor(sorcery / config.sorceryPerSummon());
             }
 
+            // Strength and sorcery each grant their own summon increments.
+            // Example: 175 strength + 175 sorcery with 175 thresholds grants +2.
             extra = strengthExtra + sorceryExtra;
         } else {
             // Fallback to mana-based scaling for backwards compatibility
@@ -1267,7 +1276,9 @@ public final class ArmyOfTheDeadPassive {
                 ownerMana = mana != null ? Math.max(0.0D, mana.getMax()) : 0.0D;
             }
             if (ownerMana <= 0.0D && sourcePlayerData != null) {
-                ownerMana = Math.max(0.0D, sourcePlayerData.getPlayerSkillAttributeLevel(SkillAttributeType.FLOW));
+                ownerMana = skillManager != null
+                        ? Math.max(0.0D, skillManager.calculatePlayerFlow(sourcePlayerData))
+                        : 0.0D;
             }
 
             if (config.manaPerSummon() > 0.0D) {
@@ -1470,9 +1481,17 @@ public final class ArmyOfTheDeadPassive {
             return null;
         }
 
+        SkillManager skillManager = EndlessLeveling.getInstance() != null
+            ? EndlessLeveling.getInstance().getSkillManager()
+            : null;
+
         double healthMax = 0.0D;
-        double manaMax = Math.max(0.0D, sourcePlayerData.getPlayerSkillAttributeLevel(SkillAttributeType.FLOW));
-        double staminaMax = Math.max(0.0D, sourcePlayerData.getPlayerSkillAttributeLevel(SkillAttributeType.STAMINA));
+        double manaMax = skillManager != null
+            ? Math.max(0.0D, skillManager.calculatePlayerFlow(sourcePlayerData))
+            : 0.0D;
+        double staminaMax = skillManager != null
+            ? Math.max(0.0D, skillManager.calculatePlayerStamina(sourcePlayerData))
+            : 0.0D;
         if (sourceStats != null) {
             EntityStatValue ownerHealth = sourceStats.get(DefaultEntityStatTypes.getHealth());
             EntityStatValue ownerMana = sourceStats.get(DefaultEntityStatTypes.getMana());

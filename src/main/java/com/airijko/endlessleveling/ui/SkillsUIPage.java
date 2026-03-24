@@ -248,12 +248,12 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                                                         if (isVanguardCritAttributeLocked(playerData,
                                                                                         type)) {
                                                                                 player.sendMessage(Message.raw(tr(
-                                                                                                "ui.skills.error.vanguard_crit_locked",
-                                                                                                "Vanguard cannot invest in {0}.",
+                                                                                                "ui.skills.error.crit_locked",
+                                                                                                "This build cannot invest in {0}.",
                                                                                                 type.name()))
                                                                                                 .color("#ff0000"));
                                                                                 LOGGER.atInfo().log(
-                                                                                                "Blocked Vanguard add for %s attribute %s",
+                                                                                                "Blocked crit-locked add for %s attribute %s",
                                                                                                 playerRef.getUuid(),
                                                                                                 type.name());
                                                                         } else {
@@ -572,7 +572,7 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                                         .enforceVanguardCritRestrictions(playerData);
                         if (restrictionResult.adjusted()) {
                                 LOGGER.atInfo().log(
-                                                "Applied Vanguard crit restriction refund for %s (total=%d precision=%d ferocity=%d)",
+                                                "Applied crit restriction refund for %s (total=%d precision=%d ferocity=%d)",
                                                 playerRef.getUuid(),
                                                 restrictionResult.totalRefunded(),
                                                 restrictionResult.precisionRefunded(),
@@ -687,7 +687,7 @@ public class SkillsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
                 if (skillManager == null) {
                         return false;
                 }
-                return skillManager.isVanguardCritAttributeLocked(playerData, type);
+                return skillManager.isCritAttributeLocked(playerData, type);
         }
 
         private String formatResourceDisplay(double total, String label) {

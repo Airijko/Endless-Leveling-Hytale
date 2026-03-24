@@ -1,5 +1,6 @@
 package com.airijko.endlessleveling.passives.type;
 
+import com.airijko.endlessleveling.EndlessLeveling;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.enums.ArchetypePassiveType;
 import com.airijko.endlessleveling.enums.SkillAttributeType;
@@ -193,7 +194,14 @@ public final class HealingTouchPassive {
         if (skillManager != null) {
             return Math.max(0.0D, skillManager.calculateSkillAttributeTotalBonus(playerData, sourceAttribute, -1));
         }
-        return Math.max(0.0D, playerData.getPlayerSkillAttributeLevel(sourceAttribute));
+        SkillManager resolvedSkillManager = EndlessLeveling.getInstance() != null
+                ? EndlessLeveling.getInstance().getSkillManager()
+                : null;
+        if (resolvedSkillManager != null) {
+            return Math.max(0.0D,
+                    resolvedSkillManager.calculateSkillAttributeTotalBonus(playerData, sourceAttribute, -1));
+        }
+        return 0.0D;
     }
 
     private double resolveResourceMax(EntityStatMap statMap, int statIndex) {

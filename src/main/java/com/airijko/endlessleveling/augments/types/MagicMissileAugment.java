@@ -12,14 +12,14 @@ import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 
 import java.util.Map;
 
-public final class MagicMissleAugment extends Augment implements AugmentHooks.OnHitAugment {
-    public static final String ID = "magic_missle";
+public final class MagicMissileAugment extends Augment implements AugmentHooks.OnHitAugment {
+    public static final String ID = "magic_missile";
 
     private final double flatDamage;
     private final double sorceryScaling;
     private final long cooldownMillis;
 
-    public MagicMissleAugment(AugmentDefinition definition) {
+    public MagicMissileAugment(AugmentDefinition definition) {
         super(definition);
         Map<String, Object> passives = definition.getPassives();
         Map<String, Object> missileDamage = AugmentValueReader.getMap(passives, "missile_damage");

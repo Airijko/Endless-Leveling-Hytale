@@ -42,6 +42,7 @@ public class AugmentUnlockManager {
     private static final String PRECISION_STAT_KEY = "precision";
     private static final String FEROCITY_STAT_KEY = "ferocity";
     private static final String VANGUARD_BASE_CLASS_ID = "vanguard";
+    private static final String BRUTE_FORCE_AUGMENT_ID = "brute_force";
     private static final Set<String> DEFENSE_COMMON_BLOCKED_PRIMARY_CLASSES = Set.of(
             "mage",
             "arcanist",
@@ -124,10 +125,35 @@ public class AugmentUnlockManager {
 
     /** Ensures any eligible unlocks are rolled and persisted for the player. */
     public void ensureUnlocks(@Nonnull PlayerData playerData) {
+        ensureUnlocksInternal(playerData, true);
+    }
+
+    /** Ensures all profiles are sanitized and refilled once, then saves once. */
+    public void ensureUnlocksForAllProfiles(@Nonnull PlayerData playerData) {
+        if (playerData == null) {
+            return;
+        }
+
+        int originalActiveIndex = playerData.getActiveProfileIndex();
+        boolean updated = false;
+        for (int profileIndex : playerData.getProfiles().keySet()) {
+            playerData.switchProfile(profileIndex);
+            updated |= ensureUnlocksInternal(playerData, false);
+        }
+        playerData.switchProfile(originalActiveIndex);
+
+        if (updated) {
+            playerDataManager.save(playerData);
+        }
+    }
+
+    private boolean ensureUnlocksInternal(@Nonnull PlayerData playerData, boolean persist) {
         LOGGER.atFiner().log("ensureUnlocks: player=%s level=%d rules=%d", playerData.getPlayerName(),
                 playerData.getLevel(), unlockRules.size());
 
         boolean updated = sanitizeVanguardCommonCritSelections(playerData);
+        updated |= sanitizeBruteForceCommonCritOffers(playerData);
+        updated |= sanitizeInvalidSelectionsAndOffers(playerData);
 
         int playerLevel = playerData.getLevel();
         Map<PassiveTier, Integer> eligibleByTier = buildEligibleByTier(playerData, playerLevel);
@@ -171,12 +197,14 @@ public class AugmentUnlockManager {
             }
             playerData.setAugmentOffersForTier(tierKey, offers);
         }
-        if (updated) {
+        if (updated && persist) {
             playerDataManager.save(playerData);
-        } else {
+        } else if (!updated) {
             LOGGER.atFiner().log("No augment rolls persisted for %s (level %d)", playerData.getPlayerName(),
                     playerData.getLevel());
         }
+
+        return updated;
     }
 
     /**
@@ -729,7 +757,7 @@ public class AugmentUnlockManager {
 
         DamageBuildFocus damageBuildFocus = resolveDamageBuildFocus(playerData);
         boolean blockDefenseOffer = shouldBlockDefenseCommonOffer(playerData);
-        boolean blockCritOffers = shouldBlockVanguardCritCommonOffers(playerData);
+        boolean blockCritOffers = shouldBlockCommonCritOffers(playerData);
         boolean blockPrecisionOffer = shouldBlockPrecisionCommonOffer(playerData);
         List<String> statKeys = new ArrayList<>();
         for (String key : buffs.keySet()) {
@@ -823,6 +851,11 @@ public class AugmentUnlockManager {
         return VANGUARD_BASE_CLASS_ID.equals(basePrimaryClassId);
     }
 
+    private boolean shouldBlockCommonCritOffers(PlayerData playerData) {
+        String basePrimaryClassId = normalizePrimaryClassBaseId(playerData);
+        return VANGUARD_BASE_CLASS_ID.equals(basePrimaryClassId) || hasSelectedAugment(playerData, BRUTE_FORCE_AUGMENT_ID);
+    }
+
     private boolean shouldBlockPrecisionCommonOffer(PlayerData playerData) {
         if (playerData == null || skillManager == null) {
             return false;
@@ -856,27 +889,9 @@ public class AugmentUnlockManager {
             updated = true;
         }
 
-        List<String> currentCommonOffers = new ArrayList<>(
-                playerData.getAugmentOffersForTier(PassiveTier.COMMON.name()));
-        if (!currentCommonOffers.isEmpty()) {
-            List<String> filteredCommonOffers = new ArrayList<>(currentCommonOffers.size());
-            int removedOffers = 0;
-            for (String offerId : currentCommonOffers) {
-                CommonAugment.CommonStatOffer offer = CommonAugment.parseStatOfferId(offerId);
-                if (offer != null && isBlockedVanguardCritCommonStat(offer.attributeKey())) {
-                    removedOffers++;
-                    continue;
-                }
-                filteredCommonOffers.add(offerId);
-            }
-            if (removedOffers > 0) {
-                playerData.setAugmentOffersForTier(PassiveTier.COMMON.name(), filteredCommonOffers);
-                updated = true;
-                LOGGER.atInfo().log(
-                        "Removed %d blocked Vanguard COMMON offers for %s (precision/ferocity)",
-                        removedOffers,
-                        playerData.getPlayerName());
-            }
+        int removedOfferBundles = removeBlockedCommonOfferBundles(playerData, "Vanguard");
+        if (removedOfferBundles > 0) {
+            updated = true;
         }
 
         if (removedSelections > 0) {
@@ -889,12 +904,168 @@ public class AugmentUnlockManager {
         return updated;
     }
 
+    private boolean sanitizeBruteForceCommonCritOffers(PlayerData playerData) {
+        if (!hasSelectedAugment(playerData, BRUTE_FORCE_AUGMENT_ID)) {
+            return false;
+        }
+
+        return removeBlockedCommonOfferBundles(playerData, "Brute Force") > 0;
+    }
+
+    private int removeBlockedCommonOfferBundles(PlayerData playerData, String restrictionName) {
+        List<String> currentCommonOffers = new ArrayList<>(playerData.getAugmentOffersForTier(PassiveTier.COMMON.name()));
+        if (currentCommonOffers.isEmpty()) {
+            return 0;
+        }
+
+        List<String> filteredCommonOffers = new ArrayList<>(currentCommonOffers.size());
+        int removedBundles = 0;
+        for (int index = 0; index < currentCommonOffers.size(); index += DEFAULT_OFFER_COUNT) {
+            int bundleEnd = Math.min(index + DEFAULT_OFFER_COUNT, currentCommonOffers.size());
+            boolean blockedBundle = bundleEnd - index < DEFAULT_OFFER_COUNT;
+            if (!blockedBundle) {
+                for (int offerIndex = index; offerIndex < bundleEnd; offerIndex++) {
+                    CommonAugment.CommonStatOffer offer = CommonAugment.parseStatOfferId(currentCommonOffers.get(offerIndex));
+                    if (offer != null && isBlockedVanguardCritCommonStat(offer.attributeKey())) {
+                        blockedBundle = true;
+                        break;
+                    }
+                }
+            }
+
+            if (blockedBundle) {
+                removedBundles++;
+                continue;
+            }
+
+            filteredCommonOffers.addAll(currentCommonOffers.subList(index, bundleEnd));
+        }
+
+        if (removedBundles > 0) {
+            playerData.setAugmentOffersForTier(PassiveTier.COMMON.name(), filteredCommonOffers);
+            LOGGER.atInfo().log(
+                    "Removed %d blocked %s COMMON offer bundle(s) for %s (precision/ferocity); replacements will be rerolled.",
+                    removedBundles,
+                    restrictionName,
+                    playerData.getPlayerName());
+        }
+
+        return removedBundles;
+    }
+
+    private boolean sanitizeInvalidSelectionsAndOffers(PlayerData playerData) {
+        if (playerData == null) {
+            return false;
+        }
+
+        boolean updated = false;
+        int removedSelections = 0;
+        for (Map.Entry<String, String> selectedEntry : playerData.getSelectedAugmentsSnapshot().entrySet()) {
+            String selectionKey = selectedEntry.getKey();
+            PassiveTier tier = resolveTierFromSelectionKey(selectionKey);
+            if (tier == null || isValidAugmentForTier(selectedEntry.getValue(), tier)) {
+                continue;
+            }
+            playerData.setSelectedAugmentForTier(selectionKey, null);
+            removedSelections++;
+            updated = true;
+        }
+
+        int removedOfferBundles = 0;
+        for (Map.Entry<String, List<String>> offersEntry : playerData.getAugmentOffersSnapshot().entrySet()) {
+            PassiveTier tier = parseTier(offersEntry.getKey());
+            List<String> currentOffers = offersEntry.getValue();
+            if (tier == null || currentOffers == null || currentOffers.isEmpty()) {
+                continue;
+            }
+
+            List<String> sanitizedOffers = new ArrayList<>(currentOffers.size());
+            int tierRemovedBundles = 0;
+            for (int index = 0; index < currentOffers.size(); index += DEFAULT_OFFER_COUNT) {
+                int bundleEnd = Math.min(index + DEFAULT_OFFER_COUNT, currentOffers.size());
+                boolean invalidBundle = bundleEnd - index < DEFAULT_OFFER_COUNT;
+                if (!invalidBundle) {
+                    for (int offerIndex = index; offerIndex < bundleEnd; offerIndex++) {
+                        if (!isValidAugmentForTier(currentOffers.get(offerIndex), tier)) {
+                            invalidBundle = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (invalidBundle) {
+                    tierRemovedBundles++;
+                    continue;
+                }
+
+                sanitizedOffers.addAll(currentOffers.subList(index, bundleEnd));
+            }
+
+            if (tierRemovedBundles > 0) {
+                playerData.setAugmentOffersForTier(tier.name(), sanitizedOffers);
+                removedOfferBundles += tierRemovedBundles;
+                updated = true;
+            }
+        }
+
+        if (removedSelections > 0 || removedOfferBundles > 0) {
+            LOGGER.atInfo().log(
+                    "Removed %d invalid augment selections and %d invalid offer bundle(s) for %s; replacement offers will be rerolled by tier.",
+                    removedSelections,
+                    removedOfferBundles,
+                    playerData.getPlayerName());
+        }
+
+        return updated;
+    }
+
+    private boolean isValidAugmentForTier(String augmentId, PassiveTier expectedTier) {
+        if (expectedTier == null) {
+            return false;
+        }
+
+        String normalizedId = normalizeAugmentId(augmentId);
+        if (normalizedId == null) {
+            return false;
+        }
+
+        String baseAugmentId = CommonAugment.resolveBaseAugmentId(normalizedId);
+        AugmentDefinition definition = augmentManager.getAugment(baseAugmentId);
+        return definition != null && definition.getTier() == expectedTier;
+    }
+
+    private PassiveTier resolveTierFromSelectionKey(String selectionKey) {
+        if (selectionKey == null || selectionKey.isBlank()) {
+            return null;
+        }
+
+        int suffixIndex = selectionKey.indexOf('#');
+        String tierKey = suffixIndex >= 0 ? selectionKey.substring(0, suffixIndex) : selectionKey;
+        return parseTier(tierKey);
+    }
+
     private boolean isBlockedVanguardCritCommonStat(String attributeKey) {
         if (attributeKey == null || attributeKey.isBlank()) {
             return false;
         }
         String normalized = attributeKey.trim().toLowerCase(Locale.ROOT);
         return PRECISION_STAT_KEY.equals(normalized) || FEROCITY_STAT_KEY.equals(normalized);
+    }
+
+    private boolean hasSelectedAugment(PlayerData playerData, String augmentId) {
+        String normalizedTarget = normalizeAugmentId(augmentId);
+        if (playerData == null || normalizedTarget == null) {
+            return false;
+        }
+
+        for (String selectedAugmentId : playerData.getSelectedAugmentsSnapshot().values()) {
+            String normalizedSelected = normalizeAugmentId(selectedAugmentId);
+            if (normalizedTarget.equals(normalizedSelected)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private DamageBuildFocus resolveDamageBuildFocus(PlayerData playerData) {

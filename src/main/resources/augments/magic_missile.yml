@@ -1,7 +1,7 @@
-id: magic_missle
-name: Magic Missle
+id: magic_missile
+name: Magic Missile
 tier: ELITE
-description: Every 2 seconds, your hits fire a magic missle that deals bonus damage
+description: Every 2 seconds, your hits fire a magic missile that deals bonus damage
   based on Sorcery.
 category: MAGIC_ON_HIT
 enabled: true

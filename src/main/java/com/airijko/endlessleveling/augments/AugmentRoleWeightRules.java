@@ -12,7 +12,7 @@ public final class AugmentRoleWeightRules {
 
     private static final Set<String> SORCERY_AUGMENTS = Set.of(
             "arcane_cataclysm", "arcane_comet", "arcane_instability", "arcane_mastery",
-            "magic_blade", "magic_missle", "mana_infusion");
+            "magic_blade", "magic_missile", "mana_infusion");
 
     private static final Set<String> STRENGTH_AUGMENTS = Set.of(
             "blood_echo", "blood_frenzy", "blood_surge",

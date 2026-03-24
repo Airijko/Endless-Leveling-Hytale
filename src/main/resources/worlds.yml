@@ -146,6 +146,7 @@ World_Overrides:
           "Stag",
           "Merchant",
           "Trader",
+          "Calf",
           "Frog",
         ]
     Level_Range:

@@ -66,7 +66,7 @@ public class AugmentManager {
             Map.entry(GraspOfTheUndyingAugment.ID, GraspOfTheUndyingAugment::new),
             Map.entry(HaymakerAugment.ID, HaymakerAugment::new),
             Map.entry(MagicBladeAugment.ID, MagicBladeAugment::new),
-            Map.entry(MagicMissleAugment.ID, MagicMissleAugment::new),
+            Map.entry(MagicMissileAugment.ID, MagicMissileAugment::new),
             Map.entry(MissileShotAugment.ID, MissileShotAugment::new),
             Map.entry(ManaInfusionAugment.ID, ManaInfusionAugment::new),
             Map.entry(NestingDollAugment.ID, NestingDollAugment::new),
