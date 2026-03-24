@@ -1396,13 +1396,11 @@ public final class ArmyOfTheDeadPassive {
             return;
         }
 
-        boolean anyTracked = false;
         synchronized (ownerState) {
             for (SummonSlot slot : ownerState.slots) {
                 if (slot == null || slot.activeSummonUuid == null) {
                     continue;
                 }
-                anyTracked = true;
 
                 Ref<EntityStore> summonRef = slot.activeRef;
                 Store<EntityStore> summonStore = summonRef != null ? summonRef.getStore() : null;
@@ -1445,10 +1443,10 @@ public final class ArmyOfTheDeadPassive {
                         expired,
                         ownerLeftWorld);
             }
-        }
 
-        if (!anyTracked) {
-            OWNER_STATES.remove(ownerUuid, ownerState);
+            if (!ownerState.hasTrackedState(now)) {
+                OWNER_STATES.remove(ownerUuid, ownerState);
+            }
         }
     }
 
@@ -2275,6 +2273,18 @@ public final class ArmyOfTheDeadPassive {
                 return null;
             }
             return slots.get(slotIndex);
+        }
+
+        private boolean hasTrackedState(long now) {
+            for (SummonSlot slot : slots) {
+                if (slot == null) {
+                    continue;
+                }
+                if (slot.activeSummonUuid != null || slot.spawnPending || slot.cooldownExpiresAt > now) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
