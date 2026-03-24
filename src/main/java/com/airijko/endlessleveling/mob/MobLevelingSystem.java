@@ -241,6 +241,10 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         // announcers) read the same assigned level that mob flow is using, even if they execute
         // outside this system's runtime-state map.
         mobLevelingManager.recordEntityResolvedLevel(entityKey, mobLevel);
+        long fallbackEntityKey = toEntityKey(store, ref.getIndex());
+        if (fallbackEntityKey != entityKey) {
+            mobLevelingManager.recordEntityResolvedLevel(fallbackEntityKey, mobLevel);
+        }
 
         if (state.appliedLevel <= 0) {
             state.appliedLevel = mobLevel;

@@ -234,7 +234,11 @@ public class XpEventSystem extends DeathSystems.OnDeathSystem {
                 totalLuck,
                 true);
 
-        LOGGER.atInfo().log("Granting XP (before party share): %f to player %s", xpAfterKillRules, playerUuid);
+        LOGGER.atInfo().log(
+            "Granting XP (pre-personal-bonuses, before party share): %.3f to player %s (projected personal XP after bonuses: %.3f)",
+            xpAfterKillRules,
+            playerUuid,
+            projectedPersonalXp);
 
         if (partyManager != null) {
             double partyShareRange = levelingManager != null
