@@ -556,6 +556,14 @@ public class SkillManager {
                 player.getPlayerName(), totalSkillPoints);
     }
 
+    public void clearHardResetAugmentRuntimeState(PlayerData player) {
+        if (player == null || player.getUuid() == null || augmentRuntimeManager == null) {
+            return;
+        }
+
+        augmentRuntimeManager.clear(player.getUuid());
+    }
+
     /**
      * Refunds attribute points that no longer provide value due hard caps:
      * Precision crit chance capped at 100%, Defense reduction capped at 80%.

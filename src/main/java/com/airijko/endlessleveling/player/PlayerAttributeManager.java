@@ -44,6 +44,7 @@ public class PlayerAttributeManager {
     private static final double DEFAULT_GLASS_CANNON_HEALTH_PENALTY = 0.20D;
     private static final double DEFAULT_NESTING_DOLL_HEALTH_PENALTY = 1.0D / 3.0D;
     private static final double MAX_HEALTH_PENALTY = 0.95D;
+    private static final float MIN_SURVIVABLE_LIFE_FORCE_MAX = 25.0f;
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
 
@@ -131,7 +132,7 @@ public class PlayerAttributeManager {
         // Do not rewrite LIFE_FORCE while the entity is in a dead/near-death
         // state. This avoids stat-map correction churn interfering with combat
         // death attribution during revive/low-hp transitions.
-        if (slot == AttributeSlot.LIFE_FORCE && current.get() <= 1.0f) {
+        if (slot == AttributeSlot.LIFE_FORCE && current.get() <= 1.0f && current.getMax() > 1.0f) {
             return true;
         }
 
@@ -166,10 +167,14 @@ public class PlayerAttributeManager {
 
         EntityStatValue updated = statMap.get(slot.statIndex());
         float newMax = updated != null ? updated.getMax() : computation.finalMax();
-        // Clamp the final max to a minimum of 0.0f to prevent negative stats
-        newMax = Math.max(0.0f, newMax);
+        if (slot == AttributeSlot.LIFE_FORCE) {
+            newMax = Math.max(MIN_SURVIVABLE_LIFE_FORCE_MAX, newMax);
+        } else {
+            newMax = Math.max(0.0f, newMax);
+        }
         float ratio = previousMax > 0.01f ? previousValue / previousMax : 1.0f;
-        float newValue = Math.max(0.01f, Math.min(newMax, ratio * newMax));
+        float minCurrent = slot == AttributeSlot.LIFE_FORCE ? 1.0f : 0.01f;
+        float newValue = Math.max(minCurrent, Math.min(newMax, ratio * newMax));
         statMap.setStatValue(slot.statIndex(), newValue);
         statMap.update();
 

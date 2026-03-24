@@ -52,7 +52,9 @@ public final class GlassCannonAugment extends Augment
                 movementSpeedBonus * 100.0D,
                 0L);
 
-        applyMaxHealthPenalty(context.getStatMap());
+        if (context.getPlayerData() == null) {
+            applyMaxHealthPenalty(context.getStatMap());
+        }
     }
 
     @Override

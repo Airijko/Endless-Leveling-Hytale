@@ -99,6 +99,10 @@ public class ResetPrestigeCommand extends AbstractCommand {
         int previousPrestige = Math.max(0, targetData.getPrestigeLevel());
         int previousLevel = Math.max(1, targetData.getLevel());
 
+        if (skillManager != null) {
+            skillManager.clearHardResetAugmentRuntimeState(targetData);
+        }
+
         targetData.setPrestigeLevel(0);
         int prestigeZeroCap = levelingManager.getLevelCap(targetData);
 

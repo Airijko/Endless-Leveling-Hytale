@@ -16,11 +16,13 @@ import com.airijko.endlessleveling.util.PlayerChatNotifier;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
+import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.util.EventTitleUtil;
 import com.hypixel.hytale.server.core.util.NotificationUtil;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import java.util.List;
@@ -399,6 +401,7 @@ public class LevelingManager {
 
         // Reset skill attributes and recalc skill points
         skillManager.resetSkillAttributes(player);
+        skillManager.clearHardResetAugmentRuntimeState(player);
 
         playerDataManager.save(player);
         LOGGER.atInfo().log("Player %s level changed from %d to %d",
@@ -483,6 +486,7 @@ public class LevelingManager {
         player.setXp(0.0D);
 
         skillManager.resetSkillAttributes(player);
+        skillManager.clearHardResetAugmentRuntimeState(player);
         if (passiveManager != null) {
             passiveManager.syncPassives(player);
         }
@@ -732,6 +736,42 @@ public class LevelingManager {
         }
         EndlessLeveling plugin = EndlessLeveling.getInstance();
         if (plugin == null) {
+            return;
+        }
+
+        PlayerRef playerRef = player.getUuid() != null ? Universe.get().getPlayer(player.getUuid()) : null;
+        if (playerRef != null && skillManager != null) {
+            UUID worldUuid = playerRef.getWorldUuid();
+            World world = worldUuid != null ? Universe.get().getWorld(worldUuid) : null;
+            if (world != null) {
+                try {
+                    world.execute(() -> {
+                        Ref<EntityStore> entityRef = playerRef.getReference();
+                        if (entityRef == null) {
+                            scheduleAttributeRetry(plugin, player);
+                            return;
+                        }
+
+                        Store<EntityStore> entityStore = entityRef.getStore();
+                        boolean applied = skillManager.applyAllSkillModifiers(entityRef, entityStore, player);
+                        if (!applied) {
+                            scheduleAttributeRetry(plugin, player);
+                        }
+                    });
+                    return;
+                } catch (Exception ex) {
+                    LOGGER.atFine().withCause(ex).log(
+                            "Immediate attribute resync failed for %s; scheduling retry",
+                            player.getPlayerName());
+                }
+            }
+        }
+
+        scheduleAttributeRetry(plugin, player);
+    }
+
+    private void scheduleAttributeRetry(EndlessLeveling plugin, PlayerData player) {
+        if (plugin == null || player == null || player.getUuid() == null) {
             return;
         }
         PlayerRaceStatSystem retrySystem = plugin.getPlayerRaceStatSystem();
