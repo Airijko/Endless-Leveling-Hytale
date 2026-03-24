@@ -255,49 +255,43 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         // when applyHealthModifier snapshots and applies max-health layers.
         applyMobAugments(ref, store, commandBuffer, currentTimeMillis);
 
-        if (showHealthInNameplate) {
-            if (state.augmentHealthReconcilePending && state.settledHealthLevel == mobLevel) {
-                // Augments became available after initial settle; do exactly one reconcile apply
-                // so augmented health layers are included without recurring per-tick reapplication.
-                state.settledHealthLevel = 0;
-                state.nextHealthApplyAttemptMillis = currentTimeMillis;
-            }
-
-            if (state.settledHealthLevel != mobLevel) {
-                boolean attemptedHealthApply = false;
-                boolean healthApplied = false;
-                if (currentTimeMillis >= state.nextHealthApplyAttemptMillis) {
-                    attemptedHealthApply = true;
-                    healthApplied = applyHealthModifier(ref, commandBuffer, mobLevel, entityKey);
-                    if (healthApplied) {
-                        state.settledHealthLevel = mobLevel;
-                        state.nextHealthApplyAttemptMillis = currentTimeMillis;
-                        state.augmentHealthReconcilePending = false;
-                    } else {
-                        state.nextHealthApplyAttemptMillis = currentTimeMillis + FLOW_HEALTH_RETRY_INTERVAL_MILLIS;
-                    }
-                }
-
-                if (isDebugSectionEnabled(DEBUG_SECTION_MOB_LEVEL_FLOW)
-                        && (healthApplied || (attemptedHealthApply
-                                && currentTimeMillis - state.lastHealthFlowLogMillis >= FLOW_HEALTH_LOG_COOLDOWN_MILLIS))) {
-                    LOGGER.atInfo().log(
-                            "[MOB_LEVEL_FLOW] entity=%d uuidBacked=%s phase=health level=%d applied=%s settled=%d nextRetryInMs=%d",
-                            ref.getIndex(),
-                            trackingIdentity.uuidBacked(),
-                            mobLevel,
-                            healthApplied,
-                            state.settledHealthLevel,
-                            Math.max(0L, state.nextHealthApplyAttemptMillis - currentTimeMillis));
-                    state.lastHealthFlowLogMillis = currentTimeMillis;
-                }
-            }
-        } else {
-            // When health display is disabled, skip all health scaling work and clear scheduling
-            // state so no health retries/ticks are attempted until re-enabled.
+        // Health scaling must happen regardless of nameplate display setting, as it affects
+        // both mob durability and XP calculation. The Show_Health setting only controls UI display.
+        if (state.augmentHealthReconcilePending && state.settledHealthLevel == mobLevel) {
+            // Augments became available after initial settle; do exactly one reconcile apply
+            // so augmented health layers are included without recurring per-tick reapplication.
             state.settledHealthLevel = 0;
-            state.nextHealthApplyAttemptMillis = 0L;
-            state.augmentHealthReconcilePending = false;
+            state.nextHealthApplyAttemptMillis = currentTimeMillis;
+        }
+
+        if (state.settledHealthLevel != mobLevel) {
+            boolean attemptedHealthApply = false;
+            boolean healthApplied = false;
+            if (currentTimeMillis >= state.nextHealthApplyAttemptMillis) {
+                attemptedHealthApply = true;
+                healthApplied = applyHealthModifier(ref, commandBuffer, mobLevel, entityKey);
+                if (healthApplied) {
+                    state.settledHealthLevel = mobLevel;
+                    state.nextHealthApplyAttemptMillis = currentTimeMillis;
+                    state.augmentHealthReconcilePending = false;
+                } else {
+                    state.nextHealthApplyAttemptMillis = currentTimeMillis + FLOW_HEALTH_RETRY_INTERVAL_MILLIS;
+                }
+            }
+
+            if (isDebugSectionEnabled(DEBUG_SECTION_MOB_LEVEL_FLOW)
+                    && (healthApplied || (attemptedHealthApply
+                            && currentTimeMillis - state.lastHealthFlowLogMillis >= FLOW_HEALTH_LOG_COOLDOWN_MILLIS))) {
+                LOGGER.atInfo().log(
+                        "[MOB_LEVEL_FLOW] entity=%d uuidBacked=%s phase=health level=%d applied=%s settled=%d nextRetryInMs=%d",
+                        ref.getIndex(),
+                        trackingIdentity.uuidBacked(),
+                        mobLevel,
+                        healthApplied,
+                        state.settledHealthLevel,
+                        Math.max(0L, state.nextHealthApplyAttemptMillis - currentTimeMillis));
+                state.lastHealthFlowLogMillis = currentTimeMillis;
+            }
         }
 
         if (showMobLevelUi) {
@@ -422,6 +416,8 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         }
 
         int entityId = ref.getIndex();
+        long fallbackEntityKey = toEntityKey(ref.getStore(), entityId);
+        boolean hasFallbackAlias = fallbackEntityKey >= 0L && fallbackEntityKey != entityKey;
 
         PlayerRef playerRef = commandBuffer.getComponent(ref, PlayerRef.getComponentType());
         if (playerRef != null && playerRef.isValid()) {
@@ -452,6 +448,9 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             if (updatedSummonHp != null && Float.isFinite(updatedSummonHp.getMax())
                     && updatedSummonHp.getMax() > 0.0f) {
                 mobLevelingManager.recordEntityMaxHealth(entityKey, updatedSummonHp.getMax());
+                if (hasFallbackAlias) {
+                    mobLevelingManager.recordEntityMaxHealth(fallbackEntityKey, updatedSummonHp.getMax());
+                }
 
                 float afterCurrent = updatedSummonHp.get();
                 float afterMax = updatedSummonHp.getMax();
@@ -503,6 +502,9 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         // anchor, those augment modifiers would be included in baseMax on every subsequent tick, causing
         // the level-scaling multiplier to compound on an ever-growing base and produce billions of HP.
         mobLevelingManager.cacheTrueBaseHealth(entityKey, baselineRead);
+        if (hasFallbackAlias) {
+            mobLevelingManager.cacheTrueBaseHealth(fallbackEntityKey, baselineRead);
+        }
         Float cachedBase = mobLevelingManager.getTrueBaseHealth(entityKey);
         float baseMax = (cachedBase != null && Float.isFinite(cachedBase) && cachedBase > 0.0f)
                 ? cachedBase
@@ -534,12 +536,23 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             EntityStatValue restoredHealth = statMap.get(healthIndex);
             if (restoredHealth != null && Float.isFinite(restoredHealth.getMax()) && restoredHealth.getMax() > 0.0f) {
                 mobLevelingManager.recordEntityMaxHealth(entityKey, restoredHealth.getMax());
+                if (hasFallbackAlias) {
+                    mobLevelingManager.recordEntityMaxHealth(fallbackEntityKey, restoredHealth.getMax());
+                }
                 mobLevelingManager.recordEntityHealthComposition(
                     entityKey,
                         baseMax,
                         baseMax,
                         lifeForceBonus,
                         restoredHealth.getMax());
+                if (hasFallbackAlias) {
+                    mobLevelingManager.recordEntityHealthComposition(
+                        fallbackEntityKey,
+                        baseMax,
+                        baseMax,
+                        lifeForceBonus,
+                        restoredHealth.getMax());
+                }
                 if (isDebugSectionEnabled(DEBUG_SECTION_MOB_COMMON_DEFENSE)) {
                     LOGGER.atInfo().log(
                             "[MOB_COMMON_DEFENSE][HEALTH_AUDIT] entity=%d level=%d scalingEnabled=false baseMax=%.3f scaledMax=%.3f lifeForceBonus=%.3f expectedCombinedMax=%.3f current=%.3f actualMax=%.3f",
@@ -603,12 +616,23 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         EntityStatValue updatedHealth = statMap.get(healthIndex);
         if (updatedHealth != null && Float.isFinite(updatedHealth.getMax()) && updatedHealth.getMax() > 0.0f) {
             mobLevelingManager.recordEntityMaxHealth(entityKey, updatedHealth.getMax());
+            if (hasFallbackAlias) {
+                mobLevelingManager.recordEntityMaxHealth(fallbackEntityKey, updatedHealth.getMax());
+            }
             mobLevelingManager.recordEntityHealthComposition(
                 entityKey,
                 baseMax,
                 targetMax,
                 lifeForceBonus,
                 updatedHealth.getMax());
+            if (hasFallbackAlias) {
+                mobLevelingManager.recordEntityHealthComposition(
+                    fallbackEntityKey,
+                    baseMax,
+                    targetMax,
+                    lifeForceBonus,
+                    updatedHealth.getMax());
+            }
             LOGGER.atInfo().log(
                     "[MOB_HEALTH_LAYER_DEBUG] entity=%d level=%d baseMax=%.3f scaledMax=%.3f lifeForceBonus=%.3f finalMax=%.3f current=%.3f ratio=%.4f",
                     entityId,

@@ -351,7 +351,23 @@ public class MobLevelingManager {
     public float getEntityMaxHealthSnapshot(Ref<EntityStore> ref,
                                             Store<EntityStore> store,
                                             CommandBuffer<EntityStore> commandBuffer) {
-        return getEntityMaxHealthSnapshot(resolveTrackingKey(ref, store, commandBuffer));
+        long primaryKey = resolveTrackingKey(ref, store, commandBuffer);
+        float primary = getEntityMaxHealthSnapshot(primaryKey);
+        if (primary > 0.0f) {
+            return primary;
+        }
+
+        if (ref == null) {
+            return primary;
+        }
+
+        Store<EntityStore> effectiveStore = store != null ? store : ref.getStore();
+        long fallbackKey = toEntityKey(effectiveStore, ref.getIndex());
+        if (fallbackKey == primaryKey) {
+            return primary;
+        }
+        float fallback = getEntityMaxHealthSnapshot(fallbackKey);
+        return fallback > 0.0f ? fallback : primary;
     }
 
     public void recordEntityHealthComposition(long trackingKey,
@@ -401,7 +417,23 @@ public class MobLevelingManager {
     public Integer getEntityResolvedLevelSnapshot(Ref<EntityStore> ref,
                                                   Store<EntityStore> store,
                                                   CommandBuffer<EntityStore> commandBuffer) {
-        return getEntityResolvedLevelSnapshot(resolveTrackingKey(ref, store, commandBuffer));
+        long primaryKey = resolveTrackingKey(ref, store, commandBuffer);
+        Integer primary = getEntityResolvedLevelSnapshot(primaryKey);
+        if (primary != null && primary > 0) {
+            return primary;
+        }
+
+        if (ref == null) {
+            return primary;
+        }
+
+        Store<EntityStore> effectiveStore = store != null ? store : ref.getStore();
+        long fallbackKey = toEntityKey(effectiveStore, ref.getIndex());
+        if (fallbackKey == primaryKey) {
+            return primary;
+        }
+        Integer fallback = getEntityResolvedLevelSnapshot(fallbackKey);
+        return (fallback != null && fallback > 0) ? fallback : primary;
     }
 
     /**
