@@ -2409,10 +2409,9 @@ public class MobLevelingManager {
             }
         }
 
-        // Treat `default` as a fallback profile only for worlds that are not
-        // XP-blacklisted and do not have an explicit non-default match.
-        if ((matchedKey == null || "default".equalsIgnoreCase(matchedKey))
-                && shouldApplyDefaultWorldOverride(store, worldIds)) {
+        // Treat `default` as an inheritance profile for any world that is not XP-blacklisted
+        // when the matched world profile does not define the requested key.
+        if (shouldApplyDefaultWorldOverride(store, worldIds)) {
             String defaultPath = "World_Overrides.default." + worldPath;
             if (worldsConfigManager.hasPath(defaultPath)) {
                 return worldsConfigManager.get(defaultPath, null, false);
