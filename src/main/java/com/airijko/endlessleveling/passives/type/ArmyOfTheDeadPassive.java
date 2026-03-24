@@ -446,6 +446,20 @@ public final class ArmyOfTheDeadPassive {
             Ref<EntityStore> targetRef,
             Store<EntityStore> store,
             CommandBuffer<EntityStore> commandBuffer) {
+        if (!EntityRefUtil.isUsable(attackerRef) || !EntityRefUtil.isUsable(targetRef)) {
+            return false;
+        }
+
+        UUID targetSummonOwner = resolveSummonOwnerUuid(targetRef, store, commandBuffer);
+        if (targetSummonOwner != null && isFriendlyToOwner(targetSummonOwner, attackerRef, store, commandBuffer)) {
+            return true;
+        }
+
+        UUID attackerSummonOwner = resolveSummonOwnerUuid(attackerRef, store, commandBuffer);
+        if (attackerSummonOwner != null && isFriendlyToOwner(attackerSummonOwner, targetRef, store, commandBuffer)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -1949,7 +1963,22 @@ public final class ArmyOfTheDeadPassive {
                     }
                 }
 
-                summonNpc.setLeashPoint(ownerPosition);
+                Vector3d leashPoint = ownerPosition;
+                if (summonNpc.getRole() != null) {
+                    Ref<EntityStore> currentTarget = summonNpc.getRole()
+                            .getMarkedEntitySupport()
+                            .getMarkedEntityRef("LockedTarget");
+                    if (isSummonTargetStillValid(ownerUuid, slot.activeRef, currentTarget, store)) {
+                        TransformComponent targetTransform = EntityRefUtil.tryGetComponent(store,
+                                currentTarget,
+                                TransformComponent.getComponentType());
+                        if (targetTransform != null && targetTransform.getPosition() != null) {
+                            leashPoint = targetTransform.getPosition();
+                        }
+                    }
+                }
+
+                summonNpc.setLeashPoint(leashPoint);
 
                 if (now >= slot.nextTeleportCheckAt) {
                     slot.nextTeleportCheckAt = now + TELEPORT_CHECK_INTERVAL_MS;
