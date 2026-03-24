@@ -93,10 +93,10 @@ public class DungeonTierJoinNotificationListener {
 
             int tierNumber = delayedSummary.tierOffset() + 1;
             Message chat = Message.join(
-                    Message.raw("Tiered instance: ").color("#ffcf66"),
-                    Message.raw("Tier ").color("#ffcf66"),
+                    Message.raw("Tiered instance").color("#ffcf66"),
+                    Message.raw("\nTier ").color("#ffcf66"),
                     Message.raw(String.valueOf(tierNumber)).color("#4fd7f7"),
-                    Message.raw(" | Mob Lv ").color("#ffcf66"),
+                    Message.raw("\nMob Lv ").color("#ffcf66"),
                     Message.raw(delayedSummary.tierMinLevel() + "-" + delayedSummary.tierMaxLevel()).color("#4fd7f7"),
                     Message.raw(" | Boss Lv ").color("#ffcf66"),
                     Message.raw(String.valueOf(delayedSummary.bossLevel())).color("#ff6b6b"));
