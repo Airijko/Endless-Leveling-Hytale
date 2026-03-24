@@ -31,8 +31,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType.Activating;
-import static com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType.MouseEntered;
-import static com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType.MouseExited;
 import static com.hypixel.hytale.server.core.ui.builder.EventData.of;
 
 /**
@@ -45,8 +43,6 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
     private static final int MAX_NODES_PER_TIER_ROW = 3;
     private static final int MAX_TIER_DEPTH = 12;
     private static final String ACTION_SELECT_PREFIX = "racepath:select:";
-    private static final String ACTION_HOVER_PREFIX = "racepath:hover:";
-    private static final String ACTION_HOVER_END = "racepath:hoverend";
     private static final String ACTION_PATH_BUTTON = "racepath:action";
     private static final String NODE_OUTLINE_DEFAULT_COLOR = "#25384b";
     private static final String NODE_OUTLINE_SELECTED_COLOR = "#f0cf78";
@@ -55,7 +51,6 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
     private final PlayerDataManager playerDataManager;
     private String browsedRaceId;
     private String selectedPathKey;
-    private String hoveredPathKey;
 
     public RacePathsUIPage(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime) {
         this(playerRef, lifetime, null);
@@ -70,7 +65,6 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
         this.playerDataManager = plugin != null ? plugin.getPlayerDataManager() : null;
         this.browsedRaceId = initialRaceId;
         this.selectedPathKey = null;
-        this.hoveredPathKey = null;
     }
 
     @Override
@@ -115,7 +109,6 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
 
             String action = data.action.trim();
             boolean selectionChanged = false;
-            boolean infoPanelChanged = false;
 
             if (ACTION_PATH_BUTTON.equals(action)) {
                 handlePathAction(ref, store);
@@ -127,20 +120,10 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
                 if (key != null) {
                     selectedPathKey = key;
                     selectionChanged = true;
-                    infoPanelChanged = true;
-                }
-            } else if (action.startsWith(ACTION_HOVER_PREFIX)) {
-                String key = normalizePathKey(action.substring(ACTION_HOVER_PREFIX.length()));
-                hoveredPathKey = key;
-                infoPanelChanged = true;
-            } else if (ACTION_HOVER_END.equals(action)) {
-                if (hoveredPathKey != null) {
-                    hoveredPathKey = null;
-                    infoPanelChanged = true;
                 }
             }
 
-            if (selectionChanged || infoPanelChanged) {
+            if (selectionChanged) {
                 UICommandBuilder ui = new UICommandBuilder();
                 UIEventBuilder eventBuilder = new UIEventBuilder();
                 PlayerData playerData = loadPlayerData();
@@ -266,7 +249,6 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
 
         browsedRaceId = focusedRace.getId();
         selectedPathKey = pathKey(focusedRace);
-        hoveredPathKey = null;
         rebuild();
     }
 
@@ -509,8 +491,6 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
             ui.set(nodeBase + " #NodeSelectedOutlineOverlay.Visible", false);
 
             events.addEventBinding(Activating, nodeBase, of("Action", ACTION_SELECT_PREFIX + key), false);
-            events.addEventBinding(MouseEntered, nodeBase, of("Action", ACTION_HOVER_PREFIX + key), false);
-            events.addEventBinding(MouseExited, nodeBase, of("Action", ACTION_HOVER_END), false);
 
             inRow++;
             if (inRow >= MAX_NODES_PER_TIER_ROW) {
@@ -599,7 +579,7 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
             ui.set("#PathInfoSource.Text", "Source: -");
             ui.set("#PathInfoAttributes.Text", "Select a path to view attribute stats.");
             ui.set("#PathInfoPassives.Text", "Select a path to view passives.");
-            ui.set("#PathInfoRequirements.Text", "Hover or select a race path to inspect requirements.");
+            ui.set("#PathInfoRequirements.Text", "Select a race path to inspect requirements.");
             ui.set("#ChooseRacePathButton.Text", "SELECT PATH");
             return;
         }
@@ -710,11 +690,6 @@ public class RacePathsUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> 
     private RaceDefinition resolveFocusedRace(RaceDefinition currentPlayerRace, RaceDefinition browsedRace) {
         if (raceManager == null) {
             return null;
-        }
-
-        RaceDefinition hovered = findRaceByPathKey(hoveredPathKey);
-        if (hovered != null) {
-            return hovered;
         }
 
         RaceDefinition selected = findRaceByPathKey(selectedPathKey);

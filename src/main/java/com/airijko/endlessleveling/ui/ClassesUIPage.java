@@ -324,8 +324,8 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             ui.append("#ClassRows", "Pages/Classes/ClassRow.ui");
             String base = "#ClassRows[" + index + "]";
 
-            boolean isPrimary = primary != null && primary.getId().equalsIgnoreCase(definition.getId());
-            boolean isSecondary = secondary != null && secondary.getId().equalsIgnoreCase(definition.getId());
+            boolean isPrimary = primary != null && sameClassPath(primary.getId(), definition.getId());
+            boolean isSecondary = secondary != null && sameClassPath(secondary.getId(), definition.getId());
             boolean isSelected = selectedClassMatches(definition.getId());
 
             ui.set(base + " #ClassName.Text", definition.getDisplayName());
@@ -363,8 +363,8 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             CharacterClassDefinition definition = classes.get(index);
             String base = "#ClassRows[" + index + "]";
 
-            boolean isPrimary = primary != null && primary.getId().equalsIgnoreCase(definition.getId());
-            boolean isSecondary = secondary != null && secondary.getId().equalsIgnoreCase(definition.getId());
+            boolean isPrimary = primary != null && sameClassPath(primary.getId(), definition.getId());
+            boolean isSecondary = secondary != null && sameClassPath(secondary.getId(), definition.getId());
             boolean isSelected = selectedClassMatches(definition.getId());
 
             ui.set(base + " #ClassName.Text", definition.getDisplayName());
@@ -699,7 +699,26 @@ public class ClassesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private boolean selectedClassMatches(String classId) {
-        return selectedClassId != null && selectedClassId.equalsIgnoreCase(classId);
+        return sameClassPath(selectedClassId, classId);
+    }
+
+    private boolean sameClassPath(String leftClassId, String rightClassId) {
+        String leftKey = resolveClassPathKey(leftClassId);
+        String rightKey = resolveClassPathKey(rightClassId);
+        return leftKey != null && rightKey != null && leftKey.equalsIgnoreCase(rightKey);
+    }
+
+    private String resolveClassPathKey(String classId) {
+        if (classId == null || classId.isBlank()) {
+            return null;
+        }
+        if (classManager != null) {
+            String resolved = classManager.resolveAscensionPathId(classId);
+            if (resolved != null && !resolved.isBlank()) {
+                return resolved.trim();
+            }
+        }
+        return classId.trim();
     }
 
     private List<CharacterClassDefinition> getBaseClassesForList() {

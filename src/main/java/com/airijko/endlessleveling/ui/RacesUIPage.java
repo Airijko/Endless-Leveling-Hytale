@@ -201,7 +201,7 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             String baseSelector = "#RaceRows[" + index + "]";
 
             String displayName = definition.getDisplayName();
-            boolean isCurrent = activeRace != null && activeRace.getId().equalsIgnoreCase(definition.getId());
+            boolean isCurrent = activeRace != null && sameRacePath(activeRace.getId(), definition.getId());
             boolean isSelected = selectedRaceMatches(definition.getId());
 
             ui.set(baseSelector + " #RaceName.Text", displayName);
@@ -233,7 +233,7 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
             String baseSelector = "#RaceRows[" + index + "]";
 
             String displayName = definition.getDisplayName();
-            boolean isCurrent = activeRace != null && activeRace.getId().equalsIgnoreCase(definition.getId());
+            boolean isCurrent = activeRace != null && sameRacePath(activeRace.getId(), definition.getId());
             boolean isSelected = selectedRaceMatches(definition.getId());
 
             ui.set(baseSelector + " #RaceName.Text", displayName);
@@ -1003,7 +1003,26 @@ public class RacesUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
     private boolean selectedRaceMatches(String raceId) {
-        return selectedRaceId != null && selectedRaceId.equalsIgnoreCase(raceId);
+        return sameRacePath(selectedRaceId, raceId);
+    }
+
+    private boolean sameRacePath(String leftRaceId, String rightRaceId) {
+        String leftKey = resolveRacePathKey(leftRaceId);
+        String rightKey = resolveRacePathKey(rightRaceId);
+        return leftKey != null && rightKey != null && leftKey.equalsIgnoreCase(rightKey);
+    }
+
+    private String resolveRacePathKey(String raceId) {
+        if (raceId == null || raceId.isBlank()) {
+            return null;
+        }
+        if (raceManager != null) {
+            String resolved = raceManager.resolveAscensionPathId(raceId);
+            if (resolved != null && !resolved.isBlank()) {
+                return resolved.trim();
+            }
+        }
+        return raceId.trim();
     }
 
     private boolean isBaseRaceSelection(RaceDefinition race) {

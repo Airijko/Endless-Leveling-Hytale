@@ -6,6 +6,7 @@ import com.airijko.endlessleveling.augments.AugmentManager;
 import com.airijko.endlessleveling.augments.AugmentUnlockManager;
 import com.airijko.endlessleveling.player.PlayerData;
 import com.airijko.endlessleveling.enums.PassiveTier;
+import com.airijko.endlessleveling.enums.themes.AugmentTheme;
 import com.airijko.endlessleveling.player.PlayerDataManager;
 import com.airijko.endlessleveling.util.Lang;
 import com.airijko.endlessleveling.util.LocalizationKey;
@@ -278,7 +279,7 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
     private record CardSection(String title, String body, String color) {
     }
 
-    private record NoAugmentState(String title, String body) {
+    private record NoAugmentState(String title, String body, String bodyColor) {
     }
 
     private void applyCard(@Nonnull UICommandBuilder ui,
@@ -308,9 +309,15 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
                     ? noAugmentState
                     : new NoAugmentState(
                             tr("ui.augments.no_augment.title", "NO AUGMENT"),
-                            tr("ui.augments.no_augment.body", "No augments are currently available."));
+                            tr("ui.augments.no_augment.body", "No augments are currently available."),
+                            null);
             ui.set(titleSelector + ".Text", fallback.title());
             ui.set(descriptionSelector + ".Text", fallback.body());
+            if (fallback.bodyColor() != null && !fallback.bodyColor().isBlank()) {
+                ui.set(descriptionSelector + ".Style.TextColor", normalizeColor(fallback.bodyColor(), "#e6edf5"));
+            } else {
+                ui.set(descriptionSelector + ".Style.TextColor", "#e6edf5");
+            }
             ui.set(chooseSelector + ".Visible", false);
             return;
         }
@@ -483,61 +490,93 @@ public class AugmentsChoosePage extends InteractiveCustomUIPage<SkillsUIPage.Dat
             return new NoAugmentState(
                     tr("ui.augments.error.title", "AUGMENT ERROR"),
                     tr("ui.augments.error.system_unavailable",
-                            "Augment system is unavailable right now. Please contact an admin."));
+                        "Augment system is unavailable right now. Please contact an admin."),
+                    null);
         }
 
         if (playerData == null) {
             return new NoAugmentState(
                     tr("ui.augments.error.title", "AUGMENT ERROR"),
                     tr("ui.augments.error.playerdata_unavailable",
-                            "Unable to load your player data. Try reopening this page."));
+                        "Unable to load your player data. Try reopening this page."),
+                    null);
         }
 
         if (augmentManager.getAugments().isEmpty()) {
             return new NoAugmentState(
                     tr("ui.augments.error.title", "AUGMENT ERROR"),
                     tr("ui.augments.error.definitions_missing",
-                            "No augment definitions are loaded. Check /mods/EndlessLeveling/augments."));
+                        "No augment definitions are loaded. Check /mods/EndlessLeveling/augments."),
+                    null);
         }
 
         int level = Math.max(1, playerData.getLevel());
         int eligibleMilestones = augmentUnlockManager.getEligibleMilestoneCount(playerData, level);
-        int nextUnlockLevel = augmentUnlockManager.getNextUnlockLevel(playerData, level);
+        AugmentUnlockManager.NextUnlockPreview nextUnlockPreview =
+            augmentUnlockManager.getNextUnlockPreview(playerData, level);
+        String nextUnlockSummary = formatNextUnlockPreview(nextUnlockPreview);
+        String nextUnlockColor = resolveTierColor(nextUnlockPreview);
 
         if (eligibleMilestones <= 0) {
-            if (nextUnlockLevel > 0) {
+            if (!nextUnlockSummary.isBlank()) {
                 return new NoAugmentState(
                         tr("ui.augments.no_augments_yet.title", "NO AUGMENTS YET"),
-                        tr("ui.augments.no_augments_yet.body",
-                                "No augments available yet. Next unlock at level {0}.",
-                                nextUnlockLevel));
+                tr("ui.augments.no_augments_yet.next_unlock_preview",
+                    "No augments available yet.\n\nNext unlock\n{0}",
+                    nextUnlockSummary),
+                    nextUnlockColor);
             }
             return new NoAugmentState(
                     tr("ui.augments.no_augments.title", "NO AUGMENTS"),
-                    tr("ui.augments.no_augments.body", "No augment unlock milestones are configured."));
+                    tr("ui.augments.no_augments.body", "No augment unlock milestones are configured."),
+                    null);
         }
 
         int grantedMilestones = augmentUnlockManager.getGrantedMilestoneCount(playerData, level);
         if (grantedMilestones >= eligibleMilestones) {
-            if (nextUnlockLevel > 0) {
+            if (!nextUnlockSummary.isBlank()) {
                 return new NoAugmentState(
                         tr("ui.augments.all_claimed.title", "ALL CLAIMED"),
-                        tr("ui.augments.all_claimed.next_unlock",
-                                "You have claimed all currently unlocked augments. Next unlock at level {0}.",
-                                nextUnlockLevel));
+                tr("ui.augments.all_claimed.next_unlock_preview",
+                "You have claimed all currently unlocked augments.\n\nNext unlock\n{0}",
+                nextUnlockSummary),
+                nextUnlockColor);
             }
             return new NoAugmentState(
                     tr("ui.augments.all_claimed.title", "ALL CLAIMED"),
-                    tr("ui.augments.all_claimed.done", "You have already claimed all configured augment unlocks."));
+                tr("ui.augments.all_claimed.done", "You have already claimed all configured augment unlocks."),
+                null);
         }
 
         return new NoAugmentState(
                 tr("ui.augments.error.title", "AUGMENT ERROR"),
                 tr("ui.augments.error.offers_missing",
-                        "Unlocked augments are missing from your offers. Ask an admin to run /el augment refresh <player>."));
+                "Unlocked augments are missing from your offers. Ask an admin to run /el augment refresh <player>."),
+            null);
     }
 
     private String tr(String key, String fallback, Object... args) {
         return Lang.tr(playerRef.getUuid(), key, fallback, args);
+    }
+
+    private String formatNextUnlockPreview(AugmentUnlockManager.NextUnlockPreview preview) {
+        if (preview == null || preview.tier() == null) {
+            return "";
+        }
+
+        int requiredLevel = Math.max(1, preview.requiredPlayerLevel());
+        int requiredPrestige = Math.max(0, preview.requiredPrestigeLevel());
+        String tier = preview.tier().name();
+
+        if (requiredPrestige > 0) {
+            return tier + "  •  Prestige " + requiredPrestige + "  •  Level " + requiredLevel;
+        }
+
+        return tier + "  •  Level " + requiredLevel;
+    }
+
+    private String resolveTierColor(AugmentUnlockManager.NextUnlockPreview preview) {
+        PassiveTier tier = preview != null ? preview.tier() : null;
+        return AugmentTheme.profileTierColor(tier);
     }
 }

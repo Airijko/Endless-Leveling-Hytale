@@ -29,8 +29,10 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.NotificationUtil;
 
+import javax.annotation.Nonnull;
 import java.util.UUID;
 import java.util.List;
+import java.util.Objects;
 
 public class PlayerDataListener {
 
@@ -55,9 +57,14 @@ public class PlayerDataListener {
         var player = event.getPlayer();
         Ref<EntityStore> entityRef = event.getPlayerRef();
         Store<EntityStore> store = entityRef != null ? entityRef.getStore() : null;
-        PlayerRef playerRef = Universe.get().getPlayer(player.getUuid());
+        UUID playerUuid = player.getUuid();
+        if (playerUuid == null) {
+            LOGGER.atWarning().log("Unable to resolve joining player UUID.");
+            return;
+        }
+        PlayerRef playerRef = Universe.get().getPlayer(playerUuid);
         if (playerRef == null) {
-            LOGGER.atWarning().log("Unable to find PlayerRef for joining player %s", player.getUuid());
+            LOGGER.atWarning().log("Unable to find PlayerRef for joining player %s", playerUuid);
             return;
         }
         UUID uuid = playerRef.getUuid();
@@ -90,8 +97,8 @@ public class PlayerDataListener {
         }
     }
 
-    private void processPlayerReadyOnWorldThread(PlayerData playerData,
-            PlayerRef playerRef,
+        private void processPlayerReadyOnWorldThread(@Nonnull PlayerData playerData,
+            @Nonnull PlayerRef playerRef,
             Ref<EntityStore> entityRef,
             Store<EntityStore> store,
             boolean inInstanceWorld) {
@@ -172,7 +179,7 @@ public class PlayerDataListener {
         }
     }
 
-    private void scheduleSkillRetry(UUID uuid, String username) {
+    private void scheduleSkillRetry(@Nonnull UUID uuid, @Nonnull String username) {
         LOGGER.atFine().log("Skill modifiers scheduled for retry for %s", username);
         var retrySystem = EndlessLeveling.getInstance().getPlayerRaceStatSystem();
         if (retrySystem != null) {
@@ -217,37 +224,49 @@ public class PlayerDataListener {
         ArmyOfTheDeadPassive.cleanupOwnerSummonsOnDisconnect(uuid, playerStore);
     }
 
-    private void notifyAvailableSkillPoints(PlayerRef playerRef, int skillPoints) {
-        if (playerRef == null || skillPoints <= 0) {
+        private void notifyAvailableSkillPoints(@Nonnull PlayerRef playerRef, int skillPoints) {
+        if (skillPoints <= 0) {
             return;
         }
 
         var packetHandler = playerRef.getPacketHandler();
         var primaryMessage = Message.raw(
-                Lang.tr(playerRef.getUuid(), "notify.skills.unspent.primary",
-                        "You have {0} unspent skill points!", skillPoints))
+            nn(Lang.tr(playerRef.getUuid(), "notify.skills.unspent.primary",
+                "You have {0} unspent skill points!", skillPoints),
+                "You have " + skillPoints + " unspent skill points!"))
                 .color("#ffc300");
         var secondaryMessage = Message.join(
-                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.unspent.secondary.open", "Open "))
+            Message.raw(nn(Lang.tr(playerRef.getUuid(), "notify.skills.unspent.secondary.open", "Open "),
+                "Open "))
                         .color("#ff9d00"),
-                Message.raw(FixedValue.ROOT_COMMAND.value()).color("#4fd7f7"),
-                Message.raw(Lang.tr(playerRef.getUuid(), "notify.skills.unspent.secondary.close", " to invest them"))
+            Message.raw(nn(FixedValue.ROOT_COMMAND.value(), "/lvl"))
+                .color("#4fd7f7"),
+            Message.raw(nn(Lang.tr(playerRef.getUuid(), "notify.skills.unspent.secondary.close", " to invest them"),
+                " to invest them"))
                         .color("#ff9d00"));
         var icon = new ItemStack("Ingredient_Ice_Essence", 1).toPacket();
         NotificationUtil.sendNotification(packetHandler, primaryMessage, secondaryMessage, icon);
 
         var chatMessage = Message.join(
-                Message.raw(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.SKILLS_CHAT_HAVE))
-                        .color(ChatMessageTemplate.SKILLS_CHAT_HAVE.colorHex()),
+            Message.raw(nn(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.SKILLS_CHAT_HAVE),
+                "You have "))
+                .color(nn(ChatMessageTemplate.SKILLS_CHAT_HAVE.colorHex(), "#ff9d00")),
                 Message.raw(String.valueOf(skillPoints)).color("#4fd7f7"),
-                Message.raw(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.SKILLS_CHAT_USE))
-                        .color(ChatMessageTemplate.SKILLS_CHAT_USE.colorHex()),
-                Message.raw(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.SKILLS_COMMAND))
-                        .color(ChatMessageTemplate.SKILLS_COMMAND.colorHex()),
-                Message.raw(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.SKILLS_CHAT_END))
-                        .color(ChatMessageTemplate.SKILLS_CHAT_END.colorHex()));
+            Message.raw(nn(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.SKILLS_CHAT_USE),
+                " skill points. Use "))
+                .color(nn(ChatMessageTemplate.SKILLS_CHAT_USE.colorHex(), "#ff9d00")),
+            Message.raw(nn(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.SKILLS_COMMAND),
+                "/lvl skills"))
+                .color(nn(ChatMessageTemplate.SKILLS_COMMAND.colorHex(), "#4fd7f7")),
+            Message.raw(nn(PlayerChatNotifier.text(playerRef, ChatMessageTemplate.SKILLS_CHAT_END),
+                " to invest them."))
+                .color(nn(ChatMessageTemplate.SKILLS_CHAT_END.colorHex(), "#ff9d00")));
         PlayerChatNotifier.send(playerRef, chatMessage);
     }
+
+        private static String nn(String value, String fallback) {
+        return Objects.requireNonNullElse(value, fallback);
+        }
 
     private void notifyAvailableAugments(PlayerRef playerRef, PlayerData playerData) {
         if (playerRef == null || playerData == null || augmentUnlockManager == null) {

@@ -363,15 +363,15 @@ public class PlayerHud extends CustomUIHud {
             }
 
             // Handle MIXED mode: show distance level | player range
-            if (mobLevelingManager.isLevelSourceMixedMode()) {
-                int distanceLevel = mobLevelingManager.resolveMobLevel(store, transform.getPosition());
+            if (mobLevelingManager.isLevelSourceMixedMode(store)) {
+                int distanceLevel = mobLevelingManager.resolveDistanceMobLevel(store, transform.getPosition());
                 if (distanceLevel <= 0) {
                     return Lang.tr(targetPlayerRef.getUuid(), LocalizationKey.HUD_COMMON_UNAVAILABLE);
                 }
                 
                 PlayerData data = getPlayerData();
                 if (data != null) {
-                    var playerRange = mobLevelingManager.getPlayerBasedLevelRange(data.getLevel());
+                    var playerRange = mobLevelingManager.getPlayerBasedLevelRange(data.getLevel(), store);
                     if (playerRange != null) {
                         return Lang.tr(targetPlayerRef.getUuid(), LocalizationKey.HUD_MOB_LEVEL_MIXED,
                                 distanceLevel, playerRange.min(), playerRange.max());
@@ -383,12 +383,12 @@ public class PlayerHud extends CustomUIHud {
             }
 
             // Handle PLAYER mode: show player range only
-            if (mobLevelingManager.isPlayerBasedMode()) {
+            if (mobLevelingManager.isPlayerBasedMode(store)) {
                 PlayerData data = getPlayerData();
                 if (data == null) {
                     return Lang.tr(targetPlayerRef.getUuid(), LocalizationKey.HUD_COMMON_UNAVAILABLE);
                 }
-                var range = mobLevelingManager.getPlayerBasedLevelRange(data.getLevel());
+                var range = mobLevelingManager.getPlayerBasedLevelRange(data.getLevel(), store);
                 if (range != null) {
                     if (range.min() == range.max()) {
                         return Lang.tr(targetPlayerRef.getUuid(), LocalizationKey.HUD_MOB_LEVEL_SINGLE, range.min());

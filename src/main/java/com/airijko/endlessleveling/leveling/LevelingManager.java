@@ -10,7 +10,6 @@ import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveManager;
 import com.airijko.endlessleveling.passives.archetype.ArchetypePassiveSnapshot;
 import com.airijko.endlessleveling.ui.PlayerHud;
 import com.airijko.endlessleveling.systems.PlayerRaceStatSystem;
-import com.airijko.endlessleveling.util.ChatMessageTemplate;
 import com.airijko.endlessleveling.util.FixedValue;
 import com.airijko.endlessleveling.util.PlayerChatNotifier;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -25,6 +24,7 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -132,10 +132,10 @@ public class LevelingManager {
         xpScalingMinMultiplier = clampMultiplier(getDouble("Mob_Leveling.Experience.Scaling.MinMultiplier", 0.1));
 
         LOGGER.atInfo().log(
-            "Leveling config loaded: base=%f, multiplier=%f, logMode=%s, cap=%d, prestigeEnabled=%s, prestigeCap=%s, cap+%d/base+%.2f",
+                "Leveling config loaded: base=%f, multiplier=%f, logMode=%s, cap=%d, prestigeEnabled=%s, prestigeCap=%s, cap+%d/base+%.2f",
                 baseXp,
                 multiplier,
-            logMode,
+                logMode,
                 levelCap,
                 prestigeEnabled,
                 prestigeCap == null ? "ENDLESS" : prestigeCap,
@@ -152,6 +152,15 @@ public class LevelingManager {
         } catch (Exception ignored) {
         }
         return fallback;
+    }
+
+    @Nonnull
+    private String rootCommand() {
+        String command = FixedValue.ROOT_COMMAND.value();
+        if (command == null || command.isBlank()) {
+            return FixedValue.ROOT_COMMAND.defaultValue();
+        }
+        return command;
     }
 
     public void addXp(UUID uuid, double xpAmount) {
@@ -216,15 +225,15 @@ public class LevelingManager {
         player.setXp(player.getXp() + adjustedXp);
 
         LOGGER.atInfo().log(
-            "[XP_APPLY] player=%s level=%d cap=%d incoming=%.3f passiveBonus=%.4f disciplinePct=%.3f luckPct=%.3f final=%.3f blocked=none",
-            uuid,
-            player.getLevel(),
-            effectiveCap,
-            xpAmount,
-            passiveXpBonus,
-            disciplineBonusPercent,
-            luckXpBonusPercent,
-            adjustedXp);
+                "[XP_APPLY] player=%s level=%d cap=%d incoming=%.3f passiveBonus=%.4f disciplinePct=%.3f luckPct=%.3f final=%.3f blocked=none",
+                uuid,
+                player.getLevel(),
+                effectiveCap,
+                xpAmount,
+                passiveXpBonus,
+                disciplineBonusPercent,
+                luckXpBonusPercent,
+                adjustedXp);
 
         // Notify XP gain
         notifyXpGain(player, adjustedXp);
@@ -317,6 +326,9 @@ public class LevelingManager {
         }
 
         notifyLevelUp(player);
+        if (canNotifyPrestigeAvailable(player)) {
+            notifyPrestigeAvailable(player);
+        }
         refreshHud(player);
         pushPartyProHudText(player);
         requestAttributeResync(player);
@@ -380,10 +392,45 @@ public class LevelingManager {
                 .color("#ffc300");
         var notifSecondary = Message.join(
                 Message.raw("Use ").color("#ff9d00"),
-            Message.raw(FixedValue.ROOT_COMMAND.value()).color("#4fd7f7"),
+                Message.raw(rootCommand()).color("#4fd7f7"),
                 Message.raw(" to allocate your points").color("#ff9d00"));
         var icon = new ItemStack("Ingredient_Ice_Essence", 1).toPacket();
         NotificationUtil.sendNotification(playerRef.getPacketHandler(), notifPrimary, notifSecondary, icon);
+    }
+
+    private boolean canNotifyPrestigeAvailable(PlayerData player) {
+        if (player == null || !prestigeEnabled) {
+            return false;
+        }
+
+        int prestigeLevel = Math.max(0, player.getPrestigeLevel());
+        if (prestigeCap != null && prestigeLevel >= prestigeCap) {
+            return false;
+        }
+
+        return player.getLevel() >= getLevelCap(player);
+    }
+
+    private void notifyPrestigeAvailable(PlayerData player) {
+        PlayerRef playerRef = Universe.get().getPlayer(player.getUuid());
+        if (playerRef == null) {
+            return;
+        }
+
+        String rankupCommand = rootCommand() + " rankup";
+
+        Message title = Message.raw("Prestige Available!")
+                .color("#f0c15a");
+        Message subtitle = Message.raw("Use " + rankupCommand + " to prestige to the next tier.")
+                .color("#ffffff");
+        EventTitleUtil.showEventTitleToPlayer(playerRef, title, subtitle, true, null, 6, 1, 1);
+
+        Message chatBody = Message.join(
+                Message.raw("Prestige is ready! ").color("#ffc300"),
+                Message.raw("Use ").color("#ff9d00"),
+                Message.raw(rankupCommand).color("#4fd7f7"),
+                Message.raw(" to prestige to the next tier.").color("#ffc300"));
+        PlayerChatNotifier.send(playerRef, chatBody);
     }
 
     public void setPlayerLevel(PlayerData player, int newLevel) {

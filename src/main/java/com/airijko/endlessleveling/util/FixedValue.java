@@ -1,5 +1,7 @@
 package com.airijko.endlessleveling.util;
 
+import javax.annotation.Nonnull;
+
 /**
  * Centralized fixed values that must stay consistent across chat/UI flows.
  */
@@ -15,10 +17,16 @@ public enum FixedValue {
         this.value = value;
     }
 
+    @Nonnull
     public String value() {
-        return value;
+        String currentValue = value;
+        if (currentValue == null || currentValue.isBlank()) {
+            return defaultValue;
+        }
+        return currentValue;
     }
 
+    @Nonnull
     public String defaultValue() {
         return defaultValue;
     }

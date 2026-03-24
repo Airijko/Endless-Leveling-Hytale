@@ -498,6 +498,125 @@ public class AugmentUnlockManager {
         return next;
     }
 
+    @Nonnull
+    public List<NextUnlockPreview> getNextUnlockPreviews(@Nonnull PlayerData playerData,
+            int currentLevel,
+            int maxEntries) {
+        if (playerData == null) {
+            return List.of();
+        }
+
+        int localLevel = Math.max(1, currentLevel);
+        int progressionLevel = getProgressionLevel(playerData, localLevel);
+        int progressionOffset = Math.max(0, progressionLevel - localLevel);
+        int prestigeLevel = Math.max(0, playerData.getPrestigeLevel());
+        int currentPrestigeCap = getConfiguredLevelCapForPrestige(prestigeLevel);
+        int previousPrestigeCap = prestigeLevel > 0
+                ? getConfiguredLevelCapForPrestige(prestigeLevel - 1)
+                : localLevel;
+        int baseReferenceLevel = prestigeLevel > 0
+                ? Math.max(localLevel, previousPrestigeCap)
+                : localLevel;
+        int limit = Math.max(1, maxEntries);
+
+        Map<PassiveTier, NextUnlockPreview> byTier = new EnumMap<>(PassiveTier.class);
+
+        for (UnlockRule rule : unlockRules) {
+            int nextLocal = prestigeLevel > 0
+                    ? rule.nextEligibleLevelAfter(baseReferenceLevel, baseReferenceLevel, 0)
+                    : rule.nextEligibleLevelAfter(localLevel, progressionLevel, progressionOffset);
+
+            if (nextLocal <= localLevel) {
+                continue;
+            }
+
+            // During prestige cycles, base-track milestones must be reachable within the
+            // current prestige cap. Otherwise the next unlock should come from prestige rules.
+            if (prestigeLevel > 0 && nextLocal > currentPrestigeCap) {
+                continue;
+            }
+
+            NextUnlockPreview candidate = new NextUnlockPreview(rule.tier(), Math.max(1, nextLocal), 0);
+            mergePreview(byTier, candidate, prestigeLevel, localLevel);
+        }
+
+        for (PrestigeUnlockRule rule : prestigeUnlockRules) {
+            int requiredLevel = Math.max(1, rule.requiredPlayerLevel());
+            if (rule.countEligibleIgnoringPlayerLevel(prestigeLevel) > 0 && requiredLevel > localLevel) {
+                // Prestige requirement is already met; next unlock in this rule is blocked only by player level.
+                NextUnlockPreview candidate = new NextUnlockPreview(rule.tier(), requiredLevel, prestigeLevel);
+                mergePreview(byTier, candidate, prestigeLevel, localLevel);
+            }
+
+            int nextPrestige = rule.nextPrestigeLevelAfter(prestigeLevel);
+            if (nextPrestige <= 0) {
+                continue;
+            }
+            NextUnlockPreview candidate = new NextUnlockPreview(rule.tier(), requiredLevel, nextPrestige);
+            mergePreview(byTier, candidate, prestigeLevel, localLevel);
+        }
+
+        if (byTier.isEmpty()) {
+            return List.of();
+        }
+
+        return byTier.values().stream()
+                .sorted((left, right) -> comparePreviewAvailability(left, right, prestigeLevel, localLevel))
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
+    public NextUnlockPreview getNextUnlockPreview(@Nonnull PlayerData playerData, int currentLevel) {
+        List<NextUnlockPreview> previews = getNextUnlockPreviews(playerData, currentLevel, 1);
+        return previews.isEmpty() ? null : previews.get(0);
+    }
+
+    private void mergePreview(Map<PassiveTier, NextUnlockPreview> byTier,
+            NextUnlockPreview candidate,
+            int currentPrestige,
+            int currentLevel) {
+        if (byTier == null || candidate == null || candidate.tier() == null) {
+            return;
+        }
+
+        NextUnlockPreview existing = byTier.get(candidate.tier());
+        if (existing == null || isCandidateBetter(existing, candidate, currentPrestige, currentLevel)) {
+            byTier.put(candidate.tier(), candidate);
+        }
+    }
+
+    private boolean isCandidateBetter(NextUnlockPreview current,
+            NextUnlockPreview candidate,
+            int currentPrestige,
+            int currentLevel) {
+        return comparePreviewAvailability(candidate, current, currentPrestige, currentLevel) < 0;
+    }
+
+    private int comparePreviewAvailability(NextUnlockPreview left,
+            NextUnlockPreview right,
+            int currentPrestige,
+            int currentLevel) {
+        int leftPrestigeDelta = Math.max(0, left.requiredPrestigeLevel() - Math.max(0, currentPrestige));
+        int rightPrestigeDelta = Math.max(0, right.requiredPrestigeLevel() - Math.max(0, currentPrestige));
+        if (leftPrestigeDelta != rightPrestigeDelta) {
+            return Integer.compare(leftPrestigeDelta, rightPrestigeDelta);
+        }
+
+        int leftLevelTarget = Math.max(1, left.requiredPlayerLevel());
+        int rightLevelTarget = Math.max(1, right.requiredPlayerLevel());
+        if (leftLevelTarget != rightLevelTarget) {
+            return Integer.compare(leftLevelTarget, rightLevelTarget);
+        }
+
+        int leftPrestige = Math.max(0, left.requiredPrestigeLevel());
+        int rightPrestige = Math.max(0, right.requiredPrestigeLevel());
+        if (leftPrestige != rightPrestige) {
+            return Integer.compare(leftPrestige, rightPrestige);
+        }
+
+        return left.tier().compareTo(right.tier());
+    }
+
     private int getNextPrestigeUnlockLevel(@Nonnull PlayerData playerData, int localLevel, int prestigeLevel) {
         if (prestigeUnlockRules.isEmpty()) {
             return -1;
@@ -516,6 +635,9 @@ public class AugmentUnlockManager {
         }
 
         return next == Integer.MAX_VALUE ? -1 : next;
+    }
+
+    public record NextUnlockPreview(PassiveTier tier, int requiredPlayerLevel, int requiredPrestigeLevel) {
     }
 
     public int getEligibleMilestoneCount(int playerLevel) {
@@ -1716,6 +1838,39 @@ public class AugmentUnlockManager {
                 return 0;
             }
             return countEligibleIgnoringPlayerLevel(prestigeLevel);
+        }
+
+        int nextPrestigeLevelAfter(int currentPrestigeLevel) {
+            int current = Math.max(0, currentPrestigeLevel);
+
+            if (!prestigeLevels.isEmpty()) {
+                int next = Integer.MAX_VALUE;
+                for (int level : prestigeLevels) {
+                    if (level > current && level < next) {
+                        next = level;
+                    }
+                }
+                return next == Integer.MAX_VALUE ? -1 : next;
+            }
+
+            int first = Math.max(1, requiredPrestigeLevel);
+            int step = Math.max(1, interval);
+            if (current < first) {
+                return first;
+            }
+
+            int offset = current - first;
+            int nextIndex = (offset / step) + 1;
+            long next = (long) first + ((long) nextIndex * step);
+
+            if (maxUnlocks > 0) {
+                long last = (long) first + ((long) (maxUnlocks - 1) * step);
+                if (next > last) {
+                    return -1;
+                }
+            }
+
+            return next >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) next;
         }
     }
 
