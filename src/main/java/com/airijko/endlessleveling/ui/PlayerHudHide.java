@@ -50,7 +50,7 @@ public class PlayerHudHide extends CustomUIHud {
             return;
         }
 
-        synchronized (HudSlotManager.getHudLock(uuid)) {
+        synchronized (PlayerHud.getHudLock(uuid)) {
             PlayerHud.unregister(uuid);
 
             PlayerHudHide trackedHud = ACTIVE_HUDS.get(uuid);
@@ -66,7 +66,7 @@ public class PlayerHudHide extends CustomUIHud {
             PlayerHudHide newHud = new PlayerHudHide(playerRef);
             ACTIVE_HUDS.put(uuid, newHud);
 
-            if (MultipleHudCompatibility.showHud(player, playerRef, HudSlotManager.MULTI_HUD_SLOT, newHud)) {
+            if (MultipleHudCompatibility.showHud(player, playerRef, PlayerHud.MULTI_HUD_SLOT, newHud)) {
                 LOGGER.atInfo().log("Opening PlayerHudHide via MultipleHUD for %s", uuid);
                 return;
             }
@@ -90,7 +90,7 @@ public class PlayerHudHide extends CustomUIHud {
         if (uuid == null) {
             return;
         }
-        synchronized (HudSlotManager.getHudLock(uuid)) {
+        synchronized (PlayerHud.getHudLock(uuid)) {
             unregisterInternal(uuid);
         }
     }

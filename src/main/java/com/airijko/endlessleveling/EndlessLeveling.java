@@ -19,6 +19,7 @@ import com.airijko.endlessleveling.commands.CommandRegistrar;
 import com.airijko.endlessleveling.listeners.OpenPlayerHudListener;
 import com.airijko.endlessleveling.listeners.PartyListener;
 import com.airijko.endlessleveling.listeners.PlayerDataListener;
+import com.airijko.endlessleveling.listeners.WorldOverrideDebugListener;
 import com.airijko.endlessleveling.managers.ConfigManager;
 import com.airijko.endlessleveling.managers.EventHookManager;
 import com.airijko.endlessleveling.managers.LanguageManager;
@@ -459,7 +460,9 @@ public class EndlessLeveling extends JavaPlugin {
         // Register event listeners
         PlayerDataListener playerDataListener = new PlayerDataListener(playerDataManager, passiveManager, skillManager,
                 raceManager, augmentUnlockManager);
+        WorldOverrideDebugListener worldOverrideDebugListener = new WorldOverrideDebugListener();
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, playerDataListener::onPlayerReady);
+        this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, worldOverrideDebugListener::onPlayerReady);
         this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, playerDataListener::onPlayerDisconnect);
 
         if (partyManager.isAvailable()) {
@@ -531,6 +534,14 @@ public class EndlessLeveling extends JavaPlugin {
     }
 
     protected void shutdown() {
+        if (mobLevelingSystem != null) {
+            mobLevelingSystem.shutdownRuntimeState();
+            LOGGER.atInfo().log("Server shutting down: mob leveling runtime state cleared.");
+        } else if (mobLevelingManager != null) {
+            mobLevelingManager.shutdownRuntimeState();
+            LOGGER.atInfo().log("Server shutting down: mob leveling manager state cleared.");
+        }
+
         if (playerDataManager != null) {
             playerDataManager.saveAll();
             LOGGER.atInfo().log("Server shutting down: all player data saved.");

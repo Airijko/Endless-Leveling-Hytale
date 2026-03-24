@@ -11,6 +11,7 @@ import com.airijko.endlessleveling.player.PlayerDataManager;
 import com.airijko.endlessleveling.races.RaceManager;
 import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.ui.PlayerHud;
+import com.airijko.endlessleveling.ui.PlayerHudHide;
 import com.airijko.endlessleveling.util.ChatMessageTemplate;
 import com.airijko.endlessleveling.util.FixedValue;
 import com.airijko.endlessleveling.util.Lang;
@@ -184,7 +185,12 @@ public class PlayerDataListener {
         var playerRef = event.getPlayerRef();
         UUID uuid = playerRef.getUuid();
 
-        PlayerHud.unregister(uuid);
+        try {
+            PlayerHud.unregister(uuid);
+            PlayerHudHide.unregister(uuid);
+        } catch (LinkageError | RuntimeException ex) {
+            LOGGER.atWarning().withCause(ex).log("Failed to clean up HUD state for %s on disconnect.", uuid);
+        }
 
         PlayerData data = playerDataManager.get(uuid);
         if (data != null) {

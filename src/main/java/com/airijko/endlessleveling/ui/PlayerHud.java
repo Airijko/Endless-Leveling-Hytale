@@ -37,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlayerHud extends CustomUIHud {
 
     public static final String ID = "EndlessLeveling:PlayerHud";
+    public static final String MULTI_HUD_SLOT = "EndlessLevelingHud";
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final String[] STACKING_ICON_VARIANT_SUFFIXES = {
             "CommonStat",
@@ -67,6 +68,7 @@ public class PlayerHud extends CustomUIHud {
     private static final int MAX_STACKING_SLOTS = 6;
     private static final Map<UUID, PlayerHud> ACTIVE_HUDS = new ConcurrentHashMap<>();
     private static final Set<UUID> DIRTY_HUDS = ConcurrentHashMap.newKeySet();
+    private static final Map<UUID, Object> HUD_LOCKS = new ConcurrentHashMap<>();
     private static final Map<String, String> DEFAULT_CLASS_ICONS = Map.ofEntries(
             Map.entry("*", "Weapon_Longsword_Adamantite_Saurian"),
             Map.entry("adventurer", "Ingredient_Life_Essence"),
@@ -94,6 +96,10 @@ public class PlayerHud extends CustomUIHud {
     private final Map<String, Object> lastUiState = new HashMap<>();
     private final java.util.concurrent.atomic.AtomicBoolean built = new java.util.concurrent.atomic.AtomicBoolean(
             false);
+
+    static Object getHudLock(UUID uuid) {
+        return HUD_LOCKS.computeIfAbsent(uuid, ignored -> new Object());
+    }
 
     public PlayerHud(@Nonnull PlayerRef playerRef) {
         super(playerRef);
@@ -609,7 +615,7 @@ public class PlayerHud extends CustomUIHud {
         if (uuid == null) {
             return;
         }
-        synchronized (HudSlotManager.getHudLock(uuid)) {
+        synchronized (getHudLock(uuid)) {
             unregisterInternal(uuid);
         }
     }
@@ -678,7 +684,7 @@ public class PlayerHud extends CustomUIHud {
             return;
         }
 
-        synchronized (HudSlotManager.getHudLock(uuid)) {
+        synchronized (getHudLock(uuid)) {
             PlayerHudHide.unregister(uuid);
 
             PlayerHud trackedHud = ACTIVE_HUDS.get(uuid);
@@ -697,7 +703,7 @@ public class PlayerHud extends CustomUIHud {
 
             // Prefer MultipleHUD if available so EndlessLeveling can coexist with
             // other custom HUD mods.
-            if (MultipleHudCompatibility.showHud(player, playerRef, HudSlotManager.MULTI_HUD_SLOT, newHud)) {
+            if (MultipleHudCompatibility.showHud(player, playerRef, MULTI_HUD_SLOT, newHud)) {
                 LOGGER.atInfo().log("Opening PlayerHud via MultipleHUD for %s", uuid);
                 return;
             }

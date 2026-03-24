@@ -98,7 +98,7 @@ Mob_Leveling:
       MinMultiplier: 0.2
     XP_Level_Range:
       Enabled: true
-      Max_Difference: 15
+      Max_Difference: 20
       Below_Range:
         Multiplier: 0.05
       Above_Range:
@@ -110,4 +110,4 @@ Mob_Leveling:
     Enabled: true
     Show_Level: true
     Show_Name: true
-    Show_Health: true
+    Show_Health: false
