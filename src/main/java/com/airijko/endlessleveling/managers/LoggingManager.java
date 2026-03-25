@@ -21,6 +21,7 @@ import java.util.logging.Level;
 public final class LoggingManager {
 
     private static final String LOGGER_PREFIX = "com.airijko.endlessleveling";
+    private static final String ALWAYS_INFO_PREFIX_SHUTDOWN = LOGGER_PREFIX + ".shutdown.";
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
     private static final Level DEFAULT_BASE_LEVEL = Level.WARNING;
 
@@ -95,7 +96,13 @@ public final class LoggingManager {
     }
 
     private static Level resolveLevel(String loggerName) {
+        if ("EndlessLeveling".equals(loggerName)) {
+            return Level.INFO;
+        }
         if (loggerName != null && loggerName.startsWith(LOGGER_PREFIX)) {
+            if (loggerName.startsWith(ALWAYS_INFO_PREFIX_SHUTDOWN)) {
+                return Level.INFO;
+            }
             if (enableAll) {
                 return Level.ALL;
             }

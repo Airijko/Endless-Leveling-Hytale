@@ -34,6 +34,7 @@ import javax.annotation.Nonnull;
 import java.util.UUID;
 import java.util.List;
 import java.util.Objects;
+import java.lang.reflect.Method;
 
 public class PlayerDataListener {
 
@@ -223,10 +224,57 @@ public class PlayerDataListener {
         Ref<EntityStore> playerEntityRef = playerRef.getReference();
         Store<EntityStore> playerStore = playerEntityRef != null ? playerEntityRef.getStore() : null;
         PlayerNameplateSystem playerNameplateSystem = EndlessLeveling.getInstance().getPlayerNameplateSystem();
-        if (playerNameplateSystem != null && playerEntityRef != null && playerStore != null && !playerStore.isShutdown()) {
-            playerNameplateSystem.removeNameplateForPlayerRef(playerEntityRef, playerStore, playerRef);
+        if (playerEntityRef != null && playerStore != null && !playerStore.isShutdown()) {
+            queuePlayerRuntimeCleanup(playerRef, playerEntityRef, playerStore, playerNameplateSystem);
         }
         ArmyOfTheDeadPassive.cleanupOwnerSummonsOnDisconnect(uuid, playerStore);
+    }
+
+    private void queuePlayerRuntimeCleanup(@Nonnull PlayerRef playerRef,
+            @Nonnull Ref<EntityStore> playerEntityRef,
+            @Nonnull Store<EntityStore> playerStore,
+            PlayerNameplateSystem playerNameplateSystem) {
+        Object world = null;
+        try {
+            if (playerStore.getExternalData() != null) {
+                world = playerStore.getExternalData().getWorld();
+            }
+        } catch (Throwable ignored) {
+            world = null;
+        }
+
+        if (world == null) {
+            return;
+        }
+
+        try {
+            Method executeMethod = world.getClass().getMethod("execute", Runnable.class);
+            executeMethod.invoke(world, (Runnable) () -> {
+                try {
+                    if (!playerEntityRef.isValid()) {
+                        return;
+                    }
+
+                    Store<EntityStore> liveStore = playerEntityRef.getStore();
+                    if (liveStore == null || liveStore.isShutdown()) {
+                        return;
+                    }
+
+                    if (skillManager != null) {
+                        skillManager.removeAllSkillModifiers(playerEntityRef, liveStore);
+                    }
+                    if (playerNameplateSystem != null) {
+                        playerNameplateSystem.removeNameplateForPlayerRef(playerEntityRef, liveStore, playerRef);
+                    }
+                } catch (Throwable ex) {
+                    LOGGER.atFine().withCause(ex)
+                            .log("Failed deferred player runtime cleanup for %s", playerRef.getUuid());
+                }
+            });
+        } catch (Throwable ex) {
+            LOGGER.atFine().withCause(ex)
+                    .log("Unable to queue world-thread runtime cleanup for %s", playerRef.getUuid());
+        }
     }
 
         private void notifyAvailableSkillPoints(@Nonnull PlayerRef playerRef, int skillPoints) {
