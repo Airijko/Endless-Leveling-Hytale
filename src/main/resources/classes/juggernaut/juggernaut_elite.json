@@ -15,6 +15,10 @@
       "damage": 1.105
     },
     {
+      "type": "HAMMER",
+      "damage": 1.05
+    },
+    {
       "type": "MACE",
       "damage": 1.05
     },

@@ -15,6 +15,14 @@
       "damage": 1.05
     },
     {
+      "type": "SHIELD",
+      "damage": 1.05
+    },
+    {
+      "type": "HAMMER",
+      "damage": 1.05
+    },
+    {
       "type": "AXE",
       "damage": 1.05
     }
