@@ -1,13 +1,16 @@
+/*
+ * Copyright (c) 2026 Airijko
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * This Source Code Form is "Incompatible With Secondary Licenses", as defined by the Mozilla Public License, v. 2.0.
+ */
+
 package com.airijko.endlessleveling;
 
 import com.airijko.endlessleveling.classes.ClassWeaponResolver;
 import com.airijko.endlessleveling.classes.WeaponConfig;
-import com.airijko.endlessleveling.commands.EndlessLevelingCommand;
-import com.airijko.endlessleveling.commands.augments.AugmentCommand;
-import com.airijko.endlessleveling.commands.PartyCommand;
-import com.airijko.endlessleveling.commands.RaceCommand;
-import com.airijko.endlessleveling.commands.classes.ClassCommand;
-import com.airijko.endlessleveling.commands.profile.ProfileCommand;
 import com.airijko.endlessleveling.augments.AugmentExecutor;
 import com.airijko.endlessleveling.augments.AugmentManager;
 import com.airijko.endlessleveling.augments.AugmentSyncValidator;
@@ -25,12 +28,10 @@ import com.airijko.endlessleveling.managers.EventHookManager;
 import com.airijko.endlessleveling.managers.LanguageManager;
 import com.airijko.endlessleveling.managers.LoggingManager;
 import com.airijko.endlessleveling.managers.PluginFilesManager;
-import com.airijko.endlessleveling.managers.VersionRegistry;
 import com.airijko.endlessleveling.leveling.LevelingManager;
 import com.airijko.endlessleveling.leveling.MobLevelingManager;
 import com.airijko.endlessleveling.leveling.PartyManager;
 import com.airijko.endlessleveling.player.PlayerDataManager;
-import com.airijko.endlessleveling.player.PlayerDataMigration;
 import com.airijko.endlessleveling.player.PlayerAttributeManager;
 import com.airijko.endlessleveling.player.SkillManager;
 import com.airijko.endlessleveling.classes.ClassManager;
