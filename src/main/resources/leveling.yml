@@ -111,3 +111,9 @@ Mob_Leveling:
     Show_Level: true
     Show_Name: true
     Show_Health: true
+    # Nameplate refresh cadence in world ticks.
+    # Example thresholds:
+    # - 1: update every tick (smoothest, highest update cost)
+    # - 5: update every 5 ticks (~4 updates/sec at 20 TPS)
+    # - 10: update every 10 ticks (~2 updates/sec at 20 TPS)
+    Nameplate_Update_Ticks: 1

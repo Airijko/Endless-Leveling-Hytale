@@ -14,11 +14,11 @@ import com.hypixel.hytale.component.system.tick.TickingSystem;
 import com.hypixel.hytale.server.core.entity.nameplate.Nameplate;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 
 /** Keeps player nameplates in sync with EndlessLeveling NameplateBuilder segments. */
@@ -28,7 +28,7 @@ public class PlayerNameplateSystem extends TickingSystem<EntityStore> {
     private static final float UPDATE_INTERVAL_SECONDS = 1.0f;
 
     private final PlayerDataManager playerDataManager;
-    private final Map<UUID, String> lastLabels = new HashMap<>();
+    private final Map<UUID, String> lastLabels = new ConcurrentHashMap<>();
     private float elapsedSeconds;
 
     public PlayerNameplateSystem(@Nonnull PlayerDataManager playerDataManager) {

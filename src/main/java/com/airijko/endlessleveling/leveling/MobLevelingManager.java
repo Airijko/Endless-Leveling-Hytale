@@ -1231,6 +1231,10 @@ public class MobLevelingManager {
         return getConfigBoolean("Mob_Leveling.Nameplate.Show_Health", true, null);
     }
 
+    public int getMobNameplateUpdateTicks() {
+        return Math.max(1, getConfigInt("Mob_Leveling.Nameplate.Nameplate_Update_Ticks", 1, null));
+    }
+
     public boolean registerAreaLevelOverride(String id,
             String worldId,
             double centerX,

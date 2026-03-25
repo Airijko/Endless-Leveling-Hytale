@@ -188,6 +188,10 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         boolean showLevelInNameplate = mobLevelingManager.shouldShowMobNameplateLevel();
         boolean showNameInNameplate = mobLevelingManager.shouldShowMobNameplateName();
         boolean showHealthInNameplate = mobLevelingManager.shouldShowMobNameplateHealth();
+        int nameplateUpdateTicks = mobLevelingManager.getMobNameplateUpdateTicks();
+        boolean evaluateHealthDeltaThisTick = !showHealthInNameplate
+            || nameplateUpdateTicks <= 1
+            || Math.floorMod(tickCount, nameplateUpdateTicks) == 0;
         boolean renderAnyNameplateText = showMobLevelUi
             && (showLevelInNameplate || showNameInNameplate || showHealthInNameplate);
         boolean shouldResetAllMobs = fullMobRescaleRequested.getAndSet(false);
@@ -217,6 +221,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                                 showLevelInNameplate,
                                 showNameInNameplate,
                                 showHealthInNameplate,
+                                evaluateHealthDeltaThisTick,
                                 currentTimeMillis,
                             playerChunkViewports);
                     }
@@ -270,6 +275,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             boolean showLevelInNameplate,
             boolean showNameInNameplate,
             boolean showHealthInNameplate,
+                boolean evaluateHealthDeltaThisTick,
             long currentTimeMillis,
                     List<PlayerChunkViewport> playerChunkViewports) {
         if (ref == null || commandBuffer == null) {
@@ -394,6 +400,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
 
             boolean healthChangedForNameplate =
                 showHealthInNameplate
+                    && evaluateHealthDeltaThisTick
                     && hasFiniteHealthForNameplate
                     && (Math.abs(currentHpForNameplate - state.lastNameplateHealthValue) > 0.0001f
                         || Math.abs(currentMaxHpForNameplate - state.lastNameplateMaxHealthValue) > 0.0001f);
