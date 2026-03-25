@@ -15,73 +15,42 @@
       ]
     },
     "axe": {
-      "keywords": [
-        "axe",
-        "hatchet",
-        "battleaxe",
-        "Mjolnir"
-      ]
+      "keywords": ["axe", "hatchet", "battleaxe"]
     },
     "gauntlet": {
-      "keywords": [
-        "gauntlet",
-        "glove",
-        "knuckle",
-        "bracer",
-        "fist"
-      ]
+      "keywords": ["gauntlet", "glove", "knuckle", "bracer", "fist"]
     },
     "bow": {
-      "keywords": [
-        "bow",
-        "weaver"
-      ]
+      "keywords": ["bow", "weaver"]
     },
     "staff": {
-      "keywords": [
-        "staff",
-        "rod",
-        "spellbook",
-        "wand",
-        "necronomicon"
-      ]
+      "keywords": ["staff", "rod", "spellbook", "wand", "necronomicon"]
     },
     "dagger": {
-      "keywords": [
-        "dagger",
-        "knife",
-        "dirk",
-        "whirlwinds"
-      ]
+      "keywords": ["dagger", "knife", "dirk", "whirlwinds"]
     },
     "mace": {
-      "keywords": [
-        "mace",
-        "hammer",
-        "club",
-        "flail",
-        "warhammer",
-        "Mjolnir"
-      ]
+      "keywords": ["mace", "hammer", "club", "flail", "warhammer"]
     },
     "spear": {
-      "keywords": [
-        "spear",
-        "halberd",
-        "polearm",
-        "trident",
-        "glaive"
-      ]
+      "keywords": ["spear", "halberd", "polearm", "trident", "glaive"]
     },
     "crossbow": {
-      "keywords": [
-        "crossbow"
-      ]
+      "keywords": ["crossbow"]
+    },
+    "hammer": {
+      "ids": ["Weapon_Mjolnir_Starky"],
+      "keywords": ["hammer"]
+    },
+    "shield": {
+      "keywords": ["shield"]
+    },
+    "guns": {
+      "ids": ["Weapon_RayGun_Starky", "Weapon_ThunderGun_Starky", "Weapon_FartGun_Starky"],
+      "keywords": ["gun"]
     },
     "unarmed": {
-      "keywords": [
-        "fist"
-      ]
+      "keywords": ["fist"]
     }
   }
 }
