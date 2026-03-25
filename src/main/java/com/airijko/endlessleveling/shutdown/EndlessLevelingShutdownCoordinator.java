@@ -75,11 +75,6 @@ public final class EndlessLevelingShutdownCoordinator {
     }
 
     public void runPreShutdownEntityCleanup(String source) {
-        if (plugin.getMobLevelingSystem() != null) {
-            plugin.getMobLevelingSystem().beginShutdownReset();
-            appendShutlog("mob leveling shutdown reset mode enabled");
-        }
-
         if (!preShutdownCleanupExecuted.compareAndSet(false, true)) {
             if ("Plugin.shutdown()".equals(source)) {
                 cleanupKnownWorldEntityStores();
@@ -229,7 +224,6 @@ public final class EndlessLevelingShutdownCoordinator {
                 mobEntities = plugin.getMobLevelingSystem().removeAllNameplatesForStore(store);
                 clearedMobScaledEntities.addAndGet(mobEntities);
             }
-            persistStoreCleanup(store, "cleanupWorldStore");
 
             appendShutlog(String.format(
                     "cleanupWorldStore task complete: storeId=%d playerModifierEntities=%d playerNameplates=%d mobEntities=%d",
@@ -298,7 +292,6 @@ public final class EndlessLevelingShutdownCoordinator {
                 mobEntities = plugin.getMobLevelingSystem().removeAllNameplatesForStore(store);
                 clearedMobScaledEntities.addAndGet(mobEntities);
             }
-            persistStoreCleanup(store, "cleanupStoreDirect");
 
             appendShutlog(String.format(
                     "cleanupStoreDirect task complete: storeId=%d playerModifierEntities=%d playerNameplates=%d mobEntities=%d",
@@ -502,25 +495,6 @@ public final class EndlessLevelingShutdownCoordinator {
             return worldThread == Thread.currentThread();
         } catch (Throwable ignored) {
             return false;
-        }
-    }
-
-    private void persistStoreCleanup(Store<EntityStore> store, String source) {
-        if (store == null || store.isShutdown()) {
-            appendShutlog(source + " persist skipped: store null/shutdown");
-            return;
-        }
-
-        try {
-            store.saveAllResources().join();
-            appendShutlog(source + " persist complete: storeId="
-                    + Integer.toUnsignedLong(System.identityHashCode(store)));
-            alwaysShutdownLog("[CleanupDebug] " + source + " persist complete storeId="
-                    + Integer.toUnsignedLong(System.identityHashCode(store)));
-        } catch (Throwable ex) {
-            appendShutlog(source + " persist failed: " + ex.getClass().getSimpleName() + " " + ex.getMessage());
-            alwaysShutdownLog("[CleanupDebug] " + source + " persist failed: "
-                    + ex.getClass().getSimpleName() + " " + ex.getMessage());
         }
     }
 

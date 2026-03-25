@@ -74,7 +74,6 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     private final java.util.Random random = new java.util.Random();
 
     private final AtomicBoolean fullMobRescaleRequested = new AtomicBoolean(false);
-    private final AtomicBoolean shutdownResetRequested = new AtomicBoolean(false);
     private long systemTimeMillis = 0L;
     private final Map<Long, EntityRuntimeState> entityStates = new ConcurrentHashMap<>();
     private final Set<Store<EntityStore>> knownStoresForCleanup = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -96,10 +95,6 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         if (mobLevelingManager != null) {
             mobLevelingManager.shutdownRuntimeState();
         }
-    }
-
-    public void beginShutdownReset() {
-        shutdownResetRequested.set(true);
     }
 
 
@@ -369,12 +364,6 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         }
 
         knownStoresForCleanup.add(store);
-
-        if (shutdownResetRequested.get()) {
-            removeAllNameplatesForStoreCurrentThread(store);
-            cleanupStoreRuntimeState(store);
-            return;
-        }
 
         if (mobLevelingManager == null || !mobLevelingManager.isMobLevelingEnabled())
             return;
