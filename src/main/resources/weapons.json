@@ -18,7 +18,8 @@
       "keywords": [
         "axe",
         "hatchet",
-        "battleaxe"
+        "battleaxe",
+        "Mjolnir"
       ]
     },
     "gauntlet": {
@@ -58,7 +59,9 @@
         "mace",
         "hammer",
         "club",
-        "warhammer"
+        "flail",
+        "warhammer",
+        "Mjolnir"
       ]
     },
     "spear": {
