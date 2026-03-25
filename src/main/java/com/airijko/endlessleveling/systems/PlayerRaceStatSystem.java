@@ -60,6 +60,13 @@ public class PlayerRaceStatSystem extends TickingSystem<EntityStore> {
         });
     }
 
+    public int shutdownRuntimeState() {
+        int cleared = pendingAttempts.size();
+        pendingAttempts.clear();
+        elapsedSinceRetryPass = 0.0f;
+        return cleared;
+    }
+
     @Override
     public void tick(float deltaSeconds, int tickCount, Store<EntityStore> store) {
         if (store == null || store.isShutdown() || playerDataManager == null || skillManager == null) {

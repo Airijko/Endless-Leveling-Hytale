@@ -440,6 +440,12 @@ public final class BurnAugment extends Augment
         return expected.equals(actual);
     }
 
+    public static int clearAllRuntimeState() {
+        int cleared = ACTIVE_PULSES.size();
+        ACTIVE_PULSES.clear();
+        return cleared;
+    }
+
     private void spawnPulseParticle(Ref<EntityStore> sourceRef, Vector3d position) {
         for (String particleId : PULSE_RING_VFX_IDS) {
             try {

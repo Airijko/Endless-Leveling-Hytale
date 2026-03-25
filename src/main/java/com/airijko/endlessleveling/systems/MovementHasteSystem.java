@@ -104,6 +104,15 @@ public class MovementHasteSystem extends TickingSystem<EntityStore> {
                 .setAttributeBonus(SkillAttributeType.HASTE, MOVEMENT_HASTE_SOURCE_ID, 0.0D, 0L);
     }
 
+    public int shutdownRuntimeState() {
+        int cleared = Math.max(states.size(), activePlayerRefs.size());
+        states.clear();
+        activePlayerRefs.clear();
+        timeSinceLastProcess = 0.0f;
+        timeSinceLastDiscovery = 0.0f;
+        return cleared;
+    }
+
     @Override
     public void tick(float deltaSeconds, int tickCount, Store<EntityStore> store) {
         if (store == null || store.isShutdown()

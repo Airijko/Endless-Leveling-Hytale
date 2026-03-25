@@ -150,4 +150,15 @@ public final class UiIntegrityAlertSystem extends TickingSystem<EntityStore> {
     public void setAuthorizedPartner(boolean authorized) {
         // No-op: kept for API compatibility with existing partner-branding flow.
     }
+
+    public int clearRuntimeState() {
+        int cleared = nextAlertAtByPlayer.size();
+        nextAlertAtByPlayer.clear();
+        elapsedSeconds = 0.0f;
+        systemStartedAtMillis = -1L;
+        consoleWarningLogged = false;
+        startupEvaluationCompleted = false;
+        integrityViolationActive = false;
+        return cleared;
+    }
 }

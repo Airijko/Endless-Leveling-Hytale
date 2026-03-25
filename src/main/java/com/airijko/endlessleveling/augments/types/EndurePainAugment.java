@@ -79,6 +79,12 @@ public final class EndurePainAugment extends Augment
         return context.getDamage();
     }
 
+    public static int clearAllRuntimeState() {
+        int cleared = LAST_HIT_DAMAGE.size();
+        LAST_HIT_DAMAGE.clear();
+        return cleared;
+    }
+
     @Override
     public void onKill(AugmentHooks.KillContext context) {
         AugmentRuntimeState runtime = context.getRuntimeState();

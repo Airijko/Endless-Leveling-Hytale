@@ -133,6 +133,12 @@ public class PassiveManager {
         runtimeStates.remove(uuid);
     }
 
+    public int clearAllRuntimeState() {
+        int cleared = runtimeStates.size();
+        runtimeStates.clear();
+        return cleared;
+    }
+
     public int resetAllPassiveCooldowns() {
         int affected = 0;
         for (PassiveRuntimeState state : runtimeStates.values()) {

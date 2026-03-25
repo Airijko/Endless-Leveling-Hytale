@@ -30,6 +30,10 @@ public final class AugmentRuntimeManager {
         runtimeStates.clear();
     }
 
+    public int getTrackedStateCount() {
+        return runtimeStates.size();
+    }
+
     public void markCooldown(UUID uuid, String augmentId, long cooldownMillis) {
         markCooldown(uuid, augmentId, augmentId, cooldownMillis);
     }

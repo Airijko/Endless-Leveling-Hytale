@@ -741,6 +741,13 @@ public class RaceManager {
         }
     }
 
+    public int clearRuntimeState() {
+        int cleared = modelApplyGuard.size() + modelApplyTimestamps.size();
+        modelApplyGuard.clear();
+        modelApplyTimestamps.clear();
+        return cleared;
+    }
+
     private void loadRaces() {
         fileRacesByKey.clear();
         File racesFolder = filesManager.getRacesFolder();

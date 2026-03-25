@@ -640,6 +640,19 @@ public class PlayerHud extends CustomUIHud {
         }
     }
 
+    public static int clearAllTrackedHuds() {
+        int cleared = ACTIVE_HUDS.size();
+        for (PlayerHud hud : ACTIVE_HUDS.values()) {
+            if (hud != null) {
+                hud.built.set(false);
+            }
+        }
+        ACTIVE_HUDS.clear();
+        DIRTY_HUDS.clear();
+        HUD_LOCKS.clear();
+        return cleared;
+    }
+
     private static void unregisterInternal(UUID uuid) {
         PlayerHud removed = ACTIVE_HUDS.remove(uuid);
         DIRTY_HUDS.remove(uuid);

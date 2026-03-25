@@ -70,6 +70,12 @@ public final class XpKillCreditTracker {
         }
     }
 
+    public static int clearAll() {
+        int cleared = RECENT_PLAYER_DAMAGE.size();
+        RECENT_PLAYER_DAMAGE.clear();
+        return cleared;
+    }
+
     private static UUID resolvePlayerCreditUuid(Ref<EntityStore> attackerRef,
             Store<EntityStore> store,
             CommandBuffer<EntityStore> commandBuffer) {

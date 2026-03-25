@@ -340,6 +340,12 @@ public final class WitherAugment extends Augment implements AugmentHooks.OnHitAu
         });
     }
 
+    public static int clearAllRuntimeState() {
+        int cleared = ACTIVE_WITHER.size();
+        ACTIVE_WITHER.clear();
+        return cleared;
+    }
+
     private static String keyFor(Ref<EntityStore> ref, CommandBuffer<EntityStore> commandBuffer) {
         if (commandBuffer != null) {
             PlayerRef playerRef = AugmentUtils.getPlayerRef(commandBuffer, ref);

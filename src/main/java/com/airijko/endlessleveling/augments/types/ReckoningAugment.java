@@ -224,6 +224,18 @@ public final class ReckoningAugment extends Augment implements AugmentHooks.OnHi
         return context.getTargetRef().toString();
     }
 
+    public static int clearAllRuntimeState() {
+        int cleared = 0;
+        for (Map<String, Long> perAttacker : EXECUTION_HEAL_COOLDOWNS.values()) {
+            if (perAttacker != null) {
+                cleared += perAttacker.size();
+            }
+        }
+        cleared += EXECUTION_HEAL_COOLDOWNS.size();
+        EXECUTION_HEAL_COOLDOWNS.clear();
+        return cleared;
+    }
+
     private long parseDurationMillis(Object raw) {
         if (raw == null) {
             return 0L;

@@ -629,8 +629,27 @@ public final class ArmyOfTheDeadPassive {
         cleanupOwnerSummons(ownerUuid, ownerStore, true, System.currentTimeMillis());
     }
 
+    public static int clearAllRuntimeState() {
+        int cleared = OWNER_STATES.size()
+                + SUMMON_BINDINGS.size()
+                + OWNER_LAST_THREAT_TARGETS.size()
+                + PENDING_ON_HIT_TRIGGERS.size()
+                + NAMEPLATE_FAILURE_LAST_LOG.size();
+        OWNER_STATES.clear();
+        SUMMON_BINDINGS.clear();
+        OWNER_LAST_THREAT_TARGETS.clear();
+        PENDING_ON_HIT_TRIGGERS.clear();
+        NAMEPLATE_FAILURE_LAST_LOG.clear();
+        return cleared;
+    }
+
     public static void cleanupPersistentSummons(Store<EntityStore> store) {
         if (store == null || store.isShutdown() || OWNER_STATES.isEmpty()) {
+            return;
+        }
+
+        Universe universe = Universe.get();
+        if (universe == null) {
             return;
         }
 
@@ -642,7 +661,7 @@ public final class ArmyOfTheDeadPassive {
                 continue;
             }
 
-            PlayerRef ownerPlayerRef = Universe.get().getPlayer(ownerUuid);
+            PlayerRef ownerPlayerRef = universe.getPlayer(ownerUuid);
             Ref<EntityStore> ownerRef = ownerPlayerRef != null && ownerPlayerRef.isValid()
                     ? ownerPlayerRef.getReference()
                     : null;

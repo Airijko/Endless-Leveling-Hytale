@@ -447,6 +447,13 @@ public final class MobAugmentExecutor {
         mobPassiveAppliedAtMillis.remove(entityId);
     }
 
+    public int clearRuntimeState() {
+        int cleared = mobAugments.size() + mobPassiveAppliedAtMillis.size();
+        mobAugments.clear();
+        mobPassiveAppliedAtMillis.clear();
+        return cleared;
+    }
+
     public List<String> clearPersistentHealthModifiers(UUID entityId, EntityStatMap statMap) {
         List<String> clearedModifierKeys = new ArrayList<>();
         if (entityId == null || statMap == null) {

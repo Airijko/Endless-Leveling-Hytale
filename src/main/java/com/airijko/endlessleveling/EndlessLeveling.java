@@ -201,6 +201,10 @@ public class EndlessLeveling extends JavaPlugin {
         return mobAugmentExecutor;
     }
 
+    public UiIntegrityAlertSystem getUiIntegrityAlertSystem() {
+        return uiIntegrityAlertSystem;
+    }
+
     public AugmentManager getAugmentManager() {
         return augmentManager;
     }

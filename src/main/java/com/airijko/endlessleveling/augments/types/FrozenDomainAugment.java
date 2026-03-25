@@ -841,4 +841,11 @@ public final class FrozenDomainAugment extends Augment
         }
         return expected.equals(actual);
     }
+
+    public static int clearAllRuntimeState() {
+        int cleared = ACTIVE_FROST.size() + ACTIVE_PULSES.size();
+        ACTIVE_FROST.clear();
+        ACTIVE_PULSES.clear();
+        return cleared;
+    }
 }

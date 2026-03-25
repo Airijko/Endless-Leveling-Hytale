@@ -269,6 +269,12 @@ public final class DeathBombAugment extends Augment
         processPendingBombs(commandBuffer, fallbackVisualRef);
     }
 
+    public static int clearAllRuntimeState() {
+        int cleared = PENDING_BOMBS.size();
+        PENDING_BOMBS.clear();
+        return cleared;
+    }
+
     private static void processPendingBombs(CommandBuffer<EntityStore> commandBuffer,
             Ref<EntityStore> fallbackVisualRef) {
         if (commandBuffer == null || PENDING_BOMBS.isEmpty()) {
