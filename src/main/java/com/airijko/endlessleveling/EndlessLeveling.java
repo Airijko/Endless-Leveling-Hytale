@@ -574,6 +574,12 @@ public class EndlessLeveling extends JavaPlugin {
         this.getEntityStoreRegistry().registerSystem(uiIntegrityAlertSystem);
         this.getEntityStoreRegistry().registerSystem(new WitherEffectSystem());
         shutdownCoordinator = new EndlessLevelingShutdownCoordinator(this);
+        resolveRemoveWorldEventClass().ifPresentOrElse(eventClass -> {
+            this.getEventRegistry().registerGlobal((Class) eventClass,
+                event -> shutdownCoordinator.runPreShutdownEntityCleanup("RemoveWorldEvent"));
+            LOGGER.atInfo().log("Registered pre-shutdown cleanup listener using world event class %s", eventClass.getName());
+        }, () -> LOGGER.atWarning().log(
+            "No supported remove-world event class found; cleanup will rely on ShutdownEvent/plugin shutdown paths."));
         resolveShutdownEventClass().ifPresentOrElse(eventClass -> {
             this.getEventRegistry().registerGlobal((Class) eventClass,
                 event -> shutdownCoordinator.runPreShutdownEntityCleanup("ShutdownEvent"));
@@ -633,6 +639,22 @@ public class EndlessLeveling extends JavaPlugin {
                 return Optional.of(Class.forName(className));
             } catch (ClassNotFoundException ignored) {
                 // Try the next known shutdown event class name.
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<Class<?>> resolveRemoveWorldEventClass() {
+        String[] candidates = {
+                "com.hypixel.hytale.server.core.universe.world.events.RemoveWorldEvent"
+        };
+
+        for (String className : candidates) {
+            try {
+                return Optional.of(Class.forName(className));
+            } catch (ClassNotFoundException ignored) {
+                // Try the next known remove-world event class name.
             }
         }
 

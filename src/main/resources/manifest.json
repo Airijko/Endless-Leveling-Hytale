@@ -9,7 +9,7 @@
       "Website": "https://www.curseforge.com/hytale/mods/endless-leveling"
     }
   ],
-  "ServerVersion": "*",
+  "ServerVersion": "2026.02.19-1a311a592",
   "Dependencies": {},
   "OptionalDependencies": {
     "Buuz135:MultipleHUD": ">=1.0.1",

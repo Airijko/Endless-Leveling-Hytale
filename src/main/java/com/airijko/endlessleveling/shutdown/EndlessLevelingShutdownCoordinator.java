@@ -75,6 +75,11 @@ public final class EndlessLevelingShutdownCoordinator {
     }
 
     public void runPreShutdownEntityCleanup(String source) {
+        if (plugin.getMobLevelingSystem() != null) {
+            plugin.getMobLevelingSystem().beginShutdownReset();
+            appendShutlog("mob leveling shutdown reset mode enabled");
+        }
+
         if (!preShutdownCleanupExecuted.compareAndSet(false, true)) {
             if ("Plugin.shutdown()".equals(source)) {
                 cleanupKnownWorldEntityStores();
@@ -157,22 +162,12 @@ public final class EndlessLevelingShutdownCoordinator {
         var mobLevelingSystem = plugin.getMobLevelingSystem();
         if (mobLevelingSystem != null) {
             for (Store<EntityStore> mobStore : mobLevelingSystem.getMobTrackedLiveStores()) {
-                Object mobWorld = null;
-                try {
-                    EntityStore externalData = mobStore.getExternalData();
-                    if (externalData != null) {
-                        mobWorld = externalData.getWorld();
-                    }
-                } catch (Throwable ignored) {
-                }
-                if (mobWorld != null) {
-                    cleanupWorldStore(mobWorld,
-                            seenStores,
-                            visitedStores,
-                            clearedPlayerAttributeEntities,
-                            clearedPlayerNameplates,
-                            clearedMobScaledEntities);
-                }
+                cleanupStoreDirect(mobStore,
+                        seenStores,
+                        visitedStores,
+                        clearedPlayerAttributeEntities,
+                        clearedPlayerNameplates,
+                        clearedMobScaledEntities);
             }
         }
 
@@ -201,36 +196,144 @@ public final class EndlessLevelingShutdownCoordinator {
             AtomicInteger clearedPlayerNameplates,
             AtomicInteger clearedMobScaledEntities) {
         if (worldObject == null) {
+            appendShutlog("cleanupWorldStore skipped: worldObject=null");
             return;
         }
+
+        appendShutlog("cleanupWorldStore begin worldClass=" + worldObject.getClass().getName());
+        alwaysShutdownLog("[CleanupDebug] cleanupWorldStore begin worldClass=" + worldObject.getClass().getName());
 
         Runnable cleanupTask = () -> {
             Store<EntityStore> store = resolveStoreFromWorldObject(worldObject);
             if (store == null || store.isShutdown()) {
+                appendShutlog("cleanupWorldStore task skipped: store unavailable or shutdown");
                 return;
             }
 
             if (!seenStores.add(store)) {
+                appendShutlog("cleanupWorldStore task skipped: store already cleaned storeId="
+                        + Integer.toUnsignedLong(System.identityHashCode(store)));
                 return;
             }
 
             visitedStores.incrementAndGet();
-            clearedPlayerAttributeEntities.addAndGet(cleanupPlayerModifiersForStore(store));
+            int playerModifierEntities = cleanupPlayerModifiersForStore(store);
+            clearedPlayerAttributeEntities.addAndGet(playerModifierEntities);
+            int playerNameplates = 0;
             if (plugin.getPlayerNameplateSystem() != null) {
-                clearedPlayerNameplates.addAndGet(plugin.getPlayerNameplateSystem().removeAllNameplatesForStore(store));
+                playerNameplates = plugin.getPlayerNameplateSystem().removeAllNameplatesForStore(store);
+                clearedPlayerNameplates.addAndGet(playerNameplates);
             }
+            int mobEntities = 0;
             if (plugin.getMobLevelingSystem() != null) {
-                clearedMobScaledEntities.addAndGet(plugin.getMobLevelingSystem().removeAllNameplatesForStore(store));
+                mobEntities = plugin.getMobLevelingSystem().removeAllNameplatesForStore(store);
+                clearedMobScaledEntities.addAndGet(mobEntities);
             }
+            persistStoreCleanup(store, "cleanupWorldStore");
+
+            appendShutlog(String.format(
+                    "cleanupWorldStore task complete: storeId=%d playerModifierEntities=%d playerNameplates=%d mobEntities=%d",
+                    Integer.toUnsignedLong(System.identityHashCode(store)),
+                    playerModifierEntities,
+                    playerNameplates,
+                    mobEntities));
+                alwaysShutdownLog(String.format(
+                    "[CleanupDebug] cleanupWorldStore complete storeId=%d playerModifierEntities=%d playerNameplates=%d mobEntities=%d",
+                    Integer.toUnsignedLong(System.identityHashCode(store)),
+                    playerModifierEntities,
+                    playerNameplates,
+                    mobEntities));
         };
 
         if (!runOnWorldThreadAndWait(worldObject, cleanupTask, 2000L)) {
             // Fallback best effort when world execution is unavailable late in shutdown.
             try {
                 cleanupTask.run();
-            } catch (Throwable ignored) {
-                appendShutlog("store sweep fallback cleanup failed for one world");
+            } catch (Throwable ex) {
+                appendShutlog("store sweep fallback cleanup failed for one world: " + ex.getClass().getSimpleName()
+                        + " " + ex.getMessage());
+                alwaysShutdownLog("[CleanupDebug] cleanupWorldStore fallback failed: "
+                    + ex.getClass().getSimpleName() + " " + ex.getMessage());
             }
+        }
+    }
+
+    private void cleanupStoreDirect(Store<EntityStore> store,
+            Set<Store<EntityStore>> seenStores,
+            AtomicInteger visitedStores,
+            AtomicInteger clearedPlayerAttributeEntities,
+            AtomicInteger clearedPlayerNameplates,
+            AtomicInteger clearedMobScaledEntities) {
+        if (store == null || store.isShutdown()) {
+            appendShutlog("cleanupStoreDirect skipped: store null/shutdown");
+            return;
+        }
+
+        appendShutlog("cleanupStoreDirect begin storeId="
+                + Integer.toUnsignedLong(System.identityHashCode(store)));
+        alwaysShutdownLog("[CleanupDebug] cleanupStoreDirect begin storeId="
+            + Integer.toUnsignedLong(System.identityHashCode(store)));
+
+        Runnable cleanupTask = () -> {
+            if (store.isShutdown()) {
+                appendShutlog("cleanupStoreDirect task skipped: store shutdown");
+                return;
+            }
+            if (!seenStores.add(store)) {
+                appendShutlog("cleanupStoreDirect task skipped: store already cleaned storeId="
+                        + Integer.toUnsignedLong(System.identityHashCode(store)));
+                return;
+            }
+
+            visitedStores.incrementAndGet();
+            int playerModifierEntities = cleanupPlayerModifiersForStore(store);
+            clearedPlayerAttributeEntities.addAndGet(playerModifierEntities);
+            int playerNameplates = 0;
+            if (plugin.getPlayerNameplateSystem() != null) {
+                playerNameplates = plugin.getPlayerNameplateSystem().removeAllNameplatesForStore(store);
+                clearedPlayerNameplates.addAndGet(playerNameplates);
+            }
+            int mobEntities = 0;
+            if (plugin.getMobLevelingSystem() != null) {
+                mobEntities = plugin.getMobLevelingSystem().removeAllNameplatesForStore(store);
+                clearedMobScaledEntities.addAndGet(mobEntities);
+            }
+            persistStoreCleanup(store, "cleanupStoreDirect");
+
+            appendShutlog(String.format(
+                    "cleanupStoreDirect task complete: storeId=%d playerModifierEntities=%d playerNameplates=%d mobEntities=%d",
+                    Integer.toUnsignedLong(System.identityHashCode(store)),
+                    playerModifierEntities,
+                    playerNameplates,
+                    mobEntities));
+                alwaysShutdownLog(String.format(
+                    "[CleanupDebug] cleanupStoreDirect complete storeId=%d playerModifierEntities=%d playerNameplates=%d mobEntities=%d",
+                    Integer.toUnsignedLong(System.identityHashCode(store)),
+                    playerModifierEntities,
+                    playerNameplates,
+                    mobEntities));
+        };
+
+        Object world = null;
+        try {
+            EntityStore externalData = store.getExternalData();
+            if (externalData != null) {
+                world = externalData.getWorld();
+            }
+        } catch (Throwable ignored) {
+        }
+
+        if (world != null && runOnWorldThreadAndWait(world, cleanupTask, 2000L)) {
+            return;
+        }
+
+        try {
+            cleanupTask.run();
+        } catch (Throwable ex) {
+            appendShutlog("store sweep direct cleanup failed for one tracked store: "
+                    + ex.getClass().getSimpleName() + " " + ex.getMessage());
+                alwaysShutdownLog("[CleanupDebug] cleanupStoreDirect failed: "
+                    + ex.getClass().getSimpleName() + " " + ex.getMessage());
         }
     }
 
@@ -358,6 +461,7 @@ public final class EndlessLevelingShutdownCoordinator {
 
         try {
             if (isCurrentWorldThread(worldObject)) {
+                appendShutlog("runOnWorldThreadAndWait: already on world thread; executing inline");
                 task.run();
                 return true;
             }
@@ -381,7 +485,9 @@ public final class EndlessLevelingShutdownCoordinator {
                 appendShutlog("world-thread cleanup timed out after " + timeoutMillis + "ms");
             }
             return completed;
-        } catch (Throwable ignored) {
+        } catch (Throwable ex) {
+            appendShutlog("runOnWorldThreadAndWait failure: " + ex.getClass().getSimpleName() + " "
+                    + ex.getMessage());
             return false;
         }
     }
@@ -396,6 +502,25 @@ public final class EndlessLevelingShutdownCoordinator {
             return worldThread == Thread.currentThread();
         } catch (Throwable ignored) {
             return false;
+        }
+    }
+
+    private void persistStoreCleanup(Store<EntityStore> store, String source) {
+        if (store == null || store.isShutdown()) {
+            appendShutlog(source + " persist skipped: store null/shutdown");
+            return;
+        }
+
+        try {
+            store.saveAllResources().join();
+            appendShutlog(source + " persist complete: storeId="
+                    + Integer.toUnsignedLong(System.identityHashCode(store)));
+            alwaysShutdownLog("[CleanupDebug] " + source + " persist complete storeId="
+                    + Integer.toUnsignedLong(System.identityHashCode(store)));
+        } catch (Throwable ex) {
+            appendShutlog(source + " persist failed: " + ex.getClass().getSimpleName() + " " + ex.getMessage());
+            alwaysShutdownLog("[CleanupDebug] " + source + " persist failed: "
+                    + ex.getClass().getSimpleName() + " " + ex.getMessage());
         }
     }
 

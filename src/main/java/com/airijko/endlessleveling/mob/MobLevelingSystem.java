@@ -42,7 +42,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -72,6 +74,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     private final java.util.Random random = new java.util.Random();
 
     private final AtomicBoolean fullMobRescaleRequested = new AtomicBoolean(false);
+    private final AtomicBoolean shutdownResetRequested = new AtomicBoolean(false);
     private long systemTimeMillis = 0L;
     private final Map<Long, EntityRuntimeState> entityStates = new ConcurrentHashMap<>();
     private final Set<Store<EntityStore>> knownStoresForCleanup = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -93,6 +96,10 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         if (mobLevelingManager != null) {
             mobLevelingManager.shutdownRuntimeState();
         }
+    }
+
+    public void beginShutdownReset() {
+        shutdownResetRequested.set(true);
     }
 
 
@@ -118,11 +125,72 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     }
 
     public int removeAllNameplatesForStore(Store<EntityStore> store) {
+        return removeAllNameplatesForStore(store, 3000L);
+    }
+
+    private int removeAllNameplatesForStore(Store<EntityStore> store, long timeoutMillis) {
+        if (store == null || store.isShutdown()) {
+            LOGGER.atWarning().log("[MOB_SHUTDOWN_DEBUG] removeAllNameplatesForStore skipped: store null/shutdown");
+            return 0;
+        }
+
+        long storeId = Integer.toUnsignedLong(System.identityHashCode(store));
+        LOGGER.atWarning().log("[MOB_SHUTDOWN_DEBUG] removeAllNameplatesForStore begin storeId=%d timeoutMs=%d", storeId,
+                timeoutMillis);
+
+        Object world = null;
+        try {
+            EntityStore externalData = store.getExternalData();
+            if (externalData != null) {
+                world = externalData.getWorld();
+            }
+        } catch (Throwable ex) {
+            LOGGER.atWarning().log("[MOB_SHUTDOWN_DEBUG] storeId=%d world resolve failed: %s %s",
+                    storeId,
+                    ex.getClass().getSimpleName(),
+                    ex.getMessage());
+        }
+
+        if (world != null && !isCurrentWorldThread(world)) {
+            final int[] removed = { 0 };
+            boolean executed = runOnWorldThreadAndWait(world,
+                    () -> removed[0] = removeAllNameplatesForStoreCurrentThread(store),
+                    timeoutMillis);
+            if (executed) {
+                LOGGER.atWarning().log(
+                        "[MOB_SHUTDOWN_DEBUG] storeId=%d cleanup executed on world thread removed=%d",
+                        storeId,
+                        removed[0]);
+                return removed[0];
+            }
+            LOGGER.atWarning().log("[MOB_SHUTDOWN_DEBUG] storeId=%d world-thread dispatch failed; trying direct path",
+                    storeId);
+        }
+
+        try {
+            int removed = removeAllNameplatesForStoreCurrentThread(store);
+            LOGGER.atWarning().log("[MOB_SHUTDOWN_DEBUG] storeId=%d direct cleanup removed=%d", storeId, removed);
+            return removed;
+        } catch (Throwable ex) {
+            LOGGER.atWarning().log("[MOB_SHUTDOWN_DEBUG] storeId=%d direct cleanup failed: %s %s",
+                    storeId,
+                    ex.getClass().getSimpleName(),
+                    ex.getMessage());
+            return 0;
+        }
+    }
+
+    private int removeAllNameplatesForStoreCurrentThread(Store<EntityStore> store) {
         if (store == null || store.isShutdown()) {
             return 0;
         }
 
         final int[] removed = { 0 };
+        final int[] scanned = { 0 };
+        final int[] skippedPlayers = { 0 };
+        final int[] candidates = { 0 };
+        final int[] withNameplate = { 0 };
+        final int[] withStatMap = { 0 };
 
         store.forEachChunk(ENTITY_QUERY, (ArchetypeChunk<EntityStore> chunk,
                 CommandBuffer<EntityStore> commandBuffer) -> {
@@ -131,9 +199,11 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                 if (ref == null) {
                     continue;
                 }
+                scanned[0]++;
 
                 PlayerRef playerRef = commandBuffer.getComponent(ref, PlayerRef.getComponentType());
                 if (playerRef != null && playerRef.isValid()) {
+                    skippedPlayers[0]++;
                     continue;
                 }
 
@@ -143,6 +213,13 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                 if (npcEntity == null && nameplate == null && statMap == null) {
                     continue;
                 }
+                candidates[0]++;
+                if (nameplate != null) {
+                    withNameplate[0]++;
+                }
+                if (statMap != null) {
+                    withStatMap[0]++;
+                }
 
                 stripMobHealthModifiers(ref, commandBuffer);
                 clearOrRemoveNameplate(ref, commandBuffer);
@@ -150,7 +227,69 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             }
         });
 
+        LOGGER.atWarning().log(
+                "[MOB_SHUTDOWN_DEBUG] storeId=%d scanSummary scanned=%d skippedPlayers=%d candidates=%d withNameplate=%d withStatMap=%d removed=%d",
+                Integer.toUnsignedLong(System.identityHashCode(store)),
+                scanned[0],
+                skippedPlayers[0],
+                candidates[0],
+                withNameplate[0],
+                withStatMap[0],
+                removed[0]);
+
         return removed[0];
+    }
+
+    private boolean runOnWorldThreadAndWait(Object worldObject, Runnable task, long timeoutMillis) {
+        if (worldObject == null || task == null) {
+            return false;
+        }
+
+        try {
+            if (isCurrentWorldThread(worldObject)) {
+                task.run();
+                return true;
+            }
+
+            var executeMethod = worldObject.getClass().getMethod("execute", Runnable.class);
+            CountDownLatch latch = new CountDownLatch(1);
+            executeMethod.invoke(worldObject, (Runnable) () -> {
+                try {
+                    task.run();
+                } finally {
+                    latch.countDown();
+                }
+            });
+
+            if (timeoutMillis <= 0L) {
+                latch.await();
+                return true;
+            }
+
+            boolean completed = latch.await(timeoutMillis, TimeUnit.MILLISECONDS);
+            if (!completed) {
+                LOGGER.atWarning().log("[MOB_SHUTDOWN_DEBUG] world-thread wait timed out after %dms", timeoutMillis);
+            }
+            return completed;
+        } catch (Throwable ex) {
+            LOGGER.atWarning().log("[MOB_SHUTDOWN_DEBUG] world-thread dispatch failed: %s %s",
+                    ex.getClass().getSimpleName(),
+                    ex.getMessage());
+            return false;
+        }
+    }
+
+    private boolean isCurrentWorldThread(Object worldObject) {
+        if (worldObject == null) {
+            return false;
+        }
+        try {
+            var getThreadMethod = worldObject.getClass().getMethod("getThread");
+            Object worldThread = getThreadMethod.invoke(worldObject);
+            return worldThread == Thread.currentThread();
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     private void stripMobHealthModifiers(Ref<EntityStore> ref,
@@ -165,20 +304,57 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         }
 
         int healthIndex = DefaultEntityStatTypes.getHealth();
+        EntityStatValue healthBefore = statMap.get(healthIndex);
+        float previousCurrent = healthBefore != null ? healthBefore.get() : Float.NaN;
+        float previousMax = healthBefore != null ? healthBefore.getMax() : Float.NaN;
+        UUID entityUuid = resolveUuid(ref, commandBuffer);
+        boolean hadMobAugments = false;
+        List<String> clearedAugmentModifierKeys = Collections.emptyList();
+
+        EndlessLeveling plugin = EndlessLeveling.getInstance();
+        if (plugin != null) {
+            MobAugmentExecutor mobAugmentExecutor = plugin.getMobAugmentExecutor();
+            if (mobAugmentExecutor != null && entityUuid != null) {
+                hadMobAugments = mobAugmentExecutor.hasMobAugments(entityUuid);
+                clearedAugmentModifierKeys = mobAugmentExecutor.clearPersistentHealthModifiers(entityUuid, statMap);
+                if (hadMobAugments) {
+                    mobAugmentExecutor.unregisterMob(entityUuid);
+                }
+            }
+        }
+
         statMap.removeModifier(healthIndex, MOB_HEALTH_SCALE_MODIFIER_KEY);
         statMap.removeModifier(healthIndex, MOB_AUGMENT_LIFE_FORCE_MODIFIER_KEY);
+
+        // Apply the modifier removals first so getMax() reflects the restored baseline.
+        statMap.update();
 
         EntityStatValue health = statMap.get(healthIndex);
         if (health != null) {
             float max = health.getMax();
-            float minCurrent = max > 1.0f ? 1.0f : 0.0f;
-            float clampedCurrent = Math.max(minCurrent, Math.min(max, health.get()));
+            float clampedCurrent = Math.max(0.0f, Math.min(max, health.get()));
             if (Float.isFinite(clampedCurrent)) {
                 statMap.setStatValue(healthIndex, clampedCurrent);
             }
         }
 
         statMap.update();
+
+        EntityStatValue healthAfter = statMap.get(healthIndex);
+        float updatedCurrent = healthAfter != null ? healthAfter.get() : Float.NaN;
+        float updatedMax = healthAfter != null ? healthAfter.getMax() : Float.NaN;
+        LOGGER.atWarning().log(
+            "[MOB_SHUTDOWN_DEBUG] entity=%d uuid=%s clearedBaseHealthKeys=[%s,%s] augmentRuntime=%s clearedAugmentHealthKeys=%s healthBefore=%.2f/%.2f healthAfter=%.2f/%.2f",
+            ref.getIndex(),
+            entityUuid != null ? entityUuid : "none",
+            MOB_HEALTH_SCALE_MODIFIER_KEY,
+            MOB_AUGMENT_LIFE_FORCE_MODIFIER_KEY,
+            hadMobAugments,
+            clearedAugmentModifierKeys,
+            previousCurrent,
+            previousMax,
+            updatedCurrent,
+            updatedMax);
     }
 
     public void requestFullMobRescale() {
@@ -193,6 +369,12 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         }
 
         knownStoresForCleanup.add(store);
+
+        if (shutdownResetRequested.get()) {
+            removeAllNameplatesForStoreCurrentThread(store);
+            cleanupStoreRuntimeState(store);
+            return;
+        }
 
         if (mobLevelingManager == null || !mobLevelingManager.isMobLevelingEnabled())
             return;
@@ -1107,17 +1289,14 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             NameplateBuilderCompatibility.removeELShowName(ref.getStore(), ref);
             NameplateBuilderCompatibility.removeELShowHealth(ref.getStore(), ref);
             NameplateBuilderCompatibility.removeSummonText(ref.getStore(), ref);
-            return;
         }
 
         Nameplate nameplate = commandBuffer.getComponent(ref, Nameplate.getComponentType());
         if (nameplate != null) {
-            DisplayNameComponent display = commandBuffer.getComponent(ref, DisplayNameComponent.getComponentType());
-            if (display != null && display.getDisplayName() != null && !display.getDisplayName().getAnsiMessage().isBlank()) {
-                nameplate.setText(display.getDisplayName().getAnsiMessage());
-            } else {
-                nameplate.setText("");
-            }
+            commandBuffer.removeComponent(ref, Nameplate.getComponentType());
+            LOGGER.atWarning().log("[MOB_SHUTDOWN_DEBUG] entity=%d uuid=%s removedNameplateComponent=true",
+                    ref.getIndex(),
+                    resolveUuid(ref, commandBuffer));
         }
     }
 

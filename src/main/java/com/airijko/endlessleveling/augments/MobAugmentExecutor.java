@@ -7,15 +7,18 @@ import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
+import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.airijko.endlessleveling.augments.types.DeathBombAugment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -444,11 +447,67 @@ public final class MobAugmentExecutor {
         mobPassiveAppliedAtMillis.remove(entityId);
     }
 
+    public List<String> clearPersistentHealthModifiers(UUID entityId, EntityStatMap statMap) {
+        List<String> clearedModifierKeys = new ArrayList<>();
+        if (entityId == null || statMap == null) {
+            return clearedModifierKeys;
+        }
+
+        MobAugmentInstance instance = mobAugments.get(entityId);
+        if (instance == null) {
+            return clearedModifierKeys;
+        }
+
+        Set<String> modifierKeys = new HashSet<>();
+        if (instance.appliedAugmentIds != null) {
+            for (String augmentId : instance.appliedAugmentIds) {
+                addHealthModifierKeys(modifierKeys, augmentId);
+            }
+        }
+        if (instance.augments != null) {
+            for (Augment augment : instance.augments) {
+                if (augment != null) {
+                    addHealthModifierKeys(modifierKeys, augment.getId());
+                }
+            }
+        }
+
+        if (modifierKeys.isEmpty()) {
+            return clearedModifierKeys;
+        }
+
+        int healthIndex = DefaultEntityStatTypes.getHealth();
+        for (String modifierKey : modifierKeys) {
+            statMap.removeModifier(healthIndex, modifierKey);
+            clearedModifierKeys.add(modifierKey);
+        }
+        return clearedModifierKeys;
+    }
+
     /**
      * Check if a mob has any registered augments.
      */
     public boolean hasMobAugments(UUID entityId) {
         return mobAugments.containsKey(entityId);
+    }
+
+    private void addHealthModifierKeys(Set<String> modifierKeys, String augmentId) {
+        String normalizedAugmentId = normalizeAugmentModifierId(augmentId);
+        if (normalizedAugmentId == null || normalizedAugmentId.isBlank()) {
+            return;
+        }
+
+        modifierKeys.add("EL_" + normalizedAugmentId + "_max_hp_bonus");
+        modifierKeys.add(normalizedAugmentId + "_max_hp_bonus");
+        modifierKeys.add("EL_" + normalizedAugmentId + "_max_hp_penalty");
+        modifierKeys.add(normalizedAugmentId + "_max_hp_penalty");
+    }
+
+    private String normalizeAugmentModifierId(String augmentId) {
+        if (augmentId == null) {
+            return null;
+        }
+        return augmentId.trim().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]+", "_");
     }
 
     public double getAttributeBonus(UUID entityId, SkillAttributeType type) {
