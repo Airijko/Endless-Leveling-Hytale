@@ -76,6 +76,12 @@ public final class EndlessLevelingShutdownCoordinator {
 
     public void runPreShutdownEntityCleanup(String source) {
         if (!preShutdownCleanupExecuted.compareAndSet(false, true)) {
+            if ("Plugin.shutdown()".equals(source)) {
+                cleanupKnownWorldEntityStores();
+                cleanupOnlinePlayerEntityState();
+                alwaysShutdownLog("Pre-shutdown cleanup retry executed from Plugin.shutdown().");
+                appendShutlog("pre-shutdown cleanup retry executed from Plugin.shutdown()");
+            }
             appendShutlog("pre-shutdown cleanup skipped (already executed)");
             return;
         }
@@ -112,9 +118,6 @@ public final class EndlessLevelingShutdownCoordinator {
     @SuppressWarnings("unchecked")
     private void cleanupKnownWorldEntityStores() {
         Universe universe = Universe.get();
-        if (universe == null) {
-            return;
-        }
 
         Set<Store<EntityStore>> seenStores = Collections.synchronizedSet(new HashSet<>());
         AtomicInteger visitedStores = new AtomicInteger();
@@ -122,30 +125,56 @@ public final class EndlessLevelingShutdownCoordinator {
         AtomicInteger clearedPlayerNameplates = new AtomicInteger();
         AtomicInteger clearedMobScaledEntities = new AtomicInteger();
 
-        Map<String, ?> worlds;
-        try {
-            worlds = universe.getWorlds();
-        } catch (Throwable ignored) {
-            worlds = null;
+        if (universe != null) {
+            Map<String, ?> worlds;
+            try {
+                worlds = universe.getWorlds();
+            } catch (Throwable ignored) {
+                worlds = null;
+            }
+
+            if (worlds != null && !worlds.isEmpty()) {
+                for (Object world : worlds.values()) {
+                    cleanupWorldStore(world,
+                            seenStores,
+                            visitedStores,
+                            clearedPlayerAttributeEntities,
+                            clearedPlayerNameplates,
+                            clearedMobScaledEntities);
+                }
+            }
+
+            cleanupWorldStore(universe.getDefaultWorld(),
+                    seenStores,
+                    visitedStores,
+                    clearedPlayerAttributeEntities,
+                    clearedPlayerNameplates,
+                    clearedMobScaledEntities);
         }
 
-        if (worlds != null && !worlds.isEmpty()) {
-            for (Object world : worlds.values()) {
-                cleanupWorldStore(world,
-                        seenStores,
-                        visitedStores,
-                        clearedPlayerAttributeEntities,
-                        clearedPlayerNameplates,
-                        clearedMobScaledEntities);
+        // Secondary sweep: use stores tracked by MobLevelingSystem directly.
+        // This still works when universe/world maps are already unavailable late in shutdown.
+        var mobLevelingSystem = plugin.getMobLevelingSystem();
+        if (mobLevelingSystem != null) {
+            for (Store<EntityStore> mobStore : mobLevelingSystem.getMobTrackedLiveStores()) {
+                Object mobWorld = null;
+                try {
+                    EntityStore externalData = mobStore.getExternalData();
+                    if (externalData != null) {
+                        mobWorld = externalData.getWorld();
+                    }
+                } catch (Throwable ignored) {
+                }
+                if (mobWorld != null) {
+                    cleanupWorldStore(mobWorld,
+                            seenStores,
+                            visitedStores,
+                            clearedPlayerAttributeEntities,
+                            clearedPlayerNameplates,
+                            clearedMobScaledEntities);
+                }
             }
         }
-
-        cleanupWorldStore(universe.getDefaultWorld(),
-                seenStores,
-                visitedStores,
-                clearedPlayerAttributeEntities,
-                clearedPlayerNameplates,
-                clearedMobScaledEntities);
 
         if (visitedStores.get() > 0) {
             alwaysShutdownLog(String.format(
@@ -195,7 +224,7 @@ public final class EndlessLevelingShutdownCoordinator {
             }
         };
 
-        if (!runOnWorldThreadAndWait(worldObject, cleanupTask, 500L)) {
+        if (!runOnWorldThreadAndWait(worldObject, cleanupTask, 2000L)) {
             // Fallback best effort when world execution is unavailable late in shutdown.
             try {
                 cleanupTask.run();

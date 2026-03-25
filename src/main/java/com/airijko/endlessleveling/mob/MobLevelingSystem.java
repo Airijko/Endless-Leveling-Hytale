@@ -35,6 +35,7 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -73,6 +74,7 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     private final AtomicBoolean fullMobRescaleRequested = new AtomicBoolean(false);
     private long systemTimeMillis = 0L;
     private final Map<Long, EntityRuntimeState> entityStates = new ConcurrentHashMap<>();
+    private final Set<Store<EntityStore>> knownStoresForCleanup = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Map<Integer, Long> summonHealthAnomalyLogTimes = new ConcurrentHashMap<>();
     // Cached once per tick to avoid per-entity config lookups, string splitting, and collection iteration.
     private boolean cachedDebugMobLevelFlow = false;
@@ -86,26 +88,31 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
         clearTrackedMobNameplates();
         cleanupStoreRuntimeState(null);
         entityStates.clear();
+        knownStoresForCleanup.clear();
         summonHealthAnomalyLogTimes.clear();
         if (mobLevelingManager != null) {
             mobLevelingManager.shutdownRuntimeState();
         }
     }
 
-    private void clearTrackedMobNameplates() {
-        if (entityStates.isEmpty()) {
-            return;
-        }
 
-        Set<Store<EntityStore>> stores = new HashSet<>();
-        for (EntityRuntimeState state : entityStates.values()) {
-            if (state == null || state.trackedStore == null || state.trackedStore.isShutdown()) {
-                continue;
+    public Set<Store<EntityStore>> getMobTrackedLiveStores() {
+        Set<Store<EntityStore>> result = new HashSet<>();
+        for (Store<EntityStore> trackedStore : knownStoresForCleanup) {
+            if (trackedStore != null && !trackedStore.isShutdown()) {
+                result.add(trackedStore);
             }
-            stores.add(state.trackedStore);
         }
+        for (EntityRuntimeState state : entityStates.values()) {
+            if (state != null && state.trackedStore != null && !state.trackedStore.isShutdown()) {
+                result.add(state.trackedStore);
+            }
+        }
+        return result;
+    }
 
-        for (Store<EntityStore> trackedStore : stores) {
+    private void clearTrackedMobNameplates() {
+        for (Store<EntityStore> trackedStore : getMobTrackedLiveStores()) {
             removeAllNameplatesForStore(trackedStore);
         }
     }
@@ -125,8 +132,15 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
                     continue;
                 }
 
+                PlayerRef playerRef = commandBuffer.getComponent(ref, PlayerRef.getComponentType());
+                if (playerRef != null && playerRef.isValid()) {
+                    continue;
+                }
+
                 NPCEntity npcEntity = commandBuffer.getComponent(ref, NPCEntity.getComponentType());
-                if (npcEntity == null) {
+                Nameplate nameplate = commandBuffer.getComponent(ref, Nameplate.getComponentType());
+                EntityStatMap statMap = commandBuffer.getComponent(ref, EntityStatMap.getComponentType());
+                if (npcEntity == null && nameplate == null && statMap == null) {
                     continue;
                 }
 
@@ -177,6 +191,8 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
             cleanupStoreRuntimeState(store);
             return;
         }
+
+        knownStoresForCleanup.add(store);
 
         if (mobLevelingManager == null || !mobLevelingManager.isMobLevelingEnabled())
             return;
@@ -229,6 +245,12 @@ public class MobLevelingSystem extends DelayedSystem<EntityStore> {
     }
 
     private void cleanupStoreRuntimeState(Store<EntityStore> store) {
+        if (store != null) {
+            knownStoresForCleanup.remove(store);
+        } else if (!knownStoresForCleanup.isEmpty()) {
+            knownStoresForCleanup.clear();
+        }
+
         if (entityStates.isEmpty()) {
             if (store != null && mobLevelingManager != null) {
                 mobLevelingManager.clearTierLockForStore(store);
