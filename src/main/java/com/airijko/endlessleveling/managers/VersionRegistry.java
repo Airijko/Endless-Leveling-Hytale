@@ -24,11 +24,13 @@ public final class VersionRegistry {
     public static final int BUILTIN_CLASSES_VERSION = 32;
     public static final int BUILTIN_RACES_VERSION = 32;
     public static final int BUILTIN_LANG_VERSION = 5;
+    public static final int BUILTIN_WORLD_SETTINGS_VERSION = 1;
 
     public static final String AUGMENTS_VERSION_FILE = "augments.version";
     public static final String CLASSES_VERSION_FILE = "classes.version";
     public static final String RACES_VERSION_FILE = "races.version";
     public static final String LANG_VERSION_FILE = "lang.version";
+    public static final String WORLD_SETTINGS_VERSION_FILE = "world-settings.version";
 
     public static Integer getResourceConfigVersion(String resourceName) {
         if (resourceName == null || resourceName.isBlank()) {

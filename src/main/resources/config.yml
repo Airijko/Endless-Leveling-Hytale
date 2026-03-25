@@ -138,6 +138,7 @@ force_builtin_races: true # If true, replace races with bundled defaults during 
 force_builtin_classes: true # If true, replace classes with bundled defaults during sync; if false, custom classes are preserved and bundled classes are only seeded when the folder has no class .json files
 force_builtin_augments: true # If true, ignore custom augment files and keep bundled augments in sync with updates; if false, deleting an individual augment .json disables that augment
 force_builtin_languages: true # If true, keep bundled language files in sync with updates and archive prior versions to old/
+force_builtin_world_settings: false # If true, replace built-in world-settings files with bundled defaults on version bump; if false, migrate built-in files by adding missing bundled keys while preserving user edits
 
 # Builtin content enable/disable (separate from sync settings above)
 # These flags control whether EndlessLeveling's default/bundled content is loaded and registered.

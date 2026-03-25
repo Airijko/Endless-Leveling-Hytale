@@ -1,5 +1,8 @@
 package com.airijko.endlessleveling.managers;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.PluginManager;
@@ -13,6 +16,11 @@ import java.nio.file.StandardOpenOption;
 import java.security.CodeSource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -37,6 +45,15 @@ public class PluginFilesManager {
     private static final DateTimeFormatter ARCHIVE_TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private static final Pattern MANIFEST_VERSION_PATTERN = Pattern.compile("\"Version\"\\s*:\\s*\"([^\"]+)\"");
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClassFull();
+        private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+        private static final List<String> BUILTIN_WORLD_SETTINGS_FILES = Arrays.asList(
+            "blacklisted-worlds.json",
+            "global.json",
+            "default.json",
+            "major-dungeons.json",
+            "endgame-dungeons.json",
+            "shiva-dungeons.json",
+            "README.md");
 
     private final JavaPlugin plugin;
     private final File pluginFolder;
@@ -147,6 +164,57 @@ public class PluginFilesManager {
 
     public File getWorldSettingsFolder() {
         return worldSettingsFolder;
+    }
+
+    /**
+     * Sync or migrate bundled world-settings files while leaving custom files
+     * untouched.
+     *
+     * force_builtin_world_settings=true: overwrite bundled files on version bump.
+     * force_builtin_world_settings=false: merge bundled defaults into bundled files,
+     * preserving user-edited values.
+     */
+    public void syncBuiltinWorldSettingsIfNeeded(ConfigManager configManager) {
+        if (configManager == null || worldSettingsFolder == null) {
+            return;
+        }
+
+        boolean forceSync = parseBoolean(configManager.get("force_builtin_world_settings", Boolean.FALSE, false),
+                false);
+        int storedVersion = readWorldSettingsVersion(worldSettingsFolder);
+        if (storedVersion == VersionRegistry.BUILTIN_WORLD_SETTINGS_VERSION) {
+            return;
+        }
+
+        archivePathIfExists(worldSettingsFolder.toPath(), "world-settings",
+                "world-settings.version:" + storedVersion);
+
+        if (forceSync) {
+            for (String fileName : BUILTIN_WORLD_SETTINGS_FILES) {
+                exportResourceFile("world-settings/" + fileName, worldSettingsFolder.toPath().resolve(fileName), true);
+            }
+            writeWorldSettingsVersion(worldSettingsFolder, VersionRegistry.BUILTIN_WORLD_SETTINGS_VERSION);
+            LOGGER.atInfo().log("Synced built-in world-settings to version %d (force_builtin_world_settings=true)",
+                    VersionRegistry.BUILTIN_WORLD_SETTINGS_VERSION);
+            return;
+        }
+
+        for (String fileName : BUILTIN_WORLD_SETTINGS_FILES) {
+            Path target = worldSettingsFolder.toPath().resolve(fileName);
+            if (!fileName.toLowerCase().endsWith(".json")) {
+                // Non-JSON support files are created when missing but never overwritten in
+                // migration mode.
+                if (!Files.exists(target)) {
+                    exportResourceFile("world-settings/" + fileName, target, false);
+                }
+                continue;
+            }
+            mergeBundledJsonDefaults("world-settings/" + fileName, target);
+        }
+
+        writeWorldSettingsVersion(worldSettingsFolder, VersionRegistry.BUILTIN_WORLD_SETTINGS_VERSION);
+        LOGGER.atInfo().log("Migrated built-in world-settings to version %d (force_builtin_world_settings=false)",
+                VersionRegistry.BUILTIN_WORLD_SETTINGS_VERSION);
     }
 
     public File getWeaponsFile() {
@@ -267,6 +335,165 @@ public class PluginFilesManager {
             Files.createDirectories(parent);
         }
         Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    private void exportResourceFile(String resourcePath, Path targetPath, boolean overwriteExisting) {
+        if (resourcePath == null || resourcePath.isBlank() || targetPath == null) {
+            return;
+        }
+        try {
+            if (!overwriteExisting && Files.exists(targetPath)) {
+                return;
+            }
+            Path parent = targetPath.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+            try (InputStream in = plugin.getClassLoader().getResourceAsStream(resourcePath)) {
+                if (in == null) {
+                    LOGGER.atWarning().log("Bundled resource %s not found; skipping", resourcePath);
+                    return;
+                }
+                if (overwriteExisting) {
+                    Files.copy(in, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                } else {
+                    Files.copy(in, targetPath);
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.atWarning().log("Failed to export bundled resource %s: %s", resourcePath, e.getMessage());
+        }
+    }
+
+    private void mergeBundledJsonDefaults(String resourcePath, Path targetPath) {
+        try {
+            Map<String, Object> bundled = readBundledJsonAsMap(resourcePath);
+            if (bundled == null) {
+                return;
+            }
+
+            if (!Files.exists(targetPath)) {
+                writeJsonMap(targetPath, bundled);
+                return;
+            }
+
+            Map<String, Object> current = readJsonFileAsMap(targetPath);
+            if (current == null) {
+                // Invalid JSON on disk: keep behavior predictable by restoring bundled template.
+                writeJsonMap(targetPath, bundled);
+                return;
+            }
+
+            Map<String, Object> merged = deepMergeDefaultsWithCurrent(bundled, current);
+            if (!Objects.equals(current, merged)) {
+                writeJsonMap(targetPath, merged);
+            }
+        } catch (Exception e) {
+            LOGGER.atWarning().log("Failed to migrate built-in world-settings file %s: %s", targetPath,
+                    e.getMessage());
+        }
+    }
+
+    private Map<String, Object> readBundledJsonAsMap(String resourcePath) {
+        try (InputStream in = plugin.getClassLoader().getResourceAsStream(resourcePath)) {
+            if (in == null) {
+                LOGGER.atWarning().log("Bundled world-settings resource missing: %s", resourcePath);
+                return null;
+            }
+            try (Reader reader = new InputStreamReader(in)) {
+                return GSON.fromJson(reader, new TypeToken<LinkedHashMap<String, Object>>() {
+                }.getType());
+            }
+        } catch (Exception e) {
+            LOGGER.atWarning().log("Failed to read bundled world-settings resource %s: %s", resourcePath,
+                    e.getMessage());
+            return null;
+        }
+    }
+
+    private Map<String, Object> readJsonFileAsMap(Path path) {
+        try (Reader reader = Files.newBufferedReader(path)) {
+            return GSON.fromJson(reader, new TypeToken<LinkedHashMap<String, Object>>() {
+            }.getType());
+        } catch (Exception e) {
+            LOGGER.atWarning().log("Failed to parse JSON file %s: %s", path, e.getMessage());
+            return null;
+        }
+    }
+
+    private void writeJsonMap(Path targetPath, Map<String, Object> content) throws IOException {
+        Path parent = targetPath.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+        String output = GSON.toJson(content);
+        if (!output.endsWith("\n")) {
+            output = output + "\n";
+        }
+        Files.writeString(targetPath, output);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> deepMergeDefaultsWithCurrent(Map<String, Object> defaults, Map<String, Object> current) {
+        Map<String, Object> merged = new LinkedHashMap<>();
+
+        for (Map.Entry<String, Object> entry : defaults.entrySet()) {
+            String key = entry.getKey();
+            Object defaultValue = entry.getValue();
+            Object currentValue = current.get(key);
+
+            if (defaultValue instanceof Map<?, ?> defaultMap && currentValue instanceof Map<?, ?> currentMap) {
+                merged.put(key, deepMergeDefaultsWithCurrent((Map<String, Object>) defaultMap,
+                        (Map<String, Object>) currentMap));
+            } else if (current.containsKey(key)) {
+                merged.put(key, currentValue);
+            } else {
+                merged.put(key, defaultValue);
+            }
+        }
+
+        for (Map.Entry<String, Object> entry : current.entrySet()) {
+            if (!merged.containsKey(entry.getKey())) {
+                merged.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return merged;
+    }
+
+    private int readWorldSettingsVersion(File folder) {
+        Path versionPath = folder.toPath().resolve(VersionRegistry.WORLD_SETTINGS_VERSION_FILE);
+        if (!Files.exists(versionPath)) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(Files.readString(versionPath).trim());
+        } catch (Exception e) {
+            LOGGER.atWarning().log("Failed to read world-settings version file: %s", e.getMessage());
+            return -1;
+        }
+    }
+
+    private void writeWorldSettingsVersion(File folder, int version) {
+        Path versionPath = folder.toPath().resolve(VersionRegistry.WORLD_SETTINGS_VERSION_FILE);
+        try {
+            Files.writeString(versionPath, Integer.toString(version));
+        } catch (IOException e) {
+            LOGGER.atWarning().log("Failed to write world-settings version file: %s", e.getMessage());
+        }
+    }
+
+    private boolean parseBoolean(Object raw, boolean defaultValue) {
+        if (raw instanceof Boolean b) {
+            return b;
+        }
+        if (raw instanceof Number n) {
+            return n.intValue() != 0;
+        }
+        if (raw instanceof String s) {
+            return Boolean.parseBoolean(s.trim());
+        }
+        return defaultValue;
     }
 
     private String resolvePluginVersion() {
