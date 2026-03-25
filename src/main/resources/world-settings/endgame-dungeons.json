@@ -2,6 +2,9 @@
   "World_Overrides": {
     "instance-endgame_frozen_dungeon-*": {
       "Enable_XP": true,
+      "Experience": {
+        "Global_XP_Multiplier": 1.0
+      },
       "Level_Range": {
         "Max": "ENDLESS"
       },
@@ -62,6 +65,9 @@
     },
     "instance-endgame_swamp_dungeon-*": {
       "Enable_XP": true,
+      "Experience": {
+        "Global_XP_Multiplier": 1.0
+      },
       "Level_Range": {
         "Max": "ENDLESS"
       },
@@ -122,6 +128,9 @@
     },
     "instance-endgame_golem_void-*": {
       "Enable_XP": true,
+      "Experience": {
+        "Global_XP_Multiplier": 1.0
+      },
       "Level_Range": {
         "Max": "ENDLESS"
       },

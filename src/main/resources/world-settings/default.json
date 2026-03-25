@@ -2,6 +2,9 @@
   "World_Overrides": {
     "default": {
       "Enable_XP": true,
+      "Experience": {
+        "Global_XP_Multiplier": 1.0
+      },
       "Blacklist_Mob_Types": {
         "ids": [],
         "keywords": [

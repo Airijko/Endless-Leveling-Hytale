@@ -2,6 +2,9 @@
   "World_Overrides": {
     "instance-shiva_dungeon-*": {
       "Enable_XP": true,
+      "Experience": {
+        "Global_XP_Multiplier": 1.0
+      },
       "Level_Range": {
         "Max": "ENDLESS"
       },
@@ -62,6 +65,9 @@
     },
     "instance-shivas_ice_cave-*": {
       "Enable_XP": true,
+      "Experience": {
+        "Global_XP_Multiplier": 1.0
+      },
       "Level_Range": {
         "Max": "ENDLESS"
       },

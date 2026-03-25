@@ -2,6 +2,9 @@
   "World_Overrides": {
     "Global": {
       "Enable_XP": true,
+      "Experience": {
+        "Global_XP_Multiplier": 1.0
+      },
       "Mob_Scaling": {
         "Mob_Level_Scaling_Difference": {
           "Range": 15

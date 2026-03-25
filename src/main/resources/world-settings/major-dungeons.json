@@ -2,6 +2,9 @@
   "World_Overrides": {
     "instance-mj_instance_d01-*": {
       "Enable_XP": true,
+      "Experience": {
+        "Global_XP_Multiplier": 1.0
+      },
       "Level_Range": {
         "Max": "ENDLESS"
       },
@@ -62,6 +65,9 @@
     },
     "instance-mj_instance_d02-*": {
       "Enable_XP": true,
+      "Experience": {
+        "Global_XP_Multiplier": 1.0
+      },
       "Level_Range": {
         "Max": "ENDLESS"
       },
@@ -141,6 +147,9 @@
     },
     "instance-mj_instance_d03-*": {
       "Enable_XP": true,
+      "Experience": {
+        "Global_XP_Multiplier": 1.0
+      },
       "Level_Range": {
         "Max": "ENDLESS"
       },
