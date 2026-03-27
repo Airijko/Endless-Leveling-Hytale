@@ -239,6 +239,20 @@ public class MobLevelingManager {
             return null;
         }
 
+        Integer areaOverrideLevel = resolveRegisteredAreaOverrideLevel(ref, effectiveStore, commandBuffer);
+        if (areaOverrideLevel != null && areaOverrideLevel > 0) {
+            int clamped = clampToConfiguredRange(areaOverrideLevel, effectiveStore);
+            if (shouldLogMobLevelDebug(ref, effectiveStore)) {
+                LOGGER.atFine().log(
+                        "[MOB_LEVEL_DEBUG] source=AREA_OVERRIDE mob=%d resolveAttempts=%d resolved=%d clamped=%d",
+                        ref.getIndex(),
+                        resolveAttempts,
+                        areaOverrideLevel,
+                        clamped);
+            }
+            return clamped;
+        }
+
         LevelSourceMode mode = getLevelSourceMode(effectiveStore);
 
         ViewportCandidate candidate = null;
@@ -526,7 +540,10 @@ public class MobLevelingManager {
             return 1;
         }
 
-        // Stateless resolution by configured source; no override checks.
+        Integer areaOverrideLevel = resolveRegisteredAreaOverrideLevel(store, mobPosition, entityId);
+        if (areaOverrideLevel != null && areaOverrideLevel > 0) {
+            return Math.max(1, clampToConfiguredRange(areaOverrideLevel, store));
+        }
 
         int level = switch (getLevelSourceMode(store)) {
             case PLAYER, MIXED -> {
@@ -1360,6 +1377,84 @@ public class MobLevelingManager {
 
     public boolean registerWorldLevelOverride(String id, String worldId, int minLevel, int maxLevel) {
         return registerAreaLevelOverride(id, worldId, 0.0D, 0.0D, Double.MAX_VALUE / 4.0D, minLevel, maxLevel);
+    }
+
+    private Integer resolveRegisteredAreaOverrideLevel(Ref<EntityStore> ref,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer) {
+        if (store == null) {
+            return null;
+        }
+
+        Vector3d mobPos = resolveWorldPosition(ref, commandBuffer);
+        return resolveRegisteredAreaOverrideLevel(store, mobPos, ref != null ? ref.getIndex() : null);
+    }
+
+    private Integer resolveRegisteredAreaOverrideLevel(Store<EntityStore> store,
+            Vector3d mobPosition,
+            Integer entityId) {
+        if (store == null || mobPosition == null || areaOverrides.isEmpty()) {
+            return null;
+        }
+
+        List<String> worldIds = resolveWorldIdentifierCandidates(store, true);
+        if (worldIds.isEmpty()) {
+            return null;
+        }
+
+        for (AreaOverride override : areaOverrides.values()) {
+            if (override == null || !matchesAreaOverrideWorld(override, worldIds)) {
+                continue;
+            }
+
+            double distanceSq = horizontalDistanceSquared(mobPosition,
+                    new Vector3d(override.centerX(), mobPosition.getY(), override.centerZ()));
+            if (distanceSq > override.radiusSq()) {
+                continue;
+            }
+
+            return rollLevelInRange(
+                    normalizeLevelRange(override.minLevel(), override.maxLevel(), store),
+                    entityId,
+                    mobPosition,
+                    0x8CB92BA72F3D8DD7L);
+        }
+
+        return null;
+    }
+
+    private boolean matchesAreaOverrideWorld(AreaOverride override, List<String> worldIds) {
+        if (override == null) {
+            return false;
+        }
+
+        String overrideWorldId = override.worldId();
+        if (overrideWorldId == null || overrideWorldId.isBlank()) {
+            return true;
+        }
+
+        String normalizedRule = overrideWorldId.trim().toLowerCase(Locale.ROOT);
+        for (String worldId : worldIds) {
+            if (worldId == null || worldId.isBlank()) {
+                continue;
+            }
+
+            String normalizedWorld = worldId.trim().toLowerCase(Locale.ROOT);
+            if (normalizedRule.contains("*")) {
+                String core = normalizedRule.replace("*", "");
+                if (matchesWildcard(normalizedWorld, normalizedRule)
+                        || (!core.isEmpty() && normalizedWorld.contains(core))) {
+                    return true;
+                }
+                continue;
+            }
+
+            if (normalizedWorld.equals(normalizedRule) || normalizedWorld.contains(normalizedRule)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public boolean removeAreaLevelOverride(String id) {
