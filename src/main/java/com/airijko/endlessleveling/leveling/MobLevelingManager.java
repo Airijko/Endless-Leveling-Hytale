@@ -1432,12 +1432,25 @@ public class MobLevelingManager {
     }
 
     public boolean registerRuntimeFixedLevelOverride(String id, String worldId, int minLevel, int maxLevel) {
+        return registerRuntimeFixedLevelOverride(id, worldId, minLevel, maxLevel, null);
+    }
+
+    public boolean registerRuntimeFixedLevelOverride(String id,
+            String worldId,
+            int minLevel,
+            int maxLevel,
+            Integer bossLevelFromRangeMaxOffset) {
         if (id == null || id.isBlank() || worldId == null || worldId.isBlank() || minLevel <= 0 || maxLevel <= 0) {
             return false;
         }
 
         runtimeFixedLevelOverrides.put(id.trim(),
-                new RuntimeFixedLevelOverride(id.trim(), worldId.trim(), minLevel, maxLevel));
+                new RuntimeFixedLevelOverride(
+                        id.trim(),
+                        worldId.trim(),
+                        minLevel,
+                        maxLevel,
+                        bossLevelFromRangeMaxOffset));
         return true;
     }
 
@@ -1801,6 +1814,10 @@ public class MobLevelingManager {
         }
         if (configuredRange == null) {
             Integer levelFromRangeMaxOffset = parseInteger(matchedOverride.get("Level_From_Range_Max_Offset"));
+            Integer runtimeBossOffset = resolveRuntimeFixedBossLevelFromRangeMaxOffset(store);
+            if (runtimeBossOffset != null) {
+                levelFromRangeMaxOffset = runtimeBossOffset;
+            }
             if (levelFromRangeMaxOffset != null) {
                 LevelRange referenceRange = switch (mode) {
                     case TIERS -> {
@@ -2996,6 +3013,11 @@ public class MobLevelingManager {
         };
     }
 
+    private Integer resolveRuntimeFixedBossLevelFromRangeMaxOffset(Store<EntityStore> store) {
+        RuntimeFixedLevelOverride override = resolveRuntimeFixedLevelOverride(store);
+        return override == null ? null : override.bossLevelFromRangeMaxOffset();
+    }
+
     private RuntimeFixedLevelOverride resolveRuntimeFixedLevelOverride(Store<EntityStore> store) {
         if (store == null || runtimeFixedLevelOverrides.isEmpty()) {
             return null;
@@ -3986,6 +4008,7 @@ public class MobLevelingManager {
         private record RuntimeFixedLevelOverride(String id,
             String worldId,
             int minLevel,
-            int maxLevel) {
+            int maxLevel,
+            Integer bossLevelFromRangeMaxOffset) {
         }
 }

@@ -329,6 +329,25 @@ public final class EndlessLevelingAPI {
                 && mobLevelingManager.registerRuntimeFixedLevelOverride(id, worldId, minLevel, maxLevel);
     }
 
+        /**
+         * Register a world-wide dynamic FIXED Level_Source override with optional
+         * runtime replacement for Mob_Overrides.Level_From_Range_Max_Offset.
+         */
+        public boolean registerMobWorldFixedLevelOverride(String id,
+            String worldId,
+            int minLevel,
+            int maxLevel,
+            int bossLevelFromRangeMaxOffset) {
+        MobLevelingManager mobLevelingManager = mobLevelingManager();
+        return mobLevelingManager != null
+            && mobLevelingManager.registerRuntimeFixedLevelOverride(
+                id,
+                worldId,
+                minLevel,
+                maxLevel,
+                bossLevelFromRangeMaxOffset);
+        }
+
     /** Remove a previously registered area/world override. */
     public boolean removeMobAreaLevelOverride(String id) {
         MobLevelingManager mobLevelingManager = mobLevelingManager();
