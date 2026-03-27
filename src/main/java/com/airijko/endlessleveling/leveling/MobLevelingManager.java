@@ -215,7 +215,7 @@ public class MobLevelingManager {
             return;
         }
         if (!getConfigBoolean("Mob_Leveling.Level_Source.Fixed_Level.Dynamic.Enabled", false, store)) {
-            LOGGER.atWarning().log(
+            LOGGER.atFine().log(
                     "[EL-GATE-SYNC] syncFixedLevelOverridesForDungeon skipped: Dynamic.Enabled=false. %s",
                     describeWorldResolutionContext(store));
             return;
