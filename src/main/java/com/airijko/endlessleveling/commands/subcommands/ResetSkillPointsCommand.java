@@ -63,9 +63,7 @@ public class ResetSkillPointsCommand extends AbstractCommand {
         boolean senderIsPlayer = senderPlayer != null;
 
         if (senderIsPlayer) {
-            if (hasExplicitTarget) {
-                CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
-            }
+            CommandUtil.requirePermission(commandContext.sender(), PERMISSION_NODE);
         } else if (!PartnerConsoleGuard.isConsoleAllowed("el resetskillpoints")) {
             commandContext.sendMessage(Message.raw(
                     "Console admin access requires an authorized EndlessLevelingPartnerAddon.")
