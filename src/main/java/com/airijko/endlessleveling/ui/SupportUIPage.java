@@ -123,8 +123,13 @@ public class SupportUIPage extends InteractiveCustomUIPage<SkillsUIPage.Data> {
     }
 
         private boolean isPartnerAddonDetected() {
+                return isAddonClassPresent("com.airijko.endlessleveling.EndlessLevelingPartnerAddon")
+                        || isAddonClassPresent("com.airijko.endlessleveling.EndlessLevelingARankAddon");
+        }
+
+        private boolean isAddonClassPresent(String className) {
                 try {
-                        Class.forName("com.airijko.endlessleveling.EndlessLevelingPartnerAddon");
+                        Class.forName(className);
                         return true;
                 } catch (Throwable ignored) {
                         return false;

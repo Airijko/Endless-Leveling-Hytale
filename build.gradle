@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.airijko'
-version = '7.0-BETA'
+version = '7.0'
 description = 'EndlessLevelingHytale'
 
 java {

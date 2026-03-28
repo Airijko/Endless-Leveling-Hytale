@@ -99,7 +99,7 @@
         "Max": "ENDLESS"
       },
       "Level_Source": {
-        "Mode": "MIXED",
+        "Mode": "DISTANCE",
         "Distance_Level": {
           "Start_Level": 1,
           "Blocks_Per_Level": 100,
@@ -128,9 +128,9 @@
         },
         "Defense": {
           "Enabled": true,
-          "At_Negative_Max_Difference": -0.2,
+          "At_Negative_Max_Difference": -0.3,
           "At_Positive_Max_Difference": 0.8,
-          "Below_Negative_Max_Difference": -0.4,
+          "Below_Negative_Max_Difference": -0.6,
           "Above_Positive_Max_Difference": 0.9
         }
       },

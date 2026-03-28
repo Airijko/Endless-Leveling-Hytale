@@ -46,6 +46,7 @@ public final class UiTitleIntegrityGuard {
     private static final String NAV_SUB_HEADER_SELECTOR = "NavSubHeader";
         private static final List<String> PARTNER_RESOURCE_MARKERS = List.of(
             "endlesslevelingpartneraddon",
+            "endlesslevelingarankaddon",
             "el-partner-addon");
 
     private volatile String expectedBrand = DEFAULT_BRAND;

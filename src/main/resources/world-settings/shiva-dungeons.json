@@ -25,15 +25,15 @@
       },
       "Scaling": {
         "Health": {
-          "Base_Multiplier": 4.0,
+          "Base_Multiplier": 3.0,
           "Per_Level": 0.075
         },
         "Damage": {
-          "Base_Multiplier": 1.35,
-          "Per_Level": 0.065
+          "Base_Multiplier": 1.25,
+          "Per_Level": 0.055
         },
         "Defense": {
-          "At_Negative_Max_Difference": 0.25,
+          "At_Negative_Max_Difference": 0.20,
           "At_Positive_Max_Difference": 0.8,
           "Below_Negative_Max_Difference": 0.0,
           "Above_Positive_Max_Difference": 0.9
@@ -51,10 +51,10 @@
             },
             "Damage": {
               "Base_Multiplier": 1.0,
-              "Per_Level": 0.07
+              "Per_Level": 0.06
             },
             "Defense": {
-              "At_Negative_Max_Difference": 0.35,
+              "At_Negative_Max_Difference": 0.30,
               "At_Positive_Max_Difference": 0.9,
               "Below_Negative_Max_Difference": 0.0,
               "Above_Positive_Max_Difference": 0.975
@@ -88,15 +88,15 @@
       },
       "Scaling": {
         "Health": {
-          "Base_Multiplier": 4.0,
+          "Base_Multiplier": 3.0,
           "Per_Level": 0.075
         },
         "Damage": {
-          "Base_Multiplier": 1.35,
-          "Per_Level": 0.065
+          "Base_Multiplier": 1.25,
+          "Per_Level": 0.055
         },
         "Defense": {
-          "At_Negative_Max_Difference": 0.25,
+          "At_Negative_Max_Difference": 0.20,
           "At_Positive_Max_Difference": 0.8,
           "Below_Negative_Max_Difference": 0.0,
           "Above_Positive_Max_Difference": 0.9
@@ -115,10 +115,10 @@
             },
             "Damage": {
               "Base_Multiplier": 1.0,
-              "Per_Level": 0.07
+              "Per_Level": 0.06
             },
             "Defense": {
-              "At_Negative_Max_Difference": 0.35,
+              "At_Negative_Max_Difference": 0.30,
               "At_Positive_Max_Difference": 0.9,
               "Below_Negative_Max_Difference": 0.0,
               "Above_Positive_Max_Difference": 0.975
@@ -137,10 +137,10 @@
             },
             "Damage": {
               "Base_Multiplier": 1.0,
-              "Per_Level": 0.07
+              "Per_Level": 0.06
             },
             "Defense": {
-              "At_Negative_Max_Difference": 0.35,
+              "At_Negative_Max_Difference": 0.30,
               "At_Positive_Max_Difference": 0.9,
               "Below_Negative_Max_Difference": 0.0,
               "Above_Positive_Max_Difference": 0.975

@@ -81,6 +81,7 @@ public class EndlessLeveling extends JavaPlugin {
     public static final String DEFAULT_COMMAND_PREFIX = "/lvl";
     public static final String DEFAULT_MESSAGE_PREFIX = "[EndlessLeveling] ";
     private static final String PARTNER_ADDON_MAIN_CLASS = "com.airijko.endlessleveling.EndlessLevelingPartnerAddon";
+    private static final String ARANK_ADDON_MAIN_CLASS = "com.airijko.endlessleveling.EndlessLevelingARankAddon";
 
     // ------------------------
     // Shared managers (singleton)
@@ -311,8 +312,13 @@ public class EndlessLeveling extends JavaPlugin {
     }
 
     private boolean isPremiumPartnerAddonAvailable() {
+        return isKnownPartnerAddonPresent(PARTNER_ADDON_MAIN_CLASS)
+                || isKnownPartnerAddonPresent(ARANK_ADDON_MAIN_CLASS);
+    }
+
+    private boolean isKnownPartnerAddonPresent(String addonMainClass) {
         try {
-            Class<?> addonClass = Class.forName(PARTNER_ADDON_MAIN_CLASS);
+            Class<?> addonClass = Class.forName(addonMainClass);
             CodeSource codeSource = addonClass.getProtectionDomain().getCodeSource();
             if (codeSource == null || codeSource.getLocation() == null) {
                 return true;
@@ -320,6 +326,7 @@ public class EndlessLeveling extends JavaPlugin {
 
             String location = codeSource.getLocation().toString().toLowerCase(Locale.ROOT);
             return location.contains("endlesslevelingpartneraddon")
+                    || location.contains("endlesslevelingarankaddon")
                     || location.contains("endlesslevelingaddon")
                     || location.contains("el-partner-addon");
         } catch (Throwable ignored) {
