@@ -23,7 +23,7 @@
     {
       "type": "HEALING_TOUCH",
       "healing_chance": 0.5,
-      "value": 1.5,
+      "value": 7.5,
       "source_attribute": "stamina",
       "radius": 12.5,
       "self_heal_effectiveness": 0.25
@@ -32,8 +32,8 @@
       "type": "HEALING_AURA",
       "value": 1,
       "flat_heal_value": 30,
-      "mana_ratio": 0.125,
-      "stamina_ratio": 0.225,
+      "mana_ratio": 0.375,
+      "stamina_ratio": 0.675,
       "self_heal_effectiveness": 0.25,
       "damage_pause_seconds": 4,
       "radius": 5,
