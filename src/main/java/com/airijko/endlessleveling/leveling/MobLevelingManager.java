@@ -1018,7 +1018,25 @@ public class MobLevelingManager {
     }
 
     public boolean isWorldXpBlacklisted(Store<EntityStore> store) {
-        List<String> worldIds = resolveWorldIdentifierCandidates(store, false);
+        String resolvedWorldId = resolveWorldIdentifier(store);
+        if (resolvedWorldId == null || resolvedWorldId.isBlank()) {
+            List<String> fallbackWorldIds = resolveWorldIdentifierCandidates(store, false);
+            if (fallbackWorldIds.isEmpty()) {
+                return false;
+            }
+
+            long fallbackStoreKey = toStoreKey(store);
+            Boolean fallbackCached = worldXpBlacklistByStore.get(fallbackStoreKey);
+            if (fallbackCached != null) {
+                return fallbackCached;
+            }
+
+            boolean fallbackBlacklisted = isWorldXpBlacklisted(fallbackWorldIds);
+            worldXpBlacklistByStore.put(fallbackStoreKey, fallbackBlacklisted);
+            return fallbackBlacklisted;
+        }
+
+        List<String> worldIds = List.of(resolvedWorldId);
         if (worldIds.isEmpty()) {
             return false;
         }
