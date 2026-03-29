@@ -1,9 +1,6 @@
 # Build outputs
-.gradle/
 build/
 target/
-
-# Gradle
 
 # IDE
 .idea/
@@ -28,4 +25,9 @@ logs/
 # Runtime
 run/
 
-bin
+# Gradle
+.gradle
+.kotlin
+bin/
+devserver
+/.idea/
